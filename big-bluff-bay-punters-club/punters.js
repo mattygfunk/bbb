@@ -85,6 +85,8 @@ async function refresh(){
   }
 
   $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
+  const adminNav = $('admin-nav-link');
+  if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
 }
 
