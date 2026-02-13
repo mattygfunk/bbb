@@ -1,4 +1,4 @@
-const API_ROOTS=['/api','/punters/api'];
+const API_ROOTS=['/punters/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
