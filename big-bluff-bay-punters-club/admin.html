@@ -28,6 +28,25 @@
           </form>
           <p id="fixture-msg" class="muted"></p>
         </section>
+        <section class="card"><h2>Enter Official Results</h2>
+          <form id="results-form" class="stack">
+            <label>Race <select name="race" id="results-race"></select></label>
+            <label>1st (supports dead heats; comma-separated)
+              <input name="first" type="text" placeholder="e.g. 4,7" />
+            </label>
+            <label>2nd (comma-separated)
+              <input name="second" type="text" placeholder="e.g. 2" />
+            </label>
+            <label>3rd (comma-separated)
+              <input name="third" type="text" placeholder="e.g. 9" />
+            </label>
+            <label>Scratchings substitutes (scratched>substitute, comma-separated)
+              <input name="substitutions" type="text" placeholder="e.g. 5>12, 8>3" />
+            </label>
+            <button class="btn" type="submit">Save Results</button>
+          </form>
+          <p id="results-msg" class="muted"></p>
+        </section>
         <section class="card"><h2>Users Who Have Tipped</h2><div id="admin-list" class="stack"></div></section>
       </div>
     </main>

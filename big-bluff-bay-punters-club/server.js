@@ -25,6 +25,7 @@ function ensureStore() {
     const store = {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
       fixtures: DEFAULT_FIXTURES,
+      raceResults: {},
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -54,6 +55,10 @@ function ensureStore() {
       changed = true;
     }
   }
+  if (!store.raceResults || typeof store.raceResults !== 'object') {
+    store.raceResults = {};
+    changed = true;
+  }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
   for (const tip of store.tips || []) {
     if (tip.status === 'pending') {
@@ -78,6 +83,27 @@ function readStore() {
 
 function writeStore(store) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+}
+
+function parseRunnerList(value) {
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
+  return String(value || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function parseSubs(value) {
+  if (!value) return [];
+  return String(value)
+    .split(',')
+    .map((pair) => pair.trim())
+    .filter(Boolean)
+    .map((pair) => {
+      const [scratched, substitute] = pair.split('>').map((v) => String(v || '').trim());
+      return { scratched, substitute };
+    })
+    .filter((x) => x.scratched && x.substitute);
 }
 
 function issueToken(user) {
@@ -167,6 +193,37 @@ function createApp() {
   app.get('/api/fixtures', (_req, res) => {
     const store = readStore();
     return res.json({ fixtures: store.fixtures || [] });
+  });
+
+  app.get('/api/results', auth, adminOnly, (_req, res) => {
+    const store = readStore();
+    return res.json({ raceResults: store.raceResults || {} });
+  });
+
+  app.put('/api/results/:race', auth, adminOnly, (req, res) => {
+    const race = String(req.params.race || '').toUpperCase();
+    const store = readStore();
+    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+    if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
+
+    const first = parseRunnerList(req.body.first);
+    const second = parseRunnerList(req.body.second);
+    const third = parseRunnerList(req.body.third);
+    const substitutions = parseSubs(req.body.substitutions);
+
+    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
+    store.raceResults[race] = {
+      first,
+      second,
+      third,
+      substitutions,
+      updatedAt: Date.now(),
+      updatedBy: req.user.username
+    };
+
+    writeStore(store);
+    return res.json({ ok: true, race, result: store.raceResults[race] });
   });
 
   app.put('/api/fixtures/:id', auth, adminOnly, (req, res) => {
