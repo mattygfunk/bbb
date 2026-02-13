@@ -49,6 +49,13 @@ function ensureStore() {
     store.fixtures = DEFAULT_FIXTURES;
     changed = true;
   }
+  // V6 migration: legacy pending tips become approved (auto-accept behavior)
+  for (const tip of store.tips || []) {
+    if (tip.status === 'pending') {
+      tip.status = 'approved';
+      changed = true;
+    }
+  }
   if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
 

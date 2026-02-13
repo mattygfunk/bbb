@@ -7,12 +7,12 @@ async function req(url,opt={}){const h={'Content-Type':'application/json',...(op
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
 async function refresh(){
-  const [fx,tp,allTipsRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=approved'),req('/api/tips?status=all')]);
+  const [fx,tp,allTipsRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all')]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   $('tips-list').innerHTML='';
   const byPunter = new Map();
-  (tp.tips||[]).forEach((t) => {
+  (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
     const member = String(t.member || 'Unknown');
     if (!byPunter.has(member)) byPunter.set(member, new Map());
     byPunter.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));

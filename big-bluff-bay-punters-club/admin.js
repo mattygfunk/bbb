@@ -17,11 +17,11 @@ async function refresh(){
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
   if(!isAdmin()){ return; }
-  const p=await req('/api/tips?status=approved');
+  const p=await req('/api/tips?status=all');
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
   const byUser = new Map();
-  (p.tips || []).forEach((t) => {
+  (p.tips || []).filter(t=>t.status!=='removed').forEach((t) => {
     const member = String(t.member || 'Unknown');
     if (!byUser.has(member)) byUser.set(member, new Map());
     byUser.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));
