@@ -1,0 +1,12 @@
+{
+  "name": "big-bluff-bay-punters-club",
+  "version": "3.0.0",
+  "description": "Punters club website V3 with backend API and real auth",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

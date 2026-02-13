@@ -93,8 +93,12 @@
                 PIN (demo)
                 <input required name="pin" type="password" minlength="4" placeholder="1234" />
               </label>
-              <button class="btn" type="submit">Log In</button>
+              <div class="row-actions">
+                <button class="btn" type="submit" data-mode="login">Log In</button>
+                <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
+              </div>
             </form>
+            <p class="muted">Demo admin account: <code>admin</code> / <code>admin123</code></p>
             <p class="muted" id="login-msg"></p>
           </article>
 
