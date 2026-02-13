@@ -37,12 +37,26 @@ function renderTips(tips) {
     list.innerHTML = '<article class="tip"><p class="muted">No tips posted yet. Be first in.</p></article>';
     return;
   }
-  tips.slice(0, 6).forEach((t) => {
-    const card = document.createElement('article');
-    card.className = 'tip';
-    card.innerHTML = `<h3>${esc(t.member)}</h3><p class="meta">${esc(t.race)} • ${esc(t.selection || '')}</p>`;
-    list.appendChild(card);
+
+  const byMember = new Map();
+  tips.forEach((t) => {
+    const member = String(t.member || 'Unknown');
+    if (!byMember.has(member)) byMember.set(member, []);
+    byMember.get(member).push({ race: String(t.race || ''), selection: String(t.selection || '') });
   });
+
+  const raceNum = (r) => Number(String(r || '').replace('R', '')) || 999;
+  Array.from(byMember.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(0, 6)
+    .forEach(([member, picks]) => {
+      const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
+      const lines = ordered.map((p) => `${esc(p.race)}: ${esc(p.selection)}`).join(' • ');
+      const card = document.createElement('article');
+      card.className = 'tip';
+      card.innerHTML = `<h3>${esc(member)}</h3><p class="meta">${lines || 'No tips yet'}</p>`;
+      list.appendChild(card);
+    });
 }
 
 async function hydrateLanding() {
