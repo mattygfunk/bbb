@@ -26,7 +26,7 @@ function ensureStore() {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
       fixtures: DEFAULT_FIXTURES,
       raceResults: {},
-      bossesBet: { legs: ['R9','R10','R11','R12'], selections: {}, updatedAt: null, updatedBy: null },
+      bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -61,7 +61,7 @@ function ensureStore() {
     changed = true;
   }
   if (!store.bossesBet || typeof store.bossesBet !== 'object') {
-    store.bossesBet = { legs: ['R9','R10','R11','R12'], selections: {}, updatedAt: null, updatedBy: null };
+    store.bossesBet = { legs: [], selections: {}, updatedAt: null, updatedBy: null };
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -122,8 +122,10 @@ function applySub(selection, raceResult) {
 }
 
 function computeBossesBetProgress(store) {
-  const bb = store.bossesBet || { legs: ['R9','R10','R11','R12'], selections: {} };
-  const legs = Array.isArray(bb.legs) && bb.legs.length ? bb.legs : ['R9','R10','R11','R12'];
+  const bb = store.bossesBet || { legs: [], selections: {} };
+  const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+  const defaultLegs = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
+  const legs = Array.isArray(bb.legs) && bb.legs.length ? bb.legs : defaultLegs;
   const result = legs.map((race) => {
     const pick = String(bb.selections?.[race] || '').trim();
     const rr = store.raceResults?.[race];

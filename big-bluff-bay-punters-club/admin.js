@@ -34,6 +34,23 @@ function renderRaceOptions(){
   fillResultsForm(select.value);
 }
 
+function renderBossesLegInputs(){
+  const wrap = $('bosses-legs');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const selectedLegs = new Set((state.bossesBet?.legs || []).map(String));
+  const selections = state.bossesBet?.selections || {};
+
+  for(let i=1;i<=state.raceCount;i+=1){
+    const race = `R${i}`;
+    const row = document.createElement('div');
+    row.className = 'row';
+    const checked = selectedLegs.size ? selectedLegs.has(race) : true;
+    row.innerHTML = `<label style="display:flex;align-items:center;gap:.45rem"><input type='checkbox' name='leg-${race}' ${checked ? 'checked' : ''}/> ${race}</label><input name='sel-${race}' type='text' placeholder='selection' value='${esc(selections[race] || '')}' style='max-width:140px' />`;
+    wrap.appendChild(row);
+  }
+}
+
 async function bootstrap(){if(!state.token)return;try{state.user=(await req(API.me)).user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);}}
 
 async function refresh(){
@@ -67,14 +84,11 @@ async function refresh(){
 
   try {
     const bb = await req('/api/bosses-bet');
-    state.bossesBet = bb.bossesBet || { legs:['R9','R10','R11','R12'], selections:{} };
-    const form = $('bosses-form');
-    if (form) {
-      ['R9','R10','R11','R12'].forEach((race)=>{
-        if (form[race]) form[race].value = state.bossesBet?.selections?.[race] || '';
-      });
-    }
-  } catch {}
+    state.bossesBet = bb.bossesBet || { legs:[], selections:{} };
+  } catch {
+    state.bossesBet = { legs:[], selections:{} };
+  }
+  renderBossesLegInputs();
 
   const p=await req('/api/tips?status=all');
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
@@ -152,18 +166,20 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
   const f = new FormData(e.target);
+  const legs = [];
+  const selections = {};
+  for(let i=1;i<=state.raceCount;i+=1){
+    const race = `R${i}`;
+    const enabled = f.get(`leg-${race}`) !== null;
+    const sel = String(f.get(`sel-${race}`) || '').trim();
+    if(enabled) legs.push(race);
+    selections[race] = sel;
+  }
+
   try {
     await req('/api/bosses-bet', {
       method: 'PUT',
-      body: JSON.stringify({
-        legs: ['R9','R10','R11','R12'],
-        selections: {
-          R9: String(f.get('R9') || '').trim(),
-          R10: String(f.get('R10') || '').trim(),
-          R11: String(f.get('R11') || '').trim(),
-          R12: String(f.get('R12') || '').trim()
-        }
-      })
+      body: JSON.stringify({ legs, selections })
     });
     $('bosses-msg').textContent = 'Bosses bet saved.';
     await refresh();
