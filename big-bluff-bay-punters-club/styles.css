@@ -187,14 +187,20 @@ input, textarea, select {
 
 #quick-race-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: .6rem;
 }
 #quick-race-list .row {
   padding: .5rem .6rem;
 }
 #quick-race-list .row select {
-  max-width: 140px;
+  max-width: 110px;
+}
+@media (max-width: 860px) {
+  #quick-race-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  #quick-race-list { grid-template-columns: 1fr; }
 }
 
 .muted { color: var(--muted); }
