@@ -78,6 +78,17 @@ p { line-height: 1.55; }
   flex-wrap: wrap;
 }
 
+.major-actions {
+  margin-top: 1.1rem;
+}
+
+.major-btn {
+  min-width: 180px;
+  text-align: center;
+  font-size: 1rem;
+  padding: .8rem 1.1rem;
+}
+
 .btn {
   appearance: none;
   border: 1px solid transparent;
