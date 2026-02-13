@@ -34,14 +34,7 @@ async function applyLoggedInState() {
     if (!me?.user) return;
 
     if (loginCard) {
-      loginCard.innerHTML = `
-        <h2>You're logged in</h2>
-        <p class="muted">Signed in as <strong>${me.user.username}</strong>.</p>
-        <div class="row-actions">
-          <a class="btn" href="/punters.html">Go to Punters Area</a>
-          <a class="btn btn-ghost" href="/admin.html">Admin Area</a>
-        </div>
-      `;
+      loginCard.style.display = 'none';
     }
   } catch {
     // not logged in
