@@ -21,7 +21,8 @@ async function refresh(){
   }
   state.existingByRace = new Map();
   if(state.user){
-    const mine=(allTipsRes.tips||[]).filter(t=>t.member===state.user.username && t.status!=='removed');
+    const currentUser = String(state.user.username || '').toLowerCase();
+    const mine=(allTipsRes.tips||[]).filter(t=>String(t.member||'').toLowerCase()===currentUser && t.status!=='removed');
     const latestByRace=new Map();
     for(const t of mine){
       if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
