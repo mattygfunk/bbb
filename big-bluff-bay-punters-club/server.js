@@ -112,7 +112,7 @@ function parseSubs(value) {
 }
 
 function issueToken(user) {
-  return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
 }
 
 function applySub(selection, raceResult) {
