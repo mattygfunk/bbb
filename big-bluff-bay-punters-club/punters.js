@@ -40,7 +40,29 @@ async function refresh(){
 
 async function bootstrap(){if(!state.token)return;try{const me=await req(API.me);state.user=me.user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);} }
 
-$('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();const mode=e.submitter?.dataset.mode||'login';try{if(mode==='register')await req(API.register,{method:'POST',body:JSON.stringify({username,password})});const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
+const loginForm = $('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const username = String(f.get('member') || '').trim();
+    const password = String(f.get('pin') || '').trim();
+    const mode = e.submitter?.dataset.mode || 'login';
+    try {
+      if (mode === 'register') await req(API.register, { method: 'POST', body: JSON.stringify({ username, password }) });
+      const r = await req(API.login, { method: 'POST', body: JSON.stringify({ username, password }) });
+      state.token = r.token;
+      state.user = r.user;
+      localStorage.setItem(tokenKey, state.token);
+      const loginMsg = $('login-msg');
+      if (loginMsg) loginMsg.textContent = 'Logged in.';
+      await refresh();
+    } catch (err) {
+      const loginMsg = $('login-msg');
+      if (loginMsg) loginMsg.textContent = err.message;
+    }
+  });
+}
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=12;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
