@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.json');
 
 const FIXTURES = [
-  { id: 'f1', date: 'Sat 15 Feb', event: 'Big Bluff Sprint', track: 'Bay Park' },
+  { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra' },
   { id: 'f2', date: 'Wed 19 Feb', event: 'Midweek Mile', track: 'Harbour Downs' },
   { id: 'f3', date: 'Sat 22 Feb', event: 'The Bluff Cup', track: 'Big Bluff Bay' }
 ];
