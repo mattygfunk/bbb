@@ -26,6 +26,7 @@ function ensureStore() {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
       fixtures: DEFAULT_FIXTURES,
       raceResults: {},
+      bossesBet: { legs: ['R9','R10','R11','R12'], selections: {}, updatedAt: null, updatedBy: null },
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -57,6 +58,10 @@ function ensureStore() {
   }
   if (!store.raceResults || typeof store.raceResults !== 'object') {
     store.raceResults = {};
+    changed = true;
+  }
+  if (!store.bossesBet || typeof store.bossesBet !== 'object') {
+    store.bossesBet = { legs: ['R9','R10','R11','R12'], selections: {}, updatedAt: null, updatedBy: null };
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -108,6 +113,33 @@ function parseSubs(value) {
 
 function issueToken(user) {
   return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+}
+
+function applySub(selection, raceResult) {
+  const subs = raceResult?.substitutions || [];
+  const hit = subs.find((s) => String(s.scratched) === String(selection));
+  return hit ? String(hit.substitute) : String(selection);
+}
+
+function computeBossesBetProgress(store) {
+  const bb = store.bossesBet || { legs: ['R9','R10','R11','R12'], selections: {} };
+  const legs = Array.isArray(bb.legs) && bb.legs.length ? bb.legs : ['R9','R10','R11','R12'];
+  const result = legs.map((race) => {
+    const pick = String(bb.selections?.[race] || '').trim();
+    const rr = store.raceResults?.[race];
+    if (!pick) return { race, selection: '', status: 'pending' };
+    if (!rr) return { race, selection: pick, status: 'pending' };
+    const eff = applySub(pick, rr);
+    const placed = [...(rr.first || []), ...(rr.second || []), ...(rr.third || [])].map(String).includes(eff);
+    return { race, selection: pick, effectiveSelection: eff, status: placed ? 'placed' : 'missed' };
+  });
+
+  const anyMiss = result.some((l) => l.status === 'missed');
+  const allPlaced = result.length > 0 && result.every((l) => l.status === 'placed');
+  const allResolved = result.every((l) => l.status === 'placed' || l.status === 'missed');
+  const overall = anyMiss ? 'lost' : allPlaced && allResolved ? 'landed' : 'live';
+
+  return { ...bb, legs, progress: result, overall };
 }
 
 function canEditTipsNow() {
@@ -198,6 +230,35 @@ function createApp() {
   app.get('/api/results', auth, adminOnly, (_req, res) => {
     const store = readStore();
     return res.json({ raceResults: store.raceResults || {} });
+  });
+
+  app.get('/api/bosses-bet', (_req, res) => {
+    const store = readStore();
+    return res.json({ bossesBet: computeBossesBetProgress(store) });
+  });
+
+  app.put('/api/bosses-bet', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+
+    const legsRaw = Array.isArray(req.body.legs) ? req.body.legs : ['R9', 'R10', 'R11', 'R12'];
+    const legs = legsRaw.map((r) => String(r).toUpperCase()).filter((r) => validRaces.has(r));
+    if (!legs.length) return res.status(400).json({ error: 'At least one valid leg is required' });
+
+    const selections = {};
+    const inSel = req.body.selections && typeof req.body.selections === 'object' ? req.body.selections : {};
+    legs.forEach((race) => { selections[race] = String(inSel[race] || '').trim(); });
+
+    store.bossesBet = {
+      legs,
+      selections,
+      updatedAt: Date.now(),
+      updatedBy: req.user.username
+    };
+
+    writeStore(store);
+    return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
   });
 
   app.put('/api/results/:race', auth, adminOnly, (req, res) => {
@@ -314,12 +375,6 @@ function createApp() {
       row.points += pts;
       if (pts > 0) row.correct += 1;
       score.set(member, row);
-    };
-
-    const applySub = (selection, raceResult) => {
-      const subs = raceResult?.substitutions || [];
-      const hit = subs.find((s) => String(s.scratched) === String(selection));
-      return hit ? String(hit.substitute) : String(selection);
     };
 
     for (const tip of store.tips || []) {

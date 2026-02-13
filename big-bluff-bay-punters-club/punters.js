@@ -1,4 +1,4 @@
-const API={fixtures:'/api/fixtures',tips:'/api/tips',ladder:'/api/ladder',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
+const API={fixtures:'/api/fixtures',tips:'/api/tips',ladder:'/api/ladder',bossesBet:'/api/bosses-bet',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12};
 const $=id=>document.getElementById(id);
@@ -22,7 +22,23 @@ function renderLeaderboard(rows){
   }
 }
 
+function renderBossesBet(bb){
+  const wrap = $('bosses-progress');
+  const overall = $('bosses-overall');
+  if(!wrap || !overall) return;
+  const data = bb || { progress:[], overall:'live' };
+  overall.textContent = String(data.overall || 'live').toUpperCase();
+  wrap.innerHTML = '';
+  (data.progress || []).forEach((leg)=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<strong>${esc(leg.race)}</strong><span class='muted'>${esc(leg.selection || '—')}</span><span class='pill'>${esc(leg.status || 'pending')}</span>`;
+    wrap.appendChild(row);
+  });
+}
+
 function renderRaceInputs(count){
+
   const wrap = $('quick-race-list');
   if(!wrap) return;
   wrap.innerHTML='';
@@ -38,12 +54,13 @@ function renderRaceInputs(count){
 }
 
 async function refresh(){
-  const [fx,tp,allTipsRes,ladderRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all'),req(API.ladder)]);
+  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all'),req(API.ladder),req(API.bossesBet)]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   state.raceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
   renderRaceInputs(state.raceCount);
   renderLeaderboard(ladderRes.ladder || []);
+  renderBossesBet(bossesRes.bossesBet || {});
   $('tips-list').innerHTML='';
   const byPunter = new Map();
   (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {

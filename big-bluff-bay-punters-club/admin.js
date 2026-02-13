@@ -1,6 +1,6 @@
 const API={tips:'/api/tips',fixtures:'/api/fixtures',results:'/api/results',login:'/api/login',logout:'/api/logout',me:'/api/me',updateFixture:id=>`/api/fixtures/${id}`,updateResult:race=>`/api/results/${race}`};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
 const $=id=>document.getElementById(id);
 async function req(url,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;const r=await fetch(url,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -63,6 +63,17 @@ async function refresh(){
     const rr = await req(API.results);
     state.raceResults = rr.raceResults || {};
     renderRaceOptions();
+  } catch {}
+
+  try {
+    const bb = await req('/api/bosses-bet');
+    state.bossesBet = bb.bossesBet || { legs:['R9','R10','R11','R12'], selections:{} };
+    const form = $('bosses-form');
+    if (form) {
+      ['R9','R10','R11','R12'].forEach((race)=>{
+        if (form[race]) form[race].value = state.bossesBet?.selections?.[race] || '';
+      });
+    }
   } catch {}
 
   const p=await req('/api/tips?status=all');
@@ -134,6 +145,30 @@ $('results-form')?.addEventListener('submit', async (e) => {
     fillResultsForm(race);
   } catch (err) {
     $('results-msg').textContent = err.message;
+  }
+});
+
+$('bosses-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  const f = new FormData(e.target);
+  try {
+    await req('/api/bosses-bet', {
+      method: 'PUT',
+      body: JSON.stringify({
+        legs: ['R9','R10','R11','R12'],
+        selections: {
+          R9: String(f.get('R9') || '').trim(),
+          R10: String(f.get('R10') || '').trim(),
+          R11: String(f.get('R11') || '').trim(),
+          R12: String(f.get('R12') || '').trim()
+        }
+      })
+    });
+    $('bosses-msg').textContent = 'Bosses bet saved.';
+    await refresh();
+  } catch (err) {
+    $('bosses-msg').textContent = err.message;
   }
 });
 
