@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
 const $=id=>document.getElementById(id);
@@ -209,6 +209,18 @@ $('reset-bosses-btn')?.addEventListener('click', async () => {
   try {
     await req(API.bossesBet, { method: 'DELETE' });
     $('bosses-msg').textContent = 'Bosses bet reset.';
+    await refresh();
+  } catch (err) {
+    $('bosses-msg').textContent = err.message;
+  }
+});
+
+$('reset-bosses-results-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  if(!confirm('Reset official race results for current Bosses Multi legs?')) return;
+  try {
+    await req(API.bossesBetResults, { method: 'DELETE' });
+    $('bosses-msg').textContent = 'Bosses multi results reset.';
     await refresh();
   } catch (err) {
     $('bosses-msg').textContent = err.message;

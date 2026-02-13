@@ -274,6 +274,19 @@ function createApp() {
     return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
   });
 
+  app.delete('/api/bosses-bet/results', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
+    const activeLegs = new Set(Array.isArray(store.bossesBet?.legs) && store.bossesBet.legs.length ? store.bossesBet.legs : allRaces);
+
+    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
+    for (const race of activeLegs) delete store.raceResults[race];
+
+    writeStore(store);
+    return res.json({ ok: true, clearedLegs: [...activeLegs], bossesBet: computeBossesBetProgress(store) });
+  });
+
   app.put('/api/results/:race', auth, adminOnly, (req, res) => {
     const race = String(req.params.race || '').toUpperCase();
     const store = readStore();
