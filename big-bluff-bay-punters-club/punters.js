@@ -1,6 +1,6 @@
 const API={fixtures:'/api/fixtures',tips:'/api/tips',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map()};
 const $=id=>document.getElementById(id);
 
 async function req(url,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;const r=await fetch(url,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d;}
@@ -19,6 +19,7 @@ async function refresh(){
     const el=document.querySelector(`#quick-race-list select[name='R${i}']`);
     if(el) el.value='';
   }
+  state.existingByRace = new Map();
   if(state.user){
     const mine=(allTipsRes.tips||[]).filter(t=>t.member===state.user.username && t.status!=='removed');
     const latestByRace=new Map();
@@ -26,6 +27,7 @@ async function refresh(){
       if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
     }
     latestByRace.forEach((t,race)=>{
+      state.existingByRace.set(race, String(t.selection||''));
       const el=document.querySelector(`#quick-race-list select[name='${race}']`);
       if(el) el.value=String(t.selection||'');
     });
@@ -39,7 +41,7 @@ async function bootstrap(){if(!state.token)return;try{const me=await req(API.me)
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();const mode=e.submitter?.dataset.mode||'login';try{if(mode==='register')await req(API.register,{method:'POST',body:JSON.stringify({username,password})});const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
 
-$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=12;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(selection)picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='Pick at least one race.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} tip${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;e.target.reset();await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
+$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=12;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
