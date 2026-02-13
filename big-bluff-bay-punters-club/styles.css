@@ -309,6 +309,11 @@ code {
   gap: .5rem;
 }
 
+.hero-login {
+  margin-top: 1rem;
+  width: min(620px, 100%);
+}
+
 .chip-red {
   color: #fecaca;
   border-color: #7f1d1d;

@@ -48,6 +48,19 @@
           <span class="pill">👥 Entries: <strong id="status-entries">0</strong> tipsters in</span>
           <span class="pill chip-red">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
         </div>
+
+        <section class="card login-card hero-login" id="enter-table" aria-label="Enter this week's card table">
+          <h2>Enter this week’s Card Table</h2>
+          <form id="home-login-form" class="stack">
+            <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
+            <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
+            <div class="row-actions">
+              <button class="btn chip-btn" type="submit" data-mode="login">Log In to Punters</button>
+              <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
+            </div>
+          </form>
+          <p id="home-login-msg" class="muted"></p>
+        </section>
       </div>
     </header>
 
@@ -109,19 +122,6 @@
         <details class="card"><summary>How is scoring calculated?</summary><p class="muted">3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
         <details class="card"><summary>What happens on tie?</summary><p class="muted">Jackpot rolls to the next round.</p></details>
         <details class="card"><summary>Who can win payouts?</summary><p class="muted">Registered members with valid tips before lock.</p></details>
-
-        <section class="card login-card" aria-label="Enter this week's card table">
-          <h2>Enter this week’s Card Table</h2>
-          <form id="home-login-form" class="stack">
-            <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
-            <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
-            <div class="row-actions">
-              <button class="btn chip-btn" type="submit" data-mode="login">Log In to Punters</button>
-              <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
-            </div>
-          </form>
-          <p id="home-login-msg" class="muted"></p>
-        </section>
       </section>
     </main>
 
