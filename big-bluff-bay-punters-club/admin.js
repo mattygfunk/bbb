@@ -12,7 +12,9 @@ async function refresh(){
   $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)} (${esc(state.user.role)})</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<span class='pill'>Logged out</span>`;
   const b=$('logout-btn'); if(b)b.onclick=logout;
   const adminOnly=$('admin-only');
+  const loginCard=$('admin-login-card');
   if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
+  if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
   if(!isAdmin()){ return; }
   const p=await req('/api/tips?status=approved');
