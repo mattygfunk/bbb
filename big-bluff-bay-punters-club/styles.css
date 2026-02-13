@@ -188,6 +188,8 @@ input, textarea, select {
 #quick-race-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(4, auto);
+  grid-auto-flow: column;
   gap: .6rem;
 }
 #quick-race-list .row {
