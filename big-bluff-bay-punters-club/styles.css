@@ -119,6 +119,35 @@ main {
 @media (max-width: 860px) {
   .home-grid { grid-template-columns: 1fr; }
 }
+
+.home-hero {
+  border-bottom: 1px solid #2e3f58;
+}
+.home-hero-content {
+  padding-top: 1.2rem;
+  padding-bottom: 2rem;
+}
+.hero-kicker {
+  margin: 0 0 .35rem;
+  font-weight: 700;
+  color: #86efac;
+}
+.hero-chips {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: .9rem;
+}
+.feature-card {
+  width: min(560px, 100%);
+}
+.feature-list {
+  margin: .4rem 0 0;
+  padding-left: 1rem;
+  color: #cbd5e1;
+}
+.feature-list li { margin: .45rem 0; }
+
 .card {
   background: linear-gradient(180deg, #0b1221 0%, #0b1220 100%);
   border: 1px solid var(--line);
