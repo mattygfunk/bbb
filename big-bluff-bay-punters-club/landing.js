@@ -1,5 +1,5 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
-const ENTRY_FEE = 20;
+const ENTRY_FEE = 10;
 
 function fmtCountdown(ms) {
   if (ms <= 0) return 'Locked';
