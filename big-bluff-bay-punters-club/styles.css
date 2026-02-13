@@ -430,3 +430,36 @@ code {
 
 details summary { cursor:pointer; font-weight:700; }
 details p { margin:.55rem 0 0; }
+
+.buyin-options {
+  display: flex;
+  justify-content: center;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+
+.buyin-option {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .55rem .8rem;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: #0a1120;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.buyin-option input {
+  accent-color: #22c55e;
+}
+
+.buyin-option:has(input:checked) {
+  border-color: #86efac;
+  background: #052e16;
+  color: #dcfce7;
+}
+
+.buyin-results {
+  text-align: center;
+}

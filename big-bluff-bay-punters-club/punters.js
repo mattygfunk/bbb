@@ -42,7 +42,7 @@ function renderBuyInVotes(voteData){
   const results = $('buyin-results');
   if(!results) return;
   const counts = voteData?.counts || {'10':0,'20':0,'30':0};
-  results.textContent = `Votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
+  results.textContent = `Punters Club votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
 
   const myVote = String(voteData?.myVote || '');
   document.querySelectorAll("input[name='buyin']").forEach((r)=>{ r.checked = r.value === myVote; });
@@ -164,7 +164,7 @@ $('buyin-form')?.addEventListener('submit', async (e) => {
   if(!['10','20','30'].includes(amount)){ $('buyin-msg').textContent='Choose $10, $20, or $30.'; return; }
   try {
     await req(API.buyInVotes, { method:'POST', body: JSON.stringify({ amount }) });
-    $('buyin-msg').textContent = `Vote saved: $${amount}`;
+    $('buyin-msg').textContent = `Punters Club vote saved: $${amount}`;
     await refresh();
   } catch (err) {
     $('buyin-msg').textContent = err.message;
