@@ -175,6 +175,7 @@ function adminOnly(req, res, next) {
 
 function createApp() {
   const app = express();
+  app.set('trust proxy', 1);
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '200kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
