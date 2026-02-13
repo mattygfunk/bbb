@@ -23,7 +23,7 @@ async function api(url, opts = {}, token) {
 
     const proc = spawn('node', ['server.js'], {
       cwd: __dirname,
-      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v5', TIP_EDIT_CUTOFF_HOUR: '24', TIP_TIMEZONE: 'Australia/Perth' },
+      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v5', TIP_EDIT_DEADLINE_ISO: '2099-12-31T23:59:59+11:00' },
       stdio: 'pipe'
     });
 

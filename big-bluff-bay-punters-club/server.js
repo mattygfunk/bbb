@@ -10,8 +10,7 @@ const rateLimit = require('express-rate-limit');
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.json');
-const TIP_EDIT_CUTOFF_HOUR = Number(process.env.TIP_EDIT_CUTOFF_HOUR || 11);
-const TIP_TIMEZONE = process.env.TIP_TIMEZONE || 'Australia/Perth';
+const TIP_EDIT_DEADLINE_ISO = process.env.TIP_EDIT_DEADLINE_ISO || '2026-02-14T15:00:00+11:00';
 
 const DEFAULT_FIXTURES = [
   { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra' }
@@ -75,13 +74,10 @@ function issueToken(user) {
   return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 }
 
-function getHourInTz(tz) {
-  const parts = new Intl.DateTimeFormat('en-AU', { hour: 'numeric', hour12: false, timeZone: tz }).formatToParts(new Date());
-  return Number(parts.find((p) => p.type === 'hour')?.value || 0);
-}
-
 function canEditTipsNow() {
-  return getHourInTz(TIP_TIMEZONE) < TIP_EDIT_CUTOFF_HOUR;
+  const deadline = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
+  if (Number.isNaN(deadline)) return true;
+  return Date.now() <= deadline;
 }
 
 function auth(req, res, next) {
@@ -199,7 +195,7 @@ function createApp() {
 
     if (existingIdx >= 0) {
       if (!canEditTipsNow()) {
-        return res.status(403).json({ error: `Tips can only be edited before ${TIP_EDIT_CUTOFF_HOUR}:00 (${TIP_TIMEZONE})` });
+        return res.status(403).json({ error: `Tips can only be edited until ${TIP_EDIT_DEADLINE_ISO}` });
       }
       store.tips[existingIdx] = { ...store.tips[existingIdx], selection, status: 'approved', updatedAt: Date.now() };
       writeStore(store);
