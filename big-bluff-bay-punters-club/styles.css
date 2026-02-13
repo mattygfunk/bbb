@@ -141,6 +141,17 @@ main {
 .feature-card {
   width: min(560px, 100%);
 }
+.photo-card {
+  width: min(560px, 100%);
+}
+.hero-photo {
+  width: 100%;
+  height: clamp(220px, 38vw, 320px);
+  object-fit: cover;
+  border-radius: .8rem;
+  border: 1px solid #2a3a50;
+  margin-bottom: .65rem;
+}
 .feature-list {
   margin: .4rem 0 0;
   padding-left: 1rem;
