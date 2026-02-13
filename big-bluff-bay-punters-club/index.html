@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="hero home-hero">
+    <header class="hero home-hero premium-hero">
       <div class="overlay"></div>
       <nav class="nav wrap">
         <a class="brand" href="/" style="text-decoration:none;color:inherit;">
@@ -35,50 +35,124 @@
       </nav>
 
       <div class="wrap hero-content home-hero-content">
-        <p class="hero-kicker">🏇 Trackside x ♠️ Card Table</p>
-        <h1>Back the best runners. Play the long game.</h1>
-        <p class="muted">Big Bluff Bay blends race-day edge with poker-table discipline. Lock your tips, chase points, and play for the jackpot.</p>
-        <div class="hero-chips">
-          <span class="pill">Jackpot Live</span>
-          <span class="pill">Pinjarra Meet</span>
-          <span class="pill">Outright Winner Rule</span>
+        <p class="hero-kicker">🏇 Track Rail × ♠ Card Table</p>
+        <h1>Where race-day instinct meets poker-table discipline.</h1>
+        <p class="muted">Lock your best runners, stack points through the meet, and chase the weekly jackpot with a club that plays smart.</p>
+        <div class="hero-actions">
+          <a class="btn chip-btn" href="#enter-table">Enter this week’s Card Table</a>
+          <a class="btn btn-ghost" href="#lobby">View Jackpot + Leaderboard</a>
+        </div>
+        <div class="status-strip" aria-label="Live round status">
+          <span class="pill">💰 Jackpot <strong id="status-jackpot">$0</strong> Live</span>
+          <span class="pill">🏁 Meet: <strong id="status-meet">Pinjarra</strong></span>
+          <span class="pill">👥 Entries: <strong id="status-entries">0</strong> tipsters in</span>
+          <span class="pill chip-red">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
         </div>
       </div>
     </header>
 
-    <main class="wrap home-grid">
-      <section class="card login-card">
-        <h2>Punters Login</h2>
-        <form id="home-login-form" class="stack">
-          <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
-          <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
-          <div class="row-actions">
-            <button class="btn" type="submit" data-mode="login">Log In to Punters</button>
-            <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
-          </div>
-        </form>
-        <p id="home-login-msg" class="muted"></p>
+    <main class="wrap premium-main">
+      <section class="rail-section" id="this-week-table" aria-labelledby="table-heading">
+        <div class="section-head">
+          <h2 id="table-heading">This Week’s Table</h2>
+          <a class="menu-link" href="/punters.html">View full table</a>
+        </div>
+        <div class="table-grid">
+          <article class="runner-card" tabindex="0">
+            <h3>Storm Ledger</h3><p class="muted">Barrier 4 • J: Macca • T: Yard A</p>
+            <div class="runner-meta"><span class="pill">Odds 4.60</span><span class="pill">♣ steady</span></div>
+            <div class="meter"><span style="width:68%"></span></div>
+            <div class="pick-toggle" role="group" aria-label="Pick type"><button>Win</button><button class="active">Place</button><button>Fade</button></div>
+          </article>
+          <article class="runner-card" tabindex="0">
+            <h3>Bayline Belle</h3><p class="muted">Barrier 8 • J: Jess • T: Stable K</p>
+            <div class="runner-meta"><span class="pill">Odds 6.20</span><span class="pill">♠ aggressive</span></div>
+            <div class="meter"><span style="width:54%"></span></div>
+            <div class="pick-toggle" role="group" aria-label="Pick type"><button class="active">Win</button><button>Place</button><button>Fade</button></div>
+          </article>
+          <article class="runner-card" tabindex="0">
+            <h3>Cash Cascade</h3><p class="muted">Barrier 2 • J: Rico • T: Bluff Team</p>
+            <div class="runner-meta"><span class="pill">Odds 3.90</span><span class="pill">♣ steady</span></div>
+            <div class="meter"><span style="width:75%"></span></div>
+            <div class="pick-toggle" role="group" aria-label="Pick type"><button>Win</button><button class="active">Place</button><button>Fade</button></div>
+          </article>
+        </div>
       </section>
 
-      <section class="card feature-card">
-        <h2>How it works</h2>
-        <ul class="feature-list">
-          <li><strong>Tip smart:</strong> Submit your race picks in seconds.</li>
-          <li><strong>Score points:</strong> 3 for 1st, 2 for 2nd, 1 for 3rd.</li>
-          <li><strong>Win outright:</strong> Ties roll the jackpot to next week.</li>
-        </ul>
+      <section class="rail-section" aria-labelledby="how-heading">
+        <div class="section-head"><h2 id="how-heading">How it Works</h2><p class="muted">Poker-table discipline applied to racing.</p></div>
+        <div class="steps-grid">
+          <article class="card"><h3>1. Lock Picks</h3><p class="muted">Submit in under 60 seconds before lock time.</p></article>
+          <article class="card"><h3>2. Score Points</h3><p class="muted">1st = 3, 2nd = 2, 3rd = 1. Stay consistent.</p></article>
+          <article class="card"><h3>3. Chase Jackpot</h3><p class="muted">Outright winner takes it. Ties roll over.</p></article>
+        </div>
       </section>
 
-      <section class="card photo-card" aria-label="Tip now preview">
-        <img class="hero-photo" src="https://images.unsplash.com/photo-1520333789090-1afc82db536a?auto=format&fit=crop&w=1600&q=80" alt="Close-up of a hand marking horse racing selections on a form guide" loading="lazy" decoding="async" />
-        <p class="muted">Tip now: lock your picks before jump time and chase the leaderboard.</p>
+      <section class="rail-section" id="lobby" aria-labelledby="lobby-heading">
+        <div class="section-head"><h2 id="lobby-heading">Jackpot + Points Ladder</h2></div>
+        <div class="split">
+          <article class="card jackpot-card">
+            <h3>Current Pot</h3>
+            <p class="jackpot-value" id="jackpot-value">$0</p>
+            <p class="muted">Growth this round: <strong>+$0</strong> • Last winner: <strong>—</strong></p>
+            <p class="muted">Rollover rule active on tied first place.</p>
+          </article>
+          <article class="card">
+            <h3>Top 10 (Live)</h3>
+            <table><thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead><tbody id="ladder-preview"></tbody></table>
+            <p class="muted ticker">Last week payouts: <span id="payout-ticker">No payout data yet.</span></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="rail-section" aria-labelledby="strategy-heading">
+        <div class="section-head"><h2 id="strategy-heading">Strategy, not spray-and-pray</h2></div>
+        <div class="steps-grid">
+          <article class="card"><h3>Value spots only</h3><p class="muted">Don’t force races. Pick edges.</p></article>
+          <article class="card"><h3>Consistency beats hero picks</h3><p class="muted">Bank repeatable points every week.</p></article>
+          <article class="card"><h3>Bankroll thinking</h3><p class="muted">Protect downside, press when odds are right.</p></article>
+        </div>
+      </section>
+
+      <section class="rail-section" aria-labelledby="proof-heading">
+        <div class="section-head"><h2 id="proof-heading">Winners Wall + Club Stats</h2></div>
+        <div class="winners-strip" id="winners-strip">
+          <span class="pill">@Macca • Week 5 • 19 pts • $220</span>
+          <span class="pill">@Jess • Week 4 • 17 pts • $180</span>
+          <span class="pill">@Rico • Week 3 • 16 pts • $150</span>
+        </div>
+        <div class="stats-grid">
+          <article class="card"><h3 id="stat-weeks">0</h3><p class="muted">Weeks running</p></article>
+          <article class="card"><h3 id="stat-entries">0</h3><p class="muted">Avg entries</p></article>
+          <article class="card"><h3 id="stat-paid">$0</h3><p class="muted">Total paid</p></article>
+        </div>
+      </section>
+
+      <section class="rail-section" id="enter-table" aria-labelledby="faq-heading">
+        <div class="section-head"><h2 id="faq-heading">Rules + FAQ</h2></div>
+        <details class="card"><summary>When do picks lock?</summary><p class="muted">At the published lock timer in the status strip.</p></details>
+        <details class="card"><summary>How is scoring calculated?</summary><p class="muted">3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
+        <details class="card"><summary>What happens on tie?</summary><p class="muted">Jackpot rolls to the next round.</p></details>
+        <details class="card"><summary>Who can win payouts?</summary><p class="muted">Registered members with valid tips before lock.</p></details>
+
+        <section class="card login-card" aria-label="Enter this week's card table">
+          <h2>Enter this week’s Card Table</h2>
+          <form id="home-login-form" class="stack">
+            <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
+            <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
+            <div class="row-actions">
+              <button class="btn chip-btn" type="submit" data-mode="login">Log In to Punters</button>
+              <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
+            </div>
+          </form>
+          <p id="home-login-msg" class="muted"></p>
+        </section>
       </section>
     </main>
 
-    <footer class="wrap footer muted">
-      <p>Big Bluff Bay Punters Club</p>
-    </footer>
+    <footer class="wrap footer muted"><p>Big Bluff Bay Punters Club</p></footer>
 
     <script src="home-login.js"></script>
+    <script src="landing.js"></script>
   </body>
 </html>
