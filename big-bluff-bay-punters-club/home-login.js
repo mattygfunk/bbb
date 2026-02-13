@@ -1,4 +1,4 @@
-const API_ROOTS = ['/punters/api'];
+const API_ROOTS = ['/api'];
 const API = { register: '/register', login: '/login', me: '/me' };
 const tokenKey = 'bbb-token-v3';
 
