@@ -23,24 +23,38 @@ async function refresh(){
   const byUser = new Map();
   (p.tips || []).filter(t=>t.status!=='removed').forEach((t) => {
     const member = String(t.member || 'Unknown');
-    if (!byUser.has(member)) byUser.set(member, new Map());
-    byUser.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));
+    if (!byUser.has(member)) byUser.set(member, []);
+    byUser.get(member).push(t);
   });
 
-  const raceOrder = Array.from({ length: 12 }, (_, i) => `R${i + 1}`);
   Array.from(byUser.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .forEach(([member, picks]) => {
-      const lines = raceOrder
-        .filter((r) => picks.get(r))
-        .map((r) => `${esc(r)}: ${esc(picks.get(r))}`)
-        .join(' • ');
-      const count = raceOrder.filter((r) => picks.get(r)).length;
+    .forEach(([member, tips]) => {
+      const paidCount = tips.filter(t => t.paid).length;
+      const lines = tips
+        .sort((a,b)=>Number(String(a.race||'R0').slice(1))-Number(String(b.race||'R0').slice(1)))
+        .map((t) => {
+          const paidLabel = t.paid ? 'Paid' : 'Unpaid';
+          return `<div class='row' style='margin-top:.35rem'><div><strong>${esc(t.race)}: ${esc(t.selection || t.horse || '')}</strong><div class='muted'>${paidLabel}</div></div><div class='row-actions'><button class='btn btn-ghost' data-tip-id='${t.id}' data-paid='${t.paid ? 'false' : 'true'}'>Mark ${t.paid ? 'Unpaid' : 'Paid'}</button></div></div>`;
+        })
+        .join('');
       const row = document.createElement('div');
       row.className = 'row';
-      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${count} race${count===1?'':'s'} tipped</div><div class='muted'>${lines || 'No tips'}</div></div>`;
+      row.style.alignItems = 'flex-start';
+      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${paidCount} paid</div>${lines}</div>`;
       $('admin-list').appendChild(row);
     });
+
+  $('admin-list').querySelectorAll('button[data-tip-id]').forEach((btn) => {
+    btn.onclick = async () => {
+      try {
+        await req(`/api/tips/${btn.dataset.tipId}`, { method: 'PATCH', body: JSON.stringify({ paid: btn.dataset.paid === 'true' }) });
+        await refresh();
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  });
 }
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});

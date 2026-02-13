@@ -54,12 +54,16 @@ function ensureStore() {
       tip.status = 'approved';
       changed = true;
     }
+    if (typeof tip.paid !== 'boolean') {
+      tip.paid = false;
+      changed = true;
+    }
   }
   if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
 
 function seedTip(member, race, selection, status) {
-  return { id: crypto.randomUUID(), member, race, selection, status, createdAt: Date.now() - Math.floor(Math.random() * 5000000) };
+  return { id: crypto.randomUUID(), member, race, selection, status, paid: false, createdAt: Date.now() - Math.floor(Math.random() * 5000000) };
 }
 
 function readStore() {
@@ -208,6 +212,7 @@ function createApp() {
       race,
       selection,
       status: 'approved',
+      paid: false,
       createdAt: Date.now()
     };
     store.tips.push(tip);
@@ -216,14 +221,20 @@ function createApp() {
   });
 
   app.patch('/api/tips/:id', auth, adminOnly, (req, res) => {
-    const status = String(req.body.status || '').trim();
-    if (!['pending', 'approved', 'removed'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
-
     const store = readStore();
     const idx = store.tips.findIndex((t) => t.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Tip not found' });
 
-    store.tips[idx].status = status;
+    if (typeof req.body.status !== 'undefined') {
+      const status = String(req.body.status || '').trim();
+      if (!['pending', 'approved', 'removed'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+      store.tips[idx].status = status;
+    }
+
+    if (typeof req.body.paid !== 'undefined') {
+      store.tips[idx].paid = Boolean(req.body.paid);
+    }
+
     writeStore(store);
     return res.json({ ok: true, tip: store.tips[idx] });
   });
