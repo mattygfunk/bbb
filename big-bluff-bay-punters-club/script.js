@@ -5,7 +5,8 @@ const API = {
   register: '/api/register',
   login: '/api/login',
   logout: '/api/logout',
-  me: '/api/me'
+  me: '/api/me',
+  updateFixture: (id) => `/api/fixtures/${id}`
 };
 
 const storeKeys = { token: 'bbb-token-v3' };
@@ -31,7 +32,9 @@ const ui = {
   tipForm: $('tip-form'),
   loginMsg: $('login-msg'),
   tipMsg: $('tip-msg'),
-  adminList: $('admin-list')
+  adminList: $('admin-list'),
+  fixtureForm: $('fixture-form'),
+  fixtureMsg: $('fixture-msg')
 };
 
 function escapeHtml(value) {
@@ -131,6 +134,7 @@ function renderAuth() {
 
 function renderAdmin() {
   ui.adminList.innerHTML = '';
+  ui.fixtureForm.style.display = isAdmin() ? 'grid' : 'none';
 
   if (!isAdmin()) {
     const msg = document.createElement('p');
@@ -295,6 +299,32 @@ ui.tipForm.addEventListener('submit', async (event) => {
     await refreshData();
   } catch (err) {
     ui.tipMsg.textContent = err.message;
+  }
+});
+
+ui.fixtureForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!isAdmin()) {
+    ui.fixtureMsg.textContent = 'Admin login required.';
+    return;
+  }
+
+  const form = new FormData(ui.fixtureForm);
+  const payload = {
+    date: String(form.get('date') || '').trim(),
+    event: String(form.get('event') || '').trim(),
+    track: String(form.get('track') || '').trim()
+  };
+
+  try {
+    await request(API.updateFixture('f1'), {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+    ui.fixtureMsg.textContent = 'Next meet updated.';
+    await refreshData();
+  } catch (err) {
+    ui.fixtureMsg.textContent = err.message;
   }
 });
 

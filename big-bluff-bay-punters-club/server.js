@@ -11,7 +11,7 @@ const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.json');
 
-const FIXTURES = [
+const DEFAULT_FIXTURES = [
   { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra' },
   { id: 'f2', date: 'Wed 19 Feb', event: 'Midweek Mile', track: 'Harbour Downs' },
   { id: 'f3', date: 'Sat 22 Feb', event: 'The Bluff Cup', track: 'Big Bluff Bay' }
@@ -25,6 +25,7 @@ function ensureStore() {
     const adminHash = bcrypt.hashSync('admin123', 10);
     const store = {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
+      fixtures: DEFAULT_FIXTURES,
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', '$4.20', 'Strong late speed.', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', '$6.00', 'Great barrier draw.', 'approved'),
@@ -43,6 +44,10 @@ function ensureStore() {
       user.passwordHash = bcrypt.hashSync('admin123', 10);
       changed = true;
     }
+  }
+  if (!Array.isArray(store.fixtures) || store.fixtures.length === 0) {
+    store.fixtures = DEFAULT_FIXTURES;
+    changed = true;
   }
   if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
@@ -89,7 +94,7 @@ function createApp() {
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
   app.use(express.static(__dirname));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, version: '4.0.0' }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, version: '5.0.0' }));
 
   app.post('/api/register', (req, res) => {
     const username = String(req.body.username || '').trim();
@@ -137,7 +142,26 @@ function createApp() {
   app.post('/api/logout', auth, (_req, res) => res.json({ ok: true }));
   app.get('/api/me', auth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username, role: req.user.role } }));
 
-  app.get('/api/fixtures', (_req, res) => res.json({ fixtures: FIXTURES }));
+  app.get('/api/fixtures', (_req, res) => {
+    const store = readStore();
+    return res.json({ fixtures: store.fixtures || [] });
+  });
+
+  app.put('/api/fixtures/:id', auth, adminOnly, (req, res) => {
+    const id = req.params.id;
+    const date = String(req.body.date || '').trim();
+    const event = String(req.body.event || '').trim();
+    const track = String(req.body.track || '').trim();
+    if (!date || !event || !track) return res.status(400).json({ error: 'date, event, and track are required' });
+
+    const store = readStore();
+    const idx = (store.fixtures || []).findIndex((f) => f.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Fixture not found' });
+
+    store.fixtures[idx] = { ...store.fixtures[idx], date, event, track };
+    writeStore(store);
+    return res.json({ ok: true, fixture: store.fixtures[idx] });
+  });
 
   app.get('/api/tips', (req, res) => {
     const status = String(req.query.status || 'approved');
@@ -207,7 +231,7 @@ function start() {
   ensureStore();
   const app = createApp();
   app.listen(PORT, () => {
-    console.log(`Big Bluff Bay V4 running: http://localhost:${PORT}`);
+    console.log(`Big Bluff Bay V5 running: http://localhost:${PORT}`);
     console.log('Demo admin login: admin / admin123');
   });
 }

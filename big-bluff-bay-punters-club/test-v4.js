@@ -23,13 +23,13 @@ async function api(url, opts = {}, token) {
 
     const proc = spawn('node', ['server.js'], {
       cwd: __dirname,
-      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v4' },
+      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v5' },
       stdio: 'pipe'
     });
 
     let started = false;
     proc.stdout.on('data', (d) => {
-      if (String(d).includes('V4 running')) started = true;
+      if (String(d).includes('V5 running')) started = true;
     });
 
     for (let i = 0; i < 40 && !started; i += 1) await wait(100);
@@ -77,11 +77,29 @@ async function api(url, opts = {}, token) {
     assert.equal(res.status, 200);
     assert.ok(res.body.tips.some((t) => t.id === pendingId));
 
+    // Non-admin cannot change fixtures
+    res = await api('/api/fixtures/f1', {
+      method: 'PUT',
+      body: JSON.stringify({ date: 'Sun 16 Feb, 4:00 PM', event: 'Next Meet', track: 'Pinjarra' })
+    }, userToken);
+    assert.equal(res.status, 403);
+
+    // Admin can change fixtures
+    res = await api('/api/fixtures/f1', {
+      method: 'PUT',
+      body: JSON.stringify({ date: 'Sun 16 Feb, 4:00 PM', event: 'Next Meet', track: 'Pinjarra' })
+    }, adminToken);
+    assert.equal(res.status, 200);
+
+    res = await api('/api/fixtures');
+    assert.equal(res.status, 200);
+    assert.equal(res.body.fixtures.find((f) => f.id === 'f1').date, 'Sun 16 Feb, 4:00 PM');
+
     proc.kill('SIGTERM');
-    console.log('V4 integration tests passed ✅');
+    console.log('V5 integration tests passed ✅');
     process.exit(0);
   } catch (err) {
-    console.error('V4 integration tests failed ❌');
+    console.error('V5 integration tests failed ❌');
     console.error(err);
     process.exit(1);
   }

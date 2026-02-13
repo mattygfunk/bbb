@@ -1,7 +1,7 @@
 {
   "name": "big-bluff-bay-punters-club",
-  "version": "4.0.0",
-  "description": "Punters club website V4 with JWT auth and tested API",
+  "version": "5.0.0",
+  "description": "Punters club website V5 with JWT auth, admin fixture editing, and tested API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

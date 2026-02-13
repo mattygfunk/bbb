@@ -135,8 +135,16 @@
           <span class="pill">Local moderation only</span>
         </div>
         <p class="muted">
-          Approve or remove pending tips. (Demo admin access for logged-in member named <code>admin</code>)
+          Approve/remove pending tips and edit fixtures. (Demo admin access: <code>admin</code>)
         </p>
+        <form id="fixture-form" class="stack">
+          <h3>Edit Next Meet (fixture f1)</h3>
+          <label>Date & Time <input name="date" type="text" placeholder="Sat 14 Feb, 3:19 PM" /></label>
+          <label>Event <input name="event" type="text" placeholder="Next Meet" /></label>
+          <label>Track <input name="track" type="text" placeholder="Pinjarra" /></label>
+          <button class="btn" type="submit">Update Next Meet</button>
+          <p class="muted" id="fixture-msg"></p>
+        </form>
         <div id="admin-list" class="stack"></div>
       </section>
     </main>
