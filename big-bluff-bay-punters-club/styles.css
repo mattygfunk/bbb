@@ -309,9 +309,26 @@ code {
   gap: .5rem;
 }
 
+.hero-layout {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
 .hero-login {
-  margin-top: 1rem;
-  width: min(620px, 100%);
+  margin-top: 0;
+  width: 100%;
+}
+
+@media (min-width: 980px) {
+  .hero-layout {
+    grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr);
+    gap: 1.2rem;
+  }
 }
 
 .chip-red {
