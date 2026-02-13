@@ -76,9 +76,8 @@ function renderTips() {
     const card = document.createElement('article');
     card.className = 'tip';
     card.innerHTML = `
-      <strong>${escapeHtml(tip.horse)}</strong>
-      <p class="meta">${escapeHtml(tip.race)} • ${escapeHtml(tip.odds)} • by ${escapeHtml(tip.member)}</p>
-      <p>${escapeHtml(tip.reason)}</p>
+      <strong>${escapeHtml(tip.selection || tip.horse || '')}</strong>
+      <p class="meta">${escapeHtml(tip.race)} • by ${escapeHtml(tip.member)}</p>
     `;
     ui.tipsList.appendChild(card);
   });
@@ -157,8 +156,8 @@ function renderAdmin() {
     row.className = 'row';
     row.innerHTML = `
       <div>
-        <strong>${escapeHtml(tip.race)} — ${escapeHtml(tip.horse)} (${escapeHtml(tip.odds)})</strong>
-        <div class="muted">by ${escapeHtml(tip.member)} • ${escapeHtml(tip.reason)}</div>
+        <strong>${escapeHtml(tip.race)} — ${escapeHtml(tip.selection || tip.horse || '')}</strong>
+        <div class="muted">by ${escapeHtml(tip.member)}</div>
       </div>
       <div class="row-actions">
         <button class="btn" data-act="approved" data-id="${tip.id}">Approve</button>
@@ -282,9 +281,7 @@ ui.tipForm.addEventListener('submit', async (event) => {
   const form = new FormData(ui.tipForm);
   const payload = {
     race: String(form.get('race') || '').trim(),
-    horse: String(form.get('horse') || '').trim(),
-    odds: String(form.get('odds') || '').trim(),
-    reason: String(form.get('reason') || '').trim()
+    selection: String(form.get('selection') || '').trim()
   };
 
   try {

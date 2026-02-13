@@ -25,9 +25,9 @@ function ensureStore() {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
       fixtures: DEFAULT_FIXTURES,
       tips: [
-        seedTip('Macca', 'R3', 'Storm Ledger', '$4.20', 'Strong late speed.', 'approved'),
-        seedTip('Jess', 'R5', 'Bayline Belle', '$6.00', 'Great barrier draw.', 'approved'),
-        seedTip('Rico', 'R7', 'Cash Cascade', '$5.50', 'Handles soft track.', 'approved')
+        seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
+        seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
+        seedTip('Rico', 'R7', 'Cash Cascade', 'approved')
       ]
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
@@ -50,8 +50,8 @@ function ensureStore() {
   if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
 
-function seedTip(member, race, horse, odds, reason, status) {
-  return { id: crypto.randomUUID(), member, race, horse, odds, reason, status, createdAt: Date.now() - Math.floor(Math.random() * 5000000) };
+function seedTip(member, race, selection, status) {
+  return { id: crypto.randomUUID(), member, race, selection, status, createdAt: Date.now() - Math.floor(Math.random() * 5000000) };
 }
 
 function readStore() {
@@ -170,20 +170,18 @@ function createApp() {
   });
 
   app.post('/api/tips', auth, (req, res) => {
-    const race = String(req.body.race || '').trim();
-    const horse = String(req.body.horse || '').trim();
-    const odds = String(req.body.odds || '').trim();
-    const reason = String(req.body.reason || '').trim();
-    if (!race || !horse || !odds || !reason) return res.status(400).json({ error: 'All fields are required' });
+    const race = String(req.body.race || '').trim().toUpperCase();
+    const selection = String(req.body.selection || req.body.horse || '').trim();
+    const validRaces = new Set(['R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11','R12']);
+    if (!validRaces.has(race)) return res.status(400).json({ error: 'Race must be R1 to R12' });
+    if (!selection) return res.status(400).json({ error: 'Selection is required' });
 
     const store = readStore();
     const tip = {
       id: crypto.randomUUID(),
       member: req.user.username,
       race,
-      horse,
-      odds,
-      reason,
+      selection,
       status: req.user.role === 'admin' ? 'approved' : 'pending',
       createdAt: Date.now()
     };

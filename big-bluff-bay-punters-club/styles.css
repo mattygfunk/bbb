@@ -161,7 +161,7 @@ label {
   gap: .35rem;
   font-size: .95rem;
 }
-input, textarea {
+input, textarea, select {
   width: 100%;
   border: 1px solid #334155;
   background: #020617;

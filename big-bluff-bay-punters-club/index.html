@@ -108,19 +108,17 @@
             <form id="tip-form" class="stack">
               <label>
                 Race
-                <input required name="race" type="text" placeholder="R5" />
+                <select required name="race">
+                  <option value="">Select race</option>
+                  <option value="R1">R1</option><option value="R2">R2</option><option value="R3">R3</option>
+                  <option value="R4">R4</option><option value="R5">R5</option><option value="R6">R6</option>
+                  <option value="R7">R7</option><option value="R8">R8</option><option value="R9">R9</option>
+                  <option value="R10">R10</option><option value="R11">R11</option><option value="R12">R12</option>
+                </select>
               </label>
               <label>
-                Horse
-                <input required name="horse" type="text" placeholder="Storm Ledger" />
-              </label>
-              <label>
-                Odds
-                <input required name="odds" type="text" placeholder="$4.20" />
-              </label>
-              <label>
-                Reason
-                <textarea required name="reason" rows="3" placeholder="Why this pick?"></textarea>
+                Selection
+                <input required name="selection" type="text" placeholder="Horse name" />
               </label>
               <button class="btn" type="submit">Submit Tip</button>
             </form>

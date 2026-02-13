@@ -54,7 +54,7 @@ async function api(url, opts = {}, token) {
 
     res = await api('/api/tips', {
       method: 'POST',
-      body: JSON.stringify({ race: 'R9', horse: 'Night Tide', odds: '$8.50', reason: 'Late market support.' })
+      body: JSON.stringify({ race: 'R9', selection: 'Night Tide' })
     }, userToken);
     assert.equal(res.status, 201);
     const pendingId = res.body.tip.id;
