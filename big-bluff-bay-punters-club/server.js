@@ -278,13 +278,13 @@ function createApp() {
     const store = readStore();
     const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
     const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
-    const activeLegs = new Set(Array.isArray(store.bossesBet?.legs) && store.bossesBet.legs.length ? store.bossesBet.legs : allRaces);
 
-    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
-    for (const race of activeLegs) delete store.raceResults[race];
+    // Hard reset all meet results + bosses selections to avoid stale "missed" states.
+    store.raceResults = {};
+    store.bossesBet = { legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
 
     writeStore(store);
-    return res.json({ ok: true, clearedLegs: [...activeLegs], bossesBet: computeBossesBetProgress(store) });
+    return res.json({ ok: true, clearedLegs: allRaces, bossesBet: computeBossesBetProgress(store) });
   });
 
   app.put('/api/results/:race', auth, adminOnly, (req, res) => {

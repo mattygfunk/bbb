@@ -217,10 +217,10 @@ $('reset-bosses-btn')?.addEventListener('click', async () => {
 
 $('reset-bosses-results-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
-  if(!confirm('Reset official race results for current Bosses Multi legs?')) return;
+  if(!confirm('Reset ALL Bosses Multi results and clear selections for this meet?')) return;
   try {
     await req(API.bossesBetResults, { method: 'DELETE' });
-    $('bosses-msg').textContent = 'Bosses multi results reset.';
+    $('bosses-msg').textContent = 'Bosses multi results and selections reset.';
     await refresh();
   } catch (err) {
     $('bosses-msg').textContent = err.message;
