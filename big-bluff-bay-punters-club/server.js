@@ -13,7 +13,7 @@ const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.j
 const TIP_EDIT_DEADLINE_ISO = process.env.TIP_EDIT_DEADLINE_ISO || '2026-02-14T15:00:00+11:00';
 
 const DEFAULT_FIXTURES = [
-  { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra' }
+  { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra', raceCount: 12 }
 ];
 
 function ensureStore() {
@@ -47,6 +47,12 @@ function ensureStore() {
   if (!Array.isArray(store.fixtures) || store.fixtures.length === 0) {
     store.fixtures = DEFAULT_FIXTURES;
     changed = true;
+  }
+  for (const f of store.fixtures || []) {
+    if (typeof f.raceCount !== 'number' || Number.isNaN(f.raceCount)) {
+      f.raceCount = 12;
+      changed = true;
+    }
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
   for (const tip of store.tips || []) {
@@ -168,13 +174,15 @@ function createApp() {
     const date = String(req.body.date || '').trim();
     const event = String(req.body.event || '').trim();
     const track = String(req.body.track || '').trim();
+    const raceCount = Number(req.body.raceCount || 12);
     if (!date || !event || !track) return res.status(400).json({ error: 'date, event, and track are required' });
+    if (!Number.isInteger(raceCount) || raceCount < 1 || raceCount > 24) return res.status(400).json({ error: 'raceCount must be 1-24' });
 
     const store = readStore();
     const idx = (store.fixtures || []).findIndex((f) => f.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Fixture not found' });
 
-    store.fixtures[idx] = { ...store.fixtures[idx], date, event, track };
+    store.fixtures[idx] = { ...store.fixtures[idx], date, event, track, raceCount };
     writeStore(store);
     return res.json({ ok: true, fixture: store.fixtures[idx] });
   });
@@ -190,11 +198,12 @@ function createApp() {
   app.post('/api/tips', auth, (req, res) => {
     const race = String(req.body.race || '').trim().toUpperCase();
     const selection = String(req.body.selection || req.body.horse || '').trim();
-    const validRaces = new Set(['R1','R2','R3','R4','R5','R6','R7','R8','R9','R10','R11','R12']);
-    if (!validRaces.has(race)) return res.status(400).json({ error: 'Race must be R1 to R12' });
+    const store = readStore();
+    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+    if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
     if (!selection) return res.status(400).json({ error: 'Selection is required' });
 
-    const store = readStore();
     const existingIdx = store.tips.findIndex((t) => t.member === req.user.username && t.race === race && t.status !== 'removed');
 
     if (existingIdx >= 0) {

@@ -1,4 +1,4 @@
-const API={tips:'/api/tips',login:'/api/login',logout:'/api/logout',me:'/api/me',updateFixture:id=>`/api/fixtures/${id}`};
+const API={tips:'/api/tips',fixtures:'/api/fixtures',login:'/api/login',logout:'/api/logout',me:'/api/me',updateFixture:id=>`/api/fixtures/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null};
 const $=id=>document.getElementById(id);
@@ -17,6 +17,19 @@ async function refresh(){
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
   if(!isAdmin()){ return; }
+
+  try {
+    const fx = await req(API.fixtures);
+    const meet = (fx.fixtures || [])[0] || {};
+    const form = $('fixture-form');
+    if (form) {
+      if (form.date && !form.date.value) form.date.value = meet.date || '';
+      if (form.event && !form.event.value) form.event.value = meet.event || '';
+      if (form.track && !form.track.value) form.track.value = meet.track || '';
+      if (form.raceCount) form.raceCount.value = String(meet.raceCount || 12);
+    }
+  } catch {}
+
   const p=await req('/api/tips?status=all');
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
@@ -61,7 +74,7 @@ async function refresh(){
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
 
-$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);try{await req(API.updateFixture('f1'),{method:'PUT',body:JSON.stringify({date:String(f.get('date')||'').trim(),event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim()})});$('fixture-msg').textContent='Fixture updated.';}catch(err){$('fixture-msg').textContent=err.message;}});
+$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);try{await req(API.updateFixture('f1'),{method:'PUT',body:JSON.stringify({date:String(f.get('date')||'').trim(),event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim(),raceCount:Number(f.get('raceCount')||12)})});$('fixture-msg').textContent='Fixture updated.';}catch(err){$('fixture-msg').textContent=err.message;}});
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
