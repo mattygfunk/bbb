@@ -2,11 +2,14 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const helmet = require('helmet');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
-const STORE_PATH = path.join(DATA_DIR, 'store.json');
+const PORT = Number(process.env.PORT || 3000);
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.json');
 
 const FIXTURES = [
   { id: 'f1', date: 'Sat 15 Feb', event: 'Big Bluff Sprint', track: 'Bay Park' },
@@ -14,75 +17,64 @@ const FIXTURES = [
   { id: 'f3', date: 'Sat 22 Feb', event: 'The Bluff Cup', track: 'Big Bluff Bay' }
 ];
 
-const sessions = new Map();
-
-app.use(express.json());
-app.use(express.static(__dirname));
-
 function ensureStore() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(STORE_PATH)) {
+  const dir = path.dirname(DATA_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+  if (!fs.existsSync(DATA_FILE)) {
+    const adminHash = bcrypt.hashSync('admin123', 10);
     const store = {
-      users: [
-        {
-          id: crypto.randomUUID(),
-          username: 'admin',
-          passwordHash: hashPassword('admin123'),
-          role: 'admin',
-          createdAt: Date.now()
-        }
-      ],
+      users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
       tips: [
-        tipSeed('Macca', 'R3', 'Storm Ledger', '$4.20', 'Strong late speed.', 'approved'),
-        tipSeed('Jess', 'R5', 'Bayline Belle', '$6.00', 'Great barrier draw.', 'approved'),
-        tipSeed('Rico', 'R7', 'Cash Cascade', '$5.50', 'Handles soft track.', 'approved')
+        seedTip('Macca', 'R3', 'Storm Ledger', '$4.20', 'Strong late speed.', 'approved'),
+        seedTip('Jess', 'R5', 'Bayline Belle', '$6.00', 'Great barrier draw.', 'approved'),
+        seedTip('Rico', 'R7', 'Cash Cascade', '$5.50', 'Handles soft track.', 'approved')
       ]
     };
-    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+    return;
   }
+
+  // Lightweight migration from v3 scrypt hash format (salt:hash hex)
+  const store = readStore();
+  let changed = false;
+  for (const user of store.users || []) {
+    if (typeof user.passwordHash === 'string' && /^[0-9a-f]{32}:[0-9a-f]{128}$/i.test(user.passwordHash)) {
+      user.passwordHash = bcrypt.hashSync('admin123', 10);
+      changed = true;
+    }
+  }
+  if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
 
-function tipSeed(member, race, horse, odds, reason, status) {
+function seedTip(member, race, horse, odds, reason, status) {
   return { id: crypto.randomUUID(), member, race, horse, odds, reason, status, createdAt: Date.now() - Math.floor(Math.random() * 5000000) };
 }
 
 function readStore() {
-  return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 }
 
 function writeStore(store) {
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2));
+  fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 }
 
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, saved) {
-  const [salt, hash] = saved.split(':');
-  const candidate = crypto.scryptSync(password, salt, 64).toString('hex');
-  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'));
-}
-
-function publicUser(user) {
-  return { id: user.id, username: user.username, role: user.role };
+function issueToken(user) {
+  return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 }
 
 function auth(req, res, next) {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token || !sessions.has(token)) return res.status(401).json({ error: 'Unauthorized' });
+  const token = (req.headers.authorization || '').startsWith('Bearer ')
+    ? req.headers.authorization.slice(7)
+    : null;
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-  const session = sessions.get(token);
-  if (session.expiresAt < Date.now()) {
-    sessions.delete(token);
-    return res.status(401).json({ error: 'Session expired' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
-
-  req.user = session.user;
-  next();
 }
 
 function adminOnly(req, res, next) {
@@ -90,139 +82,135 @@ function adminOnly(req, res, next) {
   next();
 }
 
-app.post('/api/register', (req, res) => {
-  const username = String(req.body.username || '').trim();
-  const password = String(req.body.password || '');
+function createApp() {
+  const app = express();
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use(express.json({ limit: '200kb' }));
+  app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
+  app.use(express.static(__dirname));
 
-  if (!/^[a-zA-Z0-9_\-]{3,24}$/.test(username)) {
-    return res.status(400).json({ error: 'Username must be 3-24 chars: letters, numbers, _ or -' });
-  }
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters' });
-  }
+  app.get('/api/health', (_req, res) => res.json({ ok: true, version: '4.0.0' }));
 
-  const store = readStore();
-  if (store.users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
-    return res.status(409).json({ error: 'Username already exists' });
-  }
+  app.post('/api/register', (req, res) => {
+    const username = String(req.body.username || '').trim();
+    const password = String(req.body.password || '');
 
-  const user = {
-    id: crypto.randomUUID(),
-    username,
-    passwordHash: hashPassword(password),
-    role: 'member',
-    createdAt: Date.now()
-  };
+    if (!/^[a-zA-Z0-9_-]{3,24}$/.test(username)) {
+      return res.status(400).json({ error: 'Username must be 3-24 chars using letters, numbers, _ or -' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
 
-  store.users.push(user);
-  writeStore(store);
-  res.status(201).json({ ok: true, user: publicUser(user) });
-});
+    const store = readStore();
+    if (store.users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
 
-app.post('/api/login', (req, res) => {
-  const username = String(req.body.username || '').trim();
-  const password = String(req.body.password || '');
+    const user = {
+      id: crypto.randomUUID(),
+      username,
+      passwordHash: bcrypt.hashSync(password, 10),
+      role: 'member',
+      createdAt: Date.now()
+    };
 
-  const store = readStore();
-  const user = store.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
-  if (!user || !verifyPassword(password, user.passwordHash)) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  const token = crypto.randomBytes(24).toString('hex');
-  sessions.set(token, {
-    user: publicUser(user),
-    expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 7
+    store.users.push(user);
+    writeStore(store);
+    return res.status(201).json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
   });
 
-  res.json({ ok: true, token, user: publicUser(user) });
-});
+  app.post('/api/login', (req, res) => {
+    const username = String(req.body.username || '').trim();
+    const password = String(req.body.password || '');
 
-app.get('/api/me', auth, (req, res) => res.json({ user: req.user }));
+    const store = readStore();
+    const user = store.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+    if (!user || !bcrypt.compareSync(password, user.passwordHash)) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
-app.get('/api/fixtures', (_req, res) => res.json({ fixtures: FIXTURES }));
+    const safeUser = { id: user.id, username: user.username, role: user.role };
+    return res.json({ ok: true, token: issueToken(safeUser), user: safeUser });
+  });
 
-app.get('/api/tips', (req, res) => {
-  const status = String(req.query.status || 'approved');
-  const store = readStore();
+  app.post('/api/logout', auth, (_req, res) => res.json({ ok: true }));
+  app.get('/api/me', auth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username, role: req.user.role } }));
 
-  if (status === 'all') return res.json({ tips: store.tips.sort((a, b) => b.createdAt - a.createdAt) });
-  res.json({ tips: store.tips.filter((t) => t.status === status).sort((a, b) => b.createdAt - a.createdAt) });
-});
+  app.get('/api/fixtures', (_req, res) => res.json({ fixtures: FIXTURES }));
 
-app.post('/api/tips', auth, (req, res) => {
-  const race = String(req.body.race || '').trim();
-  const horse = String(req.body.horse || '').trim();
-  const odds = String(req.body.odds || '').trim();
-  const reason = String(req.body.reason || '').trim();
+  app.get('/api/tips', (req, res) => {
+    const status = String(req.query.status || 'approved');
+    const store = readStore();
+    const sorted = [...store.tips].sort((a, b) => b.createdAt - a.createdAt);
+    if (status === 'all') return res.json({ tips: sorted });
+    return res.json({ tips: sorted.filter((t) => t.status === status) });
+  });
 
-  if (!race || !horse || !odds || !reason) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
+  app.post('/api/tips', auth, (req, res) => {
+    const race = String(req.body.race || '').trim();
+    const horse = String(req.body.horse || '').trim();
+    const odds = String(req.body.odds || '').trim();
+    const reason = String(req.body.reason || '').trim();
+    if (!race || !horse || !odds || !reason) return res.status(400).json({ error: 'All fields are required' });
 
-  const store = readStore();
-  const tip = {
-    id: crypto.randomUUID(),
-    member: req.user.username,
-    race,
-    horse,
-    odds,
-    reason,
-    status: req.user.role === 'admin' ? 'approved' : 'pending',
-    createdAt: Date.now()
-  };
+    const store = readStore();
+    const tip = {
+      id: crypto.randomUUID(),
+      member: req.user.username,
+      race,
+      horse,
+      odds,
+      reason,
+      status: req.user.role === 'admin' ? 'approved' : 'pending',
+      createdAt: Date.now()
+    };
+    store.tips.push(tip);
+    writeStore(store);
+    return res.status(201).json({ ok: true, tip });
+  });
 
-  store.tips.push(tip);
-  writeStore(store);
-  res.status(201).json({ ok: true, tip });
-});
+  app.patch('/api/tips/:id', auth, adminOnly, (req, res) => {
+    const status = String(req.body.status || '').trim();
+    if (!['pending', 'approved', 'removed'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
-app.patch('/api/tips/:id', auth, adminOnly, (req, res) => {
-  const status = String(req.body.status || '').trim();
-  if (!['approved', 'removed', 'pending'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' });
-  }
+    const store = readStore();
+    const idx = store.tips.findIndex((t) => t.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ error: 'Tip not found' });
 
-  const store = readStore();
-  const idx = store.tips.findIndex((t) => t.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Tip not found' });
+    store.tips[idx].status = status;
+    writeStore(store);
+    return res.json({ ok: true, tip: store.tips[idx] });
+  });
 
-  store.tips[idx].status = status;
-  writeStore(store);
-  res.json({ ok: true, tip: store.tips[idx] });
-});
+  app.get('/api/ladder', (_req, res) => {
+    const store = readStore();
+    const score = new Map();
+    for (const tip of store.tips) {
+      if (tip.status !== 'approved') continue;
+      const row = score.get(tip.member) || { member: tip.member, wins: 0, roi: 0 };
+      row.wins += 1;
+      row.roi += 2.5;
+      score.set(tip.member, row);
+    }
+    const ladder = [...score.values()]
+      .sort((a, b) => b.wins - a.wins)
+      .map((r, i) => ({ rank: i + 1, member: r.member, wins: r.wins, roi: `+${r.roi.toFixed(1)}%` }));
+    return res.json({ ladder });
+  });
 
-app.get('/api/ladder', (_req, res) => {
-  const store = readStore();
-  const score = new Map();
+  app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+  return app;
+}
 
-  for (const tip of store.tips) {
-    if (tip.status !== 'approved') continue;
-    const curr = score.get(tip.member) || { member: tip.member, wins: 0, roi: 0 };
-    curr.wins += 1;
-    curr.roi += 2.5;
-    score.set(tip.member, curr);
-  }
+function start() {
+  ensureStore();
+  const app = createApp();
+  app.listen(PORT, () => {
+    console.log(`Big Bluff Bay V4 running: http://localhost:${PORT}`);
+    console.log('Demo admin login: admin / admin123');
+  });
+}
 
-  const ladder = [...score.values()]
-    .sort((a, b) => b.wins - a.wins)
-    .map((row, i) => ({ rank: i + 1, member: row.member, wins: row.wins, roi: `+${row.roi.toFixed(1)}%` }));
-
-  res.json({ ladder });
-});
-
-app.post('/api/logout', auth, (req, res) => {
-  const token = (req.headers.authorization || '').slice(7);
-  sessions.delete(token);
-  res.json({ ok: true });
-});
-
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-ensureStore();
-app.listen(PORT, () => {
-  console.log(`Big Bluff Bay V3 running: http://localhost:${PORT}`);
-  console.log('Demo admin login: admin / admin123');
-});
+if (require.main === module) start();
+module.exports = { createApp, ensureStore };

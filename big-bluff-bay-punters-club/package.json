@@ -1,12 +1,17 @@
 {
   "name": "big-bluff-bay-punters-club",
-  "version": "3.0.0",
-  "description": "Punters club website V3 with backend API and real auth",
+  "version": "4.0.0",
+  "description": "Punters club website V4 with JWT auth and tested API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test-v4.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }
