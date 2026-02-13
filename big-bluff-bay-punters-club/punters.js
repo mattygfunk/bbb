@@ -11,8 +11,24 @@ async function refresh(){
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   $('tips-list').innerHTML='';
-  (tp.tips||[]).forEach(t=>{const e=document.createElement('article');e.className='tip';e.innerHTML=`<strong>${esc(t.selection||t.horse||'')}</strong><p class='meta'>${esc(t.race)} • by ${esc(t.member)}</p>`;$('tips-list').appendChild(e);});
-  $('tips-count').textContent=`${(tp.tips||[]).length}`;
+  const byPunter = new Map();
+  (tp.tips||[]).forEach((t) => {
+    const member = String(t.member || 'Unknown');
+    if (!byPunter.has(member)) byPunter.set(member, new Map());
+    byPunter.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));
+  });
+  const raceOrder = Array.from({length:12}, (_,i)=>`R${i+1}`);
+  Array.from(byPunter.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([member, picks]) => {
+    const lines = raceOrder
+      .filter((r) => picks.get(r))
+      .map((r) => `<span>${esc(r)}: <strong>${esc(picks.get(r))}</strong></span>`)
+      .join(' • ');
+    const e=document.createElement('article');
+    e.className='tip';
+    e.innerHTML=`<strong>${esc(member)}</strong><p class='meta'>${lines || 'No tips yet'}</p>`;
+    $('tips-list').appendChild(e);
+  });
+  $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;
 
   // Prefill current user's existing tips into quick-entry dropdowns
   for(let i=1;i<=12;i+=1){
