@@ -19,7 +19,28 @@ async function refresh(){
   if(!isAdmin()){ return; }
   const p=await req('/api/tips?status=approved');
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
-  p.tips.forEach(t=>{const row=document.createElement('div');row.className='row';row.innerHTML=`<div><strong>${esc(t.race)} — ${esc(t.selection||t.horse||'')}</strong><div class='muted'>by ${esc(t.member)}</div></div>`;$('admin-list').appendChild(row);});
+
+  const byUser = new Map();
+  (p.tips || []).forEach((t) => {
+    const member = String(t.member || 'Unknown');
+    if (!byUser.has(member)) byUser.set(member, new Map());
+    byUser.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));
+  });
+
+  const raceOrder = Array.from({ length: 12 }, (_, i) => `R${i + 1}`);
+  Array.from(byUser.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .forEach(([member, picks]) => {
+      const lines = raceOrder
+        .filter((r) => picks.get(r))
+        .map((r) => `${esc(r)}: ${esc(picks.get(r))}`)
+        .join(' • ');
+      const count = raceOrder.filter((r) => picks.get(r)).length;
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${count} race${count===1?'':'s'} tipped</div><div class='muted'>${lines || 'No tips'}</div></div>`;
+      $('admin-list').appendChild(row);
+    });
 }
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
