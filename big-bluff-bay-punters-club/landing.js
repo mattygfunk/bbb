@@ -9,6 +9,10 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
+function esc(s) {
+  return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
 function renderLadder(rows) {
   const body = document.getElementById('ladder-preview');
   if (!body) return;
@@ -24,6 +28,22 @@ function renderLadder(rows) {
   });
 }
 
+function renderTips(tips) {
+  const list = document.getElementById('tips-preview-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!tips.length) {
+    list.innerHTML = '<article class="tip"><p class="muted">No tips posted yet. Be first in.</p></article>';
+    return;
+  }
+  tips.slice(0, 6).forEach((t) => {
+    const card = document.createElement('article');
+    card.className = 'tip';
+    card.innerHTML = `<h3>${esc(t.member)}</h3><p class="meta">${esc(t.race)} • ${esc(t.selection || '')}</p>`;
+    list.appendChild(card);
+  });
+}
+
 async function hydrateLanding() {
   try {
     const [fx, tips, ladder] = await Promise.all([
@@ -35,10 +55,12 @@ async function hydrateLanding() {
     const meet = fx?.fixtures?.[0]?.track || 'Pinjarra';
     document.getElementById('status-meet').textContent = meet;
 
-    const entries = new Set((tips?.tips || []).map((t) => t.member)).size;
+    const tipRows = tips?.tips || [];
+    const entries = new Set(tipRows.map((t) => t.member)).size;
     document.getElementById('status-entries').textContent = String(entries || 0);
     document.getElementById('stat-entries').textContent = String(entries || 0);
 
+    renderTips(tipRows);
     renderLadder(ladder?.ladder || []);
     document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || 1);
   } catch {
