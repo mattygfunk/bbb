@@ -286,6 +286,13 @@ input, textarea, select {
   gap: .4rem;
   flex-wrap: wrap;
 }
+
+.nav-right-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .45rem;
+}
 .menu-link {
   color: var(--muted);
   text-decoration: none;
