@@ -23,7 +23,7 @@ async function api(url, opts = {}, token) {
 
     const proc = spawn('node', ['server.js'], {
       cwd: __dirname,
-      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v5' },
+      env: { ...process.env, PORT: String(PORT), DATA_FILE, JWT_SECRET: 'test-secret-v5', TIP_EDIT_CUTOFF_HOUR: '24', TIP_TIMEZONE: 'Australia/Perth' },
       stdio: 'pipe'
     });
 
@@ -57,8 +57,18 @@ async function api(url, opts = {}, token) {
       body: JSON.stringify({ race: 'R9', selection: 'Night Tide' })
     }, userToken);
     assert.equal(res.status, 201);
-    const pendingId = res.body.tip.id;
-    assert.equal(res.body.tip.status, 'pending');
+    const tipId = res.body.tip.id;
+    assert.equal(res.body.tip.status, 'approved');
+
+    // Edit same race tip (upsert) before cutoff
+    res = await api('/api/tips', {
+      method: 'POST',
+      body: JSON.stringify({ race: 'R9', selection: 'Ocean Star' })
+    }, userToken);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.updated, true);
+    assert.equal(res.body.tip.id, tipId);
+    assert.equal(res.body.tip.selection, 'Ocean Star');
 
     res = await api('/api/login', {
       method: 'POST',
@@ -67,15 +77,9 @@ async function api(url, opts = {}, token) {
     assert.equal(res.status, 200);
     const adminToken = res.body.token;
 
-    res = await api(`/api/tips/${pendingId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'approved' })
-    }, adminToken);
-    assert.equal(res.status, 200);
-
     res = await api('/api/tips?status=approved');
     assert.equal(res.status, 200);
-    assert.ok(res.body.tips.some((t) => t.id === pendingId));
+    assert.ok(res.body.tips.some((t) => t.id === tipId && t.selection === 'Ocean Star'));
 
     // Non-admin cannot change fixtures
     res = await api('/api/fixtures/f1', {

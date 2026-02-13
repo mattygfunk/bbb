@@ -15,10 +15,9 @@ async function refresh(){
   if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
   $('admin-list').innerHTML='';
   if(!isAdmin()){ return; }
-  const p=await req('/api/tips?status=pending');
-  if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No pending tips.</p>';return;}
-  p.tips.forEach(t=>{const row=document.createElement('div');row.className='row';row.innerHTML=`<div><strong>${esc(t.race)} — ${esc(t.selection||t.horse||'')}</strong><div class='muted'>by ${esc(t.member)}</div></div><div class='row-actions'><button class='btn' data-id='${t.id}' data-s='approved'>Approve</button><button class='btn btn-danger' data-id='${t.id}' data-s='removed'>Remove</button></div>`;$('admin-list').appendChild(row);});
-  $('admin-list').querySelectorAll('button[data-id]').forEach(btn=>btn.onclick=async()=>{try{await req(`/api/tips/${btn.dataset.id}`,{method:'PATCH',body:JSON.stringify({status:btn.dataset.s})});await refresh();}catch(err){alert(err.message);}});
+  const p=await req('/api/tips?status=approved');
+  if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
+  p.tips.forEach(t=>{const row=document.createElement('div');row.className='row';row.innerHTML=`<div><strong>${esc(t.race)} — ${esc(t.selection||t.horse||'')}</strong><div class='muted'>by ${esc(t.member)}</div></div>`;$('admin-list').appendChild(row);});
 }
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
