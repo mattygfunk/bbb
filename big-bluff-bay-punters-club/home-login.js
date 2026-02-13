@@ -1,24 +1,32 @@
-const BASE = '/punters';
-const API = { register: `${BASE}/api/register`, login: `${BASE}/api/login`, me: `${BASE}/api/me` };
+const API_ROOTS = ['/punters/api', '/api'];
+const API = { register: '/register', login: '/login', me: '/me' };
 const tokenKey = 'bbb-token-v3';
 
 const form = document.getElementById('home-login-form');
 const msg = document.getElementById('home-login-msg');
 const loginCard = form?.closest('.card');
 
-async function req(url, opt = {}) {
+async function req(path, opt = {}) {
   const token = localStorage.getItem(tokenKey);
-  const res = await fetch(url, {
-    ...opt,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(opt.headers || {})
-    }
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+  let lastErr = null;
+
+  for (const root of API_ROOTS) {
+    const res = await fetch(`${root}${path}`, {
+      ...opt,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(opt.headers || {})
+      }
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) return data;
+    lastErr = data?.error || `Request failed (${res.status})`;
+    if (res.status !== 404) break;
+  }
+
+  throw new Error(lastErr || 'Request failed');
 }
 
 async function applyLoggedInState() {

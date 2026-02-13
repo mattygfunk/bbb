@@ -1,10 +1,10 @@
-const BASE='/punters';
-const API={fixtures:`${BASE}/api/fixtures`,tips:`${BASE}/api/tips`,ladder:`${BASE}/api/ladder`,bossesBet:`${BASE}/api/bosses-bet`,register:`${BASE}/api/register`,login:`${BASE}/api/login`,logout:`${BASE}/api/logout`,me:`${BASE}/api/me`};
+const API_ROOTS=['/punters/api','/api'];
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12};
 const $=id=>document.getElementById(id);
 
-async function req(url,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;const r=await fetch(url,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d;}
+async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;if(r.status!==404)break;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
 function renderLeaderboard(rows){

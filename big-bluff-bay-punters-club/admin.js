@@ -1,9 +1,9 @@
-const BASE='/punters';
-const API={tips:`${BASE}/api/tips`,fixtures:`${BASE}/api/fixtures`,results:`${BASE}/api/results`,bossesBet:`${BASE}/api/bosses-bet`,login:`${BASE}/api/login`,logout:`${BASE}/api/logout`,me:`${BASE}/api/me`,updateFixture:id=>`${BASE}/api/fixtures/${id}`,updateResult:race=>`${BASE}/api/results/${race}`};
+const API_ROOTS=['/punters/api','/api'];
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
 const $=id=>document.getElementById(id);
-async function req(url,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;const r=await fetch(url,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d;}
+async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;if(r.status!==404)break;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function isAdmin(){return state.user?.role==='admin';}
 
