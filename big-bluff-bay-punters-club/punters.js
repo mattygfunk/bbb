@@ -69,7 +69,14 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  const [fx,tp,allTipsRes,ladderRes,bossesRes,buyInRes]=await Promise.all([req(API.fixtures),req(`${API.tips}?status=all`),req(`${API.tips}?status=all`),req(API.ladder),req(API.bossesBet),req(API.buyInVotes)]);
+  const [fx,tp,allTipsRes,ladderRes,bossesRes,buyInRes]=await Promise.all([
+    req(API.fixtures),
+    req(`${API.tips}?status=all`),
+    req(`${API.tips}?status=all`),
+    req(API.ladder),
+    req(API.bossesBet),
+    req(API.buyInVotes).catch(()=>({ counts:{'10':0,'20':0,'30':0}, myVote:null }))
+  ]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
@@ -167,6 +174,15 @@ $('buyin-form')?.addEventListener('submit', async (e) => {
     $('buyin-msg').textContent = `Punters Club vote saved: $${amount}`;
     await refresh();
   } catch (err) {
+    // compatibility fallback for older route wiring
+    if (String(err.message || '').includes('404')) {
+      try {
+        await req('/buyin-vote', { method:'POST', body: JSON.stringify({ amount }) });
+        $('buyin-msg').textContent = `Punters Club vote saved: $${amount}`;
+        await refresh();
+        return;
+      } catch {}
+    }
     $('buyin-msg').textContent = err.message;
   }
 });

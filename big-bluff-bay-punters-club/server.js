@@ -249,7 +249,7 @@ function createApp() {
     return res.json({ bossesBet: computeBossesBetProgress(store) });
   });
 
-  app.get('/api/buyin-votes', (req, res) => {
+  function getBuyInVotePayload(req) {
     const store = readStore();
     const votes = store.buyInVotes || {};
     const counts = { '10': 0, '20': 0, '30': 0 };
@@ -269,10 +269,10 @@ function createApp() {
       } catch {}
     }
 
-    return res.json({ counts, myVote });
-  });
+    return { counts, myVote };
+  }
 
-  app.post('/api/buyin-votes', auth, (req, res) => {
+  function saveBuyInVote(req, res) {
     const amount = String(req.body.amount || '').trim();
     if (!['10', '20', '30'].includes(amount)) return res.status(400).json({ error: 'Amount must be 10, 20, or 30' });
 
@@ -288,7 +288,16 @@ function createApp() {
     });
 
     return res.json({ ok: true, myVote: amount, counts });
-  });
+  }
+
+  // canonical routes
+  app.get('/api/buyin-votes', (req, res) => res.json(getBuyInVotePayload(req)));
+  app.post('/api/buyin-votes', auth, saveBuyInVote);
+  // compatibility aliases
+  app.get('/api/buyin-vote', (req, res) => res.json(getBuyInVotePayload(req)));
+  app.get('/api/buy-in-votes', (req, res) => res.json(getBuyInVotePayload(req)));
+  app.post('/api/buyin-vote', auth, saveBuyInVote);
+  app.post('/api/buy-in-votes', auth, saveBuyInVote);
 
   app.put('/api/bosses-bet', auth, adminOnly, (req, res) => {
     const store = readStore();
