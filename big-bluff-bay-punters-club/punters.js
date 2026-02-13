@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',buyInVotes:'/buyin-votes',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0};
 const $=id=>document.getElementById(id);
@@ -38,6 +38,16 @@ function renderBossesBet(bb){
   });
 }
 
+function renderBuyInVotes(voteData){
+  const results = $('buyin-results');
+  if(!results) return;
+  const counts = voteData?.counts || {'10':0,'20':0,'30':0};
+  results.textContent = `Votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
+
+  const myVote = String(voteData?.myVote || '');
+  document.querySelectorAll("input[name='buyin']").forEach((r)=>{ r.checked = r.value === myVote; });
+}
+
 function renderRaceInputs(count){
 
   const wrap = $('quick-race-list');
@@ -59,7 +69,7 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([req(API.fixtures),req(`${API.tips}?status=all`),req(`${API.tips}?status=all`),req(API.ladder),req(API.bossesBet)]);
+  const [fx,tp,allTipsRes,ladderRes,bossesRes,buyInRes]=await Promise.all([req(API.fixtures),req(`${API.tips}?status=all`),req(`${API.tips}?status=all`),req(API.ladder),req(API.bossesBet),req(API.buyInVotes)]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
@@ -68,6 +78,7 @@ async function refresh(){
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   renderLeaderboard(ladderRes.ladder || []);
   renderBossesBet(bossesRes.bossesBet || {});
+  renderBuyInVotes(buyInRes || {});
   $('tips-list').innerHTML='';
   const byPunter = new Map();
   (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
@@ -144,6 +155,21 @@ if (loginForm) {
     }
   });
 }
+
+$('buyin-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!state.user){ $('buyin-msg').textContent='Log in first.'; return; }
+  const f = new FormData(e.target);
+  const amount = String(f.get('buyin') || '').trim();
+  if(!['10','20','30'].includes(amount)){ $('buyin-msg').textContent='Choose $10, $20, or $30.'; return; }
+  try {
+    await req(API.buyInVotes, { method:'POST', body: JSON.stringify({ amount }) });
+    $('buyin-msg').textContent = `Vote saved: $${amount}`;
+    await refresh();
+  } catch (err) {
+    $('buyin-msg').textContent = err.message;
+  }
+});
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 

@@ -28,6 +28,19 @@
         <section class="card"><h2>Bosses Bet Tracker <span class="pill" id="bosses-overall">Live</span></h2><div id="bosses-progress" class="stack"></div></section>
       </div>
       <section class="card"><h2>Community Tips <span class="pill" id="tips-count">0</span></h2><div class="grid three" id="tips-list"></div></section>
+      <section class="card"><h2>Preferred Buy-In Vote <span class="pill">$10 / $20 / $30</span></h2>
+        <form id="buyin-form" class="stack">
+          <p class="muted">Vote your preferred weekly buy-in for poker tournaments.</p>
+          <div class="row-actions" role="radiogroup" aria-label="Preferred buy-in">
+            <label><input type="radio" name="buyin" value="10" /> $10</label>
+            <label><input type="radio" name="buyin" value="20" /> $20</label>
+            <label><input type="radio" name="buyin" value="30" /> $30</label>
+          </div>
+          <button class="btn" type="submit">Submit Buy-In Vote</button>
+        </form>
+        <p id="buyin-msg" class="muted"></p>
+        <p id="buyin-results" class="muted"></p>
+      </section>
       <section class="card"><h2>Quick Tips Entry (R1–R12)</h2>
         <form id="tip-form" class="stack">
           <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>

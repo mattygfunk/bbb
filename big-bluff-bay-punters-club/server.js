@@ -27,6 +27,7 @@ function ensureStore() {
       fixtures: DEFAULT_FIXTURES,
       raceResults: {},
       bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
+      buyInVotes: {},
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -62,6 +63,10 @@ function ensureStore() {
   }
   if (!store.bossesBet || typeof store.bossesBet !== 'object') {
     store.bossesBet = { legs: [], selections: {}, updatedAt: null, updatedBy: null };
+    changed = true;
+  }
+  if (!store.buyInVotes || typeof store.buyInVotes !== 'object') {
+    store.buyInVotes = {};
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -242,6 +247,47 @@ function createApp() {
   app.get('/api/bosses-bet', (_req, res) => {
     const store = readStore();
     return res.json({ bossesBet: computeBossesBetProgress(store) });
+  });
+
+  app.get('/api/buyin-votes', (req, res) => {
+    const store = readStore();
+    const votes = store.buyInVotes || {};
+    const counts = { '10': 0, '20': 0, '30': 0 };
+    Object.values(votes).forEach((v) => {
+      const key = String(v);
+      if (counts[key] !== undefined) counts[key] += 1;
+    });
+
+    let myVote = null;
+    const token = (req.headers.authorization || '').startsWith('Bearer ')
+      ? req.headers.authorization.slice(7)
+      : null;
+    if (token) {
+      try {
+        const u = jwt.verify(token, JWT_SECRET);
+        myVote = votes[String(u.username || '').toLowerCase()] || null;
+      } catch {}
+    }
+
+    return res.json({ counts, myVote });
+  });
+
+  app.post('/api/buyin-votes', auth, (req, res) => {
+    const amount = String(req.body.amount || '').trim();
+    if (!['10', '20', '30'].includes(amount)) return res.status(400).json({ error: 'Amount must be 10, 20, or 30' });
+
+    const store = readStore();
+    if (!store.buyInVotes || typeof store.buyInVotes !== 'object') store.buyInVotes = {};
+    store.buyInVotes[String(req.user.username || '').toLowerCase()] = amount;
+    writeStore(store);
+
+    const counts = { '10': 0, '20': 0, '30': 0 };
+    Object.values(store.buyInVotes).forEach((v) => {
+      const key = String(v);
+      if (counts[key] !== undefined) counts[key] += 1;
+    });
+
+    return res.json({ ok: true, myVote: amount, counts });
   });
 
   app.put('/api/bosses-bet', auth, adminOnly, (req, res) => {
