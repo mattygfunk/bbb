@@ -13,7 +13,7 @@ async function refresh(){
   $('tips-list').innerHTML='';
   (tp.tips||[]).forEach(t=>{const e=document.createElement('article');e.className='tip';e.innerHTML=`<strong>${esc(t.selection||t.horse||'')}</strong><p class='meta'>${esc(t.race)} • by ${esc(t.member)}</p>`;$('tips-list').appendChild(e);});
   $('tips-count').textContent=`${(tp.tips||[]).length}`;
-  $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<span class='pill'>Guest</span>`;
+  $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const b=$('logout-btn'); if(b)b.onclick=logout;
 }
 
