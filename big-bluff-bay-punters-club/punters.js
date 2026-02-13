@@ -7,12 +7,30 @@ async function req(url,opt={}){const h={'Content-Type':'application/json',...(op
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
 async function refresh(){
-  const [fx,tp]=await Promise.all([req(API.fixtures),req('/api/tips?status=approved')]);
+  const [fx,tp,allTipsRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=approved'),req('/api/tips?status=all')]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   $('tips-list').innerHTML='';
   (tp.tips||[]).forEach(t=>{const e=document.createElement('article');e.className='tip';e.innerHTML=`<strong>${esc(t.selection||t.horse||'')}</strong><p class='meta'>${esc(t.race)} • by ${esc(t.member)}</p>`;$('tips-list').appendChild(e);});
   $('tips-count').textContent=`${(tp.tips||[]).length}`;
+
+  // Prefill current user's existing tips into quick-entry dropdowns
+  for(let i=1;i<=12;i+=1){
+    const el=document.querySelector(`#quick-race-list select[name='R${i}']`);
+    if(el) el.value='';
+  }
+  if(state.user){
+    const mine=(allTipsRes.tips||[]).filter(t=>t.member===state.user.username && t.status!=='removed');
+    const latestByRace=new Map();
+    for(const t of mine){
+      if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
+    }
+    latestByRace.forEach((t,race)=>{
+      const el=document.querySelector(`#quick-race-list select[name='${race}']`);
+      if(el) el.value=String(t.selection||'');
+    });
+  }
+
   $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const b=$('logout-btn'); if(b)b.onclick=logout;
 }
