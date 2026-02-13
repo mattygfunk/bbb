@@ -23,7 +23,6 @@ async function req(path, opt = {}) {
     const data = await res.json().catch(() => ({}));
     if (res.ok) return data;
     lastErr = data?.error || `Request failed (${res.status})`;
-    if (res.status !== 404) break;
   }
 
   throw new Error(lastErr || 'Request failed');
