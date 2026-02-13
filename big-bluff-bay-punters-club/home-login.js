@@ -1,17 +1,43 @@
-const API = { register: '/api/register', login: '/api/login' };
+const API = { register: '/api/register', login: '/api/login', me: '/api/me' };
 const tokenKey = 'bbb-token-v3';
 
 const form = document.getElementById('home-login-form');
 const msg = document.getElementById('home-login-msg');
+const loginCard = form?.closest('.card');
 
 async function req(url, opt = {}) {
+  const token = localStorage.getItem(tokenKey);
   const res = await fetch(url, {
     ...opt,
-    headers: { 'Content-Type': 'application/json', ...(opt.headers || {}) }
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opt.headers || {})
+    }
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
+}
+
+async function applyLoggedInState() {
+  try {
+    const me = await req(API.me);
+    if (!me?.user) return;
+
+    if (loginCard) {
+      loginCard.innerHTML = `
+        <h2>You're logged in</h2>
+        <p class="muted">Signed in as <strong>${me.user.username}</strong>.</p>
+        <div class="row-actions">
+          <a class="btn" href="/punters.html">Go to Punters Area</a>
+          <a class="btn btn-ghost" href="/admin.html">Admin Area</a>
+        </div>
+      `;
+    }
+  } catch {
+    // not logged in
+  }
 }
 
 form.addEventListener('submit', async (e) => {
@@ -41,3 +67,5 @@ form.addEventListener('submit', async (e) => {
     msg.textContent = err.message;
   }
 });
+
+applyLoggedInState();
