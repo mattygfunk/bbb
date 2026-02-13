@@ -55,11 +55,14 @@ function renderRaceInputs(count){
 }
 
 async function refresh(){
+  const isEditingTips = !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([req(API.fixtures),req(`${API.tips}?status=all`),req(`${API.tips}?status=all`),req(API.ladder),req(API.bossesBet)]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
-  state.raceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
-  renderRaceInputs(state.raceCount);
+  const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
+  const raceCountChanged = newRaceCount !== state.raceCount;
+  state.raceCount = newRaceCount;
+  if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   renderLeaderboard(ladderRes.ladder || []);
   renderBossesBet(bossesRes.bossesBet || {});
   $('tips-list').innerHTML='';
@@ -83,9 +86,12 @@ async function refresh(){
   $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;
 
   // Prefill current user's existing tips into quick-entry dropdowns
-  for(let i=1;i<=state.raceCount;i+=1){
-    const el=document.querySelector(`#quick-race-list select[name='R${i}']`);
-    if(el) el.value='';
+  // Don't overwrite while someone is actively choosing on mobile.
+  if (!isEditingTips) {
+    for(let i=1;i<=state.raceCount;i+=1){
+      const el=document.querySelector(`#quick-race-list select[name='R${i}']`);
+      if(el) el.value='';
+    }
   }
   state.existingByRace = new Map();
   if(state.user){
@@ -97,8 +103,10 @@ async function refresh(){
     }
     latestByRace.forEach((t,race)=>{
       state.existingByRace.set(race, String(t.selection||''));
-      const el=document.querySelector(`#quick-race-list select[name='${race}']`);
-      if(el) el.value=String(t.selection||'');
+      if (!isEditingTips) {
+        const el=document.querySelector(`#quick-race-list select[name='${race}']`);
+        if(el) el.value=String(t.selection||'');
+      }
     });
   }
 
@@ -138,4 +146,12 @@ $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!state.
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
-(async()=>{await bootstrap();await refresh();setInterval(()=>{refresh().catch(()=>{});},15000);})();
+(async()=>{
+  await bootstrap();
+  await refresh();
+  setInterval(()=>{
+    const interacting = !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
+    if (interacting) return;
+    refresh().catch(()=>{});
+  },30000);
+})();
