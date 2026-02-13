@@ -38,6 +38,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 0;
+  gap: .75rem;
+  flex-wrap: wrap;
 }
 .brand {
   display: flex;
@@ -170,6 +172,10 @@ input, textarea, select {
   padding: .6rem .7rem;
 }
 
+#quick-race-list .row select {
+  max-width: 130px;
+}
+
 .muted { color: var(--muted); }
 .row {
   display: flex;
@@ -182,6 +188,28 @@ input, textarea, select {
   background: #0a1120;
 }
 .row-actions { display: flex; gap: .45rem; }
+
+.menu-links {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+.menu-link {
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid #314157;
+  border-radius: 999px;
+  padding: .32rem .62rem;
+  font-size: .82rem;
+}
+.menu-link:hover { color: var(--text); border-color: #4b617f; }
+.menu-link.active {
+  color: #052e16;
+  background: #86efac;
+  border-color: #86efac;
+  font-weight: 700;
+}
 
 .footer {
   padding: 0 0 2rem;
