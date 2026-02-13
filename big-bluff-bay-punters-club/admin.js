@@ -11,8 +11,10 @@ async function bootstrap(){if(!state.token)return;try{state.user=(await req(API.
 async function refresh(){
   $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)} (${esc(state.user.role)})</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<span class='pill'>Logged out</span>`;
   const b=$('logout-btn'); if(b)b.onclick=logout;
+  const adminOnly=$('admin-only');
+  if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
   $('admin-list').innerHTML='';
-  if(!isAdmin()){ $('admin-list').innerHTML='<p class="muted">Log in as admin to moderate tips.</p>'; return; }
+  if(!isAdmin()){ return; }
   const p=await req('/api/tips?status=pending');
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No pending tips.</p>';return;}
   p.tips.forEach(t=>{const row=document.createElement('div');row.className='row';row.innerHTML=`<div><strong>${esc(t.race)} — ${esc(t.selection||t.horse||'')}</strong><div class='muted'>by ${esc(t.member)}</div></div><div class='row-actions'><button class='btn' data-id='${t.id}' data-s='approved'>Approve</button><button class='btn btn-danger' data-id='${t.id}' data-s='removed'>Remove</button></div>`;$('admin-list').appendChild(row);});
