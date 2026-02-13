@@ -1,10 +1,26 @@
-const API={fixtures:'/api/fixtures',tips:'/api/tips',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
+const API={fixtures:'/api/fixtures',tips:'/api/tips',ladder:'/api/ladder',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12};
 const $=id=>document.getElementById(id);
 
 async function req(url,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;const r=await fetch(url,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+function renderLeaderboard(rows){
+  const body = $('leaderboard-body');
+  if(!body) return;
+  body.innerHTML='';
+  (rows||[]).forEach((r)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.correct}</td>`;
+    body.appendChild(tr);
+  });
+  if(!(rows||[]).length){
+    const tr=document.createElement('tr');
+    tr.innerHTML="<td colspan='4' class='muted'>No scored results yet.</td>";
+    body.appendChild(tr);
+  }
+}
 
 function renderRaceInputs(count){
   const wrap = $('quick-race-list');
@@ -22,11 +38,12 @@ function renderRaceInputs(count){
 }
 
 async function refresh(){
-  const [fx,tp,allTipsRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all')]);
+  const [fx,tp,allTipsRes,ladderRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all'),req(API.ladder)]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   state.raceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
   renderRaceInputs(state.raceCount);
+  renderLeaderboard(ladderRes.ladder || []);
   $('tips-list').innerHTML='';
   const byPunter = new Map();
   (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
@@ -101,4 +118,4 @@ $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!state.
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
-(async()=>{await bootstrap();await refresh();})();
+(async()=>{await bootstrap();await refresh();setInterval(()=>{refresh().catch(()=>{});},15000);})();

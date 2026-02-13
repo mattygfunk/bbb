@@ -308,16 +308,37 @@ function createApp() {
   app.get('/api/ladder', (_req, res) => {
     const store = readStore();
     const score = new Map();
-    for (const tip of store.tips) {
+
+    const addPoints = (member, pts) => {
+      const row = score.get(member) || { member, points: 0, correct: 0 };
+      row.points += pts;
+      if (pts > 0) row.correct += 1;
+      score.set(member, row);
+    };
+
+    const applySub = (selection, raceResult) => {
+      const subs = raceResult?.substitutions || [];
+      const hit = subs.find((s) => String(s.scratched) === String(selection));
+      return hit ? String(hit.substitute) : String(selection);
+    };
+
+    for (const tip of store.tips || []) {
       if (tip.status !== 'approved') continue;
-      const row = score.get(tip.member) || { member: tip.member, wins: 0, roi: 0 };
-      row.wins += 1;
-      row.roi += 2.5;
-      score.set(tip.member, row);
+      const race = String(tip.race || '');
+      const rr = store.raceResults?.[race];
+      if (!rr) continue;
+
+      const sel = applySub(String(tip.selection || tip.horse || ''), rr);
+      let pts = 0;
+      if ((rr.first || []).map(String).includes(sel)) pts = 3;
+      else if ((rr.second || []).map(String).includes(sel)) pts = 2;
+      else if ((rr.third || []).map(String).includes(sel)) pts = 1;
+      addPoints(String(tip.member || 'Unknown'), pts);
     }
+
     const ladder = [...score.values()]
-      .sort((a, b) => b.wins - a.wins)
-      .map((r, i) => ({ rank: i + 1, member: r.member, wins: r.wins, roi: `+${r.roi.toFixed(1)}%` }));
+      .sort((a, b) => b.points - a.points || b.correct - a.correct || a.member.localeCompare(b.member))
+      .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, correct: r.correct }));
     return res.json({ ladder });
   });
 
