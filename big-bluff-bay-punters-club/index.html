@@ -30,12 +30,12 @@
       </div>
     </header>
 
-    <main class="wrap">
+    <main class="wrap home-grid">
       <section class="card">
         <h2>Punters Login</h2>
         <form id="home-login-form" class="stack">
-          <label>Member <input required name="member" type="text" placeholder="your username" /></label>
-          <label>Password <input required name="pin" type="password" placeholder="your password" /></label>
+          <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
+          <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
           <div class="row-actions">
             <button class="btn" type="submit" data-mode="login">Log In to Punters</button>
             <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
@@ -43,7 +43,20 @@
         </form>
         <p id="home-login-msg" class="muted"></p>
       </section>
+
+      <section class="card quick-links-card">
+        <h2>Quick Actions</h2>
+        <div class="stack">
+          <a class="btn" href="/punters.html">Go to Punters Area</a>
+          <a class="btn btn-ghost" href="/admin.html">Go to Admin Area</a>
+        </div>
+      </section>
     </main>
+
+    <footer class="wrap footer muted">
+      <p>Punters only? Use the login above. Admin tools are available here:</p>
+      <p><a class="menu-link" href="/admin.html">Open Admin Area</a></p>
+    </footer>
 
     <script src="home-login.js"></script>
   </body>
