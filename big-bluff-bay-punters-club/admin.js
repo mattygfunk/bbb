@@ -30,25 +30,27 @@ async function refresh(){
   Array.from(byUser.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .forEach(([member, tips]) => {
-      const paidCount = tips.filter(t => t.paid).length;
+      const allPaid = tips.length > 0 && tips.every(t => t.paid);
       const lines = tips
         .sort((a,b)=>Number(String(a.race||'R0').slice(1))-Number(String(b.race||'R0').slice(1)))
-        .map((t) => {
-          const paidLabel = t.paid ? 'Paid' : 'Unpaid';
-          return `<div class='row' style='margin-top:.35rem'><div><strong>${esc(t.race)}: ${esc(t.selection || t.horse || '')}</strong><div class='muted'>${paidLabel}</div></div><div class='row-actions'><button class='btn btn-ghost' data-tip-id='${t.id}' data-paid='${t.paid ? 'false' : 'true'}'>Mark ${t.paid ? 'Unpaid' : 'Paid'}</button></div></div>`;
-        })
-        .join('');
+        .map((t) => `<span>${esc(t.race)}: ${esc(t.selection || t.horse || '')}</span>`)
+        .join(' • ');
       const row = document.createElement('div');
       row.className = 'row';
       row.style.alignItems = 'flex-start';
-      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${paidCount} paid</div>${lines}</div>`;
+      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${allPaid ? 'Paid' : 'Unpaid'}</div><div class='muted'>${lines}</div></div><div class='row-actions'><button class='btn btn-ghost' data-member='${encodeURIComponent(member)}' data-paid='${allPaid ? 'false' : 'true'}'>Mark ${allPaid ? 'Unpaid' : 'Paid'}</button></div>`;
       $('admin-list').appendChild(row);
     });
 
-  $('admin-list').querySelectorAll('button[data-tip-id]').forEach((btn) => {
+  $('admin-list').querySelectorAll('button[data-member]').forEach((btn) => {
     btn.onclick = async () => {
       try {
-        await req(`/api/tips/${btn.dataset.tipId}`, { method: 'PATCH', body: JSON.stringify({ paid: btn.dataset.paid === 'true' }) });
+        const member = decodeURIComponent(btn.dataset.member || '');
+        const nextPaid = btn.dataset.paid === 'true';
+        const tipsForMember = (p.tips || []).filter(t => String(t.member||'') === member && t.status !== 'removed');
+        for (const tip of tipsForMember) {
+          await req(`/api/tips/${tip.id}`, { method: 'PATCH', body: JSON.stringify({ paid: nextPaid }) });
+        }
         await refresh();
       } catch (err) {
         alert(err.message);
