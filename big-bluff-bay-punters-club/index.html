@@ -29,5 +29,22 @@
         </div>
       </div>
     </header>
+
+    <main class="wrap">
+      <section class="card">
+        <h2>Punters Login</h2>
+        <form id="home-login-form" class="stack">
+          <label>Member <input required name="member" type="text" placeholder="your username" /></label>
+          <label>Password <input required name="pin" type="password" placeholder="your password" /></label>
+          <div class="row-actions">
+            <button class="btn" type="submit" data-mode="login">Log In to Punters</button>
+            <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
+          </div>
+        </form>
+        <p id="home-login-msg" class="muted"></p>
+      </section>
+    </main>
+
+    <script src="home-login.js"></script>
   </body>
 </html>
