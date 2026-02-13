@@ -1,4 +1,5 @@
-const API={tips:'/api/tips',fixtures:'/api/fixtures',results:'/api/results',login:'/api/login',logout:'/api/logout',me:'/api/me',updateFixture:id=>`/api/fixtures/${id}`,updateResult:race=>`/api/results/${race}`};
+const BASE='/punters';
+const API={tips:`${BASE}/api/tips`,fixtures:`${BASE}/api/fixtures`,results:`${BASE}/api/results`,bossesBet:`${BASE}/api/bosses-bet`,login:`${BASE}/api/login`,logout:`${BASE}/api/logout`,me:`${BASE}/api/me`,updateFixture:id=>`${BASE}/api/fixtures/${id}`,updateResult:race=>`${BASE}/api/results/${race}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
 const $=id=>document.getElementById(id);
@@ -83,14 +84,14 @@ async function refresh(){
   } catch {}
 
   try {
-    const bb = await req('/api/bosses-bet');
+    const bb = await req(API.bossesBet);
     state.bossesBet = bb.bossesBet || { legs:[], selections:{} };
   } catch {
     state.bossesBet = { legs:[], selections:{} };
   }
   renderBossesLegInputs();
 
-  const p=await req('/api/tips?status=all');
+  const p=await req(`${API.tips}?status=all`);
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
   const byUser = new Map();
@@ -122,7 +123,7 @@ async function refresh(){
         const nextPaid = btn.dataset.paid === 'true';
         const tipsForMember = (p.tips || []).filter(t => String(t.member||'') === member && t.status !== 'removed');
         for (const tip of tipsForMember) {
-          await req(`/api/tips/${tip.id}`, { method: 'PATCH', body: JSON.stringify({ paid: nextPaid }) });
+          await req(`${API.tips}/${tip.id}`, { method: 'PATCH', body: JSON.stringify({ paid: nextPaid }) });
         }
         await refresh();
       } catch (err) {
@@ -177,7 +178,7 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
   }
 
   try {
-    await req('/api/bosses-bet', {
+    await req(API.bossesBet, {
       method: 'PUT',
       body: JSON.stringify({ legs, selections })
     });

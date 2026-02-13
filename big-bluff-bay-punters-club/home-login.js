@@ -1,4 +1,5 @@
-const API = { register: '/api/register', login: '/api/login', me: '/api/me' };
+const BASE = '/punters';
+const API = { register: `${BASE}/api/register`, login: `${BASE}/api/login`, me: `${BASE}/api/me` };
 const tokenKey = 'bbb-token-v3';
 
 const form = document.getElementById('home-login-form');
@@ -30,8 +31,8 @@ async function applyLoggedInState() {
         <h2>You're logged in</h2>
         <p class="muted">Signed in as <strong>${me.user.username}</strong>.</p>
         <div class="row-actions">
-          <a class="btn" href="/punters.html">Go to Punters Area</a>
-          <a class="btn btn-ghost" href="/admin.html">Admin Area</a>
+          <a class="btn" href="/punters/punters.html">Go to Punters Area</a>
+          <a class="btn btn-ghost" href="/punters/admin.html">Admin Area</a>
         </div>
       `;
     }
@@ -62,7 +63,7 @@ form.addEventListener('submit', async (e) => {
 
     localStorage.setItem(tokenKey, login.token);
     msg.textContent = 'Logged in. Redirecting to Punters Area...';
-    window.location.href = '/punters.html';
+    window.location.href = '/punters/punters.html';
   } catch (err) {
     msg.textContent = err.message;
   }

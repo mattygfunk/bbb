@@ -1,4 +1,5 @@
-const API={fixtures:'/api/fixtures',tips:'/api/tips',ladder:'/api/ladder',bossesBet:'/api/bosses-bet',register:'/api/register',login:'/api/login',logout:'/api/logout',me:'/api/me'};
+const BASE='/punters';
+const API={fixtures:`${BASE}/api/fixtures`,tips:`${BASE}/api/tips`,ladder:`${BASE}/api/ladder`,bossesBet:`${BASE}/api/bosses-bet`,register:`${BASE}/api/register`,login:`${BASE}/api/login`,logout:`${BASE}/api/logout`,me:`${BASE}/api/me`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12};
 const $=id=>document.getElementById(id);
@@ -54,7 +55,7 @@ function renderRaceInputs(count){
 }
 
 async function refresh(){
-  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([req(API.fixtures),req('/api/tips?status=all'),req('/api/tips?status=all'),req(API.ladder),req(API.bossesBet)]);
+  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([req(API.fixtures),req(`${API.tips}?status=all`),req(`${API.tips}?status=all`),req(API.ladder),req(API.bossesBet)]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   state.raceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
@@ -101,7 +102,7 @@ async function refresh(){
     });
   }
 
-  $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
+  $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/punters/'>Log in</a>`;
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
