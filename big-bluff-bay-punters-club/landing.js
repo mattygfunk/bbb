@@ -1,4 +1,5 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
+const ENTRY_FEE = 20;
 
 function fmtCountdown(ms) {
   if (ms <= 0) return 'Locked';
@@ -48,20 +49,34 @@ async function hydrateLanding() {
   try {
     const [fx, tips, ladder] = await Promise.all([
       fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/tips?status=approved').then((r) => r.json()).catch(() => ({})),
+      fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
       fetch('/api/ladder').then((r) => r.json()).catch(() => ({}))
     ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Pinjarra';
     document.getElementById('status-meet').textContent = meet;
 
-    const tipRows = tips?.tips || [];
+    const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
     const entries = new Set(tipRows.map((t) => t.member)).size;
     document.getElementById('status-entries').textContent = String(entries || 0);
     document.getElementById('stat-entries').textContent = String(entries || 0);
 
+    const paidMembers = new Set(tipRows.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
+    const potValue = paidMembers * ENTRY_FEE;
+    const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+    const potText = money.format(potValue);
+    const growthText = `+${potText}`;
+    document.getElementById('status-jackpot').textContent = potText;
+    document.getElementById('jackpot-value').textContent = potText;
+    document.getElementById('jackpot-growth').textContent = growthText;
+    document.getElementById('stat-paid').textContent = potText;
+
+    const leaders = ladder?.ladder || [];
+    const leader = leaders[0]?.member || '—';
+    document.getElementById('jackpot-last-winner').textContent = leader;
+
     renderTips(tipRows);
-    renderLadder(ladder?.ladder || []);
+    renderLadder(leaders);
     document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || 1);
   } catch {
     // non-blocking
