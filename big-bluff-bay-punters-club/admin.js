@@ -219,7 +219,10 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
   if(!confirm('Reset ALL Bosses Multi results and clear selections for this meet?')) return;
   try {
+    // Primary reset endpoint
     await req(API.bossesBetResults, { method: 'DELETE' });
+    // Defensive follow-up to avoid stale selections from older deployments/caches
+    await req(API.bossesBet, { method: 'DELETE' });
     $('bosses-msg').textContent = 'Bosses multi results and selections reset.';
     await refresh();
   } catch (err) {
