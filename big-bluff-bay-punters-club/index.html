@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Big Bluff Bay Punters Club</title>
+    <meta name="description" content="Big Bluff Bay Punters Club — tips, fixtures, leaderboard, and member picks." />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav wrap">
+        <div class="brand">🏇 Big Bluff Bay Punters Club</div>
+        <a class="btn" href="#join">Join Club</a>
+      </nav>
+      <div class="wrap hero-content">
+        <h1>Tips, banter, and big calls.</h1>
+        <p>
+          Welcome to Big Bluff Bay’s home for race-day picks, weekly ladder updates, and member bragging rights.
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="#tips">View This Week’s Tips</a>
+          <a class="btn btn-ghost" href="#ladder">See Ladder</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section id="fixtures" class="card">
+        <h2>Upcoming Fixtures</h2>
+        <div class="grid three" id="fixtures-list"></div>
+      </section>
+
+      <section id="tips" class="card">
+        <h2>This Week’s Top Picks</h2>
+        <div class="grid three" id="tips-list"></div>
+      </section>
+
+      <section id="ladder" class="card">
+        <h2>Season Ladder</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Member</th>
+              <th>Wins</th>
+              <th>ROI</th>
+            </tr>
+          </thead>
+          <tbody id="ladder-body"></tbody>
+        </table>
+      </section>
+
+      <section id="join" class="card">
+        <h2>Join the Club</h2>
+        <p>Drop your details and we’ll add you to race-day alerts.</p>
+        <form id="join-form" class="join-form">
+          <label>
+            Name
+            <input required type="text" name="name" placeholder="Your name" />
+          </label>
+          <label>
+            Email
+            <input required type="email" name="email" placeholder="you@example.com" />
+          </label>
+          <button class="btn" type="submit">Join Punters Club</button>
+        </form>
+        <p id="join-msg" class="muted"></p>
+      </section>
+    </main>
+
+    <footer class="wrap footer muted">
+      <p>Big Bluff Bay Punters Club • Built for legends, not lurkers.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,64 @@
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --muted: #94a3b8;
+  --text: #e2e8f0;
+  --accent: #22c55e;
+  --accent-2: #16a34a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: linear-gradient(180deg, #020617, var(--bg));
+  color: var(--text);
+}
+.wrap { width: min(1050px, 92%); margin: 0 auto; }
+.hero { padding-bottom: 2rem; border-bottom: 1px solid #1f2937; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
+.brand { font-weight: 700; }
+.hero-content { padding: 2rem 0 1rem; }
+h1 { font-size: clamp(1.8rem, 4vw, 3rem); margin: 0 0 .75rem; }
+p { color: #cbd5e1; line-height: 1.5; }
+.hero-actions { display: flex; gap: .8rem; flex-wrap: wrap; margin-top: 1rem; }
+.btn {
+  display: inline-block;
+  padding: .65rem 1rem;
+  border-radius: .6rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #052e16;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn:hover { background: var(--accent-2); }
+.btn-ghost { background: transparent; color: var(--text); border-color: #334155; }
+main { padding: 1.25rem 0 2.5rem; display: grid; gap: 1rem; }
+.card {
+  background: color-mix(in oklab, var(--card) 90%, black);
+  border: 1px solid #1f2937;
+  border-radius: .9rem;
+  padding: 1rem;
+}
+.grid { display: grid; gap: .75rem; }
+.grid.three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.tip, .fixture {
+  border: 1px solid #334155;
+  border-radius: .7rem;
+  padding: .8rem;
+  background: #0b1220;
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .6rem; border-bottom: 1px solid #1f2937; text-align: left; }
+.muted { color: var(--muted); }
+.join-form { display: grid; gap: .8rem; max-width: 460px; }
+label { display: grid; gap: .35rem; font-weight: 600; }
+input {
+  border: 1px solid #334155;
+  background: #020617;
+  color: var(--text);
+  border-radius: .55rem;
+  padding: .6rem .7rem;
+}
+.footer { padding: 0 0 2rem; font-size: .9rem; }
