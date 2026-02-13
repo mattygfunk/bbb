@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
 const $=id=>document.getElementById(id);
@@ -183,6 +183,32 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
       body: JSON.stringify({ legs, selections })
     });
     $('bosses-msg').textContent = 'Bosses bet saved.';
+    await refresh();
+  } catch (err) {
+    $('bosses-msg').textContent = err.message;
+  }
+});
+
+$('clear-results-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('results-msg').textContent='Admin login required.'; return; }
+  const race = String($('results-race')?.value || 'R1').toUpperCase();
+  if(!confirm(`Clear saved result for ${race}?`)) return;
+  try {
+    await req(API.clearResult(race), { method: 'DELETE' });
+    $('results-msg').textContent = `${race} result cleared.`;
+    await refresh();
+    fillResultsForm(race);
+  } catch (err) {
+    $('results-msg').textContent = err.message;
+  }
+});
+
+$('reset-bosses-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  if(!confirm('Reset Bosses Bet for all races?')) return;
+  try {
+    await req(API.bossesBet, { method: 'DELETE' });
+    $('bosses-msg').textContent = 'Bosses bet reset.';
     await refresh();
   } catch (err) {
     $('bosses-msg').textContent = err.message;

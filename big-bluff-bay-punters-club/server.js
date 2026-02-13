@@ -267,6 +267,13 @@ function createApp() {
     return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
   });
 
+  app.delete('/api/bosses-bet', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    store.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    writeStore(store);
+    return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
+  });
+
   app.put('/api/results/:race', auth, adminOnly, (req, res) => {
     const race = String(req.params.race || '').toUpperCase();
     const store = readStore();
@@ -291,6 +298,19 @@ function createApp() {
 
     writeStore(store);
     return res.json({ ok: true, race, result: store.raceResults[race] });
+  });
+
+  app.delete('/api/results/:race', auth, adminOnly, (req, res) => {
+    const race = String(req.params.race || '').toUpperCase();
+    const store = readStore();
+    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+    if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
+
+    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
+    delete store.raceResults[race];
+    writeStore(store);
+    return res.json({ ok: true, race, removed: true });
   });
 
   app.put('/api/fixtures/:id', auth, adminOnly, (req, res) => {
@@ -416,5 +436,5 @@ function start() {
   });
 }
 
-if (require.main === module) start();
+start();
 module.exports = { createApp, ensureStore };

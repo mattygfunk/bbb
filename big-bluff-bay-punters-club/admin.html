@@ -47,7 +47,10 @@
             <label>Scratchings substitutes (scratched>substitute, comma-separated)
               <input name="substitutions" type="text" placeholder="e.g. 5>12, 8>3" />
             </label>
-            <button class="btn" type="submit">Save Results</button>
+            <div class="row-actions">
+              <button class="btn" type="submit">Save Results</button>
+              <button class="btn btn-ghost" type="button" id="clear-results-btn">Clear This Race Result</button>
+            </div>
           </form>
           <p id="results-msg" class="muted"></p>
         </section>
@@ -55,7 +58,10 @@
           <form id="bosses-form" class="stack">
             <p class="muted">Defaults to all races at the meet. Untick any legs you don’t want in this week’s multi.</p>
             <div id="bosses-legs" class="stack"></div>
-            <button class="btn" type="submit">Save Bosses Bet</button>
+            <div class="row-actions">
+              <button class="btn" type="submit">Save Bosses Bet</button>
+              <button class="btn btn-ghost" type="button" id="reset-bosses-btn">Reset Bosses Bet</button>
+            </div>
           </form>
           <p id="bosses-msg" class="muted"></p>
         </section>
