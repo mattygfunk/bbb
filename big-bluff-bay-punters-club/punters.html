@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Punters Area • Big Bluff Bay</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero"><div class="overlay"></div><nav class="nav wrap"><div class="brand"><span class="badge">BBB</span><span><strong>Punters Area</strong><small><a href="/admin.html">Admin</a></small></span></div><div id="auth-controls"></div></nav></header>
+    <main class="wrap">
+      <section class="card"><h2>Upcoming Fixtures</h2><div class="grid three" id="fixtures-list"></div></section>
+      <section class="card"><h2>Community Tips <span class="pill" id="tips-count">0</span></h2><div class="grid three" id="tips-list"></div></section>
+      <section class="card"><h2>Member Login</h2>
+        <form id="login-form" class="stack">
+          <label>Member <input required name="member" type="text" /></label>
+          <label>Password <input required name="pin" type="password" /></label>
+          <div class="row-actions"><button class="btn" type="submit" data-mode="login">Log In</button><button class="btn btn-ghost" type="submit" data-mode="register">Register</button></div>
+        </form>
+        <p id="login-msg" class="muted"></p>
+      </section>
+      <section class="card"><h2>Submit Tip</h2>
+        <form id="tip-form" class="stack">
+          <label>Race
+            <select required name="race">
+              <option value="">Select race</option>
+              <option>R1</option><option>R2</option><option>R3</option><option>R4</option><option>R5</option><option>R6</option>
+              <option>R7</option><option>R8</option><option>R9</option><option>R10</option><option>R11</option><option>R12</option>
+            </select>
+          </label>
+          <label>Selection <input required name="selection" type="text" /></label>
+          <button class="btn" type="submit">Submit Tip</button>
+        </form>
+        <p id="tip-msg" class="muted"></p>
+      </section>
+    </main>
+    <script src="punters.js"></script>
+  </body>
+</html>

@@ -3,11 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Big Bluff Bay Punters Club — V2</title>
-    <meta
-      name="description"
-      content="Big Bluff Bay Punters Club — members login, submit tips, track leaderboard, and manage picks."
-    />
+    <title>Big Bluff Bay Punters Club</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -16,141 +12,17 @@
       <nav class="nav wrap">
         <div class="brand">
           <span class="badge">BBB</span>
-          <span>
-            <strong>Big Bluff Bay</strong>
-            <small>Punters Club</small>
-          </span>
+          <span><strong>Big Bluff Bay</strong><small>Punters Club</small></span>
         </div>
-        <div class="auth-controls" id="auth-controls"></div>
       </nav>
-
       <div class="wrap hero-content">
-        <h1>Where legends call winners.</h1>
-        <p>
-          Members can log in, drop tips, climb the ladder, and stir up race-day banter.
-        </p>
+        <h1>Choose your area</h1>
+        <p>Punters and admins now have separate screens.</p>
         <div class="hero-actions">
-          <a class="btn" href="#tips">This Week’s Tips</a>
-          <a class="btn btn-ghost" href="#member-zone">Member Zone</a>
+          <a class="btn" href="/punters.html">Punters Area</a>
+          <a class="btn btn-ghost" href="/admin.html">Admin Area</a>
         </div>
       </div>
     </header>
-
-    <main class="wrap">
-      <section class="card" id="fixtures">
-        <div class="section-title-row">
-          <h2>Upcoming Fixtures</h2>
-        </div>
-        <div class="grid three" id="fixtures-list"></div>
-      </section>
-
-      <section class="card" id="tips">
-        <div class="section-title-row">
-          <h2>Community Tips Board</h2>
-          <span class="pill" id="tips-count">0 tips</span>
-        </div>
-        <div class="grid three" id="tips-list"></div>
-      </section>
-
-      <section class="card" id="ladder">
-        <div class="section-title-row">
-          <h2>Season Ladder</h2>
-          <span class="pill">Auto-updated demo stats</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Member</th>
-                <th>Wins</th>
-                <th>ROI</th>
-              </tr>
-            </thead>
-            <tbody id="ladder-body"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="card" id="member-zone">
-        <div class="section-title-row">
-          <h2>Member Zone</h2>
-          <span class="pill" id="member-state">Logged out</span>
-        </div>
-
-        <div class="split">
-          <article>
-            <h3>Login</h3>
-            <p class="muted">
-              Demo-only local login. No server needed.
-            </p>
-            <form id="login-form" class="stack">
-              <label>
-                Member Name
-                <input required name="member" type="text" placeholder="e.g. Matt" />
-              </label>
-              <label>
-                PIN (demo)
-                <input required name="pin" type="password" minlength="4" placeholder="1234" />
-              </label>
-              <div class="row-actions">
-                <button class="btn" type="submit" data-mode="login">Log In</button>
-                <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
-              </div>
-            </form>
-            <p class="muted">Demo admin account: <code>admin</code> / <code>admin123</code></p>
-            <p class="muted" id="login-msg"></p>
-          </article>
-
-          <article>
-            <h3>Submit a Tip</h3>
-            <p class="muted">Tips from logged-in members appear instantly.</p>
-            <form id="tip-form" class="stack">
-              <label>
-                Race
-                <select required name="race">
-                  <option value="">Select race</option>
-                  <option value="R1">R1</option><option value="R2">R2</option><option value="R3">R3</option>
-                  <option value="R4">R4</option><option value="R5">R5</option><option value="R6">R6</option>
-                  <option value="R7">R7</option><option value="R8">R8</option><option value="R9">R9</option>
-                  <option value="R10">R10</option><option value="R11">R11</option><option value="R12">R12</option>
-                </select>
-              </label>
-              <label>
-                Selection
-                <input required name="selection" type="text" placeholder="Horse name" />
-              </label>
-              <button class="btn" type="submit">Submit Tip</button>
-            </form>
-            <p class="muted" id="tip-msg"></p>
-          </article>
-        </div>
-      </section>
-
-      <section class="card" id="admin">
-        <div class="section-title-row">
-          <h2>Admin Panel</h2>
-          <span class="pill">Local moderation only</span>
-        </div>
-        <p class="muted">
-          Approve/remove pending tips and edit fixtures. (Demo admin access: <code>admin</code>)
-        </p>
-        <form id="fixture-form" class="stack">
-          <h3>Edit Next Meet (fixture f1)</h3>
-          <label>Date & Time <input name="date" type="text" placeholder="Sat 14 Feb, 3:19 PM" /></label>
-          <label>Event <input name="event" type="text" placeholder="Next Meet" /></label>
-          <label>Track <input name="track" type="text" placeholder="Pinjarra" /></label>
-          <button class="btn" type="submit">Update Next Meet</button>
-          <p class="muted" id="fixture-msg"></p>
-        </form>
-        <div id="admin-list" class="stack"></div>
-      </section>
-    </main>
-
-    <footer class="wrap footer muted">
-      <p>Big Bluff Bay Punters Club • V2 prototype • Built by Larry 👍</p>
-    </footer>
-
-    <script src="script.js"></script>
   </body>
 </html>

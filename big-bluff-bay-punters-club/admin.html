@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Area • Big Bluff Bay</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero"><div class="overlay"></div><nav class="nav wrap"><div class="brand"><span class="badge">BBB</span><span><strong>Admin Area</strong><small><a href="/punters.html">Punters</a></small></span></div><div id="auth-controls"></div></nav></header>
+    <main class="wrap">
+      <section class="card"><h2>Admin Login</h2>
+        <form id="login-form" class="stack">
+          <label>Admin user <input required name="member" type="text" value="admin" /></label>
+          <label>Password <input required name="pin" type="password" /></label>
+          <button class="btn" type="submit" data-mode="login">Log In</button>
+        </form>
+        <p class="muted">Demo admin account: <code>admin</code> / <code>admin123</code></p>
+        <p id="login-msg" class="muted"></p>
+      </section>
+      <section class="card"><h2>Edit Next Meet</h2>
+        <form id="fixture-form" class="stack">
+          <label>Date & Time <input name="date" type="text" placeholder="Sat 14 Feb, 3:19 PM" /></label>
+          <label>Event <input name="event" type="text" placeholder="Next Meet" /></label>
+          <label>Track <input name="track" type="text" placeholder="Pinjarra" /></label>
+          <button class="btn" type="submit">Update Fixture</button>
+        </form>
+        <p id="fixture-msg" class="muted"></p>
+      </section>
+      <section class="card"><h2>Pending Tips</h2><div id="admin-list" class="stack"></div></section>
+    </main>
+    <script src="admin.js"></script>
+  </body>
+</html>
