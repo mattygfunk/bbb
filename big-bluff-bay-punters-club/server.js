@@ -124,24 +124,28 @@ function applySub(selection, raceResult) {
 function computeBossesBetProgress(store) {
   const bb = store.bossesBet || { legs: [], selections: {} };
   const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
-  const defaultLegs = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
-  const legs = Array.isArray(bb.legs) && bb.legs.length ? bb.legs : defaultLegs;
-  const result = legs.map((race) => {
+  const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
+  const activeLegs = new Set(Array.isArray(bb.legs) && bb.legs.length ? bb.legs : allRaces);
+
+  const result = allRaces.map((race) => {
+    const inMulti = activeLegs.has(race);
     const pick = String(bb.selections?.[race] || '').trim();
     const rr = store.raceResults?.[race];
-    if (!pick) return { race, selection: '', status: 'pending' };
-    if (!rr) return { race, selection: pick, status: 'pending' };
+    if (!inMulti) return { race, selection: pick, inMulti: false, status: 'inactive' };
+    if (!pick) return { race, selection: '', inMulti: true, status: 'pending' };
+    if (!rr) return { race, selection: pick, inMulti: true, status: 'pending' };
     const eff = applySub(pick, rr);
     const placed = [...(rr.first || []), ...(rr.second || []), ...(rr.third || [])].map(String).includes(eff);
-    return { race, selection: pick, effectiveSelection: eff, status: placed ? 'placed' : 'missed' };
+    return { race, selection: pick, effectiveSelection: eff, inMulti: true, status: placed ? 'placed' : 'missed' };
   });
 
-  const anyMiss = result.some((l) => l.status === 'missed');
-  const allPlaced = result.length > 0 && result.every((l) => l.status === 'placed');
-  const allResolved = result.every((l) => l.status === 'placed' || l.status === 'missed');
+  const active = result.filter((l) => l.inMulti);
+  const anyMiss = active.some((l) => l.status === 'missed');
+  const allPlaced = active.length > 0 && active.every((l) => l.status === 'placed');
+  const allResolved = active.every((l) => l.status === 'placed' || l.status === 'missed');
   const overall = anyMiss ? 'lost' : allPlaced && allResolved ? 'landed' : 'live';
 
-  return { ...bb, legs, progress: result, overall };
+  return { ...bb, legs: [...activeLegs], progress: result, overall };
 }
 
 function canEditTipsNow() {
