@@ -183,6 +183,45 @@ function computeLadder(store) {
     .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
 }
 
+function computeMemberBreakdown(store, memberName) {
+  const target = String(memberName || '').trim().toLowerCase();
+  if (!target) return { member: memberName, totalPoints: 0, winners: 0, races: [] };
+
+  const rows = [];
+  let totalPoints = 0;
+  let winners = 0;
+
+  const myTips = (store.tips || [])
+    .filter((t) => t.status === 'approved' && String(t.member || '').trim().toLowerCase() === target)
+    .sort((a, b) => Number(String(a.race || 'R0').slice(1)) - Number(String(b.race || 'R0').slice(1)));
+
+  for (const tip of myTips) {
+    const race = String(tip.race || '');
+    const rr = store.raceResults?.[race];
+    const selection = String(tip.selection || tip.horse || '');
+    if (!rr) {
+      rows.push({ race, selection, points: 0, outcome: 'pending' });
+      continue;
+    }
+
+    const eff = applySub(selection, rr);
+    const first = (rr.first || []).map(String);
+    const second = (rr.second || []).map(String);
+    const third = (rr.third || []).map(String);
+
+    let points = 0;
+    let outcome = 'missed';
+    if (first.includes(eff)) { points = 3; outcome = 'winner'; winners += 1; }
+    else if (second.includes(eff)) { points = 2; outcome = 'second'; }
+    else if (third.includes(eff)) { points = 1; outcome = 'third'; }
+
+    totalPoints += points;
+    rows.push({ race, selection, effectiveSelection: eff, points, outcome });
+  }
+
+  return { member: memberName, totalPoints, winners, races: rows };
+}
+
 function canEditTipsNow() {
   const deadline = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
   if (Number.isNaN(deadline)) return true;
@@ -525,6 +564,20 @@ function createApp() {
     const store = readStore();
     const ladder = computeLadder(store);
     return res.json({ ladder });
+  });
+
+  app.get('/api/ladder/:member', (req, res) => {
+    const store = readStore();
+    const member = String(req.params.member || '').trim();
+    if (!member) return res.status(400).json({ error: 'Member is required' });
+
+    const exists = (store.tips || []).some(
+      (t) => String(t.member || '').trim().toLowerCase() === member.toLowerCase() && t.status !== 'removed'
+    );
+    if (!exists) return res.status(404).json({ error: 'Member not found' });
+
+    const breakdown = computeMemberBreakdown(store, member);
+    return res.json({ breakdown });
   });
 
   app.get('/api/leaderboard-image.svg', (_req, res) => {

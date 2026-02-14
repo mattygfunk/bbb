@@ -1,7 +1,7 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
@@ -13,7 +13,7 @@ function renderLeaderboard(rows){
   body.innerHTML='';
   (rows||[]).forEach((r)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
+    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button></td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
     body.appendChild(tr);
   });
   if(!(rows||[]).length){
@@ -21,6 +21,10 @@ function renderLeaderboard(rows){
     tr.innerHTML="<td colspan='4' class='muted'>No scored results yet.</td>";
     body.appendChild(tr);
   }
+
+  body.querySelectorAll('button[data-member]').forEach((btn)=>{
+    btn.addEventListener('click', ()=> loadMemberBreakdown(decodeURIComponent(btn.dataset.member || '')));
+  });
 }
 
 function renderBossesBet(bb){
@@ -36,6 +40,38 @@ function renderBossesBet(bb){
     row.innerHTML = `<strong>${esc(leg.race)}</strong><span class='muted'>${esc(leg.selection || '—')}</span><span class='pill'>${esc(leg.status || 'pending')}</span>`;
     wrap.appendChild(row);
   });
+}
+
+async function loadMemberBreakdown(member, scrollToSection = true){
+  const body = $('breakdown-body');
+  const title = $('breakdown-title');
+  if(!body || !title || !member) return;
+
+  title.textContent = `Loading breakdown for ${member}...`;
+  body.innerHTML = `<tr><td colspan='4' class='muted'>Loading…</td></tr>`;
+  try {
+    const r = await req(API.ladderMember(member));
+    const b = r.breakdown || { races: [], totalPoints: 0, winners: 0 };
+    state.selectedBreakdownMember = member;
+    title.textContent = `${member} — ${b.totalPoints} points • ${b.winners} winners`;
+    body.innerHTML = '';
+    if(!(b.races||[]).length){
+      body.innerHTML = `<tr><td colspan='4' class='muted'>No scored races yet for ${esc(member)}.</td></tr>`;
+      return;
+    }
+    (b.races || []).forEach((race)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(race.race || '-')}</td><td>${esc(race.effectiveSelection || race.selection || '-')}</td><td>${esc(race.outcome || '-')}</td><td>${Number(race.points || 0)}</td>`;
+      body.appendChild(tr);
+    });
+    if (scrollToSection) {
+      const section = $('points-breakdown');
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  } catch (err) {
+    title.textContent = 'Could not load points breakdown.';
+    body.innerHTML = `<tr><td colspan='4' class='muted'>${esc(err.message || 'Request failed')}</td></tr>`;
+  }
 }
 
 // Buy-in vote removed: fixed $20 entry from next week.
@@ -76,6 +112,9 @@ async function refresh(){
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   renderLeaderboard(ladderRes.ladder || []);
   renderBossesBet(bossesRes.bossesBet || {});
+  if (state.selectedBreakdownMember) {
+    loadMemberBreakdown(state.selectedBreakdownMember, false).catch(()=>{});
+  }
   renderBuyInVotes(buyInRes || {});
   $('tips-list').innerHTML='';
   const byPunter = new Map();
