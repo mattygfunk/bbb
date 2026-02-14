@@ -11,6 +11,10 @@ const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data', 'store.json');
 const TIP_EDIT_DEADLINE_ISO = process.env.TIP_EDIT_DEADLINE_ISO || '2026-02-14T15:00:00+11:00';
+const META_PAGE_ID = process.env.META_PAGE_ID || '';
+const META_INSTAGRAM_USER_ID = process.env.META_INSTAGRAM_USER_ID || '';
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
+const SOCIAL_CACHE_TTL_MS = Number(process.env.SOCIAL_CACHE_TTL_MS || 15 * 60 * 1000);
 
 const DEFAULT_FIXTURES = [
   { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra', raceCount: 12 }
@@ -33,6 +37,7 @@ function ensureStore() {
       entryFee: 20,
       jackpotCarry: 0,
       lastJackpotWinner: '',
+      socialFeedCache: { updatedAt: 0, items: [] },
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -92,6 +97,10 @@ function ensureStore() {
   }
   if (typeof store.lastJackpotWinner !== 'string') {
     store.lastJackpotWinner = '';
+    changed = true;
+  }
+  if (!store.socialFeedCache || typeof store.socialFeedCache !== 'object') {
+    store.socialFeedCache = { updatedAt: 0, items: [] };
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -217,6 +226,51 @@ function getLastScoredRace(store) {
   if (!races.length) return null;
   const max = Math.max(...races);
   return `R${max}`;
+}
+
+async function fetchJson(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Fetch failed (${r.status})`);
+  return r.json();
+}
+
+async function fetchSocialFeedItems() {
+  if (!META_ACCESS_TOKEN) return [];
+  const out = [];
+
+  if (META_PAGE_ID) {
+    const fbUrl = `https://graph.facebook.com/v19.0/${encodeURIComponent(META_PAGE_ID)}/posts?fields=id,message,full_picture,permalink_url,created_time&limit=6&access_token=${encodeURIComponent(META_ACCESS_TOKEN)}`;
+    const fb = await fetchJson(fbUrl).catch(() => ({ data: [] }));
+    (fb.data || []).forEach((p) => {
+      out.push({
+        id: `fb-${p.id || crypto.randomUUID()}`,
+        source: 'facebook',
+        text: String(p.message || '').slice(0, 260),
+        image: p.full_picture || '',
+        permalink: p.permalink_url || 'https://www.facebook.com/profile.php?id=61566153111980',
+        timestamp: p.created_time || new Date().toISOString()
+      });
+    });
+  }
+
+  if (META_INSTAGRAM_USER_ID) {
+    const igUrl = `https://graph.facebook.com/v19.0/${encodeURIComponent(META_INSTAGRAM_USER_ID)}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=6&access_token=${encodeURIComponent(META_ACCESS_TOKEN)}`;
+    const ig = await fetchJson(igUrl).catch(() => ({ data: [] }));
+    (ig.data || []).forEach((m) => {
+      out.push({
+        id: `ig-${m.id || crypto.randomUUID()}`,
+        source: 'instagram',
+        text: String(m.caption || '').slice(0, 260),
+        image: m.media_type === 'VIDEO' ? (m.thumbnail_url || m.media_url || '') : (m.media_url || ''),
+        permalink: m.permalink || 'https://www.instagram.com/bigbluffbay/',
+        timestamp: m.timestamp || new Date().toISOString()
+      });
+    });
+  }
+
+  return out
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 8);
 }
 
 function computeMemberBreakdown(store, memberName) {
@@ -688,6 +742,45 @@ function createApp() {
       totalPot,
       lastWinner: store.lastJackpotWinner || ''
     });
+  });
+
+  app.get('/api/social-feed', async (_req, res) => {
+    const store = readStore();
+    const now = Date.now();
+    const cache = store.socialFeedCache || { updatedAt: 0, items: [] };
+    const cacheFresh = (now - Number(cache.updatedAt || 0)) < SOCIAL_CACHE_TTL_MS;
+
+    if (cacheFresh && (cache.items || []).length) {
+      return res.json({ items: cache.items, source: 'cache', updatedAt: cache.updatedAt });
+    }
+
+    const live = await fetchSocialFeedItems();
+    if (live.length) {
+      store.socialFeedCache = { updatedAt: now, items: live };
+      writeStore(store);
+      return res.json({ items: live, source: 'live', updatedAt: now });
+    }
+
+    const fallback = (cache.items || []).length ? cache.items : [
+      {
+        id: 'fallback-fb',
+        source: 'facebook',
+        text: 'Follow Big Bluff Bay on Facebook for latest race-day updates.',
+        image: '',
+        permalink: 'https://www.facebook.com/profile.php?id=61566153111980',
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'fallback-ig',
+        source: 'instagram',
+        text: 'Follow Big Bluff Bay on Instagram for highlights and club news.',
+        image: '',
+        permalink: 'https://www.instagram.com/bigbluffbay/',
+        timestamp: new Date().toISOString()
+      }
+    ];
+
+    return res.json({ items: fallback, source: (cache.items || []).length ? 'cache' : 'fallback', updatedAt: Number(cache.updatedAt || 0) || now });
   });
 
   app.post('/api/archive-round', auth, adminOnly, (req, res) => {

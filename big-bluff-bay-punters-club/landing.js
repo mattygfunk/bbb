@@ -111,6 +111,28 @@ function renderWinners(items) {
   }
 }
 
+function renderSocialFeed(items) {
+  const wrap = document.getElementById('social-feed-list');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  const rows = (items || []).slice(0, 6);
+  if (!rows.length) {
+    wrap.innerHTML = '<article class="tip"><strong>Feed is loading</strong><p class="meta">Connect Meta API credentials to sync live posts.</p></article>';
+    return;
+  }
+
+  rows.forEach((p) => {
+    const card = document.createElement('article');
+    card.className = 'tip';
+    const sourceEmoji = p.source === 'instagram' ? '📸' : '📘';
+    const when = p.timestamp ? new Date(p.timestamp).toLocaleDateString('en-AU') : '';
+    const image = p.image ? `<img src="${esc(p.image)}" alt="${sourceEmoji} post" loading="lazy" decoding="async" style="width:100%;border-radius:.65rem;border:1px solid #2a3a50;margin:.45rem 0;max-height:220px;object-fit:cover" />` : '';
+    card.innerHTML = `<strong>${sourceEmoji} ${esc((p.source || 'social').toUpperCase())}</strong><p class="meta">${esc(p.text || 'Latest club update.')}</p>${image}<p class="meta">${esc(when)}</p><a class="menu-link" href="${esc(p.permalink || '#')}" target="_blank" rel="noopener noreferrer">Open post</a>`;
+    wrap.appendChild(card);
+  });
+}
+
 function wirePickToggles() {
   document.querySelectorAll('.pick-toggle').forEach((wrap) => {
     wrap.querySelectorAll('button').forEach((btn) => {
@@ -155,11 +177,12 @@ async function hydrateLanding() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [fx, tips, ladder, jackpot] = await Promise.all([
+    const [fx, tips, ladder, jackpot, social] = await Promise.all([
       fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
       fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
       fetch('/api/ladder').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/jackpot').then((r) => r.json()).catch(() => ({}))
+      fetch('/api/jackpot').then((r) => r.json()).catch(() => ({})),
+      fetch('/api/social-feed').then((r) => r.json()).catch(() => ({}))
     ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
@@ -191,6 +214,7 @@ async function hydrateLanding() {
 
     renderTipsByPlayer(tipRows);
     renderLadder(leaders);
+    renderSocialFeed(social?.items || []);
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
   } catch {
