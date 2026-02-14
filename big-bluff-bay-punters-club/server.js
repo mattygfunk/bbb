@@ -214,17 +214,23 @@ function createApp() {
   app.use((req, res, next) => {
     const xfProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
     const isSecure = req.secure || xfProto === 'https';
-    if (isSecure) return next();
-    const host = req.headers.host;
+    const host = String(req.headers.host || '');
     if (!host) return next();
-    return res.redirect(301, `https://${host}${req.originalUrl}`);
+
+    const hostNoPort = host.split(':')[0].toLowerCase();
+    const canonicalHost = hostNoPort.startsWith('www.') ? hostNoPort.slice(4) : hostNoPort;
+
+    if (!isSecure || hostNoPort !== canonicalHost) {
+      return res.redirect(301, `https://${canonicalHost}${req.originalUrl}`);
+    }
+    return next();
   });
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '200kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
   app.use(express.static(__dirname));
 
-  app.get('/api/health', (_req, res) => res.json({ ok: true, version: '5.0.0' }));
+  app.get('/api/health', (_req, res) => res.json({ ok: true, version: '5.0.1' }));
 
   app.post('/api/register', (req, res) => {
     const username = String(req.body.username || '').trim();
