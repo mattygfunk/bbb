@@ -575,6 +575,19 @@ details p { margin:.55rem 0 0; }
   border: 1px solid #304860;
 }
 
+.social-feed-card { display: grid; gap: .7rem; }
+.fb-feed-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.fb-feed-wrap iframe {
+  width: min(100%, 500px);
+  border-radius: .8rem;
+  border: 1px solid #2b3d52;
+  background: #0a1120;
+}
+
 @media (min-width: 980px) {
   .landing-page .hero-layout { grid-template-columns: minmax(0, 1.2fr) minmax(350px, .8fr); }
 }
