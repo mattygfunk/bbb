@@ -104,6 +104,27 @@
     </header>
 
     <main class="wrap premium-main">
+      <section class="rail-section" id="lobby" aria-labelledby="lobby-heading">
+        <div class="section-head"><h2 id="lobby-heading">Jackpot + Points Ladder</h2></div>
+        <div class="split">
+          <article class="card jackpot-card">
+            <h3>Current Pot</h3>
+            <p class="jackpot-value" id="jackpot-value">$0</p>
+            <p class="muted">Growth this round: <strong id="jackpot-growth">+$0</strong> • Last winner: <strong id="jackpot-last-winner">No winner yet</strong></p>
+            <p class="muted">Rollover rule active on tied first place.</p>
+            <p class="muted"><strong>Freeroll bonus:</strong> if the Bosses Multi lands, all that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p>
+          </article>
+          <article class="card">
+            <h3>Top 10 Live</h3>
+            <table>
+              <thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead>
+              <tbody id="ladder-preview"></tbody>
+            </table>
+            <p class="muted ticker">Last week payouts: <span id="payout-ticker">Payout board refreshes after weekly settlement.</span></p>
+          </article>
+        </div>
+      </section>
+
       <section class="rail-section" id="this-week-tips" aria-labelledby="tips-heading">
         <div class="section-head">
           <h2 id="tips-heading">This Week’s Tips</h2>
@@ -143,26 +164,7 @@
         </div>
       </section>
 
-      <section class="rail-section" id="lobby" aria-labelledby="lobby-heading">
-        <div class="section-head"><h2 id="lobby-heading">Jackpot + Points Ladder</h2></div>
-        <div class="split">
-          <article class="card jackpot-card">
-            <h3>Current Pot</h3>
-            <p class="jackpot-value" id="jackpot-value">$0</p>
-            <p class="muted">Growth this round: <strong id="jackpot-growth">+$0</strong> • Last winner: <strong id="jackpot-last-winner">No winner yet</strong></p>
-            <p class="muted">Rollover rule active on tied first place.</p>
-            <p class="muted"><strong>Freeroll bonus:</strong> if the Bosses Multi lands, all that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p>
-          </article>
-          <article class="card">
-            <h3>Top 10 Live</h3>
-            <table>
-              <thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead>
-              <tbody id="ladder-preview"></tbody>
-            </table>
-            <p class="muted ticker">Last week payouts: <span id="payout-ticker">Payout board refreshes after weekly settlement.</span></p>
-          </article>
-        </div>
-      </section>
+      
 
       <section class="rail-section" id="rules-faq" aria-labelledby="faq-heading">
         <div class="section-head"><h2 id="faq-heading">Rules + FAQ</h2></div>
