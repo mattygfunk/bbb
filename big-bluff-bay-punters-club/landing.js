@@ -30,6 +30,25 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
+function renderFixtures(fixtures) {
+  const list = document.getElementById('home-fixtures-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const rows = (fixtures || []).slice(0, 3);
+  if (!rows.length) {
+    list.innerHTML = '<article class="fixture"><strong>Next meet loading</strong><p class="muted">Fixture details will appear here shortly.</p></article>';
+    return;
+  }
+
+  rows.forEach((f) => {
+    const card = document.createElement('article');
+    card.className = 'fixture';
+    card.innerHTML = `<strong>${esc(f.event || 'Upcoming Meet')}</strong><p>${esc(f.date || 'TBA')} • ${esc(f.track || 'TBA')}</p><p class='muted'>Races: ${Number(f.raceCount || 12)}</p>`;
+    list.appendChild(card);
+  });
+}
+
 function renderTipsByPlayer(tips) {
   const list = document.getElementById('tips-preview-list');
   if (!list) return;
@@ -144,6 +163,7 @@ async function hydrateLanding() {
     ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
+    renderFixtures(fx?.fixtures || []);
     const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
     const entries = new Set(tipRows.map((t) => t.member)).size;
 
