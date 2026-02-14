@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+Disallow: /data/
 
 Sitemap: https://bigbluffbay.au/sitemap.xml

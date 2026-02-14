@@ -10,6 +10,7 @@
     <link rel="canonical" href="https://bigbluffbay.au/punters.html" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Big Bluff Bay" />
+    <meta property="og:locale" content="en_AU" />
     <meta property="og:title" content="Punters Club Leaderboard & Tips • Big Bluff Bay" />
     <meta property="og:description" content="Live ladder, winners, tips, and weekly jackpot action." />
     <meta property="og:url" content="https://bigbluffbay.au/punters.html" />
@@ -18,6 +19,8 @@
     <meta name="twitter:title" content="Punters Club Leaderboard & Tips • Big Bluff Bay" />
     <meta name="twitter:description" content="Live ladder, winners, tips, and weekly jackpot action." />
     <meta name="twitter:image" content="https://bigbluffbay.au/api/leaderboard-image.svg" />
+    <link rel="alternate" hreflang="en-au" href="https://bigbluffbay.au/punters.html" />
+    <link rel="alternate" hreflang="x-default" href="https://bigbluffbay.au/punters.html" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -25,6 +28,16 @@
         "name": "Big Bluff Bay Punters Club",
         "url": "https://bigbluffbay.au/punters.html",
         "description": "Race tips, live leaderboard, and weekly jackpot updates."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://bigbluffbay.au/"},
+          {"@type": "ListItem", "position": 2, "name": "Punters Club", "item": "https://bigbluffbay.au/punters.html"}
+        ]
       }
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -68,7 +81,7 @@
         <form id="tip-form" class="stack">
           <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>
           <div class="quick-grid" id="quick-race-list"></div>
-          <button class="btn" type="submit">Submit Selected Tips</button>
+          <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Submit Selected Tips</button>
         </form>
         <p id="tip-msg" class="muted"></p>
       </section>
