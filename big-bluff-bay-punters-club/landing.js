@@ -119,9 +119,11 @@ function wireLeaderboardShare() {
         if (msg) msg.textContent = 'Shared. Select your Messenger group to post it.';
       } else {
         const shareUrl = `https://www.facebook.com/dialog/share?app_id=966242223397117&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`;
+        const w = window.open(shareUrl, '_blank', 'noopener,noreferrer');
         try { await navigator.clipboard.writeText(payload); } catch {}
-        window.open(shareUrl, '_blank', 'noopener,noreferrer');
-        if (msg) msg.textContent = 'Facebook share dialog opened. Choose Messenger and your group.';
+        if (msg) msg.textContent = w
+          ? 'Facebook share dialog opened. Choose Messenger and your group.'
+          : 'Popup was blocked. Please allow popups, then try again.';
       }
     } catch {
       if (msg) msg.textContent = 'Share cancelled.';
