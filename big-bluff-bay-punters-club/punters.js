@@ -217,9 +217,31 @@ if (tipForm) {
   });
 }
 
+function wirePuntersLeaderboardShare(){
+  const btn = $('share-punters-leaderboard-btn');
+  const msg = $('share-punters-msg');
+  if(!btn) return;
+  btn.onclick = async () => {
+    const text = 'Big Bluff Bay Punters Club leaderboard is live. Have a look:';
+    const url = `${window.location.origin}/punters.html`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'BBB Leaderboard', text, url });
+        if (msg) msg.textContent = 'Shared.';
+      } else {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
+        if (msg) msg.textContent = 'Facebook share opened in a new tab.';
+      }
+    } catch {
+      if (msg) msg.textContent = 'Share cancelled.';
+    }
+  };
+}
+
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
 (async()=>{
+  wirePuntersLeaderboardShare();
   await bootstrap();
   await refresh();
   setInterval(()=>{

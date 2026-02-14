@@ -116,12 +116,18 @@
             <p class="muted"><strong>Freeroll bonus:</strong> if the Bosses Multi lands, all that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p>
           </article>
           <article class="card">
-            <h3>Top 10 Live</h3>
+            <div class="section-head" style="margin-bottom:.45rem">
+              <h3 style="margin:0">Top 10 Live</h3>
+              <div class="row-actions">
+                <button class="btn btn-ghost" type="button" id="share-leaderboard-btn">Share Leaderboard</button>
+              </div>
+            </div>
             <table>
               <thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead>
               <tbody id="ladder-preview"></tbody>
             </table>
             <p class="muted ticker">Last week payouts: <span id="payout-ticker">Payout board refreshes after weekly settlement.</span></p>
+            <p class="muted" id="share-leaderboard-msg"></p>
           </article>
         </div>
       </section>

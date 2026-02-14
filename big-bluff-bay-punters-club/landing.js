@@ -104,6 +104,29 @@ function wirePickToggles() {
   });
 }
 
+function wireLeaderboardShare() {
+  const btn = document.getElementById('share-leaderboard-btn');
+  const msg = document.getElementById('share-leaderboard-msg');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    const text = 'Big Bluff Bay Punters Club leaderboard is live. Check current rankings:';
+    const url = `${window.location.origin}/punters.html`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'BBB Leaderboard', text, url });
+        if (msg) msg.textContent = 'Shared.';
+      } else {
+        const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        if (msg) msg.textContent = 'Facebook share opened in a new tab.';
+      }
+    } catch {
+      if (msg) msg.textContent = 'Share cancelled.';
+    }
+  });
+}
+
 async function hydrateLanding() {
   renderWinners(MOCK.winners);
   const ticker = document.getElementById('payout-ticker');
@@ -163,5 +186,6 @@ async function hydrateLanding() {
   }
 
   wirePickToggles();
+  wireLeaderboardShare();
   hydrateLanding();
 })();
