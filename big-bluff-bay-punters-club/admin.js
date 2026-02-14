@@ -254,15 +254,16 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
     const box = document.querySelector(`#bosses-legs input[name='leg-${race}']`);
     const sel = document.querySelector(`#bosses-legs input[name='sel-${race}']`);
     if(!sel || !box) continue;
-    if(box.checked && popular[race]?.selection){
+    if(popular[race]?.selection){
+      box.checked = true;
       sel.value = popular[race].selection;
       filled += 1;
     }
   }
 
   $('bosses-msg').textContent = filled
-    ? `Auto-filled ${filled} leg${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.`
-    : 'No popular tips found for currently selected legs.';
+    ? `Auto-filled ${filled} race${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.`
+    : 'No popular tips found to auto-fill yet.';
 });
 
 $('reset-bosses-btn')?.addEventListener('click', async () => {
