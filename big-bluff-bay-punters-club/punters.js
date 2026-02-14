@@ -1,5 +1,5 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',buyInVotes:'/buyin-votes',buyInVotesMe:'/buyin-votes/me',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0};
 const $=id=>document.getElementById(id);
@@ -38,23 +38,7 @@ function renderBossesBet(bb){
   });
 }
 
-function renderBuyInVotes(voteData){
-  const results = $('buyin-results');
-  if(!results) return;
-  const counts = voteData?.counts || {'10':0,'20':0,'30':0};
-  const myVote = String(voteData?.myVote || '');
-
-  document.querySelectorAll("input[name='buyin']").forEach((r)=>{ r.checked = r.value === myVote; });
-
-  if (!myVote) {
-    results.textContent = '';
-    results.style.display = 'none';
-    return;
-  }
-
-  results.style.display = 'block';
-  results.textContent = `Punters Club votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
-}
+// Buy-in vote removed: fixed $20 entry from next week.
 
 function renderRaceInputs(count){
 
@@ -77,7 +61,6 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  let buyInRes = { counts:{'10':0,'20':0,'30':0}, myVote:null };
   const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([
     req(API.fixtures),
     req(`${API.tips}?status=all`),
@@ -85,13 +68,6 @@ async function refresh(){
     req(API.ladder),
     req(API.bossesBet)
   ]);
-  try { buyInRes = await req(API.buyInVotes); } catch {}
-  if (state.user && !buyInRes.myVote) {
-    try {
-      const meVote = await req(API.buyInVotesMe);
-      buyInRes = { ...buyInRes, ...meVote, myVote: meVote.myVote || buyInRes.myVote };
-    } catch {}
-  }
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
@@ -184,29 +160,7 @@ if (loginForm) {
   });
 }
 
-$('buyin-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if(!state.user){ $('buyin-msg').textContent='Log in first.'; return; }
-  const f = new FormData(e.target);
-  const amount = String(f.get('buyin') || '').trim();
-  if(!['10','20','30'].includes(amount)){ $('buyin-msg').textContent='Choose $10, $20, or $30.'; return; }
-  try {
-    await req(API.buyInVotes, { method:'POST', body: JSON.stringify({ amount }) });
-    $('buyin-msg').textContent = `Punters Club vote saved: $${amount}`;
-    await refresh();
-  } catch (err) {
-    // compatibility fallback for older route wiring
-    if (String(err.message || '').includes('404')) {
-      try {
-        await req('/buyin-vote', { method:'POST', body: JSON.stringify({ amount }) });
-        $('buyin-msg').textContent = `Punters Club vote saved: $${amount}`;
-        await refresh();
-        return;
-      } catch {}
-    }
-    $('buyin-msg').textContent = err.message;
-  }
-});
+// Buy-in vote submission removed: fixed $20 entry from next week.
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
