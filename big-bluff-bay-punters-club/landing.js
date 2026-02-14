@@ -205,6 +205,8 @@ async function hydrateLanding() {
     document.getElementById('jackpot-value').textContent = potText;
     document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
+    const debugNode = document.getElementById('jackpot-debug-line');
+    if (debugNode) debugNode.textContent = `API jackpot debug: total=${potValue} rollover=${rolloverValue} round=${roundValue} paid=${Number(jackpot?.paidMembers || 0)}`;
 
     const [fx, tips, ladder, social] = await Promise.all([
       fetchApi('/fixtures'),
@@ -233,6 +235,8 @@ async function hydrateLanding() {
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
   } catch {
+    const debugNode = document.getElementById('jackpot-debug-line');
+    if (debugNode) debugNode.textContent = 'API jackpot debug: failed to load /api/jackpot';
     // graceful fallback to mock/empty states
   }
 }
