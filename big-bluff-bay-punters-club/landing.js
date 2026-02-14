@@ -1,5 +1,5 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
-const API_ROOTS = ['/api'];
+const LANDING_API_ROOTS = ['/api'];
 
 window.addEventListener('error', (e) => {
   const debugNode = document.getElementById('jackpot-debug-line');
@@ -27,7 +27,7 @@ function esc(s) {
 }
 
 async function fetchApi(path) {
-  for (const root of API_ROOTS) {
+  for (const root of LANDING_API_ROOTS) {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 6000);
