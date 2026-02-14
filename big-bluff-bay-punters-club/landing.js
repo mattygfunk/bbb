@@ -30,31 +30,6 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
-function renderRunnerPreview(rows) {
-  const wrap = document.getElementById('runner-preview-list');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  rows.slice(0, 4).forEach((r, i) => {
-    const card = document.createElement('article');
-    card.className = 'runner-card';
-    card.tabIndex = 0;
-    card.innerHTML = `
-      <div class="runner-top">
-        <h3>${esc(r.name)}</h3>
-        <span class="pill">Odds ${esc(r.odds)}</span>
-      </div>
-      <p class="runner-meta">Barrier ${esc(r.barrier)} • J: ${esc(r.jockey)} • Risk ${esc(r.risk)}</p>
-      <div class="confidence-meter" aria-label="Confidence ${Number(r.confidence) || 0} percent"><span style="width:${Number(r.confidence) || 0}%"></span></div>
-      <div class="pick-toggle" role="group" aria-label="Pick type">
-        <button class="${i % 3 === 0 ? 'active' : ''}" type="button">Win</button>
-        <button class="${i % 3 === 1 ? 'active' : ''}" type="button">Place</button>
-        <button class="${i % 3 === 2 ? 'active' : ''}" type="button">Fade</button>
-      </div>
-    `;
-    wrap.appendChild(card);
-  });
-}
-
 function renderTipsByPlayer(tips) {
   const list = document.getElementById('tips-preview-list');
   if (!list) return;
@@ -130,7 +105,6 @@ function wirePickToggles() {
 }
 
 async function hydrateLanding() {
-  renderRunnerPreview(MOCK.runners);
   renderWinners(MOCK.winners);
   const ticker = document.getElementById('payout-ticker');
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
