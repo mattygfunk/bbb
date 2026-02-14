@@ -42,10 +42,18 @@ function renderBuyInVotes(voteData){
   const results = $('buyin-results');
   if(!results) return;
   const counts = voteData?.counts || {'10':0,'20':0,'30':0};
-  results.textContent = `Punters Club votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
-
   const myVote = String(voteData?.myVote || '');
+
   document.querySelectorAll("input[name='buyin']").forEach((r)=>{ r.checked = r.value === myVote; });
+
+  if (!myVote) {
+    results.textContent = '';
+    results.style.display = 'none';
+    return;
+  }
+
+  results.style.display = 'block';
+  results.textContent = `Punters Club votes — $10: ${counts['10']||0} • $20: ${counts['20']||0} • $30: ${counts['30']||0}`;
 }
 
 function renderRaceInputs(count){
