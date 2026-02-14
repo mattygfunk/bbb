@@ -224,13 +224,15 @@ function wirePuntersLeaderboardShare(){
   btn.onclick = async () => {
     const text = 'Big Bluff Bay Punters Club leaderboard is live. Have a look:';
     const url = `${window.location.origin}/punters.html`;
+    const payload = `${text} ${url}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: 'BBB Leaderboard', text, url });
-        if (msg) msg.textContent = 'Shared.';
+        if (msg) msg.textContent = 'Shared. Select your Messenger group to post it.';
       } else {
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener,noreferrer');
-        if (msg) msg.textContent = 'Facebook share opened in a new tab.';
+        try { await navigator.clipboard.writeText(payload); } catch {}
+        window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
+        if (msg) msg.textContent = 'Copied link. Messenger opened — paste into your group.';
       }
     } catch {
       if (msg) msg.textContent = 'Share cancelled.';
