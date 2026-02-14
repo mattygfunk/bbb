@@ -222,20 +222,29 @@ async function hydrateLanding() {
   }
 }
 
+async function initLockCountdown() {
+  const lockNode = document.getElementById('status-lock');
+  if (!lockNode) return;
+
+  let end = new Date(LOCK_AT_ISO).getTime();
+  try {
+    const dl = await fetch('/api/tips/edit-deadline').then((r) => r.json()).catch(() => ({}));
+    const apiEnd = Number(dl?.effectiveDeadlineMs || 0);
+    if (apiEnd > 0) end = apiEnd;
+  } catch {}
+
+  const tick = () => { lockNode.textContent = fmtCountdown(end - Date.now()); };
+  tick();
+  setInterval(tick, 1000);
+}
+
 (function initLanding() {
   if (window.location.hash === '#enter-table') {
     window.location.replace('/punters.html#tip-form');
     return;
   }
 
-  const lockNode = document.getElementById('status-lock');
-  if (lockNode) {
-    const end = new Date(LOCK_AT_ISO).getTime();
-    const tick = () => { lockNode.textContent = fmtCountdown(end - Date.now()); };
-    tick();
-    setInterval(tick, 1000);
-  }
-
+  initLockCountdown();
   wirePickToggles();
   wireLeaderboardShare();
   hydrateLanding();
