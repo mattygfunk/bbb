@@ -233,8 +233,20 @@ $('clear-results-btn')?.addEventListener('click', async () => {
   }
 });
 
-$('autofill-bosses-btn')?.addEventListener('click', () => {
+$('autofill-bosses-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+
+  try {
+    // Always fetch latest tips before auto-fill so it works even if prior refresh failed.
+    const p = await req(`${API.tips}?status=all`);
+    state.tipsAll = p.tips || [];
+    state.popularByRace = computePopularByRace(state.tipsAll);
+    renderBossesSuggested(state.popularByRace);
+  } catch (err) {
+    $('bosses-msg').textContent = `Could not load latest tips: ${err.message}`;
+    return;
+  }
+
   const popular = state.popularByRace || {};
   let filled = 0;
   for(let i=1;i<=state.raceCount;i+=1){
@@ -247,7 +259,10 @@ $('autofill-bosses-btn')?.addEventListener('click', () => {
       filled += 1;
     }
   }
-  $('bosses-msg').textContent = filled ? `Auto-filled ${filled} leg${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.` : 'No popular tips available for selected legs.';
+
+  $('bosses-msg').textContent = filled
+    ? `Auto-filled ${filled} leg${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.`
+    : 'No popular tips found for currently selected legs.';
 });
 
 $('reset-bosses-btn')?.addEventListener('click', async () => {
