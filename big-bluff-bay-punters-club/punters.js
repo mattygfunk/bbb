@@ -13,7 +13,7 @@ function renderLeaderboard(rows){
   body.innerHTML='';
   (rows||[]).forEach((r)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.correct}</td>`;
+    tr.innerHTML=`<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
     body.appendChild(tr);
   });
   if(!(rows||[]).length){

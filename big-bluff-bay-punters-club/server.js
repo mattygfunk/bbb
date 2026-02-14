@@ -481,10 +481,10 @@ function createApp() {
     const store = readStore();
     const score = new Map();
 
-    const addPoints = (member, pts) => {
-      const row = score.get(member) || { member, points: 0, correct: 0 };
+    const addPoints = (member, pts, isWinner) => {
+      const row = score.get(member) || { member, points: 0, winners: 0 };
       row.points += pts;
-      if (pts > 0) row.correct += 1;
+      if (isWinner) row.winners += 1;
       score.set(member, row);
     };
 
@@ -496,15 +496,16 @@ function createApp() {
 
       const sel = applySub(String(tip.selection || tip.horse || ''), rr);
       let pts = 0;
-      if ((rr.first || []).map(String).includes(sel)) pts = 3;
+      const isWinner = (rr.first || []).map(String).includes(sel);
+      if (isWinner) pts = 3;
       else if ((rr.second || []).map(String).includes(sel)) pts = 2;
       else if ((rr.third || []).map(String).includes(sel)) pts = 1;
-      addPoints(String(tip.member || 'Unknown'), pts);
+      addPoints(String(tip.member || 'Unknown'), pts, isWinner);
     }
 
     const ladder = [...score.values()]
-      .sort((a, b) => b.points - a.points || b.correct - a.correct || a.member.localeCompare(b.member))
-      .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, correct: r.correct }));
+      .sort((a, b) => b.points - a.points || b.winners - a.winners || a.member.localeCompare(b.member))
+      .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
     return res.json({ ladder });
   });
 

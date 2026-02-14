@@ -70,7 +70,7 @@ function renderLadder(rows) {
   }
   rows.slice(0, 10).forEach((r) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>+${r.correct || 0}</td>`;
+    tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
     body.appendChild(tr);
   });
 }
