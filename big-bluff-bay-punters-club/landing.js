@@ -149,6 +149,11 @@ async function hydrateLanding() {
 }
 
 (function initLanding() {
+  if (window.location.hash === '#enter-table') {
+    window.location.replace('/punters.html#tip-form');
+    return;
+  }
+
   const lockNode = document.getElementById('status-lock');
   if (lockNode) {
     const end = new Date(LOCK_AT_ISO).getTime();
