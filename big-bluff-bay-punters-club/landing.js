@@ -1,4 +1,5 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
+const API_ROOTS = ['/api', '/punters/api'];
 
 // Mock preview data for UI polish while live feeds are sparse.
 // TODO: replace/augment with real backend endpoints when available.
@@ -18,6 +19,17 @@ const MOCK = {
 
 function esc(s) {
   return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+async function fetchApi(path) {
+  for (const root of API_ROOTS) {
+    try {
+      const r = await fetch(`${root}${path}`);
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) return d;
+    } catch {}
+  }
+  return {};
 }
 
 function fmtCountdown(ms) {
@@ -178,11 +190,11 @@ async function hydrateLanding() {
 
   try {
     const [fx, tips, ladder, jackpot, social] = await Promise.all([
-      fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/ladder').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/jackpot').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/social-feed').then((r) => r.json()).catch(() => ({}))
+      fetchApi('/fixtures'),
+      fetchApi('/tips?status=all'),
+      fetchApi('/ladder'),
+      fetchApi('/jackpot'),
+      fetchApi('/social-feed')
     ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
@@ -228,7 +240,7 @@ async function initLockCountdown() {
 
   let end = new Date(LOCK_AT_ISO).getTime();
   try {
-    const dl = await fetch('/api/tips/edit-deadline').then((r) => r.json()).catch(() => ({}));
+    const dl = await fetchApi('/tips/edit-deadline');
     const apiEnd = Number(dl?.effectiveDeadlineMs || 0);
     if (apiEnd > 0) end = apiEnd;
   } catch {}
