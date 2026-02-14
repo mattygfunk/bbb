@@ -105,18 +105,24 @@ async function refresh(){
   const byPunter = new Map();
   (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
     const member = String(t.member || 'Unknown');
-    if (!byPunter.has(member)) byPunter.set(member, new Map());
-    byPunter.get(member).set(String(t.race || ''), String(t.selection || t.horse || ''));
+    if (!byPunter.has(member)) byPunter.set(member, { picks: new Map(), unpaid: false });
+    const row = byPunter.get(member);
+    row.picks.set(String(t.race || ''), String(t.selection || t.horse || ''));
+    if (!t.paid) row.unpaid = true;
   });
   const raceOrder = Array.from({length:state.raceCount}, (_,i)=>`R${i+1}`);
-  Array.from(byPunter.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([member, picks]) => {
+  Array.from(byPunter.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([member, data]) => {
+    const picks = data.picks;
     const lines = raceOrder
       .filter((r) => picks.get(r))
       .map((r) => `<span>${esc(r)}: <strong>${esc(picks.get(r))}</strong></span>`)
       .join(' • ');
     const e=document.createElement('article');
     e.className='tip';
-    e.innerHTML=`<strong>${esc(member)}</strong><p class='meta'>${lines || 'No tips yet'}</p>`;
+    const reminder = data.unpaid
+      ? `<p class='meta unpaid-reminder'>⚠️ Payment reminder: not marked paid — PayID for today: <strong>0421 325 503</strong></p>`
+      : "";
+    e.innerHTML=`<strong>${esc(member)}</strong>${data.unpaid ? " <span class='pill unpaid-pill'>UNPAID</span>" : ""}<p class='meta'>${lines || 'No tips yet'}</p>${reminder}`;
     $('tips-list').appendChild(e);
   });
   $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;

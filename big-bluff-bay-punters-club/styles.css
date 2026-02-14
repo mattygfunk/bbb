@@ -206,6 +206,16 @@ h3 { margin: 0 0 .45rem; }
 }
 .tip .meta { color: var(--muted); font-size: .9rem; }
 .tip.pending { border-style: dashed; }
+.unpaid-pill {
+  margin-left: .35rem;
+  color: #fecaca;
+  border-color: #7f1d1d;
+  background: #3a1010;
+}
+.unpaid-reminder {
+  margin-top: .45rem;
+  color: #fecaca;
+}
 
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; min-width: 500px; }
