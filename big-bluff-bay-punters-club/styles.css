@@ -509,11 +509,14 @@ details p { margin:.55rem 0 0; }
 
 .club-banner-photo {
   width: 100%;
-  height: clamp(210px, 34vw, 380px);
+  max-width: 920px;
+  margin: 0 auto .6rem;
+  display: block;
+  height: clamp(160px, 26vw, 280px);
   object-fit: cover;
+  object-position: center 28%;
   border-radius: .85rem;
   border: 1px solid #304860;
-  margin-bottom: .6rem;
 }
 
 @media (min-width: 980px) {
