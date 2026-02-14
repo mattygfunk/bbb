@@ -14,6 +14,31 @@
     <meta name="twitter:title" content="Big Bluff Bay Punters Club" />
     <meta name="twitter:description" content="Track rail × card table. Lock picks, stack points, chase jackpots." />
     <meta name="twitter:image" content="https://bigbluffbay.au/og-image.svg" />
+    <script type="application/ld+json" id="faq-schema">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type":"Question","name":"When do picks lock?","acceptedAnswer":{"@type":"Answer","text":"Picks lock at the published lock timer shown on the page."}},
+          {"@type":"Question","name":"How is scoring calculated?","acceptedAnswer":{"@type":"Answer","text":"Scoring is 3 points for 1st, 2 points for 2nd, and 1 point for 3rd."}},
+          {"@type":"Question","name":"Can I edit tips after submitting?","acceptedAnswer":{"@type":"Answer","text":"Yes, you can edit tips until lock time. After lock, tips are frozen."}},
+          {"@type":"Question","name":"How does paid status affect jackpot?","acceptedAnswer":{"@type":"Answer","text":"Current pot is calculated from paid players for that week."}},
+          {"@type":"Question","name":"What is the Bosses Multi freeroll bonus?","acceptedAnswer":{"@type":"Answer","text":"If Bosses Multi lands, that week’s Punters Club players get a next-day Poker freeroll for the full amount."}}
+        ]
+      }
+    </script>
+    <script type="application/ld+json" id="event-schema">
+      {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": "Big Bluff Bay Punters Club Weekly Meet",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "sport": "Horse Racing",
+        "organizer": {"@type": "Organization", "name": "Big Bluff Bay Punters Club"},
+        "location": {"@type": "Place", "name": "Pinjarra"},
+        "url": "https://bigbluffbay.au/"
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
@@ -50,7 +75,7 @@
             <span class="pill">💰 <span id="status-jackpot-label">Jackpot building</span>: <strong id="status-jackpot">$0</strong></span>
             <span class="pill">🏁 Meet: <strong id="status-meet">Meet loading</strong></span>
             <span class="pill">👥 Entries: <strong id="status-entries">Loading</strong></span>
-            <span class="pill chip-red">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
+            <span class="pill chip-red live-pulse">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
             <span class="pill">🃏 Bosses Multi lands = next-day Poker freeroll</span>
           </div>
         </section>
@@ -166,6 +191,11 @@
     </main>
 
     <footer class="wrap footer muted"><p>Big Bluff Bay Punters Club</p></footer>
+
+    <div class="mobile-sticky-cta" aria-label="Quick actions">
+      <a class="btn chip-btn" href="#enter-table">Enter this week’s Card Table</a>
+      <a class="btn btn-ghost" href="#lobby">Jackpot + Ladder</a>
+    </div>
 
     <script src="home-login.js"></script>
     <script src="landing.js"></script>
