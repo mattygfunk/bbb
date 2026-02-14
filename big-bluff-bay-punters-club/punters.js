@@ -230,9 +230,10 @@ function wirePuntersLeaderboardShare(){
         await navigator.share({ title: 'BBB Leaderboard', text, url });
         if (msg) msg.textContent = 'Shared. Select your Messenger group to post it.';
       } else {
+        const shareUrl = `https://www.facebook.com/dialog/share?app_id=966242223397117&display=popup&href=${encodeURIComponent(url)}&redirect_uri=${encodeURIComponent(url)}`;
         try { await navigator.clipboard.writeText(payload); } catch {}
-        window.open('https://www.messenger.com/', '_blank', 'noopener,noreferrer');
-        if (msg) msg.textContent = 'Copied link. Messenger opened — paste into your group.';
+        window.open(shareUrl, '_blank', 'noopener,noreferrer');
+        if (msg) msg.textContent = 'Facebook share dialog opened. Choose Messenger and your group.';
       }
     } catch {
       if (msg) msg.textContent = 'Share cancelled.';
