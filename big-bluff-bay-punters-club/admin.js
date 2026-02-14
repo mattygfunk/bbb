@@ -129,8 +129,11 @@ async function refresh(){
 
   try {
     const j = await req(API.jackpot);
+    const rollover = Number(j?.rollover || 0);
     const input = $('jackpot-rollover-input');
-    if (input) input.value = String(Number(j?.rollover || 0));
+    const current = $('jackpot-current');
+    if (input) input.value = String(rollover);
+    if (current) current.textContent = `Current rollover: $${rollover}`;
   } catch {}
 
   const p=await req(`${API.tips}?status=all`);
@@ -255,6 +258,8 @@ $('jackpot-form')?.addEventListener('submit', async (e) => {
   try {
     const r = await req(API.jackpot, { method: 'PUT', body: JSON.stringify({ rollover }) });
     $('archive-round-msg').textContent = `Jackpot rollover set to $${Number(r.jackpotCarry || 0)}.`;
+    const current = $('jackpot-current');
+    if (current) current.textContent = `Current rollover: $${Number(r.jackpotCarry || 0)}`;
   } catch (err) {
     $('archive-round-msg').textContent = err.message;
   }
