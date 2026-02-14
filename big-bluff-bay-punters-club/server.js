@@ -183,6 +183,17 @@ function computeLadder(store) {
     .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
 }
 
+function getLastScoredRace(store) {
+  const races = Object.entries(store.raceResults || {})
+    .filter(([, rr]) => Array.isArray(rr?.first) || Array.isArray(rr?.second) || Array.isArray(rr?.third))
+    .filter(([, rr]) => (rr.first || []).length || (rr.second || []).length || (rr.third || []).length)
+    .map(([race]) => Number(String(race || 'R0').slice(1)))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  if (!races.length) return null;
+  const max = Math.max(...races);
+  return `R${max}`;
+}
+
 function computeMemberBreakdown(store, memberName) {
   const target = String(memberName || '').trim().toLowerCase();
   if (!target) return { member: memberName, totalPoints: 0, winners: 0, races: [] };
@@ -577,7 +588,8 @@ function createApp() {
   app.get('/api/ladder', (_req, res) => {
     const store = readStore();
     const ladder = computeLadder(store);
-    return res.json({ ladder });
+    const afterRace = getLastScoredRace(store);
+    return res.json({ ladder, afterRace });
   });
 
   app.get('/api/ladder/:member', (req, res) => {

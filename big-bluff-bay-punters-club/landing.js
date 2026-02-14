@@ -170,6 +170,8 @@ async function hydrateLanding() {
 
     renderTipsByPlayer(tipRows);
     renderLadder(leaders);
+    const cutoff = document.getElementById('ladder-after-race');
+    if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
   } catch {
     // graceful fallback to mock/empty states
   }

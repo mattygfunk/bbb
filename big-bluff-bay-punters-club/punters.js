@@ -111,6 +111,8 @@ async function refresh(){
   state.raceCount = newRaceCount;
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   renderLeaderboard(ladderRes.ladder || []);
+  const status = $('leaderboard-status');
+  if (status) status.textContent = ladderRes.afterRace ? `After ${ladderRes.afterRace}` : 'Live';
   renderBossesBet(bossesRes.bossesBet || {});
   if (state.selectedBreakdownMember) {
     loadMemberBreakdown(state.selectedBreakdownMember, false).catch(()=>{});
