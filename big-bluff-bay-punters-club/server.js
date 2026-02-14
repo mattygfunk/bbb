@@ -292,10 +292,26 @@ function createApp() {
 
   // canonical routes
   app.get('/api/buyin-votes', (req, res) => res.json(getBuyInVotePayload(req)));
+  app.get('/api/buyin-votes/me', auth, (req, res) => {
+    const store = readStore();
+    const votes = store.buyInVotes || {};
+    const counts = { '10': 0, '20': 0, '30': 0 };
+    Object.values(votes).forEach((v) => {
+      const key = String(v);
+      if (counts[key] !== undefined) counts[key] += 1;
+    });
+    const myVote = votes[String(req.user.username || '').toLowerCase()] || null;
+    return res.json({ counts, myVote });
+  });
   app.post('/api/buyin-votes', auth, saveBuyInVote);
   // compatibility aliases
   app.get('/api/buyin-vote', (req, res) => res.json(getBuyInVotePayload(req)));
   app.get('/api/buy-in-votes', (req, res) => res.json(getBuyInVotePayload(req)));
+  app.get('/api/buyin-vote/me', auth, (req, res) => {
+    const store = readStore();
+    const myVote = (store.buyInVotes || {})[String(req.user.username || '').toLowerCase()] || null;
+    return res.json({ myVote });
+  });
   app.post('/api/buyin-vote', auth, saveBuyInVote);
   app.post('/api/buy-in-votes', auth, saveBuyInVote);
 

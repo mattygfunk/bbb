@@ -1,5 +1,5 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',buyInVotes:'/buyin-votes',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',bossesBet:'/bosses-bet',buyInVotes:'/buyin-votes',buyInVotesMe:'/buyin-votes/me',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0};
 const $=id=>document.getElementById(id);
@@ -77,14 +77,21 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  const [fx,tp,allTipsRes,ladderRes,bossesRes,buyInRes]=await Promise.all([
+  let buyInRes = { counts:{'10':0,'20':0,'30':0}, myVote:null };
+  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([
     req(API.fixtures),
     req(`${API.tips}?status=all`),
     req(`${API.tips}?status=all`),
     req(API.ladder),
-    req(API.bossesBet),
-    req(API.buyInVotes).catch(()=>({ counts:{'10':0,'20':0,'30':0}, myVote:null }))
+    req(API.bossesBet)
   ]);
+  try { buyInRes = await req(API.buyInVotes); } catch {}
+  if (state.user && !buyInRes.myVote) {
+    try {
+      const meVote = await req(API.buyInVotesMe);
+      buyInRes = { ...buyInRes, ...meVote, myVote: meVote.myVote || buyInRes.myVote };
+    } catch {}
+  }
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
