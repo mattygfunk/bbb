@@ -1,4 +1,4 @@
-const MENU_API_ROOTS = ['/api', '/punters/api'];
+const MENU_API_ROOTS = ['/api'];
 const MENU_TOKEN_KEY = 'bbb-token-v3';
 
 async function menuReq(path, opt = {}) {

@@ -1,5 +1,5 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
-const API_ROOTS = ['/api', '/punters/api'];
+const API_ROOTS = ['/api'];
 
 // Mock preview data for UI polish while live feeds are sparse.
 // TODO: replace/augment with real backend endpoints when available.
