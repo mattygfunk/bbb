@@ -1,6 +1,26 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const ENTRY_FEE = 10;
 
+// Mock preview data for UI polish while live feeds are sparse.
+// TODO: replace/augment with real backend endpoints when available.
+const MOCK = {
+  runners: [
+    { name: 'Storm Ledger', barrier: 4, jockey: 'Macca', odds: '4.60', confidence: 68, risk: '♣' },
+    { name: 'Bayline Belle', barrier: 8, jockey: 'Jess', odds: '6.20', confidence: 55, risk: '♠' },
+    { name: 'Cash Cascade', barrier: 2, jockey: 'Rico', odds: '3.90', confidence: 74, risk: '♣' },
+    { name: 'Pinjarra Prince', barrier: 6, jockey: 'A. Kerr', odds: '8.10', confidence: 46, risk: '♠' }
+  ],
+  winners: [
+    { handle: '@___', week: 'Wk --', prize: 'Prize pending' },
+    { handle: '@___', week: 'Wk --', prize: 'Payout board loading' }
+  ],
+  payoutsTicker: 'Payout board refreshes after weekly settlement.'
+};
+
+function esc(s) {
+  return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
 function fmtCountdown(ms) {
   if (ms <= 0) return 'Locked';
   const s = Math.floor(ms / 1000);
@@ -10,26 +30,32 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
-function esc(s) {
-  return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-}
-
-function renderLadder(rows) {
-  const body = document.getElementById('ladder-preview');
-  if (!body) return;
-  body.innerHTML = '';
-  if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4" class="muted">No results yet.</td></tr>';
-    return;
-  }
-  rows.slice(0, 10).forEach((r) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.rank}</td><td>${r.member}</td><td>${r.points}</td><td>+${r.correct || 0}</td>`;
-    body.appendChild(tr);
+function renderRunnerPreview(rows) {
+  const wrap = document.getElementById('runner-preview-list');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  rows.slice(0, 4).forEach((r, i) => {
+    const card = document.createElement('article');
+    card.className = 'runner-card';
+    card.tabIndex = 0;
+    card.innerHTML = `
+      <div class="runner-top">
+        <h3>${esc(r.name)}</h3>
+        <span class="pill">Odds ${esc(r.odds)}</span>
+      </div>
+      <p class="runner-meta">Barrier ${esc(r.barrier)} • J: ${esc(r.jockey)} • Risk ${esc(r.risk)}</p>
+      <div class="confidence-meter" aria-label="Confidence ${Number(r.confidence) || 0} percent"><span style="width:${Number(r.confidence) || 0}%"></span></div>
+      <div class="pick-toggle" role="group" aria-label="Pick type">
+        <button class="${i % 3 === 0 ? 'active' : ''}" type="button">Win</button>
+        <button class="${i % 3 === 1 ? 'active' : ''}" type="button">Place</button>
+        <button class="${i % 3 === 2 ? 'active' : ''}" type="button">Fade</button>
+      </div>
+    `;
+    wrap.appendChild(card);
   });
 }
 
-function renderTips(tips) {
+function renderTipsByPlayer(tips) {
   const list = document.getElementById('tips-preview-list');
   if (!list) return;
   list.innerHTML = '';
@@ -59,41 +85,36 @@ function renderTips(tips) {
     });
 }
 
-async function hydrateLanding() {
-  try {
-    const [fx, tips, ladder] = await Promise.all([
-      fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/ladder').then((r) => r.json()).catch(() => ({}))
-    ]);
+function renderLadder(rows) {
+  const body = document.getElementById('ladder-preview');
+  if (!body) return;
+  body.innerHTML = '';
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="4" class="muted">Leaderboard updates when results are posted.</td></tr>';
+    return;
+  }
+  rows.slice(0, 10).forEach((r) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>+${r.correct || 0}</td>`;
+    body.appendChild(tr);
+  });
+}
 
-    const meet = fx?.fixtures?.[0]?.track || 'Pinjarra';
-    document.getElementById('status-meet').textContent = meet;
-
-    const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
-    const entries = new Set(tipRows.map((t) => t.member)).size;
-    document.getElementById('status-entries').textContent = String(entries || 0);
-    document.getElementById('stat-entries').textContent = String(entries || 0);
-
-    const paidMembers = new Set(tipRows.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
-    const potValue = paidMembers * ENTRY_FEE;
-    const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
-    const potText = money.format(potValue);
-    const growthText = `+${potText}`;
-    document.getElementById('status-jackpot').textContent = potText;
-    document.getElementById('jackpot-value').textContent = potText;
-    document.getElementById('jackpot-growth').textContent = growthText;
-    document.getElementById('stat-paid').textContent = potText;
-
-    const leaders = ladder?.ladder || [];
-    const leader = leaders[0]?.member || '—';
-    document.getElementById('jackpot-last-winner').textContent = leader;
-
-    renderTips(tipRows);
-    renderLadder(leaders);
-    document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || 1);
-  } catch {
-    // non-blocking
+function renderWinners(items) {
+  const wrap = document.getElementById('winners-strip');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  (items || []).forEach((w) => {
+    const card = document.createElement('article');
+    card.className = 'pill winner-item';
+    card.innerHTML = `${esc(w.handle)} • ${esc(w.week)} • ${esc(w.prize)}`;
+    wrap.appendChild(card);
+  });
+  if (!items?.length) {
+    const empty = document.createElement('span');
+    empty.className = 'pill empty-state';
+    empty.textContent = 'Winners wall updates after real payouts are recorded.';
+    wrap.appendChild(empty);
   }
 }
 
@@ -108,6 +129,51 @@ function wirePickToggles() {
   });
 }
 
+async function hydrateLanding() {
+  renderRunnerPreview(MOCK.runners);
+  renderWinners(MOCK.winners);
+  const ticker = document.getElementById('payout-ticker');
+  if (ticker) ticker.textContent = MOCK.payoutsTicker;
+
+  try {
+    const [fx, tips, ladder] = await Promise.all([
+      fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
+      fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
+      fetch('/api/ladder').then((r) => r.json()).catch(() => ({}))
+    ]);
+
+    const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
+    const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
+    const entries = new Set(tipRows.map((t) => t.member)).size;
+
+    const paidMembers = new Set(tipRows.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
+    const potValue = paidMembers * ENTRY_FEE;
+    const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+    const potText = money.format(potValue);
+
+    const leaders = ladder?.ladder || [];
+    const lastWinner = leaders[0]?.member ? `@${leaders[0].member}` : 'No winner yet';
+
+    document.getElementById('status-meet').textContent = meet;
+    document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
+    document.getElementById('status-jackpot').textContent = potText;
+    document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
+
+    document.getElementById('jackpot-value').textContent = potText;
+    document.getElementById('jackpot-growth').textContent = `+${potText}`;
+    document.getElementById('jackpot-last-winner').textContent = lastWinner;
+
+    document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || '—');
+    document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
+    document.getElementById('stat-paid').textContent = potText;
+
+    renderTipsByPlayer(tipRows);
+    renderLadder(leaders);
+  } catch {
+    // graceful fallback to mock/empty states
+  }
+}
+
 (function initLanding() {
   const lockNode = document.getElementById('status-lock');
   if (lockNode) {
@@ -116,6 +182,7 @@ function wirePickToggles() {
     tick();
     setInterval(tick, 1000);
   }
+
   wirePickToggles();
   hydrateLanding();
 })();

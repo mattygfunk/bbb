@@ -4,15 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Big Bluff Bay Punters Club</title>
-    <meta name="description" content="Big Bluff Bay Punters Club — race tips, leaderboard tracking, and weekly jackpot bragging rights." />
+    <meta name="description" content="Big Bluff Bay Punters Club — race tips, leaderboard tracking, jackpot chases, and Poker freeroll upside." />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Big Bluff Bay Punters Club" />
-    <meta property="og:description" content="Back the best runners. Play the long game. Track tips, leaderboard points, and jackpot bragging rights." />
+    <meta property="og:description" content="Track rail × card table. Lock picks, stack points, chase jackpots." />
     <meta property="og:url" content="https://bigbluffbay.au/" />
     <meta property="og:image" content="https://bigbluffbay.au/og-image.svg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Big Bluff Bay Punters Club" />
-    <meta name="twitter:description" content="Back the best runners. Play the long game." />
+    <meta name="twitter:description" content="Track rail × card table. Lock picks, stack points, chase jackpots." />
     <meta name="twitter:image" content="https://bigbluffbay.au/og-image.svg" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -20,8 +20,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <header class="hero home-hero premium-hero">
+  <body class="landing-page">
+    <header class="hero premium-hero">
       <div class="overlay"></div>
       <nav class="nav wrap">
         <a class="brand" href="/" style="text-decoration:none;color:inherit;">
@@ -35,19 +35,21 @@
         </div>
       </nav>
 
-      <div class="wrap hero-content home-hero-content hero-layout">
-        <section class="hero-copy">
+      <div class="wrap hero-content hero-layout">
+        <section class="hero-copy" aria-label="Hero introduction">
           <p class="hero-kicker">🏇 Track Rail × ♠ Card Table</p>
-          <h1>Where race-day instinct meets poker-table discipline.</h1>
-          <p class="muted">Lock your best runners, stack points through the meet, and chase the weekly jackpot with a club that plays smart.</p>
-          <div class="hero-actions major-actions" aria-label="Primary sections">
-            <a class="btn chip-btn major-btn" href="/punters.html">Punters Club</a>
-            <a class="btn btn-ghost major-btn" href="/poker.html">Poker</a>
+          <h1>Back sharp. Play patient. Win like a club.</h1>
+          <p class="muted">Big Bluff Bay blends race-day instinct with poker-table discipline. Lock your best runners, stack points, and put yourself in the frame every week.</p>
+
+          <div class="hero-actions major-actions" aria-label="Primary actions">
+            <a class="btn chip-btn major-btn" href="#enter-table">Enter this week’s Card Table</a>
+            <a class="btn btn-ghost major-btn" href="#lobby">View Jackpot + Leaderboard</a>
           </div>
+
           <div class="status-strip" aria-label="Live round status">
-            <span class="pill">💰 Jackpot <strong id="status-jackpot">$0</strong> Live</span>
-            <span class="pill">🏁 Meet: <strong id="status-meet">Pinjarra</strong></span>
-            <span class="pill">👥 Entries: <strong id="status-entries">0</strong> tipsters in</span>
+            <span class="pill">💰 <span id="status-jackpot-label">Jackpot building</span>: <strong id="status-jackpot">$0</strong></span>
+            <span class="pill">🏁 Meet: <strong id="status-meet">Meet loading</strong></span>
+            <span class="pill">👥 Entries: <strong id="status-entries">Loading</strong></span>
             <span class="pill chip-red">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
             <span class="pill">🃏 Bosses Multi lands = next-day Poker freeroll</span>
           </div>
@@ -55,20 +57,40 @@
 
         <section class="card login-card hero-login" id="enter-table" aria-label="Enter this week's card table">
           <h2>Enter this week’s Card Table</h2>
-          <form id="home-login-form" class="stack">
-            <label>Member <input required name="member" type="text" placeholder="your username" autocomplete="username" /></label>
-            <label>Password <input required name="pin" type="password" placeholder="your password" autocomplete="current-password" /></label>
+          <p class="muted">Takes 30 seconds. You can edit tips until lock.</p>
+          <form id="home-login-form" class="stack" novalidate>
+            <label>Member
+              <input required name="member" type="text" minlength="3" placeholder="your username" autocomplete="username" />
+            </label>
+            <label>Password
+              <div class="password-wrap">
+                <input required name="pin" id="home-password" type="password" minlength="6" placeholder="your password" autocomplete="current-password" />
+                <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
+              </div>
+            </label>
             <div class="row-actions">
               <button class="btn chip-btn" type="submit" data-mode="login">Log In to Punters</button>
               <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
             </div>
           </form>
-          <p id="home-login-msg" class="muted"></p>
+          <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
         </section>
       </div>
     </header>
 
     <main class="wrap premium-main">
+      <section class="rail-section" id="this-week-table" aria-labelledby="table-heading">
+        <div class="section-head">
+          <h2 id="table-heading">This Week’s Table</h2>
+          <a class="menu-link" href="/punters.html">View full table</a>
+        </div>
+        <article class="card table-preview-shell" aria-label="Card table preview">
+          <div class="table-felt">
+            <div class="table-felt-inner" id="runner-preview-list"></div>
+          </div>
+        </article>
+      </section>
+
       <section class="rail-section" id="this-week-tips" aria-labelledby="tips-heading">
         <div class="section-head">
           <h2 id="tips-heading">This Week’s Tips</h2>
@@ -78,11 +100,14 @@
       </section>
 
       <section class="rail-section" aria-labelledby="how-heading">
-        <div class="section-head"><h2 id="how-heading">How it Works</h2><p class="muted">Poker-table discipline applied to racing.</p></div>
+        <div class="section-head">
+          <h2 id="how-heading">How it Works</h2>
+          <p class="muted">Poker-table discipline applied to racing.</p>
+        </div>
         <div class="steps-grid">
-          <article class="card"><h3>1. Lock Picks</h3><p class="muted">Submit in under 60 seconds before lock time.</p></article>
-          <article class="card"><h3>2. Score Points</h3><p class="muted">1st = 3, 2nd = 2, 3rd = 1. Stay consistent.</p></article>
-          <article class="card"><h3>3. Chase Jackpot</h3><p class="muted">Outright winner takes it. Ties roll over.</p></article>
+          <article class="card step-tile"><h3>1. Lock Picks</h3><p class="muted">Submit fast before lock. Clean, simple, fair.</p></article>
+          <article class="card step-tile"><h3>2. Score Points</h3><p class="muted">3 for 1st, 2 for 2nd, 1 for 3rd.</p></article>
+          <article class="card step-tile"><h3>3. Chase Jackpot</h3><p class="muted">Outright winner takes it. Ties roll over.</p></article>
         </div>
       </section>
 
@@ -92,14 +117,17 @@
           <article class="card jackpot-card">
             <h3>Current Pot</h3>
             <p class="jackpot-value" id="jackpot-value">$0</p>
-            <p class="muted">Growth this round: <strong id="jackpot-growth">+$0</strong> • Last winner: <strong id="jackpot-last-winner">—</strong></p>
+            <p class="muted">Growth this round: <strong id="jackpot-growth">+$0</strong> • Last winner: <strong id="jackpot-last-winner">No winner yet</strong></p>
             <p class="muted">Rollover rule active on tied first place.</p>
             <p class="muted"><strong>Freeroll bonus:</strong> if the Bosses Multi lands, all that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p>
           </article>
           <article class="card">
-            <h3>Top 10 (Live)</h3>
-            <table><thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead><tbody id="ladder-preview"></tbody></table>
-            <p class="muted ticker">Last week payouts: <span id="payout-ticker">No payout data yet.</span></p>
+            <h3>Top 10 Live</h3>
+            <table>
+              <thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Δ</th></tr></thead>
+              <tbody id="ladder-preview"></tbody>
+            </table>
+            <p class="muted ticker">Last week payouts: <span id="payout-ticker">Payout board refreshes after weekly settlement.</span></p>
           </article>
         </div>
       </section>
@@ -107,20 +135,18 @@
       <section class="rail-section" aria-labelledby="strategy-heading">
         <div class="section-head"><h2 id="strategy-heading">Strategy, not spray-and-pray</h2></div>
         <div class="steps-grid">
-          <article class="card"><h3>Value spots only</h3><p class="muted">Don’t force races. Pick edges.</p></article>
-          <article class="card"><h3>Consistency beats hero picks</h3><p class="muted">Bank repeatable points every week.</p></article>
-          <article class="card"><h3>Bankroll thinking</h3><p class="muted">Protect downside, press when odds are right.</p></article>
+          <article class="card"><h3>Value spots only</h3><p class="muted">Don’t force every race. Attack where your edge is real.</p></article>
+          <article class="card"><h3>Consistency beats hero picks</h3><p class="muted">Weekly points pressure wins seasons.</p></article>
+          <article class="card"><h3>Bankroll thinking</h3><p class="muted">Protect downside, compound upside.</p></article>
         </div>
       </section>
 
       <section class="rail-section" aria-labelledby="proof-heading">
         <div class="section-head"><h2 id="proof-heading">Winners Wall + Club Stats</h2></div>
-        <div class="winners-strip" id="winners-strip">
-          <span class="pill">Winners wall updates after real payouts are recorded.</span>
-        </div>
+        <div class="winners-strip" id="winners-strip"></div>
         <div class="stats-grid">
-          <article class="card"><h3 id="stat-weeks">0</h3><p class="muted">Weeks running</p></article>
-          <article class="card"><h3 id="stat-entries">0</h3><p class="muted">Avg entries</p></article>
+          <article class="card"><h3 id="stat-weeks">—</h3><p class="muted">Weeks running</p></article>
+          <article class="card"><h3 id="stat-entries">—</h3><p class="muted">Avg entries</p></article>
           <article class="card"><h3 id="stat-paid">$0</h3><p class="muted">Total paid</p></article>
         </div>
       </section>
@@ -129,12 +155,13 @@
         <div class="section-head"><h2 id="faq-heading">Rules + FAQ</h2></div>
         <details class="card"><summary>When do picks lock?</summary><p class="muted">At the published lock timer in the status strip.</p></details>
         <details class="card"><summary>How is scoring calculated?</summary><p class="muted">3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
-        <details class="card"><summary>Can I edit my tips after submitting?</summary><p class="muted">Yes, up to lock time. After lock, entries are frozen for fairness.</p></details>
-        <details class="card"><summary>What happens on tie?</summary><p class="muted">Jackpot rolls to the next round.</p></details>
-        <details class="card"><summary>How does paid status affect the jackpot?</summary><p class="muted">Current pot is calculated from paid players for that week.</p></details>
-        <details class="card"><summary>Who can win payouts?</summary><p class="muted">Registered members with valid tips before lock.</p></details>
-        <details class="card"><summary>What is the Bosses Multi freeroll bonus?</summary><p class="muted">If the Bosses Multi lands, that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p></details>
-        <details class="card"><summary>Where do I see official race results?</summary><p class="muted">Results are posted in the Punters page and reflected in live points/leaderboard.</p></details>
+        <details class="card"><summary>Can I edit tips after submitting?</summary><p class="muted">Yes, until lock time. After lock, tips are frozen.</p></details>
+        <details class="card"><summary>How does paid status affect jackpot?</summary><p class="muted">Current pot is calculated from paid players for that week.</p></details>
+        <details class="card"><summary>What is the Bosses Multi freeroll bonus?</summary><p class="muted">If Bosses Multi lands, that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p></details>
+
+        <div class="final-cta">
+          <a class="btn chip-btn major-btn" href="#enter-table">Enter this week’s Card Table</a>
+        </div>
       </section>
     </main>
 
