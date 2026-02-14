@@ -28,6 +28,7 @@ function ensureStore() {
       raceResults: {},
       bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
       buyInVotes: {},
+      archiveRounds: [],
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -67,6 +68,10 @@ function ensureStore() {
   }
   if (!store.buyInVotes || typeof store.buyInVotes !== 'object') {
     store.buyInVotes = {};
+    changed = true;
+  }
+  if (!Array.isArray(store.archiveRounds)) {
+    store.archiveRounds = [];
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -590,6 +595,38 @@ function createApp() {
     const ladder = computeLadder(store);
     const afterRace = getLastScoredRace(store);
     return res.json({ ladder, afterRace });
+  });
+
+  app.post('/api/archive-round', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const fixture = (store.fixtures || [])[0] || null;
+    const tips = (store.tips || []).filter((t) => t.status !== 'removed');
+
+    if (!fixture && !tips.length && !Object.keys(store.raceResults || {}).length) {
+      return res.status(400).json({ error: 'Nothing to archive yet' });
+    }
+
+    const snapshot = {
+      id: crypto.randomUUID(),
+      archivedAt: Date.now(),
+      archivedBy: req.user.username,
+      fixture,
+      tips,
+      raceResults: store.raceResults || {},
+      bossesBet: store.bossesBet || { legs: [], selections: {} },
+      ladder: computeLadder(store)
+    };
+
+    store.archiveRounds = Array.isArray(store.archiveRounds) ? store.archiveRounds : [];
+    store.archiveRounds.unshift(snapshot);
+
+    store.tips = [];
+    store.raceResults = {};
+    store.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    store.buyInVotes = {};
+
+    writeStore(store);
+    return res.json({ ok: true, archivedRoundId: snapshot.id, tipsArchived: tips.length, fixture: fixture?.event || null });
   });
 
   app.get('/api/ladder/:member', (req, res) => {
