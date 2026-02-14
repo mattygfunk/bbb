@@ -855,6 +855,18 @@ function createApp() {
     return res.json({ ok: true, deadlineMs, deadlineIso: new Date(deadlineMs).toISOString() });
   });
 
+  app.get('/api/tips/edit-deadline', (_req, res) => {
+    const store = readStore();
+    const manual = Number(store.tipEditDeadlineMs || 0);
+    const fallback = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
+    const effective = manual > 0 ? manual : fallback;
+    return res.json({
+      manualDeadlineMs: manual || null,
+      effectiveDeadlineMs: Number.isFinite(effective) ? effective : null,
+      editableNow: canEditTipsNow(store)
+    });
+  });
+
   app.get('/api/ladder/:member', (req, res) => {
     const store = readStore();
     const member = String(req.params.member || '').trim();
