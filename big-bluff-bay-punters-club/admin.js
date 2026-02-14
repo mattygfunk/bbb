@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -52,6 +52,33 @@ function renderBossesLegInputs(){
   }
 }
 
+function computePopularByRace(tips){
+  const byRace = new Map();
+  (tips || []).filter(t=>t.status!=='removed').forEach((t)=>{
+    const race = String(t.race || '').toUpperCase();
+    const sel = String(t.selection || t.horse || '').trim();
+    if(!race || !sel) return;
+    if(!byRace.has(race)) byRace.set(race, new Map());
+    const m = byRace.get(race);
+    m.set(sel, (m.get(sel) || 0) + 1);
+  });
+
+  const out = {};
+  for(const [race,m] of byRace.entries()){
+    const sorted = [...m.entries()].sort((a,b)=>b[1]-a[1] || Number(a[0])-Number(b[0]) || String(a[0]).localeCompare(String(b[0])));
+    if(sorted[0]) out[race] = { selection: sorted[0][0], votes: sorted[0][1] };
+  }
+  return out;
+}
+
+function renderBossesSuggested(popular){
+  const box = $('bosses-suggested');
+  if(!box) return;
+  const races = Array.from({length:state.raceCount},(_,i)=>`R${i+1}`);
+  const lines = races.filter(r=>popular[r]).map((r)=>`${r}: ${popular[r].selection} (${popular[r].votes} votes)`);
+  box.textContent = lines.length ? `Most popular picks → ${lines.join(' • ')}` : 'No tip data yet to auto-calculate Bosses Bet.';
+}
+
 async function bootstrap(){if(!state.token)return;try{state.user=(await req(API.me)).user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);}}
 
 async function refresh(){
@@ -92,6 +119,9 @@ async function refresh(){
   renderBossesLegInputs();
 
   const p=await req(`${API.tips}?status=all`);
+  state.tipsAll = p.tips || [];
+  state.popularByRace = computePopularByRace(state.tipsAll);
+  renderBossesSuggested(state.popularByRace);
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
   const byUser = new Map();
@@ -201,6 +231,23 @@ $('clear-results-btn')?.addEventListener('click', async () => {
   } catch (err) {
     $('results-msg').textContent = err.message;
   }
+});
+
+$('autofill-bosses-btn')?.addEventListener('click', () => {
+  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  const popular = state.popularByRace || {};
+  let filled = 0;
+  for(let i=1;i<=state.raceCount;i+=1){
+    const race = `R${i}`;
+    const box = document.querySelector(`#bosses-legs input[name='leg-${race}']`);
+    const sel = document.querySelector(`#bosses-legs input[name='sel-${race}']`);
+    if(!sel || !box) continue;
+    if(box.checked && popular[race]?.selection){
+      sel.value = popular[race].selection;
+      filled += 1;
+    }
+  }
+  $('bosses-msg').textContent = filled ? `Auto-filled ${filled} leg${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.` : 'No popular tips available for selected legs.';
 });
 
 $('reset-bosses-btn')?.addEventListener('click', async () => {
