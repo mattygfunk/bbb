@@ -24,7 +24,10 @@ function esc(s) {
 async function fetchApi(path) {
   for (const root of API_ROOTS) {
     try {
-      const r = await fetch(`${root}${path}`);
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(`${root}${path}`, { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(t);
       const d = await r.json().catch(() => ({}));
       if (r.ok) return d;
     } catch {}
@@ -189,11 +192,24 @@ async function hydrateLanding() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [fx, tips, ladder, jackpot, social] = await Promise.all([
+    const jackpot = await fetchApi('/jackpot');
+    const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+    const potValue = Number(jackpot?.totalPot || 0);
+    const roundValue = Number(jackpot?.currentRoundPot || 0);
+    const rolloverValue = Number(jackpot?.rollover || 0);
+    const potText = money.format(potValue);
+    const lastWinner = jackpot?.lastWinner ? `@${jackpot.lastWinner}` : 'No winner yet';
+
+    document.getElementById('status-jackpot').textContent = potText;
+    document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
+    document.getElementById('jackpot-value').textContent = potText;
+    document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
+    document.getElementById('jackpot-last-winner').textContent = lastWinner;
+
+    const [fx, tips, ladder, social] = await Promise.all([
       fetchApi('/fixtures'),
       fetchApi('/tips?status=all'),
       fetchApi('/ladder'),
-      fetchApi('/jackpot'),
       fetchApi('/social-feed')
     ]);
 
@@ -202,23 +218,10 @@ async function hydrateLanding() {
     const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
     const entries = new Set(tipRows.map((t) => t.member)).size;
 
-    const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
-    const potValue = Number(jackpot?.totalPot || 0);
-    const roundValue = Number(jackpot?.currentRoundPot || 0);
-    const rolloverValue = Number(jackpot?.rollover || 0);
-    const potText = money.format(potValue);
-
     const leaders = ladder?.ladder || [];
-    const lastWinner = jackpot?.lastWinner ? `@${jackpot.lastWinner}` : 'No winner yet';
 
     document.getElementById('status-meet').textContent = meet;
     document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
-    document.getElementById('status-jackpot').textContent = potText;
-    document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
-
-    document.getElementById('jackpot-value').textContent = potText;
-    document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
-    document.getElementById('jackpot-last-winner').textContent = lastWinner;
 
     document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || '—');
     document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
