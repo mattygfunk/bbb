@@ -556,6 +556,20 @@ function createApp() {
       store.tips[idx].paid = Boolean(req.body.paid);
     }
 
+    if (typeof req.body.selection !== 'undefined') {
+      const selection = String(req.body.selection || '').trim();
+      if (!selection) return res.status(400).json({ error: 'Selection is required' });
+      store.tips[idx].selection = selection;
+    }
+
+    if (typeof req.body.race !== 'undefined') {
+      const race = String(req.body.race || '').trim().toUpperCase();
+      const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+      const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+      if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
+      store.tips[idx].race = race;
+    }
+
     writeStore(store);
     return res.json({ ok: true, tip: store.tips[idx] });
   });

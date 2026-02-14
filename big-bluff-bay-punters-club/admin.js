@@ -1,5 +1,5 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{}};
 const $=id=>document.getElementById(id);
@@ -142,18 +142,55 @@ async function refresh(){
       const row = document.createElement('div');
       row.className = 'row';
       row.style.alignItems = 'flex-start';
-      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${allPaid ? 'Paid' : 'Unpaid'}</div><div class='muted'>${lines}</div></div><div class='row-actions'><button class='btn btn-ghost' data-member='${encodeURIComponent(member)}' data-paid='${allPaid ? 'false' : 'true'}'>Mark ${allPaid ? 'Unpaid' : 'Paid'}</button></div>`;
+      row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${allPaid ? 'Paid' : 'Unpaid'}</div><div class='muted'>${lines}</div></div><div class='row-actions'><button class='btn btn-ghost' data-action='toggle-paid' data-member='${encodeURIComponent(member)}' data-paid='${allPaid ? 'false' : 'true'}'>Mark ${allPaid ? 'Unpaid' : 'Paid'}</button><button class='btn btn-ghost' data-action='edit-tips' data-member='${encodeURIComponent(member)}'>Edit Tips</button></div>`;
       $('admin-list').appendChild(row);
     });
 
-  $('admin-list').querySelectorAll('button[data-member]').forEach((btn) => {
+  $('admin-list').querySelectorAll("button[data-action='toggle-paid']").forEach((btn) => {
     btn.onclick = async () => {
       try {
         const member = decodeURIComponent(btn.dataset.member || '');
         const nextPaid = btn.dataset.paid === 'true';
         const tipsForMember = (p.tips || []).filter(t => String(t.member||'') === member && t.status !== 'removed');
         for (const tip of tipsForMember) {
-          await req(`${API.tips}/${tip.id}`, { method: 'PATCH', body: JSON.stringify({ paid: nextPaid }) });
+          await req(API.updateTip(tip.id), { method: 'PATCH', body: JSON.stringify({ paid: nextPaid }) });
+        }
+        await refresh();
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  });
+
+  $('admin-list').querySelectorAll("button[data-action='edit-tips']").forEach((btn) => {
+    btn.onclick = async () => {
+      try {
+        const member = decodeURIComponent(btn.dataset.member || '');
+        const tipsForMember = (p.tips || [])
+          .filter(t => String(t.member||'') === member && t.status !== 'removed')
+          .sort((a,b)=>Number(String(a.race||'R0').slice(1))-Number(String(b.race||'R0').slice(1)));
+
+        const current = tipsForMember.map((t)=>`${t.race}=${t.selection || ''}`).join(', ');
+        const raw = prompt(`Edit tips for ${member}.\nFormat: R1=4, R2=9\n(Only existing tipped races can be edited)`, current);
+        if (raw == null) return;
+
+        const updates = raw.split(',').map((x)=>x.trim()).filter(Boolean).map((entry)=>{
+          const [raceRaw, selRaw] = entry.split('=').map((v)=>String(v||'').trim());
+          return { race: raceRaw.toUpperCase(), selection: selRaw };
+        }).filter((x)=>/^R\d+$/i.test(x.race) && x.selection);
+
+        if(!updates.length){ alert('No valid edits found. Use format like R1=4, R2=9'); return; }
+
+        const tipByRace = new Map(tipsForMember.map((t)=>[String(t.race||'').toUpperCase(), t]));
+        const missing = [];
+        for (const u of updates) {
+          const tip = tipByRace.get(u.race);
+          if (!tip) { missing.push(u.race); continue; }
+          await req(API.updateTip(tip.id), { method:'PATCH', body: JSON.stringify({ selection: u.selection }) });
+        }
+
+        if (missing.length) {
+          alert(`Updated existing races. Could not edit ${missing.join(', ')} because no tip exists yet for those races.`);
         }
         await refresh();
       } catch (err) {
