@@ -503,6 +503,19 @@ details p { margin:.55rem 0 0; }
 #winners-strip .winner-item { min-width: 220px; }
 #winners-strip .empty-state { color: var(--muted); }
 
+.banner-photo-card {
+  padding: .75rem;
+}
+
+.club-banner-photo {
+  width: 100%;
+  height: clamp(210px, 34vw, 380px);
+  object-fit: cover;
+  border-radius: .85rem;
+  border: 1px solid #304860;
+  margin-bottom: .6rem;
+}
+
 @media (min-width: 980px) {
   .landing-page .hero-layout { grid-template-columns: minmax(0, 1.2fr) minmax(350px, .8fr); }
 }
