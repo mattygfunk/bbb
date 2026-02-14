@@ -744,6 +744,17 @@ function createApp() {
     });
   });
 
+  app.put('/api/jackpot', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const rollover = Number(req.body?.rollover);
+    if (!Number.isFinite(rollover) || rollover < 0) {
+      return res.status(400).json({ error: 'Rollover must be a non-negative number' });
+    }
+    store.jackpotCarry = Math.round(rollover * 100) / 100;
+    writeStore(store);
+    return res.json({ ok: true, jackpotCarry: store.jackpotCarry });
+  });
+
   app.get('/api/social-feed', async (_req, res) => {
     const store = readStore();
     const now = Date.now();

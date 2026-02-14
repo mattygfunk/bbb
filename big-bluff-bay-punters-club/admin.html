@@ -35,6 +35,14 @@
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>
           </div>
+          <form id="jackpot-form" class="stack" style="margin-top:.6rem">
+            <label>Set jackpot rollover amount ($)
+              <input name="rollover" id="jackpot-rollover-input" type="number" step="0.01" min="0" placeholder="e.g. 80" />
+            </label>
+            <div class="row-actions">
+              <button class="btn btn-ghost" type="submit">Save Jackpot Amount</button>
+            </div>
+          </form>
           <p id="archive-round-msg" class="muted"></p>
           <p id="tip-unlock-status" class="muted"></p>
         </section>

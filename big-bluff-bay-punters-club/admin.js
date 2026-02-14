@@ -1,5 +1,5 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{}};
 const $=id=>document.getElementById(id);
@@ -127,6 +127,12 @@ async function refresh(){
     }
   } catch {}
 
+  try {
+    const j = await req(API.jackpot);
+    const input = $('jackpot-rollover-input');
+    if (input) input.value = String(Number(j?.rollover || 0));
+  } catch {}
+
   const p=await req(`${API.tips}?status=all`);
   state.tipsAll = p.tips || [];
   state.popularByRace = computePopularByRace(state.tipsAll);
@@ -235,6 +241,20 @@ $('unlock-sat-noon-btn')?.addEventListener('click', async () => {
     const r = await req(API.unlockSatNoon, { method: 'POST' });
     const local = new Date(Number(r.deadlineMs || 0)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
     $('archive-round-msg').textContent = `Tips unlocked until ${local}.`;
+  } catch (err) {
+    $('archive-round-msg').textContent = err.message;
+  }
+});
+
+$('jackpot-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  const f = new FormData(e.target);
+  const rollover = Number(f.get('rollover'));
+  if(!Number.isFinite(rollover) || rollover < 0){ $('archive-round-msg').textContent='Enter a valid jackpot amount.'; return; }
+  try {
+    const r = await req(API.jackpot, { method: 'PUT', body: JSON.stringify({ rollover }) });
+    $('archive-round-msg').textContent = `Jackpot rollover set to $${Number(r.jackpotCarry || 0)}.`;
   } catch (err) {
     $('archive-round-msg').textContent = err.message;
   }
