@@ -1,5 +1,4 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
-const ENTRY_FEE = 10;
 
 // Mock preview data for UI polish while live feeds are sparse.
 // TODO: replace/augment with real backend endpoints when available.
@@ -156,10 +155,11 @@ async function hydrateLanding() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [fx, tips, ladder] = await Promise.all([
+    const [fx, tips, ladder, jackpot] = await Promise.all([
       fetch('/api/fixtures').then((r) => r.json()).catch(() => ({})),
       fetch('/api/tips?status=all').then((r) => r.json()).catch(() => ({})),
-      fetch('/api/ladder').then((r) => r.json()).catch(() => ({}))
+      fetch('/api/ladder').then((r) => r.json()).catch(() => ({})),
+      fetch('/api/jackpot').then((r) => r.json()).catch(() => ({}))
     ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
@@ -167,13 +167,14 @@ async function hydrateLanding() {
     const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
     const entries = new Set(tipRows.map((t) => t.member)).size;
 
-    const paidMembers = new Set(tipRows.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
-    const potValue = paidMembers * ENTRY_FEE;
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+    const potValue = Number(jackpot?.totalPot || 0);
+    const roundValue = Number(jackpot?.currentRoundPot || 0);
+    const rolloverValue = Number(jackpot?.rollover || 0);
     const potText = money.format(potValue);
 
     const leaders = ladder?.ladder || [];
-    const lastWinner = leaders[0]?.member ? `@${leaders[0].member}` : 'No winner yet';
+    const lastWinner = jackpot?.lastWinner ? `@${jackpot.lastWinner}` : 'No winner yet';
 
     document.getElementById('status-meet').textContent = meet;
     document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
@@ -181,7 +182,7 @@ async function hydrateLanding() {
     document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
 
     document.getElementById('jackpot-value').textContent = potText;
-    document.getElementById('jackpot-growth').textContent = `+${potText}`;
+    document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
 
     document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || '—');

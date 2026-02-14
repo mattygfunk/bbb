@@ -209,7 +209,10 @@ $('archive-round-btn')?.addEventListener('click', async () => {
   if(!confirm('Archive current meet tips/results and reset active round?')) return;
   try {
     const r = await req(API.archiveRound, { method: 'POST' });
-    $('archive-round-msg').textContent = `Archived ${r.tipsArchived || 0} tips${r.fixture ? ` from ${r.fixture}` : ''}. Round reset.`;
+    const outcome = r.outrightWinner
+      ? `Outright winner: ${r.outrightWinner}. Jackpot resets.`
+      : `No outright winner. Jackpot rolls to next week: $${Number(r.rolloverToNextWeek || 0)}.`;
+    $('archive-round-msg').textContent = `Archived ${r.tipsArchived || 0} tips${r.fixture ? ` from ${r.fixture}` : ''}. ${outcome}`;
     await refresh();
   } catch (err) {
     $('archive-round-msg').textContent = err.message;

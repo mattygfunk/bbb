@@ -30,6 +30,9 @@ function ensureStore() {
       buyInVotes: {},
       archiveRounds: [],
       tipEditDeadlineMs: null,
+      entryFee: 20,
+      jackpotCarry: 0,
+      lastJackpotWinner: '',
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -77,6 +80,18 @@ function ensureStore() {
   }
   if (typeof store.tipEditDeadlineMs !== 'number') {
     store.tipEditDeadlineMs = null;
+    changed = true;
+  }
+  if (typeof store.entryFee !== 'number' || !Number.isFinite(store.entryFee) || store.entryFee <= 0) {
+    store.entryFee = 20;
+    changed = true;
+  }
+  if (typeof store.jackpotCarry !== 'number' || !Number.isFinite(store.jackpotCarry) || store.jackpotCarry < 0) {
+    store.jackpotCarry = 0;
+    changed = true;
+  }
+  if (typeof store.lastJackpotWinner !== 'string') {
+    store.lastJackpotWinner = '';
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -657,6 +672,24 @@ function createApp() {
     return res.json({ ladder, afterRace });
   });
 
+  app.get('/api/jackpot', (_req, res) => {
+    const store = readStore();
+    const entryFee = Number(store.entryFee || 20);
+    const tipRows = (store.tips || []).filter((t) => t.status !== 'removed');
+    const paidMembers = new Set(tipRows.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
+    const currentRoundPot = paidMembers * entryFee;
+    const rollover = Number(store.jackpotCarry || 0);
+    const totalPot = currentRoundPot + rollover;
+    return res.json({
+      entryFee,
+      paidMembers,
+      currentRoundPot,
+      rollover,
+      totalPot,
+      lastWinner: store.lastJackpotWinner || ''
+    });
+  });
+
   app.post('/api/archive-round', auth, adminOnly, (req, res) => {
     const store = readStore();
     const fixture = (store.fixtures || [])[0] || null;
@@ -666,6 +699,16 @@ function createApp() {
       return res.status(400).json({ error: 'Nothing to archive yet' });
     }
 
+    const ladder = computeLadder(store);
+    const entryFee = Number(store.entryFee || 20);
+    const paidMembers = new Set(tips.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
+    const roundPool = paidMembers * entryFee;
+    const previousCarry = Number(store.jackpotCarry || 0);
+
+    const first = ladder[0];
+    const second = ladder[1];
+    const outright = !!first && (!second || first.points > second.points || (first.points === second.points && first.winners > second.winners));
+
     const snapshot = {
       id: crypto.randomUUID(),
       archivedAt: Date.now(),
@@ -674,11 +717,26 @@ function createApp() {
       tips,
       raceResults: store.raceResults || {},
       bossesBet: store.bossesBet || { legs: [], selections: {} },
-      ladder: computeLadder(store)
+      ladder,
+      jackpot: {
+        entryFee,
+        paidMembers,
+        roundPool,
+        previousCarry,
+        outrightWinner: outright ? first?.member || null : null,
+        rolloverToNextWeek: outright ? 0 : (previousCarry + roundPool)
+      }
     };
 
     store.archiveRounds = Array.isArray(store.archiveRounds) ? store.archiveRounds : [];
     store.archiveRounds.unshift(snapshot);
+
+    if (outright) {
+      store.jackpotCarry = 0;
+      store.lastJackpotWinner = String(first?.member || '');
+    } else {
+      store.jackpotCarry = previousCarry + roundPool;
+    }
 
     store.tips = [];
     store.raceResults = {};
@@ -686,7 +744,14 @@ function createApp() {
     store.buyInVotes = {};
 
     writeStore(store);
-    return res.json({ ok: true, archivedRoundId: snapshot.id, tipsArchived: tips.length, fixture: fixture?.event || null });
+    return res.json({
+      ok: true,
+      archivedRoundId: snapshot.id,
+      tipsArchived: tips.length,
+      fixture: fixture?.event || null,
+      outrightWinner: outright ? first?.member || null : null,
+      rolloverToNextWeek: Number(store.jackpotCarry || 0)
+    });
   });
 
   app.post('/api/tips/unlock-saturday-noon', auth, adminOnly, (req, res) => {
