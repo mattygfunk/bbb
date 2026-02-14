@@ -1,6 +1,11 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const API_ROOTS = ['/api'];
 
+window.addEventListener('error', (e) => {
+  const debugNode = document.getElementById('jackpot-debug-line');
+  if (debugNode) debugNode.textContent = `API jackpot debug: JS error — ${e.message || 'unknown error'}`;
+});
+
 // Mock preview data for UI polish while live feeds are sparse.
 // TODO: replace/augment with real backend endpoints when available.
 const MOCK = {
@@ -258,6 +263,9 @@ async function initLockCountdown() {
 }
 
 (function initLanding() {
+  const debugNode = document.getElementById('jackpot-debug-line');
+  if (debugNode) debugNode.textContent = 'API jackpot debug: script started';
+
   if (window.location.hash === '#enter-table') {
     window.location.replace('/punters.html#tip-form');
     return;
