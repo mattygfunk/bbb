@@ -111,7 +111,7 @@ function wireLeaderboardShare() {
 
   btn.addEventListener('click', async () => {
     const text = 'Big Bluff Bay Punters Club leaderboard is live. Check current rankings:';
-    const url = `${window.location.origin}/punters.html`;
+    const url = `${window.location.origin}/share/leaderboard`;
     const payload = `${text} ${url}`;
     try {
       if (navigator.share) {

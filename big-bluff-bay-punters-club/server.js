@@ -153,6 +153,36 @@ function computeBossesBetProgress(store) {
   return { ...bb, legs: [...activeLegs], progress: result, overall };
 }
 
+function computeLadder(store) {
+  const score = new Map();
+
+  const addPoints = (member, pts, isWinner) => {
+    const row = score.get(member) || { member, points: 0, winners: 0 };
+    row.points += pts;
+    if (isWinner) row.winners += 1;
+    score.set(member, row);
+  };
+
+  for (const tip of store.tips || []) {
+    if (tip.status !== 'approved') continue;
+    const race = String(tip.race || '');
+    const rr = store.raceResults?.[race];
+    if (!rr) continue;
+
+    const sel = applySub(String(tip.selection || tip.horse || ''), rr);
+    const isWinner = (rr.first || []).map(String).includes(sel);
+    let pts = 0;
+    if (isWinner) pts = 3;
+    else if ((rr.second || []).map(String).includes(sel)) pts = 2;
+    else if ((rr.third || []).map(String).includes(sel)) pts = 1;
+    addPoints(String(tip.member || 'Unknown'), pts, isWinner);
+  }
+
+  return [...score.values()]
+    .sort((a, b) => b.points - a.points || b.winners - a.winners || a.member.localeCompare(b.member))
+    .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
+}
+
 function canEditTipsNow() {
   const deadline = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
   if (Number.isNaN(deadline)) return true;
@@ -181,6 +211,14 @@ function adminOnly(req, res, next) {
 function createApp() {
   const app = express();
   app.set('trust proxy', 1);
+  app.use((req, res, next) => {
+    const xfProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+    const isSecure = req.secure || xfProto === 'https';
+    if (isSecure) return next();
+    const host = req.headers.host;
+    if (!host) return next();
+    return res.redirect(301, `https://${host}${req.originalUrl}`);
+  });
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '200kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
@@ -479,34 +517,63 @@ function createApp() {
 
   app.get('/api/ladder', (_req, res) => {
     const store = readStore();
-    const score = new Map();
-
-    const addPoints = (member, pts, isWinner) => {
-      const row = score.get(member) || { member, points: 0, winners: 0 };
-      row.points += pts;
-      if (isWinner) row.winners += 1;
-      score.set(member, row);
-    };
-
-    for (const tip of store.tips || []) {
-      if (tip.status !== 'approved') continue;
-      const race = String(tip.race || '');
-      const rr = store.raceResults?.[race];
-      if (!rr) continue;
-
-      const sel = applySub(String(tip.selection || tip.horse || ''), rr);
-      let pts = 0;
-      const isWinner = (rr.first || []).map(String).includes(sel);
-      if (isWinner) pts = 3;
-      else if ((rr.second || []).map(String).includes(sel)) pts = 2;
-      else if ((rr.third || []).map(String).includes(sel)) pts = 1;
-      addPoints(String(tip.member || 'Unknown'), pts, isWinner);
-    }
-
-    const ladder = [...score.values()]
-      .sort((a, b) => b.points - a.points || b.winners - a.winners || a.member.localeCompare(b.member))
-      .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
+    const ladder = computeLadder(store);
     return res.json({ ladder });
+  });
+
+  app.get('/api/leaderboard-image.svg', (_req, res) => {
+    const store = readStore();
+    const ladder = computeLadder(store).slice(0, 10);
+    const rows = ladder.length ? ladder : [{ rank: '-', member: 'No results yet', points: 0, winners: 0 }];
+    const height = 170 + rows.length * 46;
+    const rowSvg = rows.map((r, i) => {
+      const y = 148 + i * 46;
+      const bg = i % 2 === 0 ? '#131a1f' : '#10161b';
+      return `<rect x="24" y="${y - 28}" width="912" height="38" rx="8" fill="${bg}"/>\n`
+        + `<text x="46" y="${y}" fill="#d2a94b" font-size="18" font-family="Arial">${r.rank}</text>\n`
+        + `<text x="120" y="${y}" fill="#f3f5f7" font-size="18" font-family="Arial">${String(r.member).replace(/[<&>]/g, '')}</text>\n`
+        + `<text x="690" y="${y}" fill="#f3f5f7" font-size="18" font-family="Arial">${r.points}</text>\n`
+        + `<text x="820" y="${y}" fill="#f3f5f7" font-size="18" font-family="Arial">${r.winners ?? r.correct ?? 0}</text>`;
+    }).join('\n');
+
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1418"/>
+      <stop offset="100%" stop-color="#1d252c"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="${height}" fill="url(#bg)"/>
+  <text x="30" y="54" fill="#f7efe0" font-size="32" font-weight="700" font-family="Arial">Big Bluff Bay — Live Leaderboard</text>
+  <text x="30" y="82" fill="#9fb0bf" font-size="16" font-family="Arial">Share this snapshot to your Messenger group</text>
+  <text x="46" y="120" fill="#8ba0b1" font-size="15" font-family="Arial">#</text>
+  <text x="120" y="120" fill="#8ba0b1" font-size="15" font-family="Arial">Punter</text>
+  <text x="690" y="120" fill="#8ba0b1" font-size="15" font-family="Arial">Points</text>
+  <text x="820" y="120" fill="#8ba0b1" font-size="15" font-family="Arial">Winners</text>
+  ${rowSvg}
+</svg>`;
+
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(svg);
+  });
+
+  app.get('/share/leaderboard', (req, res) => {
+    const host = req.headers.host || 'bigbluffbay.au';
+    const imageUrl = `https://${host}/api/leaderboard-image.svg`;
+    const targetUrl = `https://${host}/punters.html`;
+    const html = `<!doctype html><html><head>
+<meta charset="utf-8" />
+<meta property="og:title" content="Big Bluff Bay Leaderboard" />
+<meta property="og:description" content="Latest points and winners. Tap to view full leaderboard." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${targetUrl}" />
+<meta property="og:image" content="${imageUrl}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta http-equiv="refresh" content="0; url=${targetUrl}" />
+</head><body>Redirecting to <a href="${targetUrl}">${targetUrl}</a></body></html>`;
+    return res.send(html);
   });
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));

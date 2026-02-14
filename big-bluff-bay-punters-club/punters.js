@@ -223,7 +223,7 @@ function wirePuntersLeaderboardShare(){
   if(!btn) return;
   btn.onclick = async () => {
     const text = 'Big Bluff Bay Punters Club leaderboard is live. Have a look:';
-    const url = `${window.location.origin}/punters.html`;
+    const url = `${window.location.origin}/share/leaderboard`;
     const payload = `${text} ${url}`;
     try {
       if (navigator.share) {
