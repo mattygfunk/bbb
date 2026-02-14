@@ -29,6 +29,7 @@ function ensureStore() {
       bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
       buyInVotes: {},
       archiveRounds: [],
+      tipEditDeadlineMs: null,
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -72,6 +73,10 @@ function ensureStore() {
   }
   if (!Array.isArray(store.archiveRounds)) {
     store.archiveRounds = [];
+    changed = true;
+  }
+  if (typeof store.tipEditDeadlineMs !== 'number') {
+    store.tipEditDeadlineMs = null;
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -238,7 +243,62 @@ function computeMemberBreakdown(store, memberName) {
   return { member: memberName, totalPoints, winners, races: rows };
 }
 
-function canEditTipsNow() {
+function getMelbourneOffsetMinutes(dateLike) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Australia/Melbourne',
+    timeZoneName: 'shortOffset'
+  }).formatToParts(dateLike);
+  const raw = parts.find((p) => p.type === 'timeZoneName')?.value || 'GMT+0';
+  const m = raw.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/i);
+  if (!m) return 0;
+  const sign = m[1] === '-' ? -1 : 1;
+  const hh = Number(m[2] || 0);
+  const mm = Number(m[3] || 0);
+  return sign * (hh * 60 + mm);
+}
+
+function getMelbourneParts(dateLike) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Melbourne',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    weekday: 'short'
+  }).formatToParts(dateLike);
+  const get = (t) => parts.find((p) => p.type === t)?.value || '';
+  return {
+    year: Number(get('year')),
+    month: Number(get('month')),
+    day: Number(get('day')),
+    hour: Number(get('hour')),
+    minute: Number(get('minute')),
+    weekday: get('weekday')
+  };
+}
+
+function nextSaturdayNoonMelbourneMs() {
+  const now = new Date();
+  const nowParts = getMelbourneParts(now);
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const nowIdx = weekdays.indexOf(nowParts.weekday);
+  const satIdx = 6;
+  let addDays = (satIdx - nowIdx + 7) % 7;
+  if (addDays === 0 && nowParts.hour >= 12) addDays = 7;
+
+  const targetProbeUtc = new Date(now.getTime() + addDays * 24 * 60 * 60 * 1000);
+  const targetParts = getMelbourneParts(targetProbeUtc);
+
+  const offsetMin = getMelbourneOffsetMinutes(new Date(Date.UTC(targetParts.year, targetParts.month - 1, targetParts.day, 12, 0, 0)));
+  return Date.UTC(targetParts.year, targetParts.month - 1, targetParts.day, 12, 0, 0) - offsetMin * 60 * 1000;
+}
+
+function canEditTipsNow(store) {
+  const manual = Number(store?.tipEditDeadlineMs || 0);
+  if (manual > 0) return Date.now() <= manual;
   const deadline = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
   if (Number.isNaN(deadline)) return true;
   return Date.now() <= deadline;
@@ -535,7 +595,7 @@ function createApp() {
     const existingIdx = store.tips.findIndex((t) => t.member === req.user.username && t.race === race && t.status !== 'removed');
 
     if (existingIdx >= 0) {
-      if (!canEditTipsNow()) {
+      if (!canEditTipsNow(store)) {
         return res.status(403).json({ error: `Tips can only be edited until ${TIP_EDIT_DEADLINE_ISO}` });
       }
       store.tips[existingIdx] = { ...store.tips[existingIdx], selection, status: 'approved', updatedAt: Date.now() };
@@ -627,6 +687,14 @@ function createApp() {
 
     writeStore(store);
     return res.json({ ok: true, archivedRoundId: snapshot.id, tipsArchived: tips.length, fixture: fixture?.event || null });
+  });
+
+  app.post('/api/tips/unlock-saturday-noon', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const deadlineMs = nextSaturdayNoonMelbourneMs();
+    store.tipEditDeadlineMs = deadlineMs;
+    writeStore(store);
+    return res.json({ ok: true, deadlineMs, deadlineIso: new Date(deadlineMs).toISOString() });
   });
 
   app.get('/api/ladder/:member', (req, res) => {

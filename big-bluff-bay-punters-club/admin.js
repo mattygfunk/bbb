@@ -1,5 +1,5 @@
 const API_ROOTS=['/api','/punters/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{}};
 const $=id=>document.getElementById(id);
@@ -211,6 +211,18 @@ $('archive-round-btn')?.addEventListener('click', async () => {
     const r = await req(API.archiveRound, { method: 'POST' });
     $('archive-round-msg').textContent = `Archived ${r.tipsArchived || 0} tips${r.fixture ? ` from ${r.fixture}` : ''}. Round reset.`;
     await refresh();
+  } catch (err) {
+    $('archive-round-msg').textContent = err.message;
+  }
+});
+
+$('unlock-sat-noon-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  if(!confirm('Unlock tip edits until next Saturday 12:00 PM (Melbourne time)?')) return;
+  try {
+    const r = await req(API.unlockSatNoon, { method: 'POST' });
+    const local = new Date(Number(r.deadlineMs || 0)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
+    $('archive-round-msg').textContent = `Tips unlocked until ${local}.`;
   } catch (err) {
     $('archive-round-msg').textContent = err.message;
   }
