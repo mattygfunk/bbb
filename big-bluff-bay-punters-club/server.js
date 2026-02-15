@@ -574,7 +574,24 @@ function createApp() {
   });
   app.use(express.json({ limit: '200kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
-  app.use(express.static(__dirname));
+  app.use(express.static(__dirname, {
+    etag: true,
+    setHeaders: (res, filePath) => {
+      const lower = String(filePath || '').toLowerCase();
+      const isHtml = lower.endsWith('.html');
+      const isStaticAsset = /\.(css|js|svg|png|jpg|jpeg|webp|gif|woff2?)$/.test(lower);
+
+      if (isHtml) {
+        res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+        return;
+      }
+      if (isStaticAsset) {
+        res.setHeader('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400');
+        return;
+      }
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }));
 
   app.get('/api/health', (_req, res) => res.json({ ok: true, version: '5.0.1' }));
 
