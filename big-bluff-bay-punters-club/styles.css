@@ -3,7 +3,7 @@
   --surface: #0f172a;
   --surface-2: #111827;
   --text: #e5e7eb;
-  --muted: #b8c5d9;
+  --muted: #d0d9e8;
   --line: #243041;
   --brand: #22c55e;
   --brand-2: #16a34a;
@@ -302,6 +302,11 @@ a:hover {
   color: #ffe8a3;
 }
 
+.muted a,
+.muted a:visited {
+  color: #ffe8a3;
+}
+
 .row {
   display: flex;
   justify-content: space-between;
@@ -328,14 +333,15 @@ a:hover {
   gap: .45rem;
 }
 .menu-link {
-  color: #dbe7f6;
+  color: #ffffff;
   text-decoration: none;
-  border: 1px solid #4b617f;
+  border: 1px solid #8aa4c7;
+  background: #0f1b2d;
   border-radius: 999px;
   padding: .32rem .62rem;
   font-size: .86rem;
 }
-.menu-link:hover { color: #ffffff; border-color: #7b95b8; background: #0f1b2d; }
+.menu-link:hover { color: #ffffff; border-color: #b7c8de; background: #14243b; }
 
 :focus-visible {
   outline: 2px solid #86efac;
