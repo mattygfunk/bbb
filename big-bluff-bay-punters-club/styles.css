@@ -292,7 +292,10 @@ input, textarea, select {
 }
 
 .muted { color: var(--muted); }
-.section-head .muted { color: #e2e8f0; }
+.section-head .muted { color: #f1f5f9; }
+#resources > p.muted { color: #f1f5f9; }
+#resources > p.muted a,
+#resources > p.muted a:visited { color: #ffffff; }
 
 a,
 a:visited {
