@@ -273,6 +273,113 @@ async function fetchSocialFeedItems() {
     .slice(0, 8);
 }
 
+
+function normalizeArchivedRounds(store) {
+  const rounds = Array.isArray(store.archiveRounds) ? [...store.archiveRounds] : [];
+  rounds.sort((a, b) => Number(a.archivedAt || 0) - Number(b.archivedAt || 0));
+  return rounds.map((round, idx) => ({
+    ...round,
+    weekNumber: idx + 1,
+    weekLabel: `Week ${idx + 1}`
+  }));
+}
+
+function computeMilestonesData(store) {
+  const rounds = normalizeArchivedRounds(store);
+  const streakThresholds = [4, 8, 12, 26, 52];
+  const winThresholds = [3, 5, 10];
+
+  const stats = new Map();
+  const ensure = (member) => {
+    const key = String(member || '').trim();
+    if (!key) return null;
+    if (!stats.has(key)) stats.set(key, { member: key, currentStreak: 0, bestStreak: 0, totalWins: 0, backToBackWins: 0, hasBackToBack: false });
+    return stats.get(key);
+  };
+
+  for (const round of rounds) {
+    const participants = new Set((round.tips || []).map((t) => String(t.member || '').trim()).filter(Boolean));
+    participants.forEach((m) => ensure(m));
+
+    for (const row of stats.values()) {
+      if (participants.has(row.member)) {
+        row.currentStreak += 1;
+        if (row.currentStreak > row.bestStreak) row.bestStreak = row.currentStreak;
+      } else {
+        row.currentStreak = 0;
+      }
+    }
+
+    const winner = String(round?.jackpot?.outrightWinner || '').trim();
+    if (winner) ensure(winner).totalWins += 1;
+  }
+
+  const openParticipants = new Set((store.tips || []).filter((t) => t.status !== 'removed').map((t) => String(t.member || '').trim()).filter(Boolean));
+  if (openParticipants.size) {
+    openParticipants.forEach((m) => ensure(m));
+    for (const row of stats.values()) {
+      if (openParticipants.has(row.member)) {
+        row.currentStreak += 1;
+        if (row.currentStreak > row.bestStreak) row.bestStreak = row.currentStreak;
+      } else {
+        row.currentStreak = 0;
+      }
+    }
+  }
+
+  const winnersChrono = rounds
+    .map((round) => {
+      const winner = String(round?.jackpot?.outrightWinner || '').trim();
+      if (!winner) return null;
+      const ladderEntry = (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null;
+      return {
+        member: winner,
+        weekNumber: round.weekNumber,
+        weekLabel: round.weekLabel,
+        archivedAt: Number(round.archivedAt || 0),
+        points: Number(ladderEntry?.points || 0),
+        winners: Number(ladderEntry?.winners || 0)
+      };
+    })
+    .filter(Boolean);
+
+  for (let i = 0; i < winnersChrono.length; i += 1) {
+    const current = winnersChrono[i];
+    const prev = winnersChrono[i - 1];
+    if (prev && prev.member.toLowerCase() === current.member.toLowerCase()) {
+      const row = ensure(current.member);
+      row.hasBackToBack = true;
+      row.backToBackWins += 1;
+    }
+  }
+
+  const milestoneRows = [...stats.values()].map((row) => {
+    const badges = [];
+    streakThresholds.forEach((n) => { if (row.bestStreak >= n) badges.push(`Streak ${n} Weeks`); });
+    if (row.totalWins >= 1) badges.push('Weekly Winner');
+    if (row.hasBackToBack) badges.push('Back-to-Back Winner');
+    winThresholds.forEach((n) => { if (row.totalWins >= n) badges.push(`${n}-Time Winner`); });
+
+    return {
+      member: row.member,
+      currentStreak: row.currentStreak,
+      bestStreak: row.bestStreak,
+      totalWins: row.totalWins,
+      badges
+    };
+  }).sort((a, b) => b.currentStreak - a.currentStreak || b.bestStreak - a.bestStreak || b.totalWins - a.totalWins || a.member.localeCompare(b.member));
+
+  const winnerHistory = [...winnersChrono].reverse();
+  const featuredWinner = winnerHistory[0] || null;
+
+  return {
+    featuredWinner,
+    winnerHistory,
+    streakLeaderboard: milestoneRows.map((r, i) => ({ rank: i + 1, ...r })),
+    generatedAt: Date.now()
+  };
+}
+
 function computeMemberBreakdown(store, memberName) {
   const target = String(memberName || '').trim().toLowerCase();
   if (!target) return { member: memberName, totalPoints: 0, winners: 0, races: [] };
@@ -730,6 +837,12 @@ function createApp() {
     const ladder = computeLadder(store);
     const afterRace = getLastScoredRace(store);
     return res.json({ ladder, afterRace });
+  });
+
+
+  app.get('/api/milestones', (_req, res) => {
+    const store = readStore();
+    return res.json(computeMilestonesData(store));
   });
 
   app.get('/api/jackpot', (_req, res) => {

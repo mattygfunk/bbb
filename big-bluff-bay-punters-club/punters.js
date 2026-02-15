@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',register:'/register',login:'/login',logout:'/logout',me:'/me'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
 const $=id=>document.getElementById(id);
@@ -25,6 +25,47 @@ function renderLeaderboard(rows){
   body.querySelectorAll('button[data-member]').forEach((btn)=>{
     btn.addEventListener('click', ()=> loadMemberBreakdown(decodeURIComponent(btn.dataset.member || '')));
   });
+}
+
+
+function renderMilestones(data){
+  const winnerCard = $('weekly-winner-card');
+  const winnerHistory = $('winner-history-body');
+  const streakBody = $('streak-body');
+  if(!winnerCard || !winnerHistory || !streakBody) return;
+
+  const featured = data?.featuredWinner || null;
+  if(!featured){
+    winnerCard.innerHTML = "<p class='muted'>No weekly winner recorded yet.</p>";
+  } else {
+    const date = featured.archivedAt ? new Date(featured.archivedAt).toLocaleDateString('en-AU',{ day:'2-digit', month:'short', year:'numeric' }) : '';
+    winnerCard.innerHTML = `<div class='stack'><strong>${esc(featured.member)}</strong><p class='muted'>${esc(featured.weekLabel)}${date ? ` • ${date}` : ''}</p><p class='muted'>${featured.points} pts • ${featured.winners} winners</p></div>`;
+  }
+
+  winnerHistory.innerHTML='';
+  (data?.winnerHistory || []).slice(0,8).forEach((row)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${esc(row.weekLabel || '-')}</td><td>${esc(row.member || '-')}</td><td>${Number(row.points || 0)}</td>`;
+    winnerHistory.appendChild(tr);
+  });
+  if(!(data?.winnerHistory || []).length){
+    const tr=document.createElement('tr');
+    tr.innerHTML="<td colspan='3' class='muted'>No winners archived yet.</td>";
+    winnerHistory.appendChild(tr);
+  }
+
+  streakBody.innerHTML='';
+  (data?.streakLeaderboard || []).slice(0,10).forEach((row)=>{
+    const badgeText = (row.badges || []).slice(0,2).join(' • ');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${row.rank}</td><td>${esc(row.member || '-')}</td><td>${Number(row.currentStreak || 0)}</td><td>${Number(row.bestStreak || 0)}</td><td>${Number(row.totalWins || 0)}</td><td class='muted'>${esc(badgeText || '—')}</td>`;
+    streakBody.appendChild(tr);
+  });
+  if(!(data?.streakLeaderboard || []).length){
+    const tr=document.createElement('tr');
+    tr.innerHTML="<td colspan='6' class='muted'>No milestones yet.</td>";
+    streakBody.appendChild(tr);
+  }
 }
 
 function renderBossesBet(bb){
@@ -97,12 +138,13 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  const [fx,tp,allTipsRes,ladderRes,bossesRes]=await Promise.all([
+  const [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
     req(API.fixtures),
     req(`${API.tips}?status=all`),
     req(`${API.tips}?status=all`),
     req(API.ladder),
-    req(API.bossesBet)
+    req(API.bossesBet),
+    req(API.milestones)
   ]);
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
@@ -114,10 +156,10 @@ async function refresh(){
   const status = $('leaderboard-status');
   if (status) status.textContent = ladderRes.afterRace ? `After ${ladderRes.afterRace}` : 'Live';
   renderBossesBet(bossesRes.bossesBet || {});
+  renderMilestones(milestonesRes || {});
   if (state.selectedBreakdownMember) {
     loadMemberBreakdown(state.selectedBreakdownMember, false).catch(()=>{});
   }
-  renderBuyInVotes(buyInRes || {});
   $('tips-list').innerHTML='';
   const byPunter = new Map();
   (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
