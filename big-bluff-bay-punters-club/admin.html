@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Area • Big Bluff Bay</title>
+    <title>Admin Console • Big Bluff Bay</title>
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <link rel="canonical" href="https://bigbluffbay.au/admin.html" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -13,13 +13,35 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="hero"><div class="overlay"></div><nav class="nav wrap"><a class="brand" href="/" style="text-decoration:none;color:inherit;"><span class="badge">BBB</span><span><strong>Admin Area</strong><small>Big Bluff Bay</small><div class="menu-links"><a class="menu-link" href="/">🏠 Home</a><a class="menu-link" href="/punters.html">🏇 Punters Club</a><a class="menu-link" href="/poker.html">♠️ Poker Tournaments</a><a class="menu-link active" href="/admin.html">🛠️ Admin</a></div><div id="auth-controls"></div></nav></header>
-    <main class="wrap">
+    <header class="hero premium-hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap">
+        <a class="brand" href="/" style="text-decoration:none;color:inherit;">
+          <span class="badge">BBB</span>
+          <span><strong>Admin Console</strong><small>Big Bluff Bay</small></span>
+        </a>
+        <div class="menu-links">
+          <a class="menu-link" href="/">🏠 Home</a>
+          <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+          <a class="menu-link" href="/poker.html">♠️ Poker Tournaments</a>
+          <a class="menu-link active" href="/admin.html">🛠️ Admin</a>
+        </div>
+        <div id="auth-controls"></div>
+      </nav>
+    </header>
+
+    <main class="wrap premium-main">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
         <a href="/">Home</a>
         <span>›</span>
         <span aria-current="page">Admin</span>
       </nav>
+
+      <section class="card">
+        <h2>Admin Operations Guide</h2>
+        <p class="muted">Recommended weekly flow: update fixture → enter official results race-by-race → confirm Bosses Bet state → archive round after settlement. Use this sequence to avoid scoring and rollover mistakes.</p>
+      </section>
+
       <section class="card" id="admin-login-card"><h2>Admin Login</h2>
         <form id="login-form" class="stack">
           <label>Admin user <input required name="member" type="text" value="admin" /></label>
@@ -28,9 +50,10 @@
         </form>
         <p id="login-msg" class="muted"></p>
       </section>
+
       <div id="admin-only" style="display:none">
         <section class="card"><h2>Round Archive</h2>
-          <p class="muted">Archive current meet tips + results into history, then reset the active round for next week.</p>
+          <p class="muted">Archive current meet tips + results into history, then reset active round for next week.</p>
           <div class="row-actions">
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>
@@ -47,6 +70,7 @@
           <p id="archive-round-msg" class="muted"></p>
           <p id="tip-unlock-status" class="muted"></p>
         </section>
+
         <section class="card"><h2>Edit Next Meet</h2>
           <form id="fixture-form" class="stack">
             <label>Date & Time <input name="date" type="text" placeholder="Sat 14 Feb, 3:19 PM" /></label>
@@ -57,6 +81,7 @@
           </form>
           <p id="fixture-msg" class="muted"></p>
         </section>
+
         <section class="card"><h2>Enter Official Results</h2>
           <form id="results-form" class="stack">
             <label>Race <select name="race" id="results-race"></select></label>
@@ -69,7 +94,7 @@
             <label>3rd (comma-separated)
               <input name="third" type="text" placeholder="e.g. 9" />
             </label>
-            <label>Scratchings substitutes (scratched>substitute, comma-separated)
+            <label>Scratchings substitutes (scratched&gt;substitute, comma-separated)
               <input name="substitutions" type="text" placeholder="e.g. 5>12, 8>3" />
             </label>
             <div class="row-actions">
@@ -79,6 +104,7 @@
           </form>
           <p id="results-msg" class="muted"></p>
         </section>
+
         <section class="card"><h2>Bosses Bet (Place Multi)</h2>
           <form id="bosses-form" class="stack">
             <p class="muted">Defaults to all races at the meet. Untick any legs you don’t want in this week’s multi.</p>
@@ -93,9 +119,11 @@
           <div id="bosses-suggested" class="muted"></div>
           <p id="bosses-msg" class="muted"></p>
         </section>
+
         <section class="card"><h2>Users Who Have Tipped</h2><div id="admin-list" class="stack"></div></section>
       </div>
     </main>
+
     <footer class="wrap footer enhanced-footer muted">
       <div class="footer-grid">
         <div>
@@ -104,7 +132,7 @@
         </div>
         <div>
           <h4>Navigate</h4>
-          <p><a class="menu-link" href="/">Home</a> <a class="menu-link" href="/punters.html#leaderboard">Leaderboard</a> <a class="menu-link" href="/admin.html">Admin</a></p>
+          <p><a class="menu-link" href="/">Home</a> <a class="menu-link" href="/punters.html">Punters</a> <a class="menu-link" href="/admin.html">Admin</a></p>
         </div>
         <div>
           <h4>Legal</h4>
