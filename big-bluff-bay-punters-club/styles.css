@@ -702,3 +702,24 @@ details p { margin:.55rem 0 0; }
   .hero-actions .btn,
   .major-actions .btn { width: 100%; }
 }
+
+.admin-page .admin-hub {
+  border-color: #325273;
+  background: linear-gradient(180deg, #0d1727 0%, #0a1322 100%);
+}
+
+.admin-page .admin-mode-switch {
+  margin-top: .45rem;
+}
+
+.admin-page .admin-mode-link.active {
+  background: #86efac;
+  color: #052e16;
+  border-color: #86efac;
+}
+
+.admin-page #admin-racing-sections,
+.admin-page #admin-poker-sections {
+  display: grid;
+  gap: .9rem;
+}

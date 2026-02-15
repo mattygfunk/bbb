@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="admin-page">
     <header class="hero premium-hero">
       <div class="overlay"></div>
       <nav class="nav wrap">
@@ -52,17 +52,29 @@
       </section>
 
       <div id="admin-only" style="display:none">
-        <section class="card">
-          <h2>Admin Sections</h2>
-          <p class="muted">Switch between admin modes:</p>
-          <div class="row-actions">
-            <a class="btn btn-ghost" href="/admin.html">All</a>
-            <a class="btn btn-ghost" href="/admin.html?view=racing">Racing Options</a>
-            <a class="btn btn-ghost" href="/admin.html?view=poker">Poker Club Options</a>
+        <section class="card admin-hub">
+          <div class="section-head">
+            <h2>Admin Command Center</h2>
+            <span class="pill" id="admin-active-view-pill">View: all</span>
+          </div>
+          <p class="muted">Clean split by workflow: Racing operations and Poker leaderboard operations.</p>
+          <div class="admin-mode-switch row-actions">
+            <a class="btn btn-ghost admin-mode-link" data-admin-view="all" href="/admin.html">All</a>
+            <a class="btn btn-ghost admin-mode-link" data-admin-view="racing" href="/admin.html?view=racing">Racing Options</a>
+            <a class="btn btn-ghost admin-mode-link" data-admin-view="poker" href="/admin.html?view=poker">Poker Club Options</a>
+          </div>
+          <div class="stats-grid" style="margin-top:.7rem">
+            <article class="card"><h3 id="admin-stat-tip-users">0</h3><p class="muted">Tip users this round</p></article>
+            <article class="card"><h3 id="admin-stat-paid-users">0</h3><p class="muted">Paid users this round</p></article>
+            <article class="card"><h3 id="admin-stat-poker-events">0</h3><p class="muted">Poker results (all-time)</p></article>
           </div>
         </section>
 
         <div id="admin-racing-sections">
+        <section class="card">
+          <h2>🏇 Racing Operations</h2>
+          <p class="muted">Fixture setup, race results, round settlement, and Bosses Bet controls.</p>
+        </section>
         <section class="card"><h2>Round Archive</h2>
           <p class="muted">Archive current meet tips + results into history, then reset active round for next week.</p>
           <div class="row-actions">
@@ -135,6 +147,10 @@
         </div>
 
         <div id="admin-poker-sections">
+        <section class="card">
+          <h2>♠️ Poker Club Operations</h2>
+          <p class="muted">Import event outcomes fast and keep the public leaderboard accurate.</p>
+        </section>
         <section class="card"><h2>Poker Leaderboard Results Entry</h2>
           <p class="muted">Add official poker result rows that feed the live leaderboard on <a href="/poker.html">Poker Tournaments</a>.</p>
           <form id="poker-result-form" class="stack">

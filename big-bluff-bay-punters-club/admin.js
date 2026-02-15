@@ -20,6 +20,15 @@ function applyAdminViewFilter(){
   if (racing) racing.style.display = showRacing ? 'grid' : 'none';
   if (racingUsers) racingUsers.style.display = showRacing ? 'block' : 'none';
   if (poker) poker.style.display = showPoker ? 'grid' : 'none';
+
+  document.querySelectorAll('.admin-mode-link').forEach((el) => {
+    el.classList.toggle('active', String(el.dataset.adminView || 'all') === view);
+  });
+
+  const pill = $('admin-active-view-pill');
+  if (pill) pill.textContent = `View: ${view}`;
+
+  return view;
 }
 
 async function applyRolloverFromQueryIfRequested(){
@@ -193,6 +202,21 @@ async function refresh(){
   state.tipsAll = p.tips || [];
   state.popularByRace = computePopularByRace(state.tipsAll);
   renderBossesSuggested(state.popularByRace);
+
+  const activeTips = (p.tips || []).filter((t) => t.status !== 'removed');
+  const tipUsers = new Set(activeTips.map((t) => String(t.member || '').trim()).filter(Boolean)).size;
+  const paidUsers = new Set(activeTips.filter((t) => t.paid).map((t) => String(t.member || '').trim()).filter(Boolean)).size;
+  const tipUsersEl = $('admin-stat-tip-users');
+  const paidUsersEl = $('admin-stat-paid-users');
+  if (tipUsersEl) tipUsersEl.textContent = String(tipUsers);
+  if (paidUsersEl) paidUsersEl.textContent = String(paidUsers);
+
+  try {
+    const pokerAll = await req(`${API.pokerLeaderboard}?range=all`);
+    const pokerEventsEl = $('admin-stat-poker-events');
+    if (pokerEventsEl) pokerEventsEl.textContent = String(Number(pokerAll?.stats?.events || 0));
+  } catch {}
+
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
   const byUser = new Map();
