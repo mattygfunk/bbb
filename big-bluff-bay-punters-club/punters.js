@@ -4,7 +4,28 @@ const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
 const $=id=>document.getElementById(id);
 
-async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
+async function req(path,opt={}){
+  const h={'Content-Type':'application/json',...(opt.headers||{})};
+  if(state.token)h.Authorization=`Bearer ${state.token}`;
+  let lastErr='';
+  for(const root of API_ROOTS){
+    for(let attempt=0;attempt<2;attempt+=1){
+      try{
+        const r=await fetch(`${root}${path}`,{...opt,headers:h,credentials:'same-origin'});
+        const d=await r.json().catch(()=>({}));
+        if(r.ok)return d;
+        lastErr=d.error||`Request failed (${r.status})`;
+        if(r.status>=500 && attempt===0){
+          await new Promise((resolve)=>setTimeout(resolve,200));
+          continue;
+        }
+      }catch{
+        lastErr='Network error. Please retry.';
+      }
+    }
+  }
+  throw new Error(lastErr||'Request failed');
+}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
 function renderLeaderboard(rows){
@@ -139,14 +160,23 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  const [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
-    req(API.fixtures),
-    req(`${API.tips}?status=all`),
-    req(`${API.tips}?status=all`),
-    req(API.ladder),
-    req(API.bossesBet),
-    req(API.milestones)
-  ]);
+  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
+  try {
+    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
+      req(API.fixtures),
+      req(`${API.tips}?status=all`),
+      req(`${API.tips}?status=all`),
+      req(API.ladder),
+      req(API.bossesBet),
+      req(API.milestones)
+    ]);
+  } catch (err) {
+    const status = $('leaderboard-status');
+    if (status) status.textContent = 'Offline';
+    const tipMsg = $('tip-msg');
+    if (tipMsg) tipMsg.textContent = `Live data unavailable: ${err.message}`;
+    return;
+  }
   $('fixtures-list').innerHTML='';
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
@@ -286,7 +316,7 @@ async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.
 (async()=>{
   wirePuntersLeaderboardShare();
   await bootstrap();
-  await refresh();
+  await refresh().catch(()=>{});
   setInterval(()=>{
     if (tipInteractionActive()) return;
     const interacting = !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
