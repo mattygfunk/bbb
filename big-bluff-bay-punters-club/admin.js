@@ -450,15 +450,20 @@ function syncPokerEventMode(){
 pokerEventPreset?.addEventListener('change', syncPokerEventMode);
 syncPokerEventMode();
 
+function selectedPokerEventName(formData){
+  const eventPreset = String(formData.get('eventPreset') || 'Nightly 500gtd').trim();
+  const eventNameCustom = String(formData.get('eventNameCustom') || '').trim();
+  const eventName = eventPreset === 'custom' ? eventNameCustom : eventPreset;
+  return { eventPreset, eventNameCustom, eventName };
+}
+
 $('poker-result-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
   const f = new FormData(e.target);
   const player = String(f.get('player') || '').trim();
   const points = Number(f.get('points'));
-  const eventPreset = String(f.get('eventPreset') || 'Nightly 500gtd').trim();
-  const eventNameCustom = String(f.get('eventNameCustom') || '').trim();
-  const eventName = eventPreset === 'custom' ? eventNameCustom : eventPreset;
+  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(f);
   const finalTable = f.get('finalTable') !== null;
   const cashed = f.get('cashed') !== null;
 
@@ -487,10 +492,64 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
   }
 });
 
+$('poker-bulk-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
+
+  const formData = new FormData(e.target);
+  const raw = String(formData.get('bulkLines') || '');
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const parentFormData = new FormData($('poker-result-form'));
+  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(parentFormData);
+  const finalTableDefault = parentFormData.get('finalTable') !== null;
+  const cashedDefault = parentFormData.get('cashed') !== null;
+
+  if (!lines.length) { $('poker-result-msg').textContent = 'Paste at least one line.'; return; }
+  if (eventPreset === 'custom' && !eventNameCustom) { $('poker-result-msg').textContent='Enter a custom event name first.'; return; }
+
+  const results = [];
+  const errors = [];
+  lines.forEach((line, idx) => {
+    const parts = line.split(',').map((x) => x.trim());
+    const player = String(parts[0] || '');
+    const points = Number(parts[1]);
+    const rank = Number(parts[2]);
+    if (!player || !Number.isFinite(points) || points < 0) {
+      errors.push(`Line ${idx + 1} invalid: ${line}`);
+      return;
+    }
+    results.push({
+      player,
+      points,
+      finalTable: finalTableDefault,
+      cashed: cashedDefault,
+      eventName,
+      createdAt: Date.now(),
+      ...(Number.isFinite(rank) && rank > 0 ? { eventRank: rank } : {})
+    });
+  });
+
+  if (!results.length) { $('poker-result-msg').textContent = errors[0] || 'No valid rows to import.'; return; }
+
+  try {
+    const out = await req(API.pokerResults, { method: 'POST', body: JSON.stringify({ results }) });
+    $('poker-result-msg').textContent = `Bulk import complete: added ${Number(out?.added || results.length)} result(s).${errors.length ? ` Skipped ${errors.length} invalid line(s).` : ''}`;
+  } catch (err) {
+    $('poker-result-msg').textContent = err.message;
+  }
+});
+
 $('poker-result-clear-btn')?.addEventListener('click', () => {
   const f = $('poker-result-form');
   if (f) f.reset();
   syncPokerEventMode();
+  const msg = $('poker-result-msg');
+  if (msg) msg.textContent = '';
+});
+
+$('poker-bulk-clear-btn')?.addEventListener('click', () => {
+  const box = $('poker-bulk-lines');
+  if (box) box.value = '';
   const msg = $('poker-result-msg');
   if (msg) msg.textContent = '';
 });

@@ -152,6 +152,22 @@
               <button class="btn btn-ghost" type="button" id="poker-result-clear-btn">Clear Form</button>
             </div>
           </form>
+
+          <details class="card" style="margin-top:.7rem">
+            <summary><strong>Bulk paste import</strong> (player, points, rank optional)</summary>
+            <form id="poker-bulk-form" class="stack" style="margin-top:.6rem">
+              <p class="muted">Paste one player per line. Formats supported:<br />
+              <code>Player,450.45,1</code> or <code>Player,450.45</code></p>
+              <label>Bulk lines
+                <textarea id="poker-bulk-lines" name="bulkLines" rows="7" placeholder="Cptred,450.45,1&#10;FloppinQuads8888,270.27,2&#10;rumpig3,180.18,3"></textarea>
+              </label>
+              <div class="row-actions">
+                <button class="btn" type="submit">Import Bulk Results</button>
+                <button class="btn btn-ghost" type="button" id="poker-bulk-clear-btn">Clear Bulk Box</button>
+              </div>
+            </form>
+          </details>
+
           <p id="poker-result-msg" class="muted"></p>
         </section>
 
