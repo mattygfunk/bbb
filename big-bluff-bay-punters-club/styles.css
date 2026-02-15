@@ -322,7 +322,7 @@ a:hover {
 .menu-links {
   display: flex;
   align-items: center;
-  gap: .4rem;
+  gap: .55rem;
   flex-wrap: wrap;
 }
 
@@ -338,8 +338,12 @@ a:hover {
   border: 1px solid #8aa4c7;
   background: #0f1b2d;
   border-radius: 999px;
-  padding: .32rem .62rem;
-  font-size: .86rem;
+  padding: .5rem .78rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
 }
 .menu-link:hover { color: #ffffff; border-color: #b7c8de; background: #14243b; }
 
