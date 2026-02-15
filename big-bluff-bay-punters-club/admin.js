@@ -7,6 +7,16 @@ async function req(path,opt={}){const h={'Content-Type':'application/json',...(o
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function isAdmin(){return state.user?.role==='admin';}
 
+function setPokerResultMsg(type, text){
+  const el = $('poker-result-msg');
+  if (!el) return;
+  el.textContent = String(text || '');
+  el.classList.remove('msg-ok', 'msg-warn', 'msg-err');
+  if (type === 'ok') el.classList.add('msg-ok');
+  else if (type === 'warn') el.classList.add('msg-warn');
+  else if (type === 'err') el.classList.add('msg-err');
+}
+
 function applyAdminViewFilter(){
   const params = new URLSearchParams(window.location.search || '');
   const view = String(params.get('view') || 'all').toLowerCase();
@@ -512,8 +522,7 @@ function applyPokerBulkFromQuery(){
     }
   }
 
-  const msg = $('poker-result-msg');
-  if (msg) msg.textContent = 'Bulk lines prefilled from URL. Review and click Import Bulk Results.';
+  setPokerResultMsg('warn', 'Bulk lines prefilled from URL. Review and click Import Bulk Results.');
 }
 
 pokerEventPreset?.addEventListener('change', syncPokerEventMode);
@@ -529,7 +538,7 @@ function selectedPokerEventName(formData){
 
 $('poker-result-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
+  if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
   const f = new FormData(e.target);
   const player = String(f.get('player') || '').trim();
   const points = Number(f.get('points'));
@@ -537,9 +546,9 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
   const finalTable = f.get('finalTable') !== null;
   const cashed = f.get('cashed') !== null;
 
-  if (!player) { $('poker-result-msg').textContent='Player is required.'; return; }
-  if (!Number.isFinite(points) || points < 0) { $('poker-result-msg').textContent='Enter a valid points value.'; return; }
-  if (eventPreset === 'custom' && !eventNameCustom) { $('poker-result-msg').textContent='Enter a custom event name.'; return; }
+  if (!player) { setPokerResultMsg('err','Player is required.'); return; }
+  if (!Number.isFinite(points) || points < 0) { setPokerResultMsg('err','Enter a valid points value.'); return; }
+  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name.'); return; }
 
   try {
     await req(API.pokerResults, {
@@ -554,11 +563,11 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
       if (first) top = ` Top this week: ${first.player} (${Number(first.points||0).toFixed(2).replace(/\.00$/,'')}).`;
     } catch {}
 
-    $('poker-result-msg').textContent = `Poker result added for ${player} (${eventName || 'event not set'}).${top}`;
+    setPokerResultMsg('ok', `Poker result added for ${player} (${eventName || 'event not set'}).${top}`);
     e.target.reset();
     syncPokerEventMode();
   } catch (err) {
-    $('poker-result-msg').textContent = err.message;
+    setPokerResultMsg('err', err.message || 'Request failed.');
   }
 });
 
@@ -596,7 +605,7 @@ function parsePokerBulkRows(raw) {
 
 $('poker-bulk-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
+  if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
 
   const formData = new FormData(e.target);
   const raw = String(formData.get('bulkLines') || '');
@@ -606,8 +615,8 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
   const finalTableDefault = parentFormData.get('finalTable') !== null;
   const cashedDefault = parentFormData.get('cashed') !== null;
 
-  if (!rows.length) { $('poker-result-msg').textContent = 'Paste at least one valid row.'; return; }
-  if (eventPreset === 'custom' && !eventNameCustom) { $('poker-result-msg').textContent='Enter a custom event name first.'; return; }
+  if (!rows.length) { setPokerResultMsg('err', 'Paste at least one valid row.'); return; }
+  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name first.'); return; }
 
   const results = [];
   const errors = [];
@@ -630,7 +639,7 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
     });
   });
 
-  if (!results.length) { $('poker-result-msg').textContent = errors[0] || 'No valid rows to import.'; return; }
+  if (!results.length) { setPokerResultMsg('err', errors[0] || 'No valid rows to import.'); return; }
 
   try {
     const out = await req(API.pokerResults, { method: 'POST', body: JSON.stringify({ results }) });
@@ -639,9 +648,13 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
       const lb = await req(`${API.pokerLeaderboard}?range=all`);
       tail = ` All-time events now: ${Number(lb?.stats?.events || 0)}.`;
     } catch {}
-    $('poker-result-msg').textContent = `Bulk import complete: added ${Number(out?.added || results.length)} result(s).${errors.length ? ` Skipped ${errors.length} invalid line(s).` : ''}${tail}`;
+    const successCount = Number(out?.added || results.length);
+    const failCount = errors.length;
+    const failedPreview = failCount ? ` Failed lines: ${errors.slice(0, 3).join(' | ')}${failCount > 3 ? ' ...' : ''}` : '';
+    const summary = `Bulk import successful: ${successCount} added.${failCount ? ` Failed/skipped: ${failCount}.` : ' Failed/skipped: 0.'}${tail}${failedPreview}`;
+    setPokerResultMsg(failCount ? 'warn' : 'ok', summary);
   } catch (err) {
-    $('poker-result-msg').textContent = err.message;
+    setPokerResultMsg('err', err.message || 'Request failed.');
   }
 });
 
@@ -650,12 +663,12 @@ $('poker-result-clear-btn')?.addEventListener('click', () => {
   if (f) f.reset();
   syncPokerEventMode();
   const msg = $('poker-result-msg');
-  if (msg) msg.textContent = '';
+  if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
 });
 
 $('poker-bulk-clear-btn')?.addEventListener('click', () => {
   const box = $('poker-bulk-lines');
   if (box) box.value = '';
   const msg = $('poker-result-msg');
-  if (msg) msg.textContent = '';
+  if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
 });

@@ -723,3 +723,7 @@ details p { margin:.55rem 0 0; }
   display: grid;
   gap: .9rem;
 }
+
+.msg-ok { color: #86efac !important; }
+.msg-warn { color: #fcd34d !important; }
+.msg-err { color: #fca5a5 !important; }
