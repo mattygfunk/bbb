@@ -415,6 +415,13 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
+  min-height: 34px;
+}
+
+#status-lock {
+  display: inline-block;
+  min-width: 88px;
+  font-variant-numeric: tabular-nums;
 }
 
 .hero-layout {
