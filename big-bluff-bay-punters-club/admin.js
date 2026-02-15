@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false};
 const $=id=>document.getElementById(id);
@@ -431,3 +431,45 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
 (async()=>{await bootstrap();await refresh();})();
+
+
+$('poker-result-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
+  const f = new FormData(e.target);
+  const player = String(f.get('player') || '').trim();
+  const points = Number(f.get('points'));
+  const eventName = String(f.get('eventName') || '').trim();
+  const finalTable = f.get('finalTable') !== null;
+  const cashed = f.get('cashed') !== null;
+
+  if (!player) { $('poker-result-msg').textContent='Player is required.'; return; }
+  if (!Number.isFinite(points) || points < 0) { $('poker-result-msg').textContent='Enter a valid points value.'; return; }
+
+  try {
+    await req(API.pokerResults, {
+      method: 'POST',
+      body: JSON.stringify({ player, points, finalTable, cashed, eventName, createdAt: Date.now() })
+    });
+
+    // Show quick confirmation from latest weekly top 5
+    let top='';
+    try {
+      const lb = await req(`${API.pokerLeaderboard}?range=week`);
+      const first = (lb.leaderboard || [])[0];
+      if (first) top = ` Top this week: ${first.player} (${Number(first.points||0).toFixed(2).replace(/\.00$/,'')}).`;
+    } catch {}
+
+    $('poker-result-msg').textContent = `Poker result added for ${player}.${top}`;
+    e.target.reset();
+  } catch (err) {
+    $('poker-result-msg').textContent = err.message;
+  }
+});
+
+$('poker-result-clear-btn')?.addEventListener('click', () => {
+  const f = $('poker-result-form');
+  if (f) f.reset();
+  const msg = $('poker-result-msg');
+  if (msg) msg.textContent = '';
+});
