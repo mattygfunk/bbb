@@ -439,9 +439,10 @@ const pokerEventCustom = $('poker-event-custom');
 
 function syncPokerEventMode(){
   const isCustom = pokerEventPreset?.value === 'custom';
-  if (pokerEventCustomWrap) pokerEventCustomWrap.style.display = isCustom ? 'grid' : 'none';
+  if (pokerEventCustomWrap) pokerEventCustomWrap.hidden = !isCustom;
   if (pokerEventCustom) {
     pokerEventCustom.required = Boolean(isCustom);
+    if (isCustom) setTimeout(() => pokerEventCustom.focus(), 0);
     if (!isCustom) pokerEventCustom.value = '';
   }
 }
