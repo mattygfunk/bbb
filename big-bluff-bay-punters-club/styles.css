@@ -461,6 +461,8 @@ code {
 .rail-section {
   border-top: 1px dashed #304860;
   padding-top: 1rem;
+  content-visibility: auto;
+  contain-intrinsic-size: 700px;
 }
 .rail-section:first-of-type { border-top: 0; padding-top: 0; }
 
