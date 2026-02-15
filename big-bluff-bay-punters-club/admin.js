@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -39,6 +39,30 @@ function applyAdminViewFilter(){
   if (pill) pill.textContent = `View: ${view}`;
 
   return view;
+}
+
+function renderAdminSummaryCounts(){
+  const tipUsers = Number(state.summary?.tipUsers || 0);
+  const paidUsers = Number(state.summary?.paidUsers || 0);
+  const pokerEvents = Number(state.summary?.pokerEvents || 0);
+
+  const all = tipUsers + pokerEvents;
+  const racing = tipUsers;
+  const poker = pokerEvents;
+
+  const allEl = $('admin-count-all');
+  const racingEl = $('admin-count-racing');
+  const pokerEl = $('admin-count-poker');
+  if (allEl) allEl.textContent = String(all);
+  if (racingEl) racingEl.textContent = String(racing);
+  if (pokerEl) pokerEl.textContent = String(poker);
+
+  const tipUsersEl = $('admin-stat-tip-users');
+  const paidUsersEl = $('admin-stat-paid-users');
+  const pokerEventsEl = $('admin-stat-poker-events');
+  if (tipUsersEl) tipUsersEl.textContent = String(tipUsers);
+  if (paidUsersEl) paidUsersEl.textContent = String(paidUsers);
+  if (pokerEventsEl) pokerEventsEl.textContent = String(pokerEvents);
 }
 
 async function applyRolloverFromQueryIfRequested(){
@@ -158,6 +182,7 @@ async function refresh(){
   if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
+  renderAdminSummaryCounts();
   if(!isAdmin()){ return; }
   applyAdminViewFilter();
 
@@ -214,18 +239,17 @@ async function refresh(){
   renderBossesSuggested(state.popularByRace);
 
   const activeTips = (p.tips || []).filter((t) => t.status !== 'removed');
-  const tipUsers = new Set(activeTips.map((t) => String(t.member || '').trim()).filter(Boolean)).size;
-  const paidUsers = new Set(activeTips.filter((t) => t.paid).map((t) => String(t.member || '').trim()).filter(Boolean)).size;
-  const tipUsersEl = $('admin-stat-tip-users');
-  const paidUsersEl = $('admin-stat-paid-users');
-  if (tipUsersEl) tipUsersEl.textContent = String(tipUsers);
-  if (paidUsersEl) paidUsersEl.textContent = String(paidUsers);
+  state.summary.tipUsers = new Set(activeTips.map((t) => String(t.member || '').trim()).filter(Boolean)).size;
+  state.summary.paidUsers = new Set(activeTips.filter((t) => t.paid).map((t) => String(t.member || '').trim()).filter(Boolean)).size;
 
   try {
     const pokerAll = await req(`${API.pokerLeaderboard}?range=all`);
-    const pokerEventsEl = $('admin-stat-poker-events');
-    if (pokerEventsEl) pokerEventsEl.textContent = String(Number(pokerAll?.stats?.events || 0));
-  } catch {}
+    state.summary.pokerEvents = Number(pokerAll?.stats?.events || 0);
+  } catch {
+    state.summary.pokerEvents = state.summary.pokerEvents || 0;
+  }
+
+  renderAdminSummaryCounts();
 
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
@@ -481,6 +505,12 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
 (async()=>{await bootstrap();await refresh();})();
+
+setInterval(() => {
+  if (document.hidden) return;
+  if (!isAdmin()) return;
+  refresh().catch(() => {});
+}, 30000);
 
 
 const pokerEventPreset = $('poker-event-preset');
