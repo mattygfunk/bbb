@@ -191,13 +191,26 @@ function wireLeaderboardShare() {
   });
 }
 
-async function hydrateLanding() {
+function scheduleIdle(task, timeout = 2500) {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => task(), { timeout });
+  } else {
+    setTimeout(task, 0);
+  }
+}
+
+async function hydrateLandingCritical() {
   renderWinners(MOCK.winners);
   const ticker = document.getElementById('payout-ticker');
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const jackpot = await fetchApi('/jackpot');
+    const [jackpot, fx, ladder] = await Promise.all([
+      fetchApi('/jackpot'),
+      fetchApi('/fixtures'),
+      fetchApi('/ladder')
+    ]);
+
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
     const potValue = Number(jackpot?.totalPot || 0);
     const roundValue = Number(jackpot?.currentRoundPot || 0);
@@ -210,39 +223,50 @@ async function hydrateLanding() {
     document.getElementById('jackpot-value').textContent = potText;
     document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
-    const debugNode = document.getElementById('jackpot-debug-line');
-    if (debugNode) debugNode.textContent = `API jackpot debug: total=${potValue} rollover=${rolloverValue} round=${roundValue} paid=${Number(jackpot?.paidMembers || 0)}`;
-
-    const [fx, tips, ladder, social] = await Promise.all([
-      fetchApi('/fixtures'),
-      fetchApi('/tips?status=all'),
-      fetchApi('/ladder'),
-      fetchApi('/social-feed')
-    ]);
 
     const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
     renderFixtures(fx?.fixtures || []);
-    const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
-    const entries = new Set(tipRows.map((t) => t.member)).size;
 
     const leaders = ladder?.ladder || [];
+    renderLadder(leaders);
 
     document.getElementById('status-meet').textContent = meet;
-    document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
-
+    document.getElementById('status-entries').textContent = 'Live';
     document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || '—');
-    document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
     document.getElementById('stat-paid').textContent = potText;
 
-    renderTipsByPlayer(tipRows);
-    renderLadder(leaders);
-    renderSocialFeed(social?.items || []);
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
+
+    const debugNode = document.getElementById('jackpot-debug-line');
+    if (debugNode) debugNode.textContent = `API jackpot debug: total=${potValue} rollover=${rolloverValue} round=${roundValue} paid=${Number(jackpot?.paidMembers || 0)}`;
+
+    scheduleIdle(() => hydrateLandingDeferred(potText), 3000);
   } catch {
     const debugNode = document.getElementById('jackpot-debug-line');
     if (debugNode) debugNode.textContent = 'API jackpot debug: failed to load /api/jackpot';
-    // graceful fallback to mock/empty states
+  }
+}
+
+async function hydrateLandingDeferred(potText) {
+  try {
+    const [tips, social] = await Promise.all([
+      fetchApi('/tips?status=all'),
+      fetchApi('/social-feed')
+    ]);
+
+    const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
+    const entries = new Set(tipRows.map((t) => t.member)).size;
+
+    requestAnimationFrame(() => {
+      renderTipsByPlayer(tipRows);
+      renderSocialFeed(social?.items || []);
+      document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
+      document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
+      if (potText) document.getElementById('stat-paid').textContent = potText;
+    });
+  } catch {
+    // deferred non-critical data failed; keep placeholders
   }
 }
 
@@ -272,7 +296,7 @@ async function initLockCountdown() {
   }
 
   initLockCountdown();
-  wirePickToggles();
+  scheduleIdle(() => wirePickToggles(), 2000);
   wireLeaderboardShare();
-  hydrateLanding();
+  hydrateLandingCritical();
 })();
