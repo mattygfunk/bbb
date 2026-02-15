@@ -31,6 +31,9 @@ async function req(path, opt = {}) {
 }
 
 async function applyLoggedInState() {
+  // Avoid unnecessary /api/me request (and console noise) for anonymous visitors.
+  if (!localStorage.getItem(tokenKey)) return;
+
   try {
     const me = await req(API.me);
     if (!me?.user) return;
@@ -39,7 +42,7 @@ async function applyLoggedInState() {
       loginCard.style.display = 'none';
     }
   } catch {
-    // not logged in
+    // token missing/expired or offline; keep login card visible
   }
 }
 
