@@ -433,18 +433,37 @@ async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.
 (async()=>{await bootstrap();await refresh();})();
 
 
+const pokerEventPreset = $('poker-event-preset');
+const pokerEventCustomWrap = $('poker-event-custom-wrap');
+const pokerEventCustom = $('poker-event-custom');
+
+function syncPokerEventMode(){
+  const isCustom = pokerEventPreset?.value === 'custom';
+  if (pokerEventCustomWrap) pokerEventCustomWrap.style.display = isCustom ? 'grid' : 'none';
+  if (pokerEventCustom) {
+    pokerEventCustom.required = Boolean(isCustom);
+    if (!isCustom) pokerEventCustom.value = '';
+  }
+}
+
+pokerEventPreset?.addEventListener('change', syncPokerEventMode);
+syncPokerEventMode();
+
 $('poker-result-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
   const f = new FormData(e.target);
   const player = String(f.get('player') || '').trim();
   const points = Number(f.get('points'));
-  const eventName = String(f.get('eventName') || '').trim();
+  const eventPreset = String(f.get('eventPreset') || 'Nightly 500gtd').trim();
+  const eventNameCustom = String(f.get('eventNameCustom') || '').trim();
+  const eventName = eventPreset === 'custom' ? eventNameCustom : eventPreset;
   const finalTable = f.get('finalTable') !== null;
   const cashed = f.get('cashed') !== null;
 
   if (!player) { $('poker-result-msg').textContent='Player is required.'; return; }
   if (!Number.isFinite(points) || points < 0) { $('poker-result-msg').textContent='Enter a valid points value.'; return; }
+  if (eventPreset === 'custom' && !eventNameCustom) { $('poker-result-msg').textContent='Enter a custom event name.'; return; }
 
   try {
     await req(API.pokerResults, {
@@ -452,7 +471,6 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
       body: JSON.stringify({ player, points, finalTable, cashed, eventName, createdAt: Date.now() })
     });
 
-    // Show quick confirmation from latest weekly top 5
     let top='';
     try {
       const lb = await req(`${API.pokerLeaderboard}?range=week`);
@@ -460,8 +478,9 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
       if (first) top = ` Top this week: ${first.player} (${Number(first.points||0).toFixed(2).replace(/\.00$/,'')}).`;
     } catch {}
 
-    $('poker-result-msg').textContent = `Poker result added for ${player}.${top}`;
+    $('poker-result-msg').textContent = `Poker result added for ${player} (${eventName || 'event not set'}).${top}`;
     e.target.reset();
+    syncPokerEventMode();
   } catch (err) {
     $('poker-result-msg').textContent = err.message;
   }
@@ -470,6 +489,7 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
 $('poker-result-clear-btn')?.addEventListener('click', () => {
   const f = $('poker-result-form');
   if (f) f.reset();
+  syncPokerEventMode();
   const msg = $('poker-result-msg');
   if (msg) msg.textContent = '';
 });

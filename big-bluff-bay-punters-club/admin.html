@@ -131,8 +131,16 @@
               <label>Points
                 <input name="points" type="number" step="0.01" min="0" placeholder="e.g. 333.5" required />
               </label>
-              <label>Event name (optional)
-                <input name="eventName" type="text" placeholder="e.g. Sunday Main" />
+              <label>Event name
+                <select name="eventPreset" id="poker-event-preset">
+                  <option value="Nightly 500gtd">Nightly 500gtd</option>
+                  <option value="Nightly 700gtd">Nightly 700gtd</option>
+                  <option value="Sunday 1300gtd">Sunday 1300gtd</option>
+                  <option value="custom">Enter manually…</option>
+                </select>
+              </label>
+              <label id="poker-event-custom-wrap" style="display:none">Custom event name
+                <input name="eventNameCustom" id="poker-event-custom" type="text" placeholder="Enter custom event" />
               </label>
             </div>
             <div class="row-actions">
