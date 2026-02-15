@@ -110,6 +110,12 @@ section[id], [id="tip-form"], [id="leaderboard"], [id="rules-faq"], [id="lobby"]
   color: var(--text);
   border-color: #334155;
 }
+
+.leaderboard-filter.active {
+  border-color: #86efac;
+  color: #dcfce7;
+  background: #052e16;
+}
 .btn-danger {
   background: #3a1010;
   color: #fecaca;

@@ -427,11 +427,27 @@ function computeMemberBreakdown(store, memberName) {
 
 function getRangeStartMs(range) {
   const now = new Date();
-  if (range === 'week') return now.getTime() - (7 * 24 * 60 * 60 * 1000);
+  if (range === 'all') return 0;
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Australia/Melbourne',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    weekday: 'short'
+  }).formatToParts(now);
+  const get = (t) => parts.find((p) => p.type === t)?.value || '';
+  const y = Number(get('year'));
+  const m = Number(get('month'));
+  const d = Number(get('day'));
+  const wd = get('weekday');
+  const dayIdx = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(wd);
+
   if (range === 'month') {
-    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    return Date.UTC(y, m - 1, 1, 0, 0, 0);
   }
-  return 0;
+
+  // week = current Melbourne week starting Monday 00:00
+  const daysFromMonday = dayIdx === 0 ? 6 : Math.max(dayIdx - 1, 0);
+  return Date.UTC(y, m - 1, d - daysFromMonday, 0, 0, 0);
 }
 
 function computePokerLeaderboard(store, range = 'all') {
@@ -912,8 +928,21 @@ function createApp() {
     const store = readStore();
     const range = String(req.query.range || 'all').toLowerCase();
     if (!['week', 'month', 'all'].includes(range)) return res.status(400).json({ error: 'range must be week, month, or all' });
+
+    const startMs = getRangeStartMs(range);
+    const rows = (store.pokerResults || []).filter((r) => Number(r.createdAt || 0) >= startMs);
     const leaderboard = computePokerLeaderboard(store, range);
-    return res.json({ range, leaderboard, updatedAt: Date.now() });
+    const totalPlayers = new Set(rows.map((r) => String(r.player || '').trim()).filter(Boolean)).size;
+
+    return res.json({
+      range,
+      leaderboard,
+      stats: {
+        events: rows.length,
+        players: totalPlayers
+      },
+      updatedAt: Date.now()
+    });
   });
 
   app.post('/api/poker-results', auth, adminOnly, (req, res) => {
