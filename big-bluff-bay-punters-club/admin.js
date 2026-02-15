@@ -3,7 +3,7 @@ const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/boss
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false};
 const $=id=>document.getElementById(id);
-async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
+async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function isAdmin(){return state.user?.role==='admin';}
 
@@ -634,7 +634,12 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
 
   try {
     const out = await req(API.pokerResults, { method: 'POST', body: JSON.stringify({ results }) });
-    $('poker-result-msg').textContent = `Bulk import complete: added ${Number(out?.added || results.length)} result(s).${errors.length ? ` Skipped ${errors.length} invalid line(s).` : ''}`;
+    let tail = '';
+    try {
+      const lb = await req(`${API.pokerLeaderboard}?range=all`);
+      tail = ` All-time events now: ${Number(lb?.stats?.events || 0)}.`;
+    } catch {}
+    $('poker-result-msg').textContent = `Bulk import complete: added ${Number(out?.added || results.length)} result(s).${errors.length ? ` Skipped ${errors.length} invalid line(s).` : ''}${tail}`;
   } catch (err) {
     $('poker-result-msg').textContent = err.message;
   }
