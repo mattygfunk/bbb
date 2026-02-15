@@ -497,6 +497,20 @@ details summary { cursor:pointer; font-weight:700; }
 .hero-login { box-shadow: 0 10px 30px rgba(0,0,0,.22); }
 details p { margin:.55rem 0 0; }
 
+.faq-columns {
+  column-count: 1;
+  column-gap: .85rem;
+}
+
+.faq-columns > details {
+  break-inside: avoid;
+  margin-bottom: .75rem;
+}
+
+@media (min-width: 980px) {
+  .faq-columns { column-count: 2; }
+}
+
 .buyin-options {
   display: flex;
   justify-content: center;
