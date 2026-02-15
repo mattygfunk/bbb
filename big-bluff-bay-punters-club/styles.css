@@ -292,6 +292,7 @@ input, textarea, select {
 }
 
 .muted { color: var(--muted); }
+.section-head .muted { color: #e2e8f0; }
 
 a,
 a:visited {
@@ -304,7 +305,9 @@ a:hover {
 
 .muted a,
 .muted a:visited {
-  color: #ffe8a3;
+  color: #fff1b8;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
 }
 
 .row {
