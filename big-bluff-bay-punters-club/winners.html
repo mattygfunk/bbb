@@ -7,15 +7,40 @@
   <meta name="description" content="Track Big Bluff Bay weekly winners, win history, streak ladders, and milestone badges in one place." />
   <link rel="canonical" href="https://bigbluffbay.au/winners.html" />
   <link rel="stylesheet" href="styles.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Big Bluff Bay Winners Hub","url":"https://bigbluffbay.au/winners.html"}</script>
 </head>
 <body>
   <header class="hero premium-hero"><div class="overlay"></div><nav class="nav wrap"><a class="brand" href="/"><span class="badge">BBB</span><span><strong>Big Bluff Bay</strong><small>Winners Hub</small></span></a><div class="menu-links"><a class="menu-link" href="/">🏠 Home</a><a class="menu-link" href="/punters.html">🏇 Punters Club</a><a class="menu-link" href="/poker.html">♠️ Poker Tournaments</a></div></nav></header>
   <main class="wrap premium-main">
     <nav class="breadcrumbs"><a href="/">Home</a><span>›</span><span aria-current="page">Winners Hub</span></nav>
-    <section class="card"><h2>Latest Weekly Winner</h2><p class="muted">Live summary from milestone data.</p><div id="featured-winner" class="muted">Loading winner…</div></section>
-    <section class="card"><h2>Weekly Winner History</h2><div class="table-wrap"><table><thead><tr><th>Week</th><th>Winner</th><th>Points</th><th>Winning Picks</th></tr></thead><tbody id="winner-history-body"></tbody></table></div></section>
-    <section class="card"><h2>Consecutive Weeks + Milestones</h2><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Member</th><th>Current</th><th>Best</th><th>Total Wins</th><th>Badges</th></tr></thead><tbody id="streak-body"></tbody></table></div></section>
-    <section class="card"><h3>How to use this page</h3><p class="muted">Use winner history to spot consistency trends, then cross-reference with <a href="/punters-faq.html">Punters FAQ</a> and <a href="/punters-rules.html">Punters Rules</a> for scoring and tie-break logic.</p></section>
+
+    <section class="card">
+      <h2>Latest Weekly Winner</h2>
+      <p class="muted">This card shows the most recent archived round winner. It updates from live milestone data, so history and rankings stay aligned with official scoring.</p>
+      <div id="featured-winner" class="muted">Loading winner…</div>
+    </section>
+
+    <section class="card">
+      <h2>Weekly Winner History</h2>
+      <p class="muted">Use this table to track consistency over time, not just one-off spikes. Strong long-term players usually combine solid points floors with periodic first-place conversions.</p>
+      <div class="table-wrap"><table><thead><tr><th>Week</th><th>Winner</th><th>Points</th><th>Winning Picks</th></tr></thead><tbody id="winner-history-body"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Consecutive Weeks + Milestones</h2>
+      <p class="muted">Streaks highlight discipline. Milestone badges recognise repeat performance, back-to-back form, and long-run reliability.</p>
+      <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Member</th><th>Current</th><th>Best</th><th>Total Wins</th><th>Badges</th></tr></thead><tbody id="streak-body"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h3>How to use this page properly</h3>
+      <ul class="feature-list">
+        <li>Use winner history to identify form trends over 4–8 week windows.</li>
+        <li>Use streak data to see who is consistently executing, even without weekly wins.</li>
+        <li>Cross-check tie-break and points logic in <a href="/punters-rules.html">Punters Rules</a> and <a href="/punters-faq.html">Punters FAQ</a>.</li>
+        <li>Use this page with <a href="/punters.html#leaderboard">Live Leaderboard</a> for current-week context.</li>
+      </ul>
+    </section>
   </main>
   <footer class="wrap footer muted"><p>© 2026 Big Bluff Bay</p></footer>
   <script src="winners.js?v=20260215-1"></script>
