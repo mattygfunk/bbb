@@ -124,11 +124,12 @@ function renderRaceInputs(count){
   wrap.innerHTML='';
   for(let i=1;i<=count;i+=1){
     const race=`R${i}`;
+    const selectId=`tip-${race.toLowerCase()}`;
     const row=document.createElement('div');
     row.className='row';
     const opts=['<option value="">—</option>'];
     for(let n=1;n<=24;n+=1) opts.push(`<option>${n}</option>`);
-    row.innerHTML=`<strong>${race}</strong><select name='${race}'>${opts.join('')}</select>`;
+    row.innerHTML=`<label for='${selectId}'><strong>${race}</strong><span class='muted' style='position:absolute;left:-9999px'> selection</span></label><select id='${selectId}' name='${race}' aria-label='${race} selection'>${opts.join('')}</select>`;
     wrap.appendChild(row);
   }
 }
