@@ -28,14 +28,16 @@ function esc(s) {
 
 async function fetchApi(path) {
   for (const root of LANDING_API_ROOTS) {
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 6000);
-      const r = await fetch(`${root}${path}`, { cache: 'no-store', signal: ctrl.signal });
-      clearTimeout(t);
-      const d = await r.json().catch(() => ({}));
-      if (r.ok) return d;
-    } catch {}
+    const url = `${root}${path}`;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) return d;
+      } catch {}
+      // brief retry for transient timeouts/network hiccups
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
   }
   return {};
 }

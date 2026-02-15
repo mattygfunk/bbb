@@ -15,6 +15,7 @@ async function req(path, opt = {}) {
   for (const root of API_ROOTS) {
     const res = await fetch(`${root}${path}`, {
       ...opt,
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -55,41 +56,43 @@ if (togglePasswordBtn && passwordInput) {
   });
 }
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const data = new FormData(form);
-  const username = String(data.get('member') || '').trim();
-  const password = String(data.get('pin') || '').trim();
-  const mode = e.submitter?.dataset.mode || 'login';
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const username = String(data.get('member') || '').trim();
+    const password = String(data.get('pin') || '').trim();
+    const mode = e.submitter?.dataset.mode || 'login';
 
-  if (username.length < 3) {
-    msg.textContent = 'Username must be at least 3 characters.';
-    return;
-  }
-  if (password.length < 6) {
-    msg.textContent = 'Password must be at least 6 characters.';
-    return;
-  }
+    if (username.length < 3) {
+      if (msg) msg.textContent = 'Username must be at least 3 characters.';
+      return;
+    }
+    if (password.length < 6) {
+      if (msg) msg.textContent = 'Password must be at least 6 characters.';
+      return;
+    }
 
-  try {
-    if (mode === 'register') {
-      await req(API.register, {
+    try {
+      if (mode === 'register') {
+        await req(API.register, {
+          method: 'POST',
+          body: JSON.stringify({ username, password })
+        });
+      }
+
+      const login = await req(API.login, {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
+
+      localStorage.setItem(tokenKey, login.token);
+      if (msg) msg.textContent = 'Logged in. Redirecting to Punters Area...';
+      window.location.href = '/punters.html';
+    } catch (err) {
+      if (msg) msg.textContent = err.message || 'Login failed. Please try again.';
     }
-
-    const login = await req(API.login, {
-      method: 'POST',
-      body: JSON.stringify({ username, password })
-    });
-
-    localStorage.setItem(tokenKey, login.token);
-    msg.textContent = 'Logged in. Redirecting to Punters Area...';
-    window.location.href = '/punters.html';
-  } catch (err) {
-    msg.textContent = err.message;
-  }
-});
+  });
+}
 
 applyLoggedInState();
