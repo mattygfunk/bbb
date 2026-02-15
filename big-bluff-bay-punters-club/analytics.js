@@ -23,24 +23,11 @@
     });
   }
 
-  // Delay GA init until idle/interaction to reduce main-thread/layout pressure during initial render.
-  const scheduleInit = () => {
-    if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(initAnalytics, { timeout: 3500 });
-    } else {
-      setTimeout(initAnalytics, 2500);
-    }
-  };
-
-  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach((ev) => {
+  // Ultra-lazy GA: load only after explicit user interaction.
+  // This keeps gtag.js off the critical path and avoids shipping ~145KB to bounce users.
+  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => {
     window.addEventListener(ev, initAnalytics, { once: true, passive: true });
   });
-
-  if (document.readyState === 'complete') {
-    scheduleInit();
-  } else {
-    window.addEventListener('load', scheduleInit, { once: true });
-  }
 
   document.addEventListener('click', (event) => {
     const cta = event.target.closest('[data-cta]');
