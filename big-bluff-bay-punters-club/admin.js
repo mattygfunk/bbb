@@ -522,30 +522,61 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
   }
 });
 
+function parsePokerBulkRows(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return [];
+
+  // Primary mode: one row per line (or semicolon-separated)
+  let rows = text
+    .split(/\r?\n|;/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.split(',').map((x) => x.trim());
+      return { player: String(parts[0] || ''), points: Number(parts[1]), rank: Number(parts[2]), raw: line };
+    })
+    .filter((r) => r.player || Number.isFinite(r.points));
+
+  // Fallback mode: single-line triples separated by spaces, e.g.
+  // "MILLLZZ,814.05,1 OneLook,488.43,2 AllinSam,325.62,3"
+  if (rows.length <= 1) {
+    const matches = [...text.matchAll(/([^,\n;]+?),\s*([0-9]+(?:\.[0-9]+)?)(?:\s*,\s*([0-9]+))?/g)];
+    if (matches.length >= 2) {
+      rows = matches.map((m) => ({
+        player: String(m[1] || '').trim(),
+        points: Number(m[2]),
+        rank: Number(m[3]),
+        raw: m[0]
+      }));
+    }
+  }
+
+  return rows;
+}
+
 $('poker-bulk-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ $('poker-result-msg').textContent='Admin login required.'; return; }
 
   const formData = new FormData(e.target);
   const raw = String(formData.get('bulkLines') || '');
-  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const rows = parsePokerBulkRows(raw);
   const parentFormData = new FormData($('poker-result-form'));
   const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(parentFormData);
   const finalTableDefault = parentFormData.get('finalTable') !== null;
   const cashedDefault = parentFormData.get('cashed') !== null;
 
-  if (!lines.length) { $('poker-result-msg').textContent = 'Paste at least one line.'; return; }
+  if (!rows.length) { $('poker-result-msg').textContent = 'Paste at least one valid row.'; return; }
   if (eventPreset === 'custom' && !eventNameCustom) { $('poker-result-msg').textContent='Enter a custom event name first.'; return; }
 
   const results = [];
   const errors = [];
-  lines.forEach((line, idx) => {
-    const parts = line.split(',').map((x) => x.trim());
-    const player = String(parts[0] || '');
-    const points = Number(parts[1]);
-    const rank = Number(parts[2]);
+  rows.forEach((row, idx) => {
+    const player = String(row.player || '').trim();
+    const points = Number(row.points);
+    const rank = Number(row.rank);
     if (!player || !Number.isFinite(points) || points < 0) {
-      errors.push(`Line ${idx + 1} invalid: ${line}`);
+      errors.push(`Line ${idx + 1} invalid: ${row.raw}`);
       return;
     }
     results.push({
