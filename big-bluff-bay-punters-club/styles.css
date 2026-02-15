@@ -388,7 +388,8 @@ a:hover {
   gap: .85rem;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
-.footer-grid h4 {
+.footer-grid h4,
+.footer-grid .footer-heading {
   margin: 0 0 .35rem;
   font-size: .84rem;
   color: #cbd5e1;
