@@ -592,10 +592,11 @@ details p { margin:.55rem 0 0; }
 .social-feed-card { display: grid; gap: .7rem; }
 
 .social-logo {
-  width: 22px;
-  height: 22px;
+  width: 14px;
+  height: 14px;
   display: inline-block;
   vertical-align: middle;
+  opacity: .95;
 }
 
 .social-feed-grid {
