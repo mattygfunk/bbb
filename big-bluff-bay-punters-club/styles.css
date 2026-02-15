@@ -3,7 +3,7 @@
   --surface: #0f172a;
   --surface-2: #111827;
   --text: #e5e7eb;
-  --muted: #94a3b8;
+  --muted: #b8c5d9;
   --line: #243041;
   --brand: #22c55e;
   --brand-2: #16a34a;
@@ -328,14 +328,14 @@ a:hover {
   gap: .45rem;
 }
 .menu-link {
-  color: var(--muted);
+  color: #dbe7f6;
   text-decoration: none;
-  border: 1px solid #314157;
+  border: 1px solid #4b617f;
   border-radius: 999px;
   padding: .32rem .62rem;
-  font-size: .82rem;
+  font-size: .86rem;
 }
-.menu-link:hover { color: var(--text); border-color: #4b617f; }
+.menu-link:hover { color: #ffffff; border-color: #7b95b8; background: #0f1b2d; }
 
 :focus-visible {
   outline: 2px solid #86efac;
