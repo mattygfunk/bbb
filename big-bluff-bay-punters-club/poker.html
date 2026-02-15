@@ -155,6 +155,22 @@
         </article>
       </section>
 
+      
+      <section class="rail-section" id="poker-leaderboard" aria-labelledby="poker-leaderboard-heading">
+        <div class="section-head">
+          <h2 id="poker-leaderboard-heading">Live Poker Leaderboard</h2>
+          <div class="row-actions">
+            <button class="btn btn-ghost leaderboard-filter" data-range="week" type="button">This Week</button>
+            <button class="btn btn-ghost leaderboard-filter" data-range="month" type="button">This Month</button>
+            <button class="btn btn-ghost leaderboard-filter" data-range="all" type="button">All-Time</button>
+          </div>
+        </div>
+        <article class="card">
+          <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Player</th><th>Points</th><th>Final Tables</th><th>Cashes</th></tr></thead><tbody id="poker-leaderboard-body"><tr><td colspan="5" class="muted">Loading leaderboard…</td></tr></tbody></table></div>
+          <p class="muted" id="poker-leaderboard-status">Range: this week</p>
+        </article>
+      </section>
+
       <section class="rail-section" id="join">
         <div class="split">
           <article class="card">
@@ -210,5 +226,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="menu-auth.js"></script>
+    <script src="poker-leaderboard.js"></script>
   </body>
 </html>

@@ -38,6 +38,7 @@ function ensureStore() {
       jackpotCarry: 0,
       lastJackpotWinner: '',
       socialFeedCache: { updatedAt: 0, items: [] },
+      pokerResults: [],
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -101,6 +102,10 @@ function ensureStore() {
   }
   if (!store.socialFeedCache || typeof store.socialFeedCache !== 'object') {
     store.socialFeedCache = { updatedAt: 0, items: [] };
+    changed = true;
+  }
+  if (!Array.isArray(store.pokerResults)) {
+    store.pokerResults = [];
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -417,6 +422,34 @@ function computeMemberBreakdown(store, memberName) {
   }
 
   return { member: memberName, totalPoints, winners, races: rows };
+}
+
+
+function getRangeStartMs(range) {
+  const now = new Date();
+  if (range === 'week') return now.getTime() - (7 * 24 * 60 * 60 * 1000);
+  if (range === 'month') {
+    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  }
+  return 0;
+}
+
+function computePokerLeaderboard(store, range = 'all') {
+  const startMs = getRangeStartMs(range);
+  const rows = (store.pokerResults || []).filter((r) => Number(r.createdAt || 0) >= startMs);
+  const map = new Map();
+  for (const r of rows) {
+    const player = String(r.player || '').trim();
+    if (!player) continue;
+    const row = map.get(player) || { player, points: 0, finalTables: 0, cashes: 0 };
+    row.points += Number(r.points || 0);
+    if (r.finalTable) row.finalTables += 1;
+    if (r.cashed) row.cashes += 1;
+    map.set(player, row);
+  }
+  return [...map.values()]
+    .sort((a, b) => b.points - a.points || b.finalTables - a.finalTables || b.cashes - a.cashes || a.player.localeCompare(b.player))
+    .map((r, i) => ({ rank: i + 1, ...r }));
 }
 
 function getMelbourneOffsetMinutes(dateLike) {
@@ -872,6 +905,39 @@ function createApp() {
     store.jackpotCarry = Math.round(rollover * 100) / 100;
     writeStore(store);
     return res.json({ ok: true, jackpotCarry: store.jackpotCarry });
+  });
+
+
+  app.get('/api/poker-leaderboard', (req, res) => {
+    const store = readStore();
+    const range = String(req.query.range || 'all').toLowerCase();
+    if (!['week', 'month', 'all'].includes(range)) return res.status(400).json({ error: 'range must be week, month, or all' });
+    const leaderboard = computePokerLeaderboard(store, range);
+    return res.json({ range, leaderboard, updatedAt: Date.now() });
+  });
+
+  app.post('/api/poker-results', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const input = Array.isArray(req.body?.results) ? req.body.results : [req.body];
+    const added = [];
+    for (const item of input) {
+      const player = String(item?.player || '').trim();
+      if (!player) continue;
+      added.push({
+        id: crypto.randomUUID(),
+        player,
+        points: Number(item?.points || 0),
+        finalTable: Boolean(item?.finalTable),
+        cashed: Boolean(item?.cashed),
+        eventName: String(item?.eventName || '').trim(),
+        createdAt: Number(item?.createdAt || Date.now()),
+        createdBy: req.user.username
+      });
+    }
+    store.pokerResults = Array.isArray(store.pokerResults) ? store.pokerResults : [];
+    store.pokerResults.push(...added);
+    writeStore(store);
+    return res.status(201).json({ ok: true, added: added.length });
   });
 
   app.get('/api/social-feed', async (_req, res) => {
