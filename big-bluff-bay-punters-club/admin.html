@@ -52,6 +52,17 @@
       </section>
 
       <div id="admin-only" style="display:none">
+        <section class="card">
+          <h2>Admin Sections</h2>
+          <p class="muted">Switch between admin modes:</p>
+          <div class="row-actions">
+            <a class="btn btn-ghost" href="/admin.html">All</a>
+            <a class="btn btn-ghost" href="/admin.html?view=racing">Racing Options</a>
+            <a class="btn btn-ghost" href="/admin.html?view=poker">Poker Club Options</a>
+          </div>
+        </section>
+
+        <div id="admin-racing-sections">
         <section class="card"><h2>Round Archive</h2>
           <p class="muted">Archive current meet tips + results into history, then reset active round for next week.</p>
           <div class="row-actions">
@@ -121,6 +132,9 @@
         </section>
 
         
+        </div>
+
+        <div id="admin-poker-sections">
         <section class="card"><h2>Poker Leaderboard Results Entry</h2>
           <p class="muted">Add official poker result rows that feed the live leaderboard on <a href="/poker.html">Poker Tournaments</a>.</p>
           <form id="poker-result-form" class="stack">
@@ -170,8 +184,9 @@
 
           <p id="poker-result-msg" class="muted"></p>
         </section>
+        </div>
 
-        <section class="card"><h2>Users Who Have Tipped</h2><div id="admin-list" class="stack"></div></section>
+        <section class="card" id="admin-racing-users"><h2>Users Who Have Tipped</h2><div id="admin-list" class="stack"></div></section>
       </div>
     </main>
 

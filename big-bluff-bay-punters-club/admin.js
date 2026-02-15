@@ -7,6 +7,21 @@ async function req(path,opt={}){const h={'Content-Type':'application/json',...(o
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function isAdmin(){return state.user?.role==='admin';}
 
+function applyAdminViewFilter(){
+  const params = new URLSearchParams(window.location.search || '');
+  const view = String(params.get('view') || 'all').toLowerCase();
+  const racing = $('admin-racing-sections');
+  const poker = $('admin-poker-sections');
+  const racingUsers = $('admin-racing-users');
+
+  const showRacing = view === 'all' || view === 'racing';
+  const showPoker = view === 'all' || view === 'poker';
+
+  if (racing) racing.style.display = showRacing ? 'grid' : 'none';
+  if (racingUsers) racingUsers.style.display = showRacing ? 'block' : 'none';
+  if (poker) poker.style.display = showPoker ? 'grid' : 'none';
+}
+
 async function applyRolloverFromQueryIfRequested(){
   if (state.rolloverAppliedFromQuery) return;
   const params = new URLSearchParams(window.location.search || '');
@@ -125,6 +140,7 @@ async function refresh(){
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
   if(!isAdmin()){ return; }
+  applyAdminViewFilter();
 
   try {
     const fx = await req(API.fixtures);
