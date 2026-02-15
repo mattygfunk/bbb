@@ -557,17 +557,22 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
     });
 
     let top='';
+    let tail='';
     try {
-      const lb = await req(`${API.pokerLeaderboard}?range=week`);
-      const first = (lb.leaderboard || [])[0];
+      const lbWeek = await req(`${API.pokerLeaderboard}?range=week`);
+      const first = (lbWeek.leaderboard || [])[0];
       if (first) top = ` Top this week: ${first.player} (${Number(first.points||0).toFixed(2).replace(/\.00$/,'')}).`;
     } catch {}
+    try {
+      const lbAll = await req(`${API.pokerLeaderboard}?range=all`);
+      tail = ` All-time events now: ${Number(lbAll?.stats?.events || 0)}.`;
+    } catch {}
 
-    setPokerResultMsg('ok', `Poker result added for ${player} (${eventName || 'event not set'}).${top}`);
+    setPokerResultMsg('ok', `Single import successful: added 1 result for ${player} (${eventName || 'event not set'}).${tail}${top}`);
     e.target.reset();
     syncPokerEventMode();
   } catch (err) {
-    setPokerResultMsg('err', err.message || 'Request failed.');
+    setPokerResultMsg('err', `Single import failed: ${err.message || 'Request failed.'}`);
   }
 });
 
