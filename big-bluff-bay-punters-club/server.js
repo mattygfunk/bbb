@@ -431,23 +431,19 @@ function getRangeStartMs(range) {
 
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Australia/Melbourne',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    weekday: 'short'
+    year: 'numeric', month: '2-digit', day: '2-digit'
   }).formatToParts(now);
   const get = (t) => parts.find((p) => p.type === t)?.value || '';
   const y = Number(get('year'));
   const m = Number(get('month'));
   const d = Number(get('day'));
-  const wd = get('weekday');
-  const dayIdx = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(wd);
 
   if (range === 'month') {
     return Date.UTC(y, m - 1, 1, 0, 0, 0);
   }
 
-  // week = current Melbourne week starting Monday 00:00
-  const daysFromMonday = dayIdx === 0 ? 6 : Math.max(dayIdx - 1, 0);
-  return Date.UTC(y, m - 1, d - daysFromMonday, 0, 0, 0);
+  // week = rolling last 7 days (includes Sunday events immediately)
+  return now.getTime() - (7 * 24 * 60 * 60 * 1000);
 }
 
 function computePokerLeaderboard(store, range = 'all') {

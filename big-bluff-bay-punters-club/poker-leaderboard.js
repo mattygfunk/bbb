@@ -12,7 +12,7 @@
   function labelFor(range){
     if (range === 'all') return 'all-time';
     if (range === 'month') return 'this month';
-    return 'this week';
+    return 'this week (last 7 days)';
   }
 
   function setActive(range){
