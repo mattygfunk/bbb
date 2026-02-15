@@ -286,6 +286,16 @@ input, textarea, select {
 }
 
 .muted { color: var(--muted); }
+
+a,
+a:visited {
+  color: #f5d76e;
+}
+
+a:hover {
+  color: #ffe8a3;
+}
+
 .row {
   display: flex;
   justify-content: space-between;
