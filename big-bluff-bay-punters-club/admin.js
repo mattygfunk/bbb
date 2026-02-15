@@ -447,8 +447,38 @@ function syncPokerEventMode(){
   }
 }
 
+function applyPokerBulkFromQuery(){
+  const box = $('poker-bulk-lines');
+  if (!box) return;
+  const params = new URLSearchParams(window.location.search || '');
+  const bulkLines = params.get('bulkLines');
+  if (!bulkLines) return;
+
+  box.value = bulkLines;
+
+  const eventName = String(params.get('eventName') || '').trim();
+  if (eventName) {
+    const preset = $('poker-event-preset');
+    const custom = $('poker-event-custom');
+    const known = ['Nightly 500gtd', 'Nightly 700gtd', 'Sunday 1300gtd'];
+    if (preset) {
+      if (known.includes(eventName)) {
+        preset.value = eventName;
+      } else {
+        preset.value = 'custom';
+        if (custom) custom.value = eventName;
+      }
+      syncPokerEventMode();
+    }
+  }
+
+  const msg = $('poker-result-msg');
+  if (msg) msg.textContent = 'Bulk lines prefilled from URL. Review and click Import Bulk Results.';
+}
+
 pokerEventPreset?.addEventListener('change', syncPokerEventMode);
 syncPokerEventMode();
+applyPokerBulkFromQuery();
 
 function selectedPokerEventName(formData){
   const eventPreset = String(formData.get('eventPreset') || 'Nightly 500gtd').trim();
