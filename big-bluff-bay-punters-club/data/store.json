@@ -1,0 +1,203 @@
+{
+  "users": [
+    {
+      "id": "7117dc3d-3650-40a2-a8dd-6e6980777489",
+      "username": "Matt",
+      "passwordHash": "$2a$10$hioaJh0bJ/4aroUCLLeg4uzcIAapzWSOZb/fxOLI6U2pnx/b4mMZC",
+      "role": "member",
+      "createdAt": 1770982280179
+    },
+    {
+      "id": "470bdfcf-5d46-4e57-a311-baa7d97633d6",
+      "username": "farmilut",
+      "passwordHash": "$2a$10$AN/BIgJaq2BsJjlSEr6XveLcg7dC6EeljfWgM8dWjIoLOPVauJ5j2",
+      "role": "admin",
+      "createdAt": 1770984683400
+    }
+  ],
+  "tips": [
+    {
+      "id": "241f0bf8-24d1-46b5-91f8-512b6c8c1f6c",
+      "member": "farmilut",
+      "race": "R1",
+      "selection": "5",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713565
+    },
+    {
+      "id": "1b554c33-66a3-4b12-bc1c-9d79b3e392fa",
+      "member": "farmilut",
+      "race": "R2",
+      "selection": "6",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713570
+    },
+    {
+      "id": "a6ace592-dbe4-4cf7-8a23-a0a55634b55c",
+      "member": "farmilut",
+      "race": "R3",
+      "selection": "10",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713574
+    },
+    {
+      "id": "c11462d3-660d-4699-bc79-c7208ad30b99",
+      "member": "farmilut",
+      "race": "R4",
+      "selection": "4",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713579
+    },
+    {
+      "id": "3f9c719c-82da-472a-a040-b4a262887b26",
+      "member": "farmilut",
+      "race": "R5",
+      "selection": "5",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713583
+    },
+    {
+      "id": "b262d13e-9577-4699-898c-fe05461174bf",
+      "member": "farmilut",
+      "race": "R6",
+      "selection": "6",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713587
+    },
+    {
+      "id": "7a5b6cdb-4367-4508-8866-c25fb03e7840",
+      "member": "farmilut",
+      "race": "R7",
+      "selection": "9",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713590
+    },
+    {
+      "id": "c0640fdf-4aae-48f2-8cc7-e9b93b5b756b",
+      "member": "farmilut",
+      "race": "R8",
+      "selection": "3",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713593
+    },
+    {
+      "id": "f3326550-15ec-46c2-899e-bb5e393935b1",
+      "member": "farmilut",
+      "race": "R9",
+      "selection": "12",
+      "status": "approved",
+      "paid": true,
+      "createdAt": 1770989713597
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "f1",
+      "date": "Sat 21 Feb, 11:30AM",
+      "event": "Next Meet",
+      "track": "Caulfeild",
+      "raceCount": 10
+    }
+  ],
+  "raceResults": {
+    "R1": {
+      "first": [
+        "5"
+      ],
+      "second": [
+        "2"
+      ],
+      "third": [
+        "4"
+      ],
+      "substitutions": [],
+      "updatedAt": 1770990617884,
+      "updatedBy": "farmilut"
+    }
+  },
+  "bossesBet": {
+    "legs": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "R7",
+      "R8",
+      "R9"
+    ],
+    "selections": {
+      "R1": "5",
+      "R2": "6",
+      "R3": "10",
+      "R4": "4",
+      "R5": "5",
+      "R6": "6",
+      "R7": "9",
+      "R8": "3",
+      "R9": "12"
+    },
+    "updatedAt": 1771043213732,
+    "updatedBy": "farmilut"
+  },
+  "jackpotCarry": 80,
+  "buyInVotes": {},
+  "archiveRounds": [],
+  "tipEditDeadlineMs": null,
+  "entryFee": 20,
+  "lastJackpotWinner": "",
+  "socialFeedCache": {
+    "updatedAt": 0,
+    "items": []
+  },
+  "pokerResults": [
+    {
+      "id": "0d6a8031-5e75-45c1-8375-6806c4bdec01",
+      "player": "Cptred",
+      "points": 450.45,
+      "finalTable": true,
+      "cashed": true,
+      "eventName": "Nightly 700gtd",
+      "eventRank": 1,
+      "source": "ocr",
+      "sourceGameId": "260215084443-3553801",
+      "createdAt": 1771153200000,
+      "createdBy": "ocr-import"
+    },
+    {
+      "id": "94de55ec-4bc5-428d-be9d-fa5227912d19",
+      "player": "FloppinQuads8888",
+      "points": 270.27,
+      "finalTable": true,
+      "cashed": true,
+      "eventName": "Nightly 700gtd",
+      "eventRank": 2,
+      "source": "ocr",
+      "sourceGameId": "260215084443-3553801",
+      "createdAt": 1771153200000,
+      "createdBy": "ocr-import"
+    },
+    {
+      "id": "e5617e49-ef8e-4819-8791-539549b6e9e7",
+      "player": "rumpig3",
+      "points": 180.18,
+      "finalTable": true,
+      "cashed": true,
+      "eventName": "Nightly 700gtd",
+      "eventRank": 3,
+      "source": "ocr",
+      "sourceGameId": "260215084443-3553801",
+      "createdAt": 1771153200000,
+      "createdBy": "ocr-import"
+    }
+  ]
+}
