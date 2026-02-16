@@ -1031,6 +1031,25 @@ function createApp() {
     });
   });
 
+  app.get('/api/poker-results', (req, res) => {
+    const store = readStore();
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit || 50)));
+    const results = (store.pokerResults || [])
+      .slice()
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+      .slice(0, limit)
+      .map((r) => ({
+        id: r.id,
+        player: String(r.player || ''),
+        points: Number(r.points || 0),
+        finalTable: Boolean(r.finalTable),
+        cashed: Boolean(r.cashed),
+        eventName: String(r.eventName || ''),
+        createdAt: Number(r.createdAt || 0)
+      }));
+    return res.json({ results, count: results.length });
+  });
+
   app.post('/api/poker-results', auth, adminOnly, (req, res) => {
     const store = readStore();
     const input = Array.isArray(req.body?.results) ? req.body.results : [req.body];
