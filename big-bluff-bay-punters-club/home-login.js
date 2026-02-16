@@ -68,7 +68,11 @@ if (form) {
       if (msg) msg.textContent = 'Username must be at least 3 characters.';
       return;
     }
-    if (password.length < 6) {
+    if (!password) {
+      if (msg) msg.textContent = 'Enter your password.';
+      return;
+    }
+    if (mode === 'register' && password.length < 6) {
       if (msg) msg.textContent = 'Password must be at least 6 characters.';
       return;
     }
