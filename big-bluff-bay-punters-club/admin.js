@@ -528,15 +528,43 @@ function syncPokerEventMode(){
 }
 
 
+function syncPokerPlayerMode() {
+  const select = $('poker-player-select');
+  const wrap = $('poker-player-custom-wrap');
+  const input = $('poker-player-custom');
+  const isCustom = String(select?.value || '') === '__custom__';
+  if (wrap) wrap.hidden = !isCustom;
+  if (input) {
+    input.required = isCustom;
+    if (!isCustom) input.value = '';
+  }
+}
+
+function selectedPokerPlayer(formData) {
+  const selected = String(formData.get('playerSelect') || '').trim();
+  const custom = String(formData.get('playerCustom') || '').trim();
+  if (selected === '__custom__') return custom;
+  return selected;
+}
+
 function renderPokerPlayerOptions(players = []) {
-  const dl = $('poker-player-list');
-  if (!dl) return;
-  dl.innerHTML = '';
+  const select = $('poker-player-select');
+  if (!select) return;
+  const current = String(select.value || '');
+  const options = ['<option value="">Select player…</option>'];
   (players || []).forEach((name) => {
-    const opt = document.createElement('option');
-    opt.value = String(name || '');
-    dl.appendChild(opt);
+    const safe = String(name || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    options.push(`<option value="${safe}">${safe}</option>`);
   });
+  options.push('<option value="__custom__">Other (type manually)…</option>');
+  select.innerHTML = options.join('');
+
+  if (current && Array.from(select.options).some((o) => o.value === current)) {
+    select.value = current;
+  } else {
+    select.value = '';
+  }
+  syncPokerPlayerMode();
 }
 
 async function refreshPokerPlayerOptions() {
@@ -625,7 +653,9 @@ function applyPokerBulkFromQuery(){
 }
 
 pokerEventPreset?.addEventListener('change', syncPokerEventMode);
+$('poker-player-select')?.addEventListener('change', syncPokerPlayerMode);
 syncPokerEventMode();
+syncPokerPlayerMode();
 applyPokerBulkFromQuery();
 
 function selectedPokerEventName(formData){
@@ -639,7 +669,7 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
   const f = new FormData(e.target);
-  const player = String(f.get('player') || '').trim();
+  const player = String(selectedPokerPlayer(f) || '').trim();
   const points = Number(f.get('points'));
   const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(f);
   const finalTable = f.get('finalTable') !== null;
@@ -670,6 +700,7 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
     setPokerResultMsg('ok', `Single import successful: added 1 result for ${player} (${eventName || 'event not set'}).${tail}${top}`);
     e.target.reset();
     syncPokerEventMode();
+    syncPokerPlayerMode();
     refreshPokerPlayerOptions().catch(()=>{});
   } catch (err) {
     setPokerResultMsg('err', `Single import failed: ${err.message || 'Request failed.'}`);
@@ -768,6 +799,7 @@ $('poker-result-clear-btn')?.addEventListener('click', () => {
   const f = $('poker-result-form');
   if (f) f.reset();
   syncPokerEventMode();
+  syncPokerPlayerMode();
   const msg = $('poker-result-msg');
   if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
 });

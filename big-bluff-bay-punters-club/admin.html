@@ -155,8 +155,12 @@
           <p class="muted">Add official poker result rows that feed the live leaderboard on <a href="/poker.html">Poker Tournaments</a>.</p>
           <form id="poker-result-form" class="stack">
             <label>Player
-              <input name="player" id="poker-player-input" type="text" list="poker-player-list" placeholder="e.g. MyGodaHippo13" required />
-              <datalist id="poker-player-list"></datalist>
+              <select name="playerSelect" id="poker-player-select" required>
+                <option value="">Loading usernames…</option>
+              </select>
+            </label>
+            <label id="poker-player-custom-wrap" hidden>Custom player name
+              <input name="playerCustom" id="poker-player-custom" type="text" placeholder="e.g. MyGodaHippo13" />
             </label>
             <div class="split">
               <label>Points
@@ -246,6 +250,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script src="admin.js?v=20260216-6"></script>
+    <script src="admin.js?v=20260216-7"></script>
   </body>
 </html>
