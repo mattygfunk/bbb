@@ -5,14 +5,64 @@
       "username": "Matt",
       "passwordHash": "$2a$10$hioaJh0bJ/4aroUCLLeg4uzcIAapzWSOZb/fxOLI6U2pnx/b4mMZC",
       "role": "member",
-      "createdAt": 1770982280179
+      "createdAt": 1770982280179,
+      "profile": {
+        "bio": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
     },
     {
       "id": "470bdfcf-5d46-4e57-a311-baa7d97633d6",
       "username": "farmilut",
       "passwordHash": "$2a$10$AN/BIgJaq2BsJjlSEr6XveLcg7dC6EeljfWgM8dWjIoLOPVauJ5j2",
       "role": "admin",
-      "createdAt": 1770984683400
+      "createdAt": 1770984683400,
+      "profile": {
+        "bio": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
+    },
+    {
+      "id": "d9ee04bc-925b-4853-ac01-24471973ed6b",
+      "username": "testuser1",
+      "passwordHash": "$2a$10$APPfqEhfCeClcthr4JW1EOAY4zfdh4BNhZYtEiP4e9ELkHgKZ4..a",
+      "role": "member",
+      "createdAt": 1771216324060,
+      "profile": {
+        "bio": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
+    },
+    {
+      "id": "e97690ff-a885-446c-910c-0e0d1f94eb09",
+      "username": "haybouroughman",
+      "passwordHash": "$2a$10$9/Tfi314vJKef/GikECSH.HYupjjSe3cZigz3QxA7CoO2dOQXkV1u",
+      "role": "admin",
+      "createdAt": 1771235187409,
+      "profile": {
+        "bio": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
     }
   ],
   "tips": [
