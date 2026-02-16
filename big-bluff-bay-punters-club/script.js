@@ -122,8 +122,10 @@ function renderAuth() {
   const userWrap = document.createElement('span');
   userWrap.className = 'profile-chip';
 
-  const userBadge = document.createElement('span');
+  const userBadge = document.createElement('a');
   userBadge.className = 'pill';
+  userBadge.href = `/profile.html?u=${encodeURIComponent(String(state.user.username || ''))}`;
+  userBadge.style.textDecoration = 'none';
   userBadge.textContent = `${state.user.username} (${state.user.role})`;
 
   const settingsLink = document.createElement('a');

@@ -1192,6 +1192,53 @@ function createApp() {
     return res.json({ breakdown });
   });
 
+  app.get('/api/profile-summary/:member', (req, res) => {
+    const store = readStore();
+    const member = String(req.params.member || '').trim();
+    if (!member) return res.status(400).json({ error: 'Member is required' });
+
+    const normalized = member.toLowerCase();
+    const user = (store.users || []).find((u) => String(u.username || '').trim().toLowerCase() === normalized);
+    const displayName = user?.username || member;
+
+    const puntersBreakdown = computeMemberBreakdown(store, displayName);
+    const hasPuntersHistory = (puntersBreakdown.races || []).length > 0;
+
+    const pokerResults = (store.pokerResults || [])
+      .filter((r) => String(r.player || '').trim().toLowerCase() === normalized)
+      .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
+      .slice(0, 50)
+      .map((r) => ({
+        id: r.id,
+        eventName: String(r.eventName || ''),
+        points: Number(r.points || 0),
+        finalTable: Boolean(r.finalTable),
+        cashed: Boolean(r.cashed),
+        createdAt: Number(r.createdAt || 0)
+      }));
+
+    const pokerStats = pokerResults.reduce((acc, row) => {
+      acc.events += 1;
+      acc.points += Number(row.points || 0);
+      if (row.finalTable) acc.finalTables += 1;
+      if (row.cashed) acc.cashes += 1;
+      return acc;
+    }, { events: 0, points: 0, finalTables: 0, cashes: 0 });
+
+    return res.json({
+      member: displayName,
+      profile: user ? normalizeUserProfile(user.profile) : normalizeUserProfile({}),
+      punters: {
+        hasHistory: hasPuntersHistory,
+        breakdown: puntersBreakdown
+      },
+      poker: {
+        stats: pokerStats,
+        results: pokerResults
+      }
+    });
+  });
+
   app.get('/api/leaderboard-image.svg', (_req, res) => {
     const store = readStore();
     const ladder = computeLadder(store).slice(0, 10);

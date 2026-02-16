@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile • Big Bluff Bay</title>
+    <meta name="robots" content="noindex,follow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="analytics.js"></script>
+  </head>
+  <body>
+    <header class="hero premium-hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap">
+        <a class="brand" href="/" style="text-decoration:none;color:inherit;">
+          <span class="badge">BBB</span>
+          <span><strong>Member Profile</strong><small>Big Bluff Bay</small></span>
+        </a>
+        <div class="menu-links">
+          <a class="menu-link" href="/">🏠 Home</a>
+          <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+          <a class="menu-link" href="/poker.html">♠️ Poker Tournaments</a>
+          <a class="menu-link" id="admin-nav-link" href="/admin.html" style="display:none">🛠️ Admin</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="wrap premium-main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span aria-current="page">Profile</span>
+      </nav>
+
+      <section class="card">
+        <div class="profile-head">
+          <img id="member-avatar" class="profile-avatar" src="/assets/default-avatar.svg" alt="Profile avatar" />
+          <div class="stack">
+            <h2 id="member-name">Member</h2>
+            <p class="muted" id="member-bio">No bio yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="split">
+        <section class="card">
+          <h2>Punters Results</h2>
+          <p class="muted" id="punters-summary">No punters history yet.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead>
+              <tbody id="punters-body"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Poker Results</h2>
+          <p class="muted" id="poker-summary">No poker events yet.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Event</th><th>Pts</th><th>FT</th><th>Cash</th></tr></thead>
+              <tbody id="poker-body"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script defer src="menu-auth.js?v=20260216-2"></script>
+    <script defer src="profile.js?v=20260216-1"></script>
+  </body>
+</html>
