@@ -175,7 +175,7 @@ function renderBossesSuggested(popular){
 async function bootstrap(){if(!state.token)return;try{state.user=(await req(API.me)).user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);}}
 
 async function refresh(){
-  $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><a class='pill' href='/profile/${encodeURIComponent(String(state.user.username || ''))}' style='text-decoration:none'>${esc(state.user.username)} (${esc(state.user.role)})</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<span class='pill'>Logged out</span>`;
+  $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)} (${esc(state.user.role)})</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<span class='pill'>Logged out</span>`;
   const b=$('logout-btn'); if(b)b.onclick=logout;
   const adminOnly=$('admin-only');
   const loginCard=$('admin-login-card');
