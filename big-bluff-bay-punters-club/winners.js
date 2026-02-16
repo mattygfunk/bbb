@@ -5,17 +5,21 @@ async function loadWinners(){
   const pokerHighlightsSummary = document.getElementById('poker-highlights-summary');
   const pokerHighlightsBody = document.getElementById('poker-highlights-body');
   const pokerResultsBody = document.getElementById('poker-results-body');
+  const jackpotPill = document.getElementById('winners-jackpot-pill');
 
   try {
-    const [milestonesRes, pokerLbRes, pokerResultsRes] = await Promise.all([
+    const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes] = await Promise.all([
       fetch('/api/milestones'),
       fetch('/api/poker-leaderboard?range=all'),
-      fetch('/api/poker-results?limit=30')
+      fetch('/api/poker-results?limit=30'),
+      fetch('/api/jackpot')
     ]);
 
     const data = await milestonesRes.json();
     const pokerLb = await pokerLbRes.json();
     const pokerResults = await pokerResultsRes.json();
+    const jackpot = await jackpotRes.json();
+    if (jackpotPill) jackpotPill.textContent = `Jackpot: $${Number(jackpot?.totalPot || 0).toFixed(2)}`;
 
     const latest = data.latestRound || null;
     const fw = data.featuredWinner;
@@ -26,7 +30,8 @@ async function loadWinners(){
         const pts = fw && fw.member === latest.outrightWinner ? ` • ${fw.points} pts` : '';
         featured.textContent = `${latest.outrightWinner} • ${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate}${pts}`;
       } else {
-        featured.textContent = `${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate} • No outright winner — jackpot rolls to $${Number(latest.rolloverToNextWeek || 0).toFixed(2)}`;
+        const liveJackpot = Number(jackpot?.totalPot || latest.rolloverToNextWeek || 0).toFixed(2);
+        featured.textContent = `${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate} • No outright winner — jackpot rolls to $${liveJackpot}`;
       }
     } else if (fw) {
       const when = fw.archivedAt ? new Date(fw.archivedAt).toLocaleDateString('en-AU') : '';
@@ -75,6 +80,7 @@ async function loadWinners(){
 
   } catch(e){
     featured.textContent = 'Could not load winner data.';
+    if (jackpotPill) jackpotPill.textContent = 'Jackpot: unavailable';
     if (pokerHighlightsSummary) pokerHighlightsSummary.textContent = 'Could not load poker highlights.';
     if (pokerHighlightsBody) pokerHighlightsBody.innerHTML = "<tr><td colspan='5' class='muted'>Could not load poker leaderboard.</td></tr>";
     if (pokerResultsBody) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>Could not load poker results.</td></tr>";
