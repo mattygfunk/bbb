@@ -2,8 +2,6 @@ const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const LANDING_API_ROOTS = ['/api'];
 
 window.addEventListener('error', (e) => {
-  const debugNode = document.getElementById('jackpot-debug-line');
-  if (debugNode) debugNode.textContent = `API jackpot debug: JS error — ${e.message || 'unknown error'}`;
 });
 
 // Mock preview data for UI polish while live feeds are sparse.
@@ -240,13 +238,8 @@ async function hydrateLandingCritical() {
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
 
-    const debugNode = document.getElementById('jackpot-debug-line');
-    if (debugNode) debugNode.textContent = `API jackpot debug: total=${potValue} rollover=${rolloverValue} round=${roundValue} paid=${Number(jackpot?.paidMembers || 0)}`;
-
     scheduleIdle(() => hydrateLandingDeferred(potText), 3000);
   } catch {
-    const debugNode = document.getElementById('jackpot-debug-line');
-    if (debugNode) debugNode.textContent = 'API jackpot debug: failed to load /api/jackpot';
   }
 }
 
@@ -289,8 +282,6 @@ async function initLockCountdown() {
 }
 
 (function initLanding() {
-  const debugNode = document.getElementById('jackpot-debug-line');
-  if (debugNode) debugNode.textContent = 'API jackpot debug: script started';
 
   if (window.location.hash === '#enter-table') {
     window.location.replace('/punters.html#tip-form');
