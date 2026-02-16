@@ -250,6 +250,7 @@ async function refresh(){
   }
 
   renderAdminSummaryCounts();
+  refreshPokerPlayerOptions().catch(()=>{});
 
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
@@ -504,7 +505,7 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
 
-(async()=>{await bootstrap();await refresh();})();
+(async()=>{await bootstrap();await refresh();refreshPokerPlayerOptions().catch(()=>{});})();
 
 setInterval(() => {
   if (document.hidden) return;
