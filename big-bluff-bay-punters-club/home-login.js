@@ -7,6 +7,11 @@ const msg = document.getElementById('home-login-msg');
 const loginCard = form?.closest('.card');
 const passwordInput = document.getElementById('home-password');
 const togglePasswordBtn = document.getElementById('toggle-password');
+const modeInput = document.getElementById('home-auth-mode');
+const modeLoginBtn = document.getElementById('home-mode-login');
+const modeRegisterBtn = document.getElementById('home-mode-register');
+const submitBtn = document.getElementById('home-auth-submit');
+let sessionActive = false;
 
 async function req(path, opt = {}) {
   const token = localStorage.getItem(tokenKey);
@@ -39,13 +44,34 @@ async function applyLoggedInState() {
     const me = await req(API.me);
     if (!me?.user) return;
 
-    if (loginCard) {
-      loginCard.style.display = 'none';
-    }
+    sessionActive = true;
+    if (msg) msg.textContent = `Signed in as ${me.user.username}. Continue to Punters Area.`;
+    if (submitBtn) submitBtn.textContent = 'Open Punters Area';
   } catch {
     // token missing/expired or offline; keep login card visible
   }
 }
+
+function setAuthMode(mode) {
+  const next = mode === 'register' ? 'register' : 'login';
+  if (modeInput) modeInput.value = next;
+  if (modeLoginBtn) {
+    modeLoginBtn.classList.toggle('chip-btn', next === 'login');
+    modeLoginBtn.classList.toggle('btn-ghost', next !== 'login');
+    modeLoginBtn.setAttribute('aria-pressed', String(next === 'login'));
+  }
+  if (modeRegisterBtn) {
+    modeRegisterBtn.classList.toggle('chip-btn', next === 'register');
+    modeRegisterBtn.classList.toggle('btn-ghost', next !== 'register');
+    modeRegisterBtn.setAttribute('aria-pressed', String(next === 'register'));
+  }
+  if (submitBtn) submitBtn.textContent = next === 'register' ? 'Create Account & Continue' : 'Log In & Continue';
+  if (msg) msg.textContent = next === 'register' ? 'Create your account once, then you can log in with the same details.' : '';
+}
+
+modeLoginBtn?.addEventListener('click', () => setAuthMode('login'));
+modeRegisterBtn?.addEventListener('click', () => setAuthMode('register'));
+setAuthMode(modeInput?.value || 'login');
 
 if (togglePasswordBtn && passwordInput) {
   togglePasswordBtn.addEventListener('click', () => {
@@ -59,10 +85,14 @@ if (togglePasswordBtn && passwordInput) {
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (sessionActive) {
+      window.location.href = '/punters.html';
+      return;
+    }
     const data = new FormData(form);
     const username = String(data.get('member') || '').trim();
     const password = String(data.get('pin') || '').trim();
-    const mode = e.submitter?.dataset.mode || 'login';
+    const mode = String(modeInput?.value || 'login');
 
     if (username.length < 3) {
       if (msg) msg.textContent = 'Username must be at least 3 characters.';

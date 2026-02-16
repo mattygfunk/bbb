@@ -84,10 +84,15 @@
 
         <section class="card login-card hero-login" id="enter-table" aria-label="Enter this week's card table">
           <h2>Member Access</h2>
-          <p class="muted">Takes 30 seconds. You can edit tips until lock.</p>
+          <p class="muted"><strong>Step 1:</strong> choose new or existing. <strong>Step 2:</strong> enter username + password. You're kept signed in on this device.</p>
           <form id="home-login-form" class="stack" novalidate>
-            <label>Member
-              <input required name="member" type="text" minlength="3" placeholder="your username" autocomplete="username" />
+            <input type="hidden" name="authMode" id="home-auth-mode" value="login" />
+            <div class="row-actions" role="tablist" aria-label="Account mode">
+              <button type="button" class="btn chip-btn" id="home-mode-login" aria-pressed="true">I have an account</button>
+              <button type="button" class="btn btn-ghost" id="home-mode-register" aria-pressed="false">I'm new (create account)</button>
+            </div>
+            <label>Username
+              <input required name="member" type="text" minlength="3" placeholder="choose or enter username" autocomplete="username" />
             </label>
             <label>Password
               <div class="password-wrap">
@@ -95,10 +100,7 @@
                 <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
               </div>
             </label>
-            <div class="row-actions">
-              <button class="btn chip-btn" type="submit" data-mode="login">Log In to Punters</button>
-              <button class="btn btn-ghost" type="submit" data-mode="register">Register</button>
-            </div>
+            <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
           </form>
           <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
         </section>
@@ -348,7 +350,7 @@
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
-    <script defer src="home-login.js?v=20260216-1"></script>
+    <script defer src="home-login.js?v=20260216-2"></script>
     <script defer src="landing.js?v=20260214-2255"></script>
   </body>
 </html>
