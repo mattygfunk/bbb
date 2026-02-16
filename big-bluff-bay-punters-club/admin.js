@@ -555,6 +555,23 @@ function parseCsvUsernames(text) {
   if (!lines.length) return [];
 
   const parseCells = (line) => line.split(',').map((c) => String(c || '').trim().replace(/^"|"$/g, ''));
+
+  // Accept one-line comma-separated username lists:
+  // user1,user2,user3,...
+  if (lines.length === 1) {
+    const single = parseCells(lines[0]).filter(Boolean);
+    const looksLikeHeaderOnly = single.length <= 3 && single.every((v) => ['username', 'player', 'name'].includes(v.toLowerCase()));
+    if (single.length > 1 && !looksLikeHeaderOnly) {
+      const seen = new Set();
+      return single.filter((n) => {
+        const key = n.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+  }
+
   const header = parseCells(lines[0]).map((h) => h.toLowerCase());
   const preferred = ['username', 'player', 'name'];
   let idx = header.findIndex((h) => preferred.includes(h));
