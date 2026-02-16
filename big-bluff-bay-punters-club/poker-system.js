@@ -250,35 +250,63 @@ function createPokerService(readStore, writeStore) {
     return { created, errors };
   }
 
-  function leaderboardRows(store, period = 'all', seasonId = null) {
+  function leaderboardRows(store, period = 'all', seasonId = null, filters = {}) {
     const now = Date.now();
     const start = period === 'weekly' ? now - 7 * 86400000
       : period === 'monthly' ? now - 30 * 86400000
       : 0;
-    const rows = (store.pokerV2.results || []).filter((r) => Number(r.date || 0) >= start && (!seasonId || r.seasonId === seasonId));
+    const events = new Map((store.pokerV2.events || []).map((e) => [e.id, e]));
+    let rows = (store.pokerV2.results || []).filter((r) => Number(r.date || 0) >= start && (!seasonId || r.seasonId === seasonId));
+    if (filters.startAt) rows = rows.filter((r) => Number(r.date || 0) >= Number(filters.startAt));
+    if (filters.endAt) rows = rows.filter((r) => Number(r.date || 0) <= Number(filters.endAt));
+    if (filters.finalTableOnly) rows = rows.filter((r) => Boolean(r.finalTable));
+    if (filters.cashedOnly) rows = rows.filter((r) => Boolean(r.cashed));
+    if (filters.eventType) {
+      rows = rows.filter((r) => {
+        const e = events.get(r.eventId);
+        return e && e.type === filters.eventType;
+      });
+    }
+
     const players = playerLookup(store).byId;
     const map = new Map();
     for (const r of rows) {
       const player = players.get(r.playerId);
       if (!player) continue;
-      const p = map.get(player.id) || { playerId: player.id, player: player.displayName, pointsTenths: 0, finalTables: 0, cashes: 0, events: 0, biggestScore: 0 };
+      const p = map.get(player.id) || { playerId: player.id, player: player.displayName, pointsTenths: 0, finalTables: 0, cashes: 0, events: 0, biggestScore: 0, lastPlayed: 0 };
       const pts = Math.round(pointsDecToNumber(r.points) * 10);
       p.pointsTenths += pts;
       p.events += 1;
       if (r.finalTable) p.finalTables += 1;
       if (r.cashed) p.cashes += 1;
       if (pts > p.biggestScore) p.biggestScore = pts;
+      if (Number(r.date || 0) > p.lastPlayed) p.lastPlayed = Number(r.date || 0);
       map.set(player.id, p);
     }
-    return [...map.values()]
-      .sort((a, b) => b.pointsTenths - a.pointsTenths || b.finalTables - a.finalTables || b.cashes - a.cashes || a.player.localeCompare(b.player))
-      .map((r, i) => ({
-        rank: i + 1,
+
+    let ranked = [...map.values()].map((r) => {
+      const points = Number((r.pointsTenths / 10).toFixed(1));
+      const avgPoints = r.events ? Number((points / r.events).toFixed(1)) : 0;
+      const ftPct = r.events ? Number(((r.finalTables / r.events) * 100).toFixed(1)) : 0;
+      const cashPct = r.events ? Number(((r.cashes / r.events) * 100).toFixed(1)) : 0;
+      return {
         ...r,
-        points: Number((r.pointsTenths / 10).toFixed(1)),
-        consistency: r.events ? Number(((r.cashes / r.events) * 100).toFixed(1)) : 0,
+        points,
+        avgPoints,
+        ftPct,
+        cashPct,
+        consistency: cashPct,
         biggestScore: Number((r.biggestScore / 10).toFixed(1))
-      }));
+      };
+    });
+
+    if (filters.minEvents) ranked = ranked.filter((r) => r.events >= Number(filters.minEvents));
+
+    ranked = ranked
+      .sort((a, b) => b.pointsTenths - a.pointsTenths || b.finalTables - a.finalTables || b.cashes - a.cashes || a.player.localeCompare(b.player))
+      .map((r, i) => ({ rank: i + 1, ...r }));
+
+    return ranked;
   }
 
   function mergePlayers(store, primaryId, duplicateIds, actor) {
@@ -481,6 +509,10 @@ function registerPokerRoutes(app, opts) {
     const submitToken = String(req.body?.submitToken || '');
     if (!submitToken) return res.status(400).json({ error: 'submitToken required' });
     store.pokerV2.submitCache = store.pokerV2.submitCache || {};
+    const nowMs = Date.now();
+    for (const [k, ts] of Object.entries(store.pokerV2.submitCache)) {
+      if (!Number.isFinite(Number(ts)) || nowMs - Number(ts) > 6 * 3600000) delete store.pokerV2.submitCache[k];
+    }
     if (store.pokerV2.submitCache[submitToken]) return res.status(409).json({ error: 'Duplicate submit blocked' });
 
     const rows = Array.isArray(req.body?.results) ? req.body.results : [req.body];
@@ -499,7 +531,7 @@ function registerPokerRoutes(app, opts) {
     }));
 
     const { created, errors } = svc.addResults(store, normalized, req.user.username);
-    store.pokerV2.submitCache[submitToken] = Date.now();
+    store.pokerV2.submitCache[submitToken] = nowMs;
     store.pokerV2.auditLogs.unshift({ id: crypto.randomUUID(), action: 'result.bulkCreate', entityType: 'result', entityId: created[0]?.id || 'none', beforeJSON: null, afterJSON: JSON.stringify({ count: created.length }), actor: req.user.username, createdAt: Date.now() });
     svc.save(store);
     return res.status(201).json({ ok: true, added: created.length, errors });
@@ -530,37 +562,81 @@ function registerPokerRoutes(app, opts) {
     const season = String(req.query.seasonId || '');
     const period = tab === 'weekly' ? 'weekly' : tab === 'monthly' ? 'monthly' : 'all';
     const seasonId = tab === 'season' ? (season || svc.activeSeason(store)?.id || null) : null;
-    const rows = svc.leaderboardRows(store, period, seasonId);
-    return res.json({ tab, seasonId, leaderboard: rows });
+    const filters = {
+      eventType: String(req.query.eventType || '').trim() || null,
+      minEvents: Number(req.query.minEvents || 0) || 0,
+      finalTableOnly: String(req.query.finalTableOnly || 'false') === 'true',
+      cashedOnly: String(req.query.cashedOnly || 'false') === 'true',
+      startAt: req.query.startAt ? Number(req.query.startAt) : null,
+      endAt: req.query.endAt ? Number(req.query.endAt) : null
+    };
+    let rows = svc.leaderboardRows(store, period, seasonId, filters);
+    const q = String(req.query.q || '').trim().toLowerCase();
+    if (q) rows = rows.filter((r) => String(r.player || '').toLowerCase().includes(q));
+    return res.json({ tab, seasonId, filters, leaderboard: rows });
   });
 
   app.get('/api/poker/dashboard', (req, res) => {
     const store = svc.getStore();
-    const lb = svc.leaderboardRows(store, 'all', null);
-    const top10 = lb.slice(0, 10);
+    const active = svc.activeSeason(store);
+    const lbAll = svc.leaderboardRows(store, 'all', null);
+    const lbSeason = svc.leaderboardRows(store, 'all', active?.id || null);
+    const top10 = lbSeason.slice(0, 10);
     const results = store.pokerV2.results || [];
+    const seasonResults = active ? results.filter((r) => r.seasonId === active.id) : results;
+    const events = new Map((store.pokerV2.events || []).map((e) => [e.id, e]));
+
+    const totalPointsSeason = seasonResults.reduce((n, r) => n + pointsDecToNumber(r.points), 0);
+    const distinctEventsSeason = new Set(seasonResults.map((r) => r.eventId).filter(Boolean)).size;
     const kpis = {
-      players: lb.length,
-      events: results.length,
-      avgPoints: lb.length ? Number((lb.reduce((n, r) => n + r.points, 0) / lb.length).toFixed(1)) : 0,
-      activeSeason: svc.activeSeason(store)?.name || '—'
+      activePlayersSeason: lbSeason.length,
+      eventsTracked: distinctEventsSeason,
+      totalResultsLogged: seasonResults.length,
+      avgPointsPerResult: seasonResults.length ? Number((totalPointsSeason / seasonResults.length).toFixed(1)) : 0,
+      activeSeason: active?.name || '—',
+      // backwards compatibility
+      players: lbSeason.length,
+      events: seasonResults.length,
+      avgPoints: seasonResults.length ? Number((totalPointsSeason / seasonResults.length).toFixed(1)) : 0
     };
+
     const streak = top10[0] || null;
+    const sortedByFt = top10.slice().sort((a, b) => b.ftPct - a.ftPct);
+    const sortedByCash = top10.slice().sort((a, b) => b.cashPct - a.cashPct);
+    const sortedByBig = top10.slice().sort((a, b) => b.biggestScore - a.biggestScore);
+    const sortedByConsistent = top10.slice().sort((a, b) => b.consistency - a.consistency);
     const hype = {
       hotStreak: streak ? `${streak.player} +${streak.points.toFixed(1)} pts` : 'No streak yet',
-      finalTableMachine: top10.sort((a, b) => b.finalTables - a.finalTables)[0] || null,
-      cashKing: top10.sort((a, b) => b.cashes - a.cashes)[0] || null,
-      biggestScore: top10.sort((a, b) => b.biggestScore - a.biggestScore)[0] || null,
-      mostConsistent: top10.sort((a, b) => b.consistency - a.consistency)[0] || null
+      finalTableMachine: sortedByFt[0] || null,
+      cashKing: sortedByCash[0] || null,
+      biggestScore: sortedByBig[0] || null,
+      mostConsistent: sortedByConsistent[0] || null
     };
 
-    const trend = results
+    const trend = seasonResults
       .slice()
       .sort((a, b) => a.date - b.date)
-      .slice(-60)
+      .slice(-90)
       .map((r) => ({ date: r.date, points: pointsDecToNumber(r.points) }));
 
-    return res.json({ kpis, top10, hype, trend });
+    const resultsByDayMap = new Map();
+    for (const r of seasonResults) {
+      const day = new Date(Number(r.date || Date.now())).toISOString().slice(0, 10);
+      resultsByDayMap.set(day, (resultsByDayMap.get(day) || 0) + 1);
+    }
+    const resultsByDay = [...resultsByDayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([day, count]) => ({ day, count }));
+
+    const eventParticipationMap = new Map();
+    for (const r of seasonResults) {
+      const key = r.eventId || 'custom';
+      const eventName = events.get(r.eventId)?.name || 'Custom';
+      const row = eventParticipationMap.get(key) || { eventId: key, eventName, entries: 0 };
+      row.entries += 1;
+      eventParticipationMap.set(key, row);
+    }
+    const eventParticipation = [...eventParticipationMap.values()].sort((a, b) => b.entries - a.entries).slice(0, 12);
+
+    return res.json({ kpis, top10, hype, trend, resultsByDay, eventParticipation, allTimeTop10: lbAll.slice(0, 10) });
   });
 
   app.get('/api/poker/admin/audit', auth, adminOnly, (req, res) => {

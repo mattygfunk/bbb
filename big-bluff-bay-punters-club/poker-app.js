@@ -23,12 +23,13 @@
     const top=(d.top10||[]).slice(0,10).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span></td><td><span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
     app.innerHTML=`
       <section class='pv2-grid'>
-        <article class='pv2-card'><h3>Players</h3><p>${d.kpis.players}</p></article>
-        <article class='pv2-card'><h3>Results Logged</h3><p>${d.kpis.events}</p></article>
-        <article class='pv2-card'><h3>Avg Points</h3><p>${fmt(d.kpis.avgPoints)}</p></article>
-        <article class='pv2-card'><h3>Season</h3><p>${esc(d.kpis.activeSeason)}</p></article>
+        <article class='pv2-card'><h3>Active Players (Season)</h3><p>${d.kpis.activePlayersSeason ?? d.kpis.players ?? 0}</p></article>
+        <article class='pv2-card'><h3>Total Results Logged</h3><p>${d.kpis.totalResultsLogged ?? d.kpis.events ?? 0}</p></article>
+        <article class='pv2-card'><h3>Avg Points / Result</h3><p>${fmt(d.kpis.avgPointsPerResult ?? d.kpis.avgPoints ?? 0)}</p></article>
+        <article class='pv2-card'><h3>Events Tracked</h3><p>${d.kpis.eventsTracked ?? 0}</p><p class='muted'>${esc(d.kpis.activeSeason)}</p></article>
       </section>
       <section class='pv2-card'><h2>Performance Trend</h2>${chartLine(d.trend||[])}</section>
+      <section class='pv2-card'><h2>Event Participation</h2><div class='table-wrap'><table><thead><tr><th>Event</th><th>Entries</th></tr></thead><tbody>${(d.eventParticipation||[]).map(e=>`<tr><td>${esc(e.eventName)}</td><td>${e.entries}</td></tr>`).join('')||'<tr><td colspan=2 class=muted>No data</td></tr>'}</tbody></table></div></section>
       <section class='pv2-grid hype'>
         <article class='pv2-card'><h4>Hot Streak</h4><p>${esc(d.hype.hotStreak||'—')}</p></article>
         <article class='pv2-card'><h4>Final Table Machine</h4><p>${esc(d.hype.finalTableMachine?.player||'—')}</p></article>
@@ -50,13 +51,29 @@
     <button class='btn tab' data-tab='weekly'>Weekly</button>
     <button class='btn tab active' data-tab='all-time'>All-time</button>
     </div>
+    <div class='row-actions' style='margin-top:8px;gap:8px;flex-wrap:wrap'>
+      <input id='q' placeholder='Search player' style='max-width:180px' />
+      <select id='eventType'><option value=''>All event types</option><option value='nightly'>Nightly</option><option value='special'>Special</option><option value='satellite'>Satellite</option></select>
+      <input id='minEvents' type='number' min='0' step='1' value='0' placeholder='Min events' style='max-width:120px' />
+      <label><input id='ftOnly' type='checkbox' /> FT only</label>
+      <label><input id='cashOnly' type='checkbox' /> Cashed only</label>
+      <button class='btn' id='applyFilters'>Apply</button>
+    </div>
     <div id='lb-wrap'></div></section>`;
+    let currentTab='all-time';
     async function load(tab){
-      const d=await get(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}&seasonId=${encodeURIComponent(active)}`);
-      const rows=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
-      document.getElementById('lb-wrap').innerHTML=`<div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Badges</th></tr></thead><tbody>${rows||'<tr><td colspan=5>No data</td></tr>'}</tbody></table></div>`;
+      currentTab=tab;
+      const q=encodeURIComponent(document.getElementById('q')?.value||'');
+      const eventType=encodeURIComponent(document.getElementById('eventType')?.value||'');
+      const minEvents=encodeURIComponent(document.getElementById('minEvents')?.value||'0');
+      const finalTableOnly=document.getElementById('ftOnly')?.checked?'true':'false';
+      const cashedOnly=document.getElementById('cashOnly')?.checked?'true':'false';
+      const d=await get(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}&seasonId=${encodeURIComponent(active)}&q=${q}&eventType=${eventType}&minEvents=${minEvents}&finalTableOnly=${finalTableOnly}&cashedOnly=${cashedOnly}`);
+      const rows=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td>${fmt(r.avgPoints)}</td><td>${r.finalTables}</td><td>${r.cashes}</td><td>${fmt(r.ftPct)}%</td><td>${fmt(r.cashPct)}%</td><td>${r.lastPlayed?new Date(r.lastPlayed).toLocaleDateString('en-AU'):'—'}</td></tr>`).join('');
+      document.getElementById('lb-wrap').innerHTML=`<div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Avg</th><th>FT</th><th>Cash</th><th>FT%</th><th>Cash%</th><th>Last Played</th></tr></thead><tbody>${rows||'<tr><td colspan=10>No data</td></tr>'}</tbody></table></div>`;
     }
     document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.tab);});
+    document.getElementById('applyFilters').onclick=()=>load(currentTab);
     load('all-time');
   }
 
