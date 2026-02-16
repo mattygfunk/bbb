@@ -119,16 +119,27 @@ function renderAuth() {
   }
 
   ui.memberState.textContent = `Logged in: ${state.user.username}`;
+  const userWrap = document.createElement('span');
+  userWrap.className = 'profile-chip';
+
   const userBadge = document.createElement('span');
   userBadge.className = 'pill';
   userBadge.textContent = `${state.user.username} (${state.user.role})`;
+
+  const settingsLink = document.createElement('a');
+  settingsLink.className = 'menu-link';
+  settingsLink.href = '/punters.html#settings';
+  settingsLink.setAttribute('aria-label', 'Settings');
+  settingsLink.title = 'Settings';
+  settingsLink.textContent = '⚙️';
 
   const logoutBtn = document.createElement('button');
   logoutBtn.className = 'btn btn-ghost';
   logoutBtn.textContent = 'Log Out';
   logoutBtn.addEventListener('click', logout);
 
-  ui.authControls.append(userBadge, logoutBtn);
+  userWrap.append(userBadge, settingsLink);
+  ui.authControls.append(userWrap, logoutBtn);
 }
 
 function renderAdmin() {
