@@ -130,7 +130,7 @@ function renderAuth() {
 
   const settingsLink = document.createElement('a');
   settingsLink.className = 'menu-link';
-  settingsLink.href = '/punters.html#settings';
+  settingsLink.href = '/profile#settings';
   settingsLink.setAttribute('aria-label', 'Settings');
   settingsLink.title = 'Settings';
   settingsLink.textContent = '⚙️';

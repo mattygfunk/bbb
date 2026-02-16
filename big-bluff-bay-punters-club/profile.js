@@ -1,6 +1,8 @@
 const tokenKey = 'bbb-token-v3';
 
 const $ = (id) => document.getElementById(id);
+let currentMember = '';
+let currentUser = null;
 
 async function api(path, opt = {}) {
   const token = localStorage.getItem(tokenKey);
@@ -64,29 +66,125 @@ function renderSummary(data) {
   }
 }
 
+function wireSettingsForm(profile, canEdit) {
+  const form = $('profile-form');
+  if (!form) return;
+  const msg = $('profile-msg');
+  const picInput = $('profile-pic-input');
+  const picFile = $('profile-pic-file');
+  const bioInput = $('profile-bio-input');
+  const publicInput = $('profile-public-input');
+  const emailInput = $('profile-email-input');
+  const themeInput = $('profile-theme-input');
+  const preview = $('profile-pic-preview');
+
+  if (picInput) picInput.value = profile?.profilePic || '';
+  if (bioInput) bioInput.value = profile?.bio || '';
+  if (publicInput) publicInput.checked = Boolean(profile?.settings?.publicProfile);
+  if (emailInput) emailInput.checked = Boolean(profile?.settings?.emailNotifications);
+  if (themeInput) themeInput.value = profile?.settings?.theme || 'system';
+  if (preview) preview.src = profile?.profilePic || '/assets/default-avatar.svg';
+
+  form.querySelectorAll('input, textarea, select, button').forEach((el) => { el.disabled = !canEdit; });
+  if (msg) msg.textContent = canEdit ? 'Update your profile settings here.' : 'Only available on your own profile.';
+
+  if (!canEdit) return;
+
+  form.addEventListener('input', (e) => {
+    if (e.target?.id === 'profile-pic-input' && preview) {
+      preview.src = e.target.value.trim() || '/assets/default-avatar.svg';
+    }
+  });
+
+  form.addEventListener('change', (e) => {
+    if (e.target?.id !== 'profile-pic-file') return;
+    const file = picFile?.files?.[0];
+    if (!file) return;
+    if (!String(file.type || '').startsWith('image/')) {
+      if (msg) msg.textContent = 'Please upload an image file.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        const scale = Math.min(1, max / Math.max(img.width || 1, img.height || 1));
+        const w = Math.max(1, Math.round((img.width || 1) * scale));
+        const h = Math.max(1, Math.round((img.height || 1) * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        if (picInput) picInput.value = dataUrl;
+        if (preview) preview.src = dataUrl;
+        if (msg) msg.textContent = 'Avatar ready. Click Save Profile.';
+      };
+      img.src = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {
+      bio: String(fd.get('bio') || '').trim(),
+      profilePic: String(fd.get('profilePic') || '').trim(),
+      settings: {
+        publicProfile: fd.get('publicProfile') === 'on',
+        emailNotifications: fd.get('emailNotifications') === 'on',
+        theme: String(fd.get('theme') || 'system')
+      }
+    };
+    try {
+      const res = await api('/profile', { method: 'PUT', body: JSON.stringify(payload) });
+      wireSettingsForm(res.profile || payload, true);
+      $('member-bio').textContent = res.profile?.bio || 'No bio yet.';
+      $('member-avatar').src = res.profile?.profilePic || '/assets/default-avatar.svg';
+      if (msg) msg.textContent = 'Profile saved.';
+    } catch (err) {
+      if (msg) msg.textContent = err.message || 'Could not save profile.';
+    }
+  });
+}
+
 (async function init(){
   try {
     const params = new URLSearchParams(window.location.search);
     const pathParts = window.location.pathname.split('/').filter(Boolean);
     const pathMember = pathParts[0] === 'profile' && pathParts[1] ? decodeURIComponent(pathParts[1]) : '';
-    let member = String(pathMember || params.get('u') || '').trim();
+    currentMember = String(pathMember || params.get('u') || '').trim();
 
-    if (!member) {
+    try {
       const me = await api('/me');
-      member = String(me?.user?.username || '').trim();
+      currentUser = me?.user || null;
+    } catch {
+      currentUser = null;
     }
 
-    if (!member) {
+    if (!currentMember && currentUser?.username) {
+      currentMember = String(currentUser.username).trim();
+    }
+
+    if (!currentMember) {
       window.location.href = '/';
       return;
     }
 
-    const data = await api(`/profile-summary/${encodeURIComponent(member)}`);
+    const data = await api(`/profile-summary/${encodeURIComponent(currentMember)}`);
     renderSummary(data);
 
-    const canonicalMemberUrl = `/profile/${encodeURIComponent(String(data?.member || member || '').trim())}`;
+    const canEdit = Boolean(currentUser?.username) && String(currentUser.username).toLowerCase() === String(data?.member || currentMember).toLowerCase();
+    wireSettingsForm(data.profile || {}, canEdit);
+
+    const canonicalMemberUrl = `/profile/${encodeURIComponent(String(data?.member || currentMember || '').trim())}`;
     if (window.location.pathname !== canonicalMemberUrl) {
-      window.history.replaceState({}, '', canonicalMemberUrl);
+      window.history.replaceState({}, '', canonicalMemberUrl + window.location.hash);
     }
     const canonicalEl = document.getElementById('canonical-profile-link');
     if (canonicalEl) canonicalEl.setAttribute('href', `https://bigbluffbay.au${canonicalMemberUrl}`);

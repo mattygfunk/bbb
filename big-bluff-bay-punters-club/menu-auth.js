@@ -53,7 +53,7 @@ function renderAuthControls(user) {
 
   const avatar = String(user?.profile?.profilePic || '/assets/default-avatar.svg');
   const username = String(user.username || 'Member');
-  controls.innerHTML = `<span class='profile-chip'><img src='${avatar.replaceAll("'", '&#39;')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${username.replaceAll('<','&lt;').replaceAll('>','&gt;')}</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='menu-logout-btn'>Log Out</button>`;
+  controls.innerHTML = `<span class='profile-chip'><img src='${avatar.replaceAll("'", '&#39;')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${username.replaceAll('<','&lt;').replaceAll('>','&gt;')}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='menu-logout-btn'>Log Out</button>`;
 
   const logoutBtn = document.getElementById('menu-logout-btn');
   if (logoutBtn) {

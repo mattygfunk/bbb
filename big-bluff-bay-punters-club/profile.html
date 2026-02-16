@@ -47,6 +47,36 @@
         </div>
       </section>
 
+      <section class="card" id="settings">
+        <h2>Profile Settings</h2>
+        <form id="profile-form" class="stack">
+          <div class="profile-head">
+            <img id="profile-pic-preview" src="/assets/default-avatar.svg" alt="Profile picture preview" class="profile-avatar" />
+            <div class="stack">
+              <label for="profile-pic-file">Upload avatar</label>
+              <input id="profile-pic-file" type="file" accept="image/*" />
+              <label for="profile-pic-input">Or use avatar URL</label>
+              <input id="profile-pic-input" name="profilePic" type="text" placeholder="https://example.com/avatar.jpg" />
+              <p class="muted">Upload an image, or use a full https:// URL / site path like /assets/avatar.png</p>
+            </div>
+          </div>
+          <label for="profile-bio-input">Bio</label>
+          <textarea id="profile-bio-input" name="bio" rows="3" maxlength="280" placeholder="Tell the club a bit about yourself…"></textarea>
+          <div class="split profile-settings">
+            <label><input type="checkbox" id="profile-public-input" name="publicProfile" /> Public profile</label>
+            <label><input type="checkbox" id="profile-email-input" name="emailNotifications" /> Email notifications</label>
+          </div>
+          <label for="profile-theme-input">Theme</label>
+          <select id="profile-theme-input" name="theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <button class="btn" type="submit">Save Profile</button>
+          <p id="profile-msg" class="muted">Only available on your own profile.</p>
+        </form>
+      </section>
+
       <section class="card">
         <h2>Highlights</h2>
         <div class="stats-grid">
@@ -101,7 +131,7 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
 
-    <script defer src="menu-auth.js?v=20260216-3"></script>
-    <script defer src="profile.js?v=20260216-3"></script>
+    <script defer src="menu-auth.js?v=20260216-4"></script>
+    <script defer src="profile.js?v=20260216-4"></script>
   </body>
 </html>
