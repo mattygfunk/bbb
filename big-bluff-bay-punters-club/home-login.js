@@ -11,6 +11,8 @@ const modeInput = document.getElementById('home-auth-mode');
 const modeLoginBtn = document.getElementById('home-mode-login');
 const modeRegisterBtn = document.getElementById('home-mode-register');
 const submitBtn = document.getElementById('home-auth-submit');
+const emailWrap = document.getElementById('home-email-wrap');
+const emailInput = document.getElementById('home-email');
 let sessionActive = false;
 
 async function req(path, opt = {}) {
@@ -66,6 +68,11 @@ function setAuthMode(mode) {
     modeRegisterBtn.setAttribute('aria-pressed', String(next === 'register'));
   }
   if (submitBtn) submitBtn.textContent = next === 'register' ? 'Create Account & Continue' : 'Log In & Continue';
+  if (emailWrap) emailWrap.hidden = next !== 'register';
+  if (emailInput) {
+    emailInput.required = next === 'register';
+    if (next !== 'register') emailInput.value = '';
+  }
   if (msg) msg.textContent = next === 'register' ? 'Create your account once, then you can log in with the same details.' : '';
 }
 
@@ -92,6 +99,7 @@ if (form) {
     const data = new FormData(form);
     const username = String(data.get('member') || '').trim();
     const password = String(data.get('pin') || '').trim();
+    const email = String(data.get('email') || '').trim();
     const mode = String(modeInput?.value || 'login');
 
     if (username.length < 3) {
@@ -106,12 +114,16 @@ if (form) {
       if (msg) msg.textContent = 'Password must be at least 6 characters.';
       return;
     }
+    if (mode === 'register' && !email) {
+      if (msg) msg.textContent = 'Email is required for new accounts.';
+      return;
+    }
 
     try {
       if (mode === 'register') {
         await req(API.register, {
           method: 'POST',
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password, email })
         });
       }
 

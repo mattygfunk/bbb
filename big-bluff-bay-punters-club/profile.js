@@ -74,14 +74,16 @@ function wireSettingsForm(profile, canEdit) {
   const picFile = $('profile-pic-file');
   const bioInput = $('profile-bio-input');
   const publicInput = $('profile-public-input');
-  const emailInput = $('profile-email-input');
+  const emailNotificationsInput = $('profile-email-input');
+  const emailTextInput = $('profile-email-input-text');
   const themeInput = $('profile-theme-input');
   const preview = $('profile-pic-preview');
 
   if (picInput) picInput.value = profile?.profilePic || '';
   if (bioInput) bioInput.value = profile?.bio || '';
   if (publicInput) publicInput.checked = Boolean(profile?.settings?.publicProfile);
-  if (emailInput) emailInput.checked = Boolean(profile?.settings?.emailNotifications);
+  if (emailNotificationsInput) emailNotificationsInput.checked = Boolean(profile?.settings?.emailNotifications);
+  if (emailTextInput) emailTextInput.value = String(profile?.email || '');
   if (themeInput) themeInput.value = profile?.settings?.theme || 'system';
   if (preview) preview.src = profile?.profilePic || '/assets/default-avatar.svg';
 
@@ -134,6 +136,7 @@ function wireSettingsForm(profile, canEdit) {
     const fd = new FormData(form);
     const payload = {
       bio: String(fd.get('bio') || '').trim(),
+      email: String(fd.get('email') || '').trim(),
       profilePic: String(fd.get('profilePic') || '').trim(),
       settings: {
         publicProfile: fd.get('publicProfile') === 'on',

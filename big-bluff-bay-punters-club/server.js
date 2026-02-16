@@ -164,8 +164,10 @@ function normalizePokerPlayerPool(store) {
 function normalizeUserProfile(profile = {}) {
   const settings = profile && typeof profile.settings === 'object' ? profile.settings : {};
   const theme = ['system', 'light', 'dark'].includes(String(settings.theme || '')) ? String(settings.theme) : 'system';
+  const email = String(profile.email || '').trim().slice(0, 254).toLowerCase();
   return {
     bio: String(profile.bio || '').slice(0, 280),
+    email,
     profilePic: String(profile.profilePic || '').slice(0, 250000),
     settings: {
       emailNotifications: Boolean(settings.emailNotifications),
@@ -659,12 +661,16 @@ function createApp() {
   app.post('/api/register', (req, res) => {
     const username = String(req.body.username || '').trim();
     const password = String(req.body.password || '');
+    const email = String(req.body.email || '').trim().toLowerCase();
 
     if (!/^[a-zA-Z0-9_-]{3,24}$/.test(username)) {
       return res.status(400).json({ error: 'Username must be 3-24 chars using letters, numbers, _ or -' });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
     }
 
     const store = readStore();
@@ -678,7 +684,7 @@ function createApp() {
       passwordHash: bcrypt.hashSync(password, 10),
       role: 'member',
       createdAt: Date.now(),
-      profile: normalizeUserProfile({})
+      profile: normalizeUserProfile({ email })
     };
 
     store.users.push(user);
@@ -745,14 +751,20 @@ function createApp() {
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const bio = req.body?.bio;
+    const email = req.body?.email;
     const profilePic = req.body?.profilePic;
     const settings = req.body?.settings;
     const next = normalizeUserProfile({
       ...normalizeUserProfile(user.profile),
       ...(bio !== undefined ? { bio } : {}),
+      ...(email !== undefined ? { email } : {}),
       ...(profilePic !== undefined ? { profilePic } : {}),
       ...(settings && typeof settings === 'object' ? { settings: { ...normalizeUserProfile(user.profile).settings, ...settings } } : {})
     });
+
+    if (next.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next.email)) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
+    }
 
     const isHttp = /^https?:\/\//i.test(next.profilePic);
     const isSitePath = next.profilePic.startsWith('/');

@@ -100,6 +100,9 @@
                 <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
               </div>
             </label>
+            <label id="home-email-wrap" hidden>Email (for updates + account recovery)
+              <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
+            </label>
             <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
           </form>
           <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
@@ -350,7 +353,7 @@
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
-    <script defer src="home-login.js?v=20260216-2"></script>
+    <script defer src="home-login.js?v=20260216-3"></script>
     <script defer src="landing.js?v=20260214-2255"></script>
   </body>
 </html>
