@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
@@ -527,6 +527,58 @@ function syncPokerEventMode(){
   }
 }
 
+
+function renderPokerPlayerOptions(players = []) {
+  const dl = $('poker-player-list');
+  if (!dl) return;
+  dl.innerHTML = '';
+  (players || []).forEach((name) => {
+    const opt = document.createElement('option');
+    opt.value = String(name || '');
+    dl.appendChild(opt);
+  });
+}
+
+async function refreshPokerPlayerOptions() {
+  try {
+    const out = await req(API.pokerPlayers);
+    renderPokerPlayerOptions(out.players || []);
+  } catch {
+    renderPokerPlayerOptions([]);
+  }
+}
+
+function parseCsvUsernames(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return [];
+  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+
+  const parseCells = (line) => line.split(',').map((c) => String(c || '').trim().replace(/^"|"$/g, ''));
+  const header = parseCells(lines[0]).map((h) => h.toLowerCase());
+  const preferred = ['username', 'player', 'name'];
+  let idx = header.findIndex((h) => preferred.includes(h));
+
+  const out = [];
+  const start = idx >= 0 ? 1 : 0;
+  if (idx < 0) idx = 0;
+
+  for (let i = start; i < lines.length; i += 1) {
+    const cells = parseCells(lines[i]);
+    const name = String(cells[idx] || '').trim();
+    if (!name) continue;
+    out.push(name);
+  }
+
+  const seen = new Set();
+  return out.filter((n) => {
+    const key = n.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function applyPokerBulkFromQuery(){
   const box = $('poker-bulk-lines');
   if (!box) return;
@@ -601,6 +653,7 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
     setPokerResultMsg('ok', `Single import successful: added 1 result for ${player} (${eventName || 'event not set'}).${tail}${top}`);
     e.target.reset();
     syncPokerEventMode();
+    refreshPokerPlayerOptions().catch(()=>{});
   } catch (err) {
     setPokerResultMsg('err', `Single import failed: ${err.message || 'Request failed.'}`);
   }
@@ -688,6 +741,7 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
     const failedPreview = failCount ? ` Failed lines: ${errors.slice(0, 3).join(' | ')}${failCount > 3 ? ' ...' : ''}` : '';
     const summary = `Bulk import successful: ${successCount} added.${failCount ? ` Failed/skipped: ${failCount}.` : ' Failed/skipped: 0.'}${tail}${failedPreview}`;
     setPokerResultMsg(failCount ? 'warn' : 'ok', summary);
+    refreshPokerPlayerOptions().catch(()=>{});
   } catch (err) {
     setPokerResultMsg('err', err.message || 'Request failed.');
   }
@@ -706,4 +760,44 @@ $('poker-bulk-clear-btn')?.addEventListener('click', () => {
   if (box) box.value = '';
   const msg = $('poker-result-msg');
   if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
+});
+
+
+$('poker-players-import-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
+
+  const textBox = $('poker-players-csv-text');
+  const fileInput = $('poker-players-csv-file');
+  let csvText = String(textBox?.value || '').trim();
+
+  if (!csvText && fileInput?.files?.[0]) {
+    try {
+      csvText = await fileInput.files[0].text();
+    } catch {
+      setPokerResultMsg('err','Could not read CSV file.');
+      return;
+    }
+  }
+
+  const names = parseCsvUsernames(csvText);
+  if (!names.length) {
+    setPokerResultMsg('err','No usernames found in CSV. Include username/player/name column or first column of names.');
+    return;
+  }
+
+  try {
+    const out = await req(API.pokerPlayersImport, { method: 'POST', body: JSON.stringify({ names }) });
+    await refreshPokerPlayerOptions();
+    setPokerResultMsg('ok', `Imported ${Number(out?.added || 0)} usernames. Player autofill list now has ${Number(out?.total || 0)} names.`);
+  } catch (err) {
+    setPokerResultMsg('err', err.message || 'Username import failed.');
+  }
+});
+
+$('poker-players-import-clear-btn')?.addEventListener('click', () => {
+  const t = $('poker-players-csv-text');
+  const f = $('poker-players-csv-file');
+  if (t) t.value = '';
+  if (f) f.value = '';
 });

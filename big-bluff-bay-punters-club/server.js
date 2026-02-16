@@ -39,6 +39,7 @@ function ensureStore() {
       lastJackpotWinner: '',
       socialFeedCache: { updatedAt: 0, items: [] },
       pokerResults: [],
+      pokerPlayers: [],
       tips: [
         seedTip('Macca', 'R3', 'Storm Ledger', 'approved'),
         seedTip('Jess', 'R5', 'Bayline Belle', 'approved'),
@@ -111,6 +112,10 @@ function ensureStore() {
     store.pokerResults = [];
     changed = true;
   }
+  if (!Array.isArray(store.pokerPlayers)) {
+    store.pokerPlayers = [];
+    changed = true;
+  }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
   for (const tip of store.tips || []) {
     if (tip.status === 'pending') {
@@ -135,6 +140,25 @@ function readStore() {
 
 function writeStore(store) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+}
+
+
+function normalizePokerPlayerPool(store) {
+  const seen = new Set();
+  const out = [];
+  const source = [
+    ...(Array.isArray(store?.pokerPlayers) ? store.pokerPlayers : []),
+    ...((store?.pokerResults || []).map((r) => r?.player))
+  ];
+  for (const raw of source) {
+    const name = String(raw || '').trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+  }
+  return out.sort((a, b) => a.localeCompare(b));
 }
 
 function normalizeUserProfile(profile = {}) {
@@ -1062,6 +1086,32 @@ function createApp() {
     return res.json({ results, count: results.length });
   });
 
+
+
+  app.get('/api/poker-players', (_req, res) => {
+    const store = readStore();
+    const players = normalizePokerPlayerPool(store);
+    return res.json({ players, count: players.length });
+  });
+
+  app.post('/api/poker-players/import', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const names = Array.isArray(req.body?.names) ? req.body.names : [];
+    const existing = new Set((store.pokerPlayers || []).map((n) => String(n || '').trim().toLowerCase()).filter(Boolean));
+    let added = 0;
+    for (const raw of names) {
+      const name = String(raw || '').trim();
+      if (!name) continue;
+      const key = name.toLowerCase();
+      if (existing.has(key)) continue;
+      existing.add(key);
+      store.pokerPlayers.push(name);
+      added += 1;
+    }
+    store.pokerPlayers = normalizePokerPlayerPool(store);
+    writeStore(store);
+    return res.json({ ok: true, added, total: store.pokerPlayers.length });
+  });
   app.post('/api/poker-results', auth, adminOnly, (req, res) => {
     const store = readStore();
     const input = Array.isArray(req.body?.results) ? req.body.results : [req.body];
@@ -1081,7 +1131,16 @@ function createApp() {
       });
     }
     store.pokerResults = Array.isArray(store.pokerResults) ? store.pokerResults : [];
+    store.pokerPlayers = Array.isArray(store.pokerPlayers) ? store.pokerPlayers : [];
     store.pokerResults.push(...added);
+    for (const row of added) {
+      const name = String(row.player || '').trim();
+      if (!name) continue;
+      if (!store.pokerPlayers.some((n) => String(n || '').trim().toLowerCase() === name.toLowerCase())) {
+        store.pokerPlayers.push(name);
+      }
+    }
+    store.pokerPlayers = normalizePokerPlayerPool(store);
     writeStore(store);
     return res.status(201).json({ ok: true, added: added.length });
   });
