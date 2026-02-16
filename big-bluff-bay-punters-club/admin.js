@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
@@ -63,6 +63,46 @@ function renderAdminSummaryCounts(){
   if (tipUsersEl) tipUsersEl.textContent = String(tipUsers);
   if (paidUsersEl) paidUsersEl.textContent = String(paidUsers);
   if (pokerEventsEl) pokerEventsEl.textContent = String(pokerEvents);
+}
+
+async function loadAdminUsers(){
+  const body = $('admin-users-body');
+  const msg = $('admin-users-msg');
+  if (!body) return;
+  if (!isAdmin()) {
+    body.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
+    return;
+  }
+  try {
+    const out = await req(API.users);
+    const users = out.users || [];
+    body.innerHTML = '';
+    users.forEach((u)=>{
+      const tr = document.createElement('tr');
+      const created = u.createdAt ? new Date(Number(u.createdAt)).toLocaleDateString('en-AU') : '-';
+      const actionLabel = u.role === 'admin' ? 'Set Member' : 'Make Admin';
+      const nextRole = u.role === 'admin' ? 'member' : 'admin';
+      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
+      body.appendChild(tr);
+    });
+    if (!users.length) body.innerHTML = "<tr><td colspan='4' class='muted'>No users found.</td></tr>";
+
+    body.querySelectorAll('button[data-user-id]').forEach((btn)=>{
+      btn.addEventListener('click', async ()=>{
+        const id = decodeURIComponent(btn.dataset.userId || '');
+        const role = String(btn.dataset.nextRole || 'member');
+        try {
+          await req(API.userRole(id), { method:'PATCH', body: JSON.stringify({ role }) });
+          if (msg) msg.textContent = `Updated role to ${role}.`;
+          await loadAdminUsers();
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not update role.';
+        }
+      });
+    });
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan='4' class='muted'>${esc(err.message || 'Could not load users.')}</td></tr>`;
+  }
 }
 
 async function applyRolloverFromQueryIfRequested(){
@@ -251,6 +291,7 @@ async function refresh(){
 
   renderAdminSummaryCounts();
   refreshPokerPlayerOptions().catch(()=>{});
+  loadAdminUsers().catch(()=>{});
 
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 

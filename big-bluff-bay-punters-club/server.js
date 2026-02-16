@@ -708,6 +708,29 @@ function createApp() {
     return res.json({ user: { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) } });
   });
 
+  app.get('/api/users', auth, adminOnly, (_req, res) => {
+    const store = readStore();
+    const users = (store.users || [])
+      .map((u) => ({ id: u.id, username: u.username, role: u.role || 'member', createdAt: Number(u.createdAt || 0) }))
+      .sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
+    return res.json({ users, count: users.length });
+  });
+
+  app.patch('/api/users/:id/role', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const id = String(req.params.id || '').trim();
+    const role = String(req.body?.role || '').trim().toLowerCase();
+    if (!id) return res.status(400).json({ error: 'User id is required' });
+    if (!['admin', 'member'].includes(role)) return res.status(400).json({ error: 'Role must be admin or member' });
+
+    const user = (store.users || []).find((u) => String(u.id || '') === id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.role = role;
+    writeStore(store);
+    return res.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
+  });
+
 
   app.get('/api/profile', auth, (req, res) => {
     const store = readStore();
