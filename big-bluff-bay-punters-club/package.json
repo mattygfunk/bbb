@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test-v4.js"
+    "test": "node test-v4.js && node test-poker-v2.js",
+    "seed:poker": "node seed-poker-demo.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 
-const PORT = 3188;
+const PORT = Number(process.env.TEST_PORT || (4100 + Math.floor(Math.random() * 400)));
 const BASE = `http://localhost:${PORT}`;
 const DATA_FILE = path.join(__dirname, 'data', 'test-store.json');
 

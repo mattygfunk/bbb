@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
+const { registerPokerRoutes, ensurePokerV2Store } = require('./poker-system');
 
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
@@ -114,6 +115,9 @@ function ensureStore() {
   }
   if (!Array.isArray(store.pokerPlayers)) {
     store.pokerPlayers = [];
+    changed = true;
+  }
+  if (ensurePokerV2Store(store)) {
     changed = true;
   }
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
@@ -622,8 +626,9 @@ function createApp() {
 
     const hostNoPort = host.split(':')[0].toLowerCase();
     const canonicalHost = hostNoPort.startsWith('www.') ? hostNoPort.slice(4) : hostNoPort;
+    const isLocalHost = canonicalHost === 'localhost' || canonicalHost === '127.0.0.1';
 
-    if (!isSecure || hostNoPort !== canonicalHost) {
+    if (!isLocalHost && (!isSecure || hostNoPort !== canonicalHost)) {
       return res.redirect(301, `https://${canonicalHost}${req.originalUrl}`);
     }
     return next();
@@ -1179,6 +1184,8 @@ function createApp() {
     writeStore(store);
     return res.status(201).json({ ok: true, added: added.length });
   });
+
+  registerPokerRoutes(app, { readStore, writeStore, auth, adminOnly });
 
   app.get('/api/social-feed', async (_req, res) => {
     const store = readStore();

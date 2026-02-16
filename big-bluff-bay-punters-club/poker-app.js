@@ -1,0 +1,102 @@
+(()=>{
+  const app=document.getElementById('app');
+  const route=location.pathname;
+
+  const fmt=(n)=>Number(n||0).toFixed(1);
+  const esc=(s)=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+
+  async function get(url){const r=await fetch(url);return r.json();}
+
+  function chartLine(points){
+    if(!points.length)return '<div class="muted">No trend data yet</div>';
+    const w=800,h=180,pad=20;
+    const vals=points.map(p=>Number(p.points||0));
+    const min=Math.min(...vals),max=Math.max(...vals);
+    const sx=(i)=>pad+(i*(w-pad*2)/Math.max(1,points.length-1));
+    const sy=(v)=>h-pad-((v-min)/(Math.max(1,max-min)))*(h-pad*2);
+    const d=points.map((p,i)=>`${i?'L':'M'}${sx(i)} ${sy(Number(p.points||0))}`).join(' ');
+    return `<svg viewBox='0 0 ${w} ${h}' class='pv2-chart'><path d='${d}' fill='none' stroke='#d4af37' stroke-width='3'/></svg>`;
+  }
+
+  async function renderHub(){
+    const d=await get('/api/poker/dashboard');
+    const top=(d.top10||[]).slice(0,10).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span></td><td><span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
+    app.innerHTML=`
+      <section class='pv2-grid'>
+        <article class='pv2-card'><h3>Players</h3><p>${d.kpis.players}</p></article>
+        <article class='pv2-card'><h3>Results Logged</h3><p>${d.kpis.events}</p></article>
+        <article class='pv2-card'><h3>Avg Points</h3><p>${fmt(d.kpis.avgPoints)}</p></article>
+        <article class='pv2-card'><h3>Season</h3><p>${esc(d.kpis.activeSeason)}</p></article>
+      </section>
+      <section class='pv2-card'><h2>Performance Trend</h2>${chartLine(d.trend||[])}</section>
+      <section class='pv2-grid hype'>
+        <article class='pv2-card'><h4>Hot Streak</h4><p>${esc(d.hype.hotStreak||'—')}</p></article>
+        <article class='pv2-card'><h4>Final Table Machine</h4><p>${esc(d.hype.finalTableMachine?.player||'—')}</p></article>
+        <article class='pv2-card'><h4>Cash King</h4><p>${esc(d.hype.cashKing?.player||'—')}</p></article>
+        <article class='pv2-card'><h4>Biggest Score</h4><p>${esc(d.hype.biggestScore?.player||'—')}</p></article>
+        <article class='pv2-card'><h4>Most Consistent</h4><p>${esc(d.hype.mostConsistent?.player||'—')}</p></article>
+      </section>
+      <section class='pv2-card'><h2>Top 10</h2><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>FT</th><th>Cash</th></tr></thead><tbody>${top||'<tr><td colspan=5 class=muted>No data</td></tr>'}</tbody></table></div></section>
+    `;
+  }
+
+  async function renderLeaderboards(){
+    const seasons=await get('/api/poker/seasons');
+    const active=seasons.activeSeason?.id||'';
+    app.innerHTML=`<section class='pv2-card'><h2>Leaderboards</h2>
+    <div class='row-actions'>
+    <button class='btn tab' data-tab='season'>Season</button>
+    <button class='btn tab' data-tab='monthly'>Monthly</button>
+    <button class='btn tab' data-tab='weekly'>Weekly</button>
+    <button class='btn tab active' data-tab='all-time'>All-time</button>
+    </div>
+    <div id='lb-wrap'></div></section>`;
+    async function load(tab){
+      const d=await get(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}&seasonId=${encodeURIComponent(active)}`);
+      const rows=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
+      document.getElementById('lb-wrap').innerHTML=`<div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Badges</th></tr></thead><tbody>${rows||'<tr><td colspan=5>No data</td></tr>'}</tbody></table></div>`;
+    }
+    document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.tab);});
+    load('all-time');
+  }
+
+  async function renderPlayers(){
+    const q=new URLSearchParams(location.search).get('q')||'';
+    const d=await get(`/api/poker/players?q=${encodeURIComponent(q)}`);
+    const cards=(d.players||[]).map(p=>`<a class='pv2-card' href='/poker/players/${p.id}'><h3>${esc(p.displayName)}</h3><p class='muted'>${esc(p.canonicalName)}</p></a>`).join('');
+    app.innerHTML=`<section><h2>Players</h2><form><input name='q' value='${esc(q)}' placeholder='Search players' /><button class='btn'>Search</button></form></section><section class='pv2-grid'>${cards||'<p>No players</p>'}</section>`;
+  }
+
+  async function renderPlayer(){
+    const id=route.split('/').pop();
+    const d=await get(`/api/poker/players/${id}`);
+    const badges=[];
+    if(d.stats.finalTables>=5)badges.push('FT Merchant');
+    if(d.stats.biggestScore>=300)badges.push('Sun Run Specialist');
+    if(d.stats.events>=15)badges.push('Loose Unit');
+    const rows=(d.results||[]).slice(0,40).map(r=>`<tr><td>${new Date(r.date).toLocaleDateString('en-AU')}</td><td>${fmt(r.points)}</td><td><span class='pill'>${r.finalTable?'FT':'—'}</span></td><td><span class='pill'>${r.cashed?'Cash':'—'}</span></td></tr>`).join('');
+    app.innerHTML=`<section class='pv2-card'><h2>${esc(d.player.displayName)}</h2><p>${badges.map(b=>`<span class='pill'>${b}</span>`).join(' ')||'—'}</p><p class='muted'>Aliases: ${(d.aliases||[]).map(a=>esc(a.alias)).join(', ')}</p></section>
+    <section class='pv2-grid'><article class='pv2-card'><h4>Points</h4><p>${fmt(d.stats.points)}</p></article><article class='pv2-card'><h4>Events</h4><p>${d.stats.events}</p></article><article class='pv2-card'><h4>FT</h4><p>${d.stats.finalTables}</p></article><article class='pv2-card'><h4>Cashes</h4><p>${d.stats.cashes}</p></article></section>
+    <section class='pv2-card'><h3>Recent Results</h3><div class='table-wrap'><table><thead><tr><th>Date</th><th>Points</th><th>FT</th><th>Cash</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  }
+
+  async function renderEvents(){
+    const d=await get('/api/poker/events');
+    const list=(d.events||[]).map(e=>`<a class='pv2-card' href='/poker/events/${e.id}'><h3>${esc(e.name)}</h3><p class='muted'>${esc(e.type)} • ${new Date(e.startAt).toLocaleString('en-AU')}</p></a>`).join('');
+    app.innerHTML=`<section><h2>Events</h2></section><section class='pv2-grid'>${list||'<p>No events</p>'}</section>`;
+  }
+
+  async function renderEvent(){
+    const id=route.split('/').pop();
+    const d=await get(`/api/poker/events/${id}`);
+    const lb=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td>${esc(r.player)}</td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
+    app.innerHTML=`<section class='pv2-card'><h2>${esc(d.event.name)}</h2><p class='muted'>${esc(d.event.type)}</p></section><section class='pv2-card'><h3>Event Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Tags</th></tr></thead><tbody>${lb||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
+  }
+
+  if(route==='/poker')renderHub();
+  else if(route==='/poker/leaderboards')renderLeaderboards();
+  else if(route==='/poker/players')renderPlayers();
+  else if(route.startsWith('/poker/players/'))renderPlayer();
+  else if(route==='/poker/events')renderEvents();
+  else if(route.startsWith('/poker/events/'))renderEvent();
+})();
