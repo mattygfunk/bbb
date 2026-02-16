@@ -83,6 +83,13 @@ function renderSummary(data) {
 
     const data = await api(`/profile-summary/${encodeURIComponent(member)}`);
     renderSummary(data);
+
+    const canonicalMemberUrl = `/profile/${encodeURIComponent(String(data?.member || member || '').trim())}`;
+    if (window.location.pathname !== canonicalMemberUrl) {
+      window.history.replaceState({}, '', canonicalMemberUrl);
+    }
+    const canonicalEl = document.getElementById('canonical-profile-link');
+    if (canonicalEl) canonicalEl.setAttribute('href', `https://bigbluffbay.au${canonicalMemberUrl}`);
   } catch (err) {
     $('member-name').textContent = 'Profile unavailable';
     $('member-bio').textContent = err.message || 'Could not load profile.';
