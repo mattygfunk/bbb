@@ -49,11 +49,11 @@
       }
     },
     {
-      "id": "e97690ff-a885-446c-910c-0e0d1f94eb09",
-      "username": "haybouroughman",
-      "passwordHash": "$2a$10$9/Tfi314vJKef/GikECSH.HYupjjSe3cZigz3QxA7CoO2dOQXkV1u",
+      "id": "4d04e0de-0d61-40ed-9778-2f78fd1627bc",
+      "username": "hayboroughman",
+      "passwordHash": "$2a$10$LLrBsGiIihPssN7WwExwZ.6hTnk5gxA6C/sAV6v8FUvRAcWbJEeX.",
       "role": "admin",
-      "createdAt": 1771235187409,
+      "createdAt": 1771235620298,
       "profile": {
         "bio": "",
         "profilePic": "",
