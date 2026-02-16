@@ -17,8 +17,18 @@ async function loadWinners(){
     const pokerLb = await pokerLbRes.json();
     const pokerResults = await pokerResultsRes.json();
 
+    const latest = data.latestRound || null;
     const fw = data.featuredWinner;
-    if (fw) {
+    if (latest) {
+      const when = latest.archivedAt ? new Date(latest.archivedAt).toLocaleDateString('en-AU') : '';
+      const raceDate = latest.raceDate ? ` • Race date: ${latest.raceDate}` : '';
+      if (latest.outrightWinner) {
+        const pts = fw && fw.member === latest.outrightWinner ? ` • ${fw.points} pts` : '';
+        featured.textContent = `${latest.outrightWinner} • ${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate}${pts}`;
+      } else {
+        featured.textContent = `${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate} • No outright winner — jackpot rolls to $${Number(latest.rolloverToNextWeek || 0).toFixed(2)}`;
+      }
+    } else if (fw) {
       const when = fw.archivedAt ? new Date(fw.archivedAt).toLocaleDateString('en-AU') : '';
       featured.textContent = `${fw.member} • ${fw.weekLabel} ${when ? `• ${when}` : ''} • ${fw.points} pts`;
     } else {

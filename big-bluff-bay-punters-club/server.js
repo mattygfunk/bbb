@@ -405,9 +405,21 @@ function computeMilestonesData(store) {
 
   const winnerHistory = [...winnersChrono].reverse();
   const featuredWinner = winnerHistory[0] || null;
+  const latestRound = rounds.length ? rounds[rounds.length - 1] : null;
+  const latestRoundSummary = latestRound ? {
+    weekNumber: latestRound.weekNumber,
+    weekLabel: latestRound.weekLabel,
+    archivedAt: Number(latestRound.archivedAt || 0),
+    raceDate: String(latestRound?.fixture?.date || ''),
+    outrightWinner: String(latestRound?.jackpot?.outrightWinner || '').trim() || null,
+    rolloverToNextWeek: Number(latestRound?.jackpot?.rolloverToNextWeek || 0),
+    roundPool: Number(latestRound?.jackpot?.roundPool || 0),
+    previousCarry: Number(latestRound?.jackpot?.previousCarry || 0)
+  } : null;
 
   return {
     featuredWinner,
+    latestRound: latestRoundSummary,
     winnerHistory,
     streakLeaderboard: milestoneRows.map((r, i) => ({ rank: i + 1, ...r })),
     generatedAt: Date.now()
