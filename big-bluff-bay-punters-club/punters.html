@@ -95,6 +95,32 @@
       </div>
       <section class="card"><h2>Weekly Winner History</h2><div class="table-wrap"><table><thead><tr><th>Week</th><th>Winner</th><th>Points</th></tr></thead><tbody id="winner-history-body"><tr><td colspan="3" class="muted">Loading history…</td></tr></tbody></table></div></section>
       <section class="card" id="points-breakdown"><h2>Points Breakdown by Race</h2><p class="muted" id="breakdown-title">Tap a punter name in the leaderboard to view race-by-race points.</p><div class="table-wrap"><table><thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead><tbody id="breakdown-body"><tr><td colspan="4" class="muted">No punter selected yet.</td></tr></tbody></table></div></section>
+      <section class="card"><h2>My Profile</h2>
+        <form id="profile-form" class="stack">
+          <div class="profile-head">
+            <img id="profile-pic-preview" src="/assets/default-avatar.svg" alt="Profile picture preview" class="profile-avatar" />
+            <div class="stack">
+              <label for="profile-pic-input">Profile picture URL</label>
+              <input id="profile-pic-input" name="profilePic" type="url" placeholder="https://example.com/avatar.jpg" />
+              <p class="muted">Use a full https:// URL or site path like /assets/avatar.png</p>
+            </div>
+          </div>
+          <label for="profile-bio-input">Bio</label>
+          <textarea id="profile-bio-input" name="bio" rows="3" maxlength="280" placeholder="Tell the club a bit about yourself…"></textarea>
+          <div class="split profile-settings">
+            <label><input type="checkbox" id="profile-public-input" name="publicProfile" /> Public profile</label>
+            <label><input type="checkbox" id="profile-email-input" name="emailNotifications" /> Email notifications</label>
+          </div>
+          <label for="profile-theme-input">Theme</label>
+          <select id="profile-theme-input" name="theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <button class="btn" type="submit">Save Profile</button>
+          <p id="profile-msg" class="muted">Log in to edit your profile.</p>
+        </form>
+      </section>
       <section class="card"><h2>Punters Legends → Poker Legends</h2><p class="muted"><strong>Level up faster:</strong> <a href="/poker-guides.html">Poker Guides</a> and <a href="/poker-guide-bankroll-and-volume.html">Bankroll + Volume Framework</a>.</p>
         <div class="stack">
           <p class="muted"><strong>Last week’s big-event winner:</strong> Sylvia 🔥</p>
@@ -142,6 +168,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260215-1"></script>
+    <script defer src="punters.js?v=20260216-2"></script>
   </body>
 </html>

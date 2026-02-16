@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',register:'/register',login:'/login',logout:'/logout',me:'/me'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
 const $=id=>document.getElementById(id);
@@ -27,6 +27,34 @@ async function req(path,opt={}){
   throw new Error(lastErr||'Request failed');
 }
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+function getProfile(){
+  return state.user?.profile || { bio:'', profilePic:'', settings:{ emailNotifications:false, publicProfile:false, theme:'system' } };
+}
+
+function renderProfileCard(){
+  const form = $('profile-form');
+  if(!form) return;
+  const profile = getProfile();
+  const picInput = $('profile-pic-input');
+  const bioInput = $('profile-bio-input');
+  const publicInput = $('profile-public-input');
+  const emailInput = $('profile-email-input');
+  const themeInput = $('profile-theme-input');
+  const preview = $('profile-pic-preview');
+  const msg = $('profile-msg');
+
+  const disabled = !state.user;
+  form.querySelectorAll('input, textarea, select, button').forEach((el)=>{ el.disabled = disabled; });
+
+  if(picInput) picInput.value = profile.profilePic || '';
+  if(bioInput) bioInput.value = profile.bio || '';
+  if(publicInput) publicInput.checked = Boolean(profile.settings?.publicProfile);
+  if(emailInput) emailInput.checked = Boolean(profile.settings?.emailNotifications);
+  if(themeInput) themeInput.value = profile.settings?.theme || 'system';
+  if(preview) preview.src = profile.profilePic || '/assets/default-avatar.svg';
+  if(msg && !state.user) msg.textContent = 'Log in to edit your profile.';
+}
 
 function renderLeaderboard(rows){
   const body = $('leaderboard-body');
@@ -242,10 +270,11 @@ async function refresh(){
     });
   }
 
-  $('auth-controls').innerHTML=state.user?`<span class='pill'>${esc(state.user.username)}</span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
+  $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <span class='pill'>${esc(state.user.username)}</span></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
+  renderProfileCard();
 }
 
 async function bootstrap(){if(!state.token)return;try{const me=await req(API.me);state.user=me.user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);} }
@@ -312,6 +341,46 @@ function wirePuntersLeaderboardShare(){
 }
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
+
+
+const profileForm = $('profile-form');
+if (profileForm) {
+  profileForm.addEventListener('input', (e)=>{
+    if (e.target?.id === 'profile-pic-input') {
+      const preview = $('profile-pic-preview');
+      if (preview) preview.src = e.target.value.trim() || '/assets/default-avatar.svg';
+    }
+  });
+
+  profileForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(!state.user){ $('profile-msg').textContent = 'Log in first.'; return; }
+    const f = new FormData(profileForm);
+    const payload = {
+      bio: String(f.get('bio') || '').trim(),
+      profilePic: String(f.get('profilePic') || '').trim(),
+      settings: {
+        publicProfile: f.get('publicProfile') === 'on',
+        emailNotifications: f.get('emailNotifications') === 'on',
+        theme: String(f.get('theme') || 'system')
+      }
+    };
+    try {
+      const r = await req(API.profile, { method:'PUT', body: JSON.stringify(payload) });
+      state.user.profile = r.profile;
+      $('profile-msg').textContent = 'Profile saved.';
+      renderProfileCard();
+      const auth = $('auth-controls');
+      if (auth) {
+        $('auth-controls').innerHTML=`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <span class='pill'>${esc(state.user.username)}</span></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`;
+        const b=$('logout-btn'); if(b)b.onclick=logout;
+      }
+    } catch (err) {
+      $('profile-msg').textContent = err.message || 'Could not save profile.';
+    }
+  });
+}
+
 
 (async()=>{
   wirePuntersLeaderboardShare();

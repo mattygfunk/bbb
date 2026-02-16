@@ -733,3 +733,9 @@ details p { margin:.55rem 0 0; }
 .msg-ok { color: #86efac !important; }
 .msg-warn { color: #fcd34d !important; }
 .msg-err { color: #fca5a5 !important; }
+
+.profile-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
+.profile-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#1a2228;border:1px solid rgba(255,255,255,.14)}
+.profile-settings{gap:1rem}
+.profile-chip{display:inline-flex;align-items:center;gap:.45rem}
+.profile-chip-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.22);background:#1a2228}

@@ -27,7 +27,7 @@ function ensureStore() {
   if (!fs.existsSync(DATA_FILE)) {
     const adminHash = bcrypt.hashSync('admin123', 10);
     const store = {
-      users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now() }],
+      users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now(), profile: normalizeUserProfile({}) }],
       fixtures: DEFAULT_FIXTURES,
       raceResults: {},
       bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
@@ -55,6 +55,9 @@ function ensureStore() {
   for (const user of store.users || []) {
     if (typeof user.passwordHash === 'string' && /^[0-9a-f]{32}:[0-9a-f]{128}$/i.test(user.passwordHash)) {
       user.passwordHash = bcrypt.hashSync('admin123', 10);
+      changed = true;
+    }
+    if (ensureUserProfile(user)) {
       changed = true;
     }
   }
@@ -132,6 +135,32 @@ function readStore() {
 
 function writeStore(store) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+}
+
+function normalizeUserProfile(profile = {}) {
+  const settings = profile && typeof profile.settings === 'object' ? profile.settings : {};
+  const theme = ['system', 'light', 'dark'].includes(String(settings.theme || '')) ? String(settings.theme) : 'system';
+  return {
+    bio: String(profile.bio || '').slice(0, 280),
+    profilePic: String(profile.profilePic || '').slice(0, 2048),
+    settings: {
+      emailNotifications: Boolean(settings.emailNotifications),
+      publicProfile: Boolean(settings.publicProfile),
+      theme
+    }
+  };
+}
+
+function ensureUserProfile(user) {
+  if (!user || typeof user !== 'object') return false;
+  const normalized = normalizeUserProfile(user.profile || {});
+  const current = JSON.stringify(user.profile || {});
+  const next = JSON.stringify(normalized);
+  if (current !== next) {
+    user.profile = normalized;
+    return true;
+  }
+  return false;
 }
 
 function parseRunnerList(value) {
@@ -612,7 +641,8 @@ function createApp() {
       username,
       passwordHash: bcrypt.hashSync(password, 10),
       role: 'member',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      profile: normalizeUserProfile({})
     };
 
     store.users.push(user);
@@ -630,12 +660,49 @@ function createApp() {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const safeUser = { id: user.id, username: user.username, role: user.role };
+    const safeUser = { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) };
     return res.json({ ok: true, token: issueToken(safeUser), user: safeUser });
   });
 
   app.post('/api/logout', auth, (_req, res) => res.json({ ok: true }));
-  app.get('/api/me', auth, (req, res) => res.json({ user: { id: req.user.sub, username: req.user.username, role: req.user.role } }));
+  app.get('/api/me', auth, (req, res) => {
+    const store = readStore();
+    const user = store.users.find((u) => u.id === req.user.sub);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    return res.json({ user: { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) } });
+  });
+
+
+  app.get('/api/profile', auth, (req, res) => {
+    const store = readStore();
+    const user = store.users.find((u) => u.id === req.user.sub);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    return res.json({ profile: normalizeUserProfile(user.profile), username: user.username });
+  });
+
+  app.put('/api/profile', auth, (req, res) => {
+    const store = readStore();
+    const user = store.users.find((u) => u.id === req.user.sub);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const bio = req.body?.bio;
+    const profilePic = req.body?.profilePic;
+    const settings = req.body?.settings;
+    const next = normalizeUserProfile({
+      ...normalizeUserProfile(user.profile),
+      ...(bio !== undefined ? { bio } : {}),
+      ...(profilePic !== undefined ? { profilePic } : {}),
+      ...(settings && typeof settings === 'object' ? { settings: { ...normalizeUserProfile(user.profile).settings, ...settings } } : {})
+    });
+
+    if (next.profilePic && !/^https?:\/\//i.test(next.profilePic) && !next.profilePic.startsWith('/')) {
+      return res.status(400).json({ error: 'Profile pic must be an absolute URL or site-relative path.' });
+    }
+
+    user.profile = next;
+    writeStore(store);
+    return res.json({ ok: true, profile: next });
+  });
 
   app.get('/api/fixtures', (_req, res) => {
     const store = readStore();
