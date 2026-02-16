@@ -142,7 +142,7 @@ function normalizeUserProfile(profile = {}) {
   const theme = ['system', 'light', 'dark'].includes(String(settings.theme || '')) ? String(settings.theme) : 'system';
   return {
     bio: String(profile.bio || '').slice(0, 280),
-    profilePic: String(profile.profilePic || '').slice(0, 2048),
+    profilePic: String(profile.profilePic || '').slice(0, 250000),
     settings: {
       emailNotifications: Boolean(settings.emailNotifications),
       publicProfile: Boolean(settings.publicProfile),
@@ -597,7 +597,7 @@ function createApp() {
     res.setHeader('Expires', '0');
     next();
   });
-  app.use(express.json({ limit: '200kb' }));
+  app.use(express.json({ limit: '350kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
   app.use(express.static(__dirname, {
     etag: true,
@@ -695,8 +695,14 @@ function createApp() {
       ...(settings && typeof settings === 'object' ? { settings: { ...normalizeUserProfile(user.profile).settings, ...settings } } : {})
     });
 
-    if (next.profilePic && !/^https?:\/\//i.test(next.profilePic) && !next.profilePic.startsWith('/')) {
-      return res.status(400).json({ error: 'Profile pic must be an absolute URL or site-relative path.' });
+    const isHttp = /^https?:\/\//i.test(next.profilePic);
+    const isSitePath = next.profilePic.startsWith('/');
+    const isDataImage = /^data:image\/(png|jpeg|jpg|webp);base64,[a-z0-9+/=\s]+$/i.test(next.profilePic);
+    if (next.profilePic && !isHttp && !isSitePath && !isDataImage) {
+      return res.status(400).json({ error: 'Profile pic must be an absolute URL, site-relative path, or uploaded image.' });
+    }
+    if (isDataImage && next.profilePic.length > 220000) {
+      return res.status(400).json({ error: 'Uploaded avatar is too large. Please use a smaller image.' });
     }
 
     user.profile = next;

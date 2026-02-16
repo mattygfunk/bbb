@@ -352,6 +352,44 @@ if (profileForm) {
     }
   });
 
+  profileForm.addEventListener('change', (e)=>{
+    if (e.target?.id !== 'profile-pic-file') return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const msg = $('profile-msg');
+    if (!String(file.type || '').startsWith('image/')) {
+      if (msg) msg.textContent = 'Please upload an image file.';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        const scale = Math.min(1, max / Math.max(img.width || 1, img.height || 1));
+        const w = Math.max(1, Math.round((img.width || 1) * scale));
+        const h = Math.max(1, Math.round((img.height || 1) * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        const picInput = $('profile-pic-input');
+        const preview = $('profile-pic-preview');
+        if (picInput) picInput.value = dataUrl;
+        if (preview) preview.src = dataUrl;
+        if (msg) msg.textContent = 'Avatar ready. Click Save Profile.';
+      };
+      img.onerror = () => { if (msg) msg.textContent = 'Could not read that image.'; };
+      img.src = String(reader.result || '');
+    };
+    reader.onerror = () => { if (msg) msg.textContent = 'Could not load that image.'; };
+    reader.readAsDataURL(file);
+  });
+
   profileForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
     if(!state.user){ $('profile-msg').textContent = 'Log in first.'; return; }

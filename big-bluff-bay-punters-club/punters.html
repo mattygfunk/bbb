@@ -100,9 +100,11 @@
           <div class="profile-head">
             <img id="profile-pic-preview" src="/assets/default-avatar.svg" alt="Profile picture preview" class="profile-avatar" />
             <div class="stack">
-              <label for="profile-pic-input">Profile picture URL</label>
-              <input id="profile-pic-input" name="profilePic" type="url" placeholder="https://example.com/avatar.jpg" />
-              <p class="muted">Use a full https:// URL or site path like /assets/avatar.png</p>
+              <label for="profile-pic-file">Upload avatar</label>
+              <input id="profile-pic-file" type="file" accept="image/*" />
+              <label for="profile-pic-input">Or use avatar URL</label>
+              <input id="profile-pic-input" name="profilePic" type="text" placeholder="https://example.com/avatar.jpg" />
+              <p class="muted">Upload an image, or use a full https:// URL / site path like /assets/avatar.png</p>
             </div>
           </div>
           <label for="profile-bio-input">Bio</label>
@@ -168,6 +170,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260216-3"></script>
+    <script defer src="punters.js?v=20260216-4"></script>
   </body>
 </html>
