@@ -205,8 +205,16 @@ async function refresh(){
     if (tipMsg) tipMsg.textContent = `Live data unavailable: ${err.message}`;
     return;
   }
-  $('fixtures-list').innerHTML='';
-  (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`;$('fixtures-list').appendChild(e);});
+  const fixturesList = $('fixtures-list');
+  if (fixturesList) fixturesList.innerHTML='';
+  (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`; if (fixturesList) fixturesList.appendChild(e);});
+  const quickFixtureLine = $('quick-fixture-line');
+  const nextMeet = (fx.fixtures || [])[0];
+  if (quickFixtureLine) {
+    quickFixtureLine.textContent = nextMeet
+      ? `Next meet: ${nextMeet.date} • ${nextMeet.track} (${nextMeet.event})`
+      : 'Next meet details coming soon.';
+  }
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
   const raceCountChanged = newRaceCount !== state.raceCount;
   state.raceCount = newRaceCount;
