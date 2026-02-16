@@ -1294,6 +1294,8 @@ function createApp() {
     return res.send(html);
   });
 
+  app.get(['/profile', '/profile/:member'], (_req, res) => res.sendFile(path.join(__dirname, 'profile.html')));
+
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   return app;
 }

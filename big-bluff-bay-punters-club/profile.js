@@ -29,6 +29,8 @@ function renderSummary(data) {
 
   const breakdown = data.punters?.breakdown || { totalPoints: 0, winners: 0, races: [] };
   $('punters-summary').textContent = `Total ${breakdown.totalPoints || 0} points • ${breakdown.winners || 0} winners`;
+  $('hl-punters-points').textContent = String(Number(breakdown.totalPoints || 0));
+  $('hl-punters-winners').textContent = String(Number(breakdown.winners || 0));
 
   const puntersBody = $('punters-body');
   puntersBody.innerHTML = '';
@@ -45,6 +47,8 @@ function renderSummary(data) {
   const poker = data.poker || { stats: {}, results: [] };
   const s = poker.stats || {};
   $('poker-summary').textContent = `${Number(s.events || 0)} events • ${Number(s.points || 0)} pts • ${Number(s.finalTables || 0)} final tables • ${Number(s.cashes || 0)} cashes`;
+  $('hl-poker-points').textContent = String(Number(s.points || 0));
+  $('hl-poker-events').textContent = String(Number(s.events || 0));
 
   const pokerBody = $('poker-body');
   pokerBody.innerHTML = '';
@@ -63,7 +67,9 @@ function renderSummary(data) {
 (async function init(){
   try {
     const params = new URLSearchParams(window.location.search);
-    let member = String(params.get('u') || '').trim();
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const pathMember = pathParts[0] === 'profile' && pathParts[1] ? decodeURIComponent(pathParts[1]) : '';
+    let member = String(pathMember || params.get('u') || '').trim();
 
     if (!member) {
       const me = await api('/me');

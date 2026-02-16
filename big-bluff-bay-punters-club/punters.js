@@ -270,7 +270,7 @@ async function refresh(){
     });
   }
 
-  $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile.html?u=${encodeURIComponent(String(state.user.username || ''))}' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
+  $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile/${encodeURIComponent(String(state.user.username || ''))}' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
@@ -410,7 +410,7 @@ if (profileForm) {
       renderProfileCard();
       const auth = $('auth-controls');
       if (auth) {
-        $('auth-controls').innerHTML=`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile.html?u=${encodeURIComponent(String(state.user.username || ''))}' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`;
+        $('auth-controls').innerHTML=`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile/${encodeURIComponent(String(state.user.username || ''))}' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/punters.html#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`;
         const b=$('logout-btn'); if(b)b.onclick=logout;
       }
     } catch (err) {

@@ -124,7 +124,7 @@ function renderAuth() {
 
   const userBadge = document.createElement('a');
   userBadge.className = 'pill';
-  userBadge.href = `/profile.html?u=${encodeURIComponent(String(state.user.username || ''))}`;
+  userBadge.href = `/profile/${encodeURIComponent(String(state.user.username || ''))}`;
   userBadge.style.textDecoration = 'none';
   userBadge.textContent = `${state.user.username} (${state.user.role})`;
 
