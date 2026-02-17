@@ -11,19 +11,30 @@ async function loadWinners(){
   const fmt1 = (n) => Number(n || 0).toFixed(1);
 
   try {
-    const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes] = await Promise.all([
+    const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes, pokerDashRes] = await Promise.all([
       fetch('/api/milestones'),
       fetch('/api/poker/leaderboards?tab=all-time'),
       fetch('/api/poker/results?page=1&pageSize=30'),
-      fetch('/api/jackpot')
+      fetch('/api/jackpot'),
+      fetch('/api/poker/dashboard')
     ]);
 
     const data = await milestonesRes.json();
     const pokerLb = await pokerLbRes.json();
     const pokerResults = await pokerResultsRes.json();
     const jackpot = await jackpotRes.json();
+    const pokerDash = await pokerDashRes.json();
 
     if (jackpotPill) jackpotPill.textContent = `Jackpot: $${Number(jackpot?.totalPot || 0).toFixed(2)}`;
+
+    const biggestScoreEl = document.getElementById('biggest-score');
+    const hotStreakEl = document.getElementById('hot-streak');
+    const ftMachineEl = document.getElementById('ft-machine');
+    const cashKingEl = document.getElementById('cash-king');
+    if (biggestScoreEl) biggestScoreEl.textContent = pokerDash?.hype?.biggestScore?.player ? `${pokerDash.hype.biggestScore.player} • ${fmt1(pokerDash.hype.biggestScore.biggestScore)} pts` : 'No data yet';
+    if (hotStreakEl) hotStreakEl.textContent = pokerDash?.hype?.hotStreak || 'No streak yet';
+    if (ftMachineEl) ftMachineEl.textContent = pokerDash?.hype?.finalTableMachine?.player ? `${pokerDash.hype.finalTableMachine.player} • ${fmt1(pokerDash.hype.finalTableMachine.ftPct)}% FT` : 'No data yet';
+    if (cashKingEl) cashKingEl.textContent = pokerDash?.hype?.cashKing?.player ? `${pokerDash.hype.cashKing.player} • ${fmt1(pokerDash.hype.cashKing.cashPct)}% cash` : 'No data yet';
 
     const latest = data.latestRound || null;
     const fw = data.featuredWinner;
@@ -116,6 +127,8 @@ async function loadWinners(){
     if (pokerHighlightsSummary) pokerHighlightsSummary.textContent = 'Could not load poker highlights.';
     if (pokerHighlightsBody) pokerHighlightsBody.innerHTML = "<tr><td colspan='7' class='muted'>Could not load poker leaderboard.</td></tr>";
     if (pokerResultsBody) pokerResultsBody.innerHTML = "<tr><td colspan='7' class='muted'>Could not load poker results.</td></tr>";
+    const ids=['biggest-score','hot-streak','ft-machine','cash-king'];
+    ids.forEach((id)=>{ const el=document.getElementById(id); if(el) el.textContent='Unavailable'; });
   }
 }
 loadWinners();
