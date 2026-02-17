@@ -12,12 +12,13 @@ async function loadWinners(){
   const aud = (n) => `$${Number(n || 0).toFixed(2)}`;
 
   try {
-    const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes, pokerDashRes] = await Promise.all([
+    const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes, pokerDashRes, pokerEventsRes] = await Promise.all([
       fetch('/api/milestones'),
       fetch('/api/poker/leaderboards?tab=all-time'),
       fetch('/api/poker/results?page=1&pageSize=250'),
       fetch('/api/jackpot'),
-      fetch('/api/poker/dashboard')
+      fetch('/api/poker/dashboard'),
+      fetch('/api/poker/events')
     ]);
 
     const data = await milestonesRes.json();
@@ -25,6 +26,7 @@ async function loadWinners(){
     const pokerResults = await pokerResultsRes.json();
     const jackpot = await jackpotRes.json();
     const pokerDash = await pokerDashRes.json();
+    const pokerEvents = await pokerEventsRes.json();
 
     if (jackpotPill) jackpotPill.textContent = `Jackpot: $${Number(jackpot?.totalPot || 0).toFixed(2)}`;
 
@@ -100,58 +102,47 @@ async function loadWinners(){
     if (!leaderboardRows.length) pokerHighlightsBody.innerHTML = "<tr><td colspan='7' class='muted'>No poker leaderboard data yet.</td></tr>";
 
     pokerResultsBody.innerHTML = '';
-    const recentRows = pokerResults.results || [];
-    const parseTs = (v) => {
-      if (v == null || v === '') return NaN;
-      if (typeof v === 'number') return v;
-      const asNum = Number(v);
-      if (Number.isFinite(asNum)) return asNum;
-      const asDate = Date.parse(String(v));
-      return Number.isFinite(asDate) ? asDate : NaN;
-    };
 
-    const gameMap = new Map();
-    recentRows.forEach((row) => {
-      const ts = parseTs(row.date) || parseTs(row.createdAt) || Date.now();
-      const when = new Date(ts).toLocaleDateString('en-AU');
-      const gameName = String(row.eventName || 'Event').trim() || 'Event';
-      // Prefer eventId (true game identity). Fallback keeps older rows separated by date+event.
-      const key = row.eventId ? `event:${row.eventId}` : `legacy:${when}__${gameName}`;
-      if (!gameMap.has(key)) {
-        gameMap.set(key, { when, gameName, eventId: row.eventId || '', rows: [], loggedBy: row.createdBy || 'Admin', ts });
-      }
-      const g = gameMap.get(key);
-      if (!g.eventId && row.eventId) g.eventId = row.eventId;
-      if (ts > Number(g.ts || 0)) { g.ts = ts; g.when = new Date(ts).toLocaleDateString('en-AU'); }
-      g.rows.push(row);
-    });
+    const events = (pokerEvents?.events || []).slice(0, 15);
+    if (events.length) {
+      const detailRows = await Promise.all(events.map(async (ev) => {
+        try {
+          const r = await fetch(`/api/poker/events/${encodeURIComponent(ev.id)}`);
+          const d = await r.json();
+          const winner = (d.leaderboard || [])[0] || null;
+          const when = ev.startAt ? new Date(Number(ev.startAt)).toLocaleDateString('en-AU') : '-';
+          return {
+            when,
+            gameName: ev.name || 'Event',
+            eventId: ev.id,
+            winner,
+            entries: (d.leaderboard || []).length,
+            loggedBy: ev.createdBy || 'Admin'
+          };
+        } catch {
+          return null;
+        }
+      }));
 
-    const games = Array.from(gameMap.values())
-      .map((g) => {
-        const winner = (g.rows || []).reduce((best, r) => (Number(r.points || 0) > Number(best?.points || -Infinity) ? r : best), null);
-        const uniquePlayers = new Set((g.rows || []).map((r) => String(r.playerId || r.playerName || r.player || '').trim()).filter(Boolean));
-        return { ...g, winner, entries: uniquePlayers.size || g.rows.length };
-      })
-      .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
-      .slice(0, 20);
-
-    games.forEach((game) => {
-      const tr = document.createElement('tr');
-      const winnerName = game.winner?.playerName || game.winner?.player || '-';
-      const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
-      const eventHref = game.eventId
-        ? `/poker/events/${encodeURIComponent(game.eventId)}`
-        : `/poker/events?q=${encodeURIComponent(game.gameName)}`;
-      tr.innerHTML = `
-        <td><a href="${eventHref}" title="View all results for this game">${game.when}</a></td>
-        <td>${esc(game.gameName)}</td>
-        <td>${href ? `<a href="${href}">${esc(winnerName)}</a>` : esc(winnerName)}</td>
-        <td>${aud(game.winner?.points || 0)}</td>
-        <td>${Number(game.entries || 0)}</td>
-        <td>${esc(game.loggedBy || 'Admin')}</td>`;
-      pokerResultsBody.appendChild(tr);
-    });
-    if (!games.length) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker results logged yet.</td></tr>";
+      const games = detailRows.filter(Boolean);
+      games.forEach((game) => {
+        const tr = document.createElement('tr');
+        const winnerName = game.winner?.player || '-';
+        const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
+        const eventHref = `/poker/events/${encodeURIComponent(game.eventId)}`;
+        tr.innerHTML = `
+          <td><a href="${eventHref}" title="View all results for this game">${game.when}</a></td>
+          <td>${esc(game.gameName)}</td>
+          <td>${href ? `<a href="${href}">${esc(winnerName)}</a>` : esc(winnerName)}</td>
+          <td>${aud(game.winner?.points || 0)}</td>
+          <td>${Number(game.entries || 0)}</td>
+          <td>${esc(game.loggedBy || 'Admin')}</td>`;
+        pokerResultsBody.appendChild(tr);
+      });
+      if (!games.length) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker events found.</td></tr>";
+    } else {
+      pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker results logged yet.</td></tr>";
+    }
 
   } catch(e){
     featured.textContent = 'Could not load winner data.';
