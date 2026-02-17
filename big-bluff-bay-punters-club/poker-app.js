@@ -69,6 +69,7 @@
       <input id='minEvents' type='number' min='0' step='1' value='0' placeholder='Min events' style='max-width:120px' />
       <label><input id='ftOnly' type='checkbox' /> FT only</label>
       <label><input id='cashOnly' type='checkbox' /> Cashed only</label>
+      <label><input id='showAllRows' type='checkbox' /> Show all</label>
       <button class='btn' id='applyFilters'>Apply</button>
     </div>
     <div id='lb-wrap'></div></section>`;
@@ -81,8 +82,12 @@
       const finalTableOnly=document.getElementById('ftOnly')?.checked?'true':'false';
       const cashedOnly=document.getElementById('cashOnly')?.checked?'true':'false';
       const d=await get(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}&seasonId=${encodeURIComponent(active)}&q=${q}&eventType=${eventType}&minEvents=${minEvents}&finalTableOnly=${finalTableOnly}&cashedOnly=${cashedOnly}`);
-      const rows=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td>${fmt(r.avgPoints)}</td><td>${r.finalTables}</td><td>${r.cashes}</td><td>${fmt(r.ftPct)}%</td><td>${fmt(r.cashPct)}%</td><td>${r.lastPlayed?new Date(r.lastPlayed).toLocaleDateString('en-AU'):'—'}</td></tr>`).join('');
-      document.getElementById('lb-wrap').innerHTML=`<div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Avg</th><th>FT</th><th>Cash</th><th>FT%</th><th>Cash%</th><th>Last Played</th></tr></thead><tbody>${rows||'<tr><td colspan=10>No data</td></tr>'}</tbody></table></div>`;
+      const showAll=document.getElementById('showAllRows')?.checked;
+      const sourceRows=(d.leaderboard||[]);
+      const shownRows = showAll ? sourceRows : sourceRows.slice(0,10);
+      const rows=shownRows.map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td>${fmt(r.avgPoints)}</td><td>${r.finalTables}</td><td>${r.cashes}</td><td>${fmt(r.ftPct)}%</td><td>${fmt(r.cashPct)}%</td><td>${r.lastPlayed?new Date(r.lastPlayed).toLocaleDateString('en-AU'):'—'}</td></tr>`).join('');
+      const helper = showAll ? `Showing all ${sourceRows.length} players` : `Showing top ${Math.min(10, sourceRows.length)} players`;
+      document.getElementById('lb-wrap').innerHTML=`<p class='muted'>${helper}</p><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Avg</th><th>FT</th><th>Cash</th><th>FT%</th><th>Cash%</th><th>Last Played</th></tr></thead><tbody>${rows||'<tr><td colspan=10>No data</td></tr>'}</tbody></table></div>`;
     }
     document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.tab);});
     document.getElementById('applyFilters').onclick=()=>load(currentTab);
