@@ -108,9 +108,11 @@ async function loadWinners(){
       const gameName = String(row.eventName || 'Event').trim() || 'Event';
       const key = `${when}__${gameName}`;
       if (!gameMap.has(key)) {
-        gameMap.set(key, { when, gameName, rows: [], loggedBy: row.createdBy || 'Admin' });
+        gameMap.set(key, { when, gameName, eventId: row.eventId || '', rows: [], loggedBy: row.createdBy || 'Admin' });
       }
-      gameMap.get(key).rows.push(row);
+      const g = gameMap.get(key);
+      if (!g.eventId && row.eventId) g.eventId = row.eventId;
+      g.rows.push(row);
     });
 
     const games = Array.from(gameMap.values())
@@ -129,8 +131,9 @@ async function loadWinners(){
       const tr = document.createElement('tr');
       const winnerName = game.winner?.playerName || game.winner?.player || '-';
       const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
+      const eventHref = game.eventId ? `/poker/events/${encodeURIComponent(game.eventId)}` : '';
       tr.innerHTML = `
-        <td>${game.when}</td>
+        <td>${eventHref ? `<a href="${eventHref}" title="View all results for this game">${game.when}</a>` : game.when}</td>
         <td>${esc(game.gameName)}</td>
         <td>${href ? `<a href="${href}">${esc(winnerName)}</a>` : esc(winnerName)}</td>
         <td>${aud(game.winner?.points || 0)}</td>
