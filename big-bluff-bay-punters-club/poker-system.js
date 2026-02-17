@@ -556,6 +556,27 @@ function registerPokerRoutes(app, opts) {
     return res.json({ results: paged, page, pageSize, total });
   });
 
+  app.delete('/api/poker/results', auth, adminOnly, (req, res) => {
+    const confirm = String(req.body?.confirm || '').trim().toUpperCase();
+    if (confirm !== 'CLEAR') return res.status(400).json({ error: 'Confirmation required (confirm=CLEAR)' });
+    const store = svc.getStore();
+    const removed = (store.pokerV2.results || []).length;
+    store.pokerV2.results = [];
+    store.pokerV2.submitCache = {};
+    store.pokerV2.auditLogs.unshift({
+      id: crypto.randomUUID(),
+      action: 'result.bulkDelete',
+      entityType: 'result',
+      entityId: 'all',
+      beforeJSON: JSON.stringify({ removed }),
+      afterJSON: JSON.stringify({ removed: 0 }),
+      actor: req.user.username,
+      createdAt: Date.now()
+    });
+    svc.save(store);
+    return res.json({ ok: true, removed });
+  });
+
   app.get('/api/poker/leaderboards', (req, res) => {
     const store = svc.getStore();
     const tab = String(req.query.tab || 'all-time').toLowerCase();

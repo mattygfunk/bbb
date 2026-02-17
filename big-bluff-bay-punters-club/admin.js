@@ -886,6 +886,18 @@ $('poker-bulk-clear-btn')?.addEventListener('click', () => {
   if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
 });
 
+$('clear-poker-records-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
+  const typed = prompt('This will permanently delete ALL Poker V2 results. Type CLEAR to confirm.');
+  if (typed !== 'CLEAR') { setPokerResultMsg('warn', 'Cancelled: confirmation text did not match.'); return; }
+  try {
+    const out = await req('/poker/results', { method:'DELETE', body: JSON.stringify({ confirm: 'CLEAR' }) });
+    setPokerResultMsg('ok', `Poker records cleared. Removed ${Number(out?.removed || 0)} rows.`);
+    await refresh();
+  } catch (err) {
+    setPokerResultMsg('err', err.message || 'Could not clear poker records.');
+  }
+});
 
 $('poker-players-import-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
