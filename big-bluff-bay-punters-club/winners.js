@@ -101,26 +101,44 @@ async function loadWinners(){
 
     pokerResultsBody.innerHTML = '';
     const recentRows = pokerResults.results || [];
+    const gameMap = new Map();
     recentRows.forEach((row) => {
-      const tr = document.createElement('tr');
-      const href = row.playerId ? `/poker/players/${encodeURIComponent(row.playerId)}` : '';
-      if (href) {
-        tr.style.cursor = 'pointer';
-        tr.title = 'Open player profile';
-        tr.addEventListener('click', () => { window.location.href = href; });
+      const rawDate = row.date ? Number(row.date) : (row.createdAt ? Number(row.createdAt) : Date.now());
+      const when = Number.isFinite(rawDate) ? new Date(rawDate).toLocaleDateString('en-AU') : '-';
+      const gameName = String(row.eventName || 'Event').trim() || 'Event';
+      const key = `${when}__${gameName}`;
+      if (!gameMap.has(key)) {
+        gameMap.set(key, { when, gameName, rows: [], loggedBy: row.createdBy || 'Admin' });
       }
-      const when = row.date ? new Date(Number(row.date)).toLocaleDateString('en-AU') : (row.createdAt ? new Date(Number(row.createdAt)).toLocaleDateString('en-AU') : '-');
+      gameMap.get(key).rows.push(row);
+    });
+
+    const games = Array.from(gameMap.values())
+      .map((g) => {
+        const winner = (g.rows || []).reduce((best, r) => (Number(r.points || 0) > Number(best?.points || -Infinity) ? r : best), null);
+        const uniquePlayers = new Set((g.rows || []).map((r) => String(r.playerId || r.playerName || r.player || '').trim()).filter(Boolean));
+        return { ...g, winner, entries: uniquePlayers.size || g.rows.length };
+      })
+      .sort((a, b) => {
+        const ax = a.rows?.[0]?.date || a.rows?.[0]?.createdAt || 0;
+        const bx = b.rows?.[0]?.date || b.rows?.[0]?.createdAt || 0;
+        return Number(bx) - Number(ax);
+      });
+
+    games.forEach((game) => {
+      const tr = document.createElement('tr');
+      const winnerName = game.winner?.playerName || game.winner?.player || '-';
+      const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
       tr.innerHTML = `
-        <td>${when}</td>
-        <td>${href ? `<a href="${href}" onclick="event.stopPropagation()">${esc(row.playerName || row.player || '-')}</a>` : esc(row.playerName || row.player || '-')}</td>
-        <td>${esc(row.eventName || 'Event')}</td>
-        <td>${aud(row.points)}</td>
-        <td>${row.finalTable ? '<span class="pill">FT</span>' : '—'}</td>
-        <td>${row.cashed ? '<span class="pill">Cash</span>' : '—'}</td>
-        <td>${esc(row.createdBy || 'Admin')}</td>`;
+        <td>${game.when}</td>
+        <td>${esc(game.gameName)}</td>
+        <td>${href ? `<a href="${href}">${esc(winnerName)}</a>` : esc(winnerName)}</td>
+        <td>${aud(game.winner?.points || 0)}</td>
+        <td>${Number(game.entries || 0)}</td>
+        <td>${esc(game.loggedBy || 'Admin')}</td>`;
       pokerResultsBody.appendChild(tr);
     });
-    if (!recentRows.length) pokerResultsBody.innerHTML = "<tr><td colspan='7' class='muted'>No poker results logged yet.</td></tr>";
+    if (!games.length) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker results logged yet.</td></tr>";
 
   } catch(e){
     featured.textContent = 'Could not load winner data.';
