@@ -36,6 +36,31 @@
 
 .pill.warn{border-color:#7d5e2b;background:#3a2d14;color:#ffe3ac}
 
+/* Winners page punchy spotlight cards */
+.punchy-spotlight .pv2-card{
+  border-color:#5e4a1f;
+  background:radial-gradient(120% 140% at 10% 0%, rgba(212,175,55,.16), rgba(18,26,36,.98));
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.punchy-spotlight .pv2-card:hover{
+  transform:translateY(-2px);
+  border-color:#d4af37;
+  box-shadow:0 14px 28px rgba(0,0,0,.42), 0 0 0 1px rgba(212,175,55,.25) inset;
+}
+.punchy-spotlight .pv2-card h4{
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  font-size:.78rem;
+  color:#f2d98a;
+}
+.punchy-spotlight .pv2-card p{
+  margin-top:.35rem;
+  font-size:1.05rem;
+  font-weight:800;
+  line-height:1.2;
+  color:#fff;
+}
+
 @media(max-width:700px){
   .pv2-header{flex-direction:column;align-items:flex-start;gap:.5rem}
   .table-wrap{overflow:auto}
