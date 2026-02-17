@@ -9,6 +9,7 @@ async function loadWinners(){
 
   const esc = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   const fmt1 = (n) => Number(n || 0).toFixed(1);
+  const aud = (n) => `$${Number(n || 0).toFixed(2)}`;
 
   try {
     const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes, pokerDashRes] = await Promise.all([
@@ -31,7 +32,7 @@ async function loadWinners(){
     const hotStreakEl = document.getElementById('hot-streak');
     const ftMachineEl = document.getElementById('ft-machine');
     const cashKingEl = document.getElementById('cash-king');
-    if (biggestScoreEl) biggestScoreEl.textContent = pokerDash?.hype?.biggestScore?.player ? `${pokerDash.hype.biggestScore.player} • ${fmt1(pokerDash.hype.biggestScore.biggestScore)} pts` : 'No data yet';
+    if (biggestScoreEl) biggestScoreEl.textContent = pokerDash?.hype?.biggestScore?.player ? `${pokerDash.hype.biggestScore.player} • ${aud(pokerDash.hype.biggestScore.biggestScore)} AUD` : 'No data yet';
     if (hotStreakEl) hotStreakEl.textContent = pokerDash?.hype?.hotStreak || 'No streak yet';
     if (ftMachineEl) ftMachineEl.textContent = pokerDash?.hype?.finalTableMachine?.player ? `${pokerDash.hype.finalTableMachine.player} • ${fmt1(pokerDash.hype.finalTableMachine.ftPct)}% FT` : 'No data yet';
     if (cashKingEl) cashKingEl.textContent = pokerDash?.hype?.cashKing?.player ? `${pokerDash.hype.cashKing.player} • ${fmt1(pokerDash.hype.cashKing.cashPct)}% cash` : 'No data yet';
@@ -42,7 +43,7 @@ async function loadWinners(){
       const when = latest.archivedAt ? new Date(latest.archivedAt).toLocaleDateString('en-AU') : '';
       const raceDate = latest.raceDate ? ` • Race date: ${latest.raceDate}` : '';
       if (latest.outrightWinner) {
-        const pts = fw && fw.member === latest.outrightWinner ? ` • ${fw.points} pts` : '';
+        const pts = fw && fw.member === latest.outrightWinner ? ` • ${aud(fw.points)} AUD` : '';
         featured.textContent = `${latest.outrightWinner} • ${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate}${pts}`;
       } else {
         const liveJackpot = Number(jackpot?.totalPot || latest.rolloverToNextWeek || 0).toFixed(2);
@@ -50,7 +51,7 @@ async function loadWinners(){
       }
     } else if (fw) {
       const when = fw.archivedAt ? new Date(fw.archivedAt).toLocaleDateString('en-AU') : '';
-      featured.textContent = `${fw.member} • ${fw.weekLabel} ${when ? `• ${when}` : ''} • ${fw.points} pts`;
+      featured.textContent = `${fw.member} • ${fw.weekLabel} ${when ? `• ${when}` : ''} • ${aud(fw.points)} AUD`;
     } else {
       featured.textContent = 'No archived winners yet.';
     }
@@ -58,7 +59,7 @@ async function loadWinners(){
     historyBody.innerHTML = '';
     (data.winnerHistory || []).forEach((w)=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(w.weekLabel||'-')}</td><td>${esc(w.member||'-')}</td><td>${Number(w.points||0)}</td><td>${Number(w.winners||0)}</td>`;
+      tr.innerHTML = `<td>${esc(w.weekLabel||'-')}</td><td>${esc(w.member||'-')}</td><td>${aud(w.points)}</td><td>${Number(w.winners||0)}</td>`;
       historyBody.appendChild(tr);
     });
     if (!(data.winnerHistory||[]).length) historyBody.innerHTML = "<tr><td colspan='4' class='muted'>No history yet.</td></tr>";
@@ -75,7 +76,7 @@ async function loadWinners(){
     const leaderboardRows = (pokerLb.leaderboard || []).slice(0, 10);
     if (pokerHighlightsSummary) {
       const activeCount = leaderboardRows.length;
-      pokerHighlightsSummary.textContent = `${activeCount} players shown • All-time tab • Points rounded to 1 decimal.`;
+      pokerHighlightsSummary.textContent = `${activeCount} players shown • All-time tab • Values shown in AUD.`;
     }
 
     leaderboardRows.forEach((row) => {
@@ -89,7 +90,7 @@ async function loadWinners(){
       tr.innerHTML = `
         <td>${row.rank}</td>
         <td>${href ? `<a href="${href}" onclick="event.stopPropagation()">${esc(row.player)}</a>` : esc(row.player)}</td>
-        <td>${fmt1(row.points)}</td>
+        <td>${aud(row.points)}</td>
         <td>${Number(row.events || 0)}</td>
         <td>${fmt1(row.avgPoints)}</td>
         <td><span class='pill'>${fmt1(row.ftPct)}%</span></td>
@@ -113,7 +114,7 @@ async function loadWinners(){
         <td>${when}</td>
         <td>${href ? `<a href="${href}" onclick="event.stopPropagation()">${esc(row.playerName || row.player || '-')}</a>` : esc(row.playerName || row.player || '-')}</td>
         <td>${esc(row.eventName || 'Event')}</td>
-        <td>${fmt1(row.points)}</td>
+        <td>${aud(row.points)}</td>
         <td>${row.finalTable ? '<span class="pill">FT</span>' : '—'}</td>
         <td>${row.cashed ? '<span class="pill">Cash</span>' : '—'}</td>
         <td>${esc(row.createdBy || 'Admin')}</td>`;
