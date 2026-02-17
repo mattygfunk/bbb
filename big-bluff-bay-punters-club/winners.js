@@ -69,9 +69,15 @@ async function loadWinners(){
 
     leaderboardRows.forEach((row) => {
       const tr = document.createElement('tr');
+      const href = row.playerId ? `/poker/players/${encodeURIComponent(row.playerId)}` : '';
+      if (href) {
+        tr.style.cursor = 'pointer';
+        tr.title = 'Open player profile';
+        tr.addEventListener('click', () => { window.location.href = href; });
+      }
       tr.innerHTML = `
         <td>${row.rank}</td>
-        <td>${esc(row.player)}</td>
+        <td>${href ? `<a href="${href}" onclick="event.stopPropagation()">${esc(row.player)}</a>` : esc(row.player)}</td>
         <td>${fmt1(row.points)}</td>
         <td>${Number(row.events || 0)}</td>
         <td>${fmt1(row.avgPoints)}</td>
@@ -85,10 +91,16 @@ async function loadWinners(){
     const recentRows = pokerResults.results || [];
     recentRows.forEach((row) => {
       const tr = document.createElement('tr');
+      const href = row.playerId ? `/poker/players/${encodeURIComponent(row.playerId)}` : '';
+      if (href) {
+        tr.style.cursor = 'pointer';
+        tr.title = 'Open player profile';
+        tr.addEventListener('click', () => { window.location.href = href; });
+      }
       const when = row.date ? new Date(Number(row.date)).toLocaleDateString('en-AU') : (row.createdAt ? new Date(Number(row.createdAt)).toLocaleDateString('en-AU') : '-');
       tr.innerHTML = `
         <td>${when}</td>
-        <td>${esc(row.playerName || row.player || '-')}</td>
+        <td>${href ? `<a href="${href}" onclick="event.stopPropagation()">${esc(row.playerName || row.player || '-')}</a>` : esc(row.playerName || row.player || '-')}</td>
         <td>${esc(row.eventName || 'Event')}</td>
         <td>${fmt1(row.points)}</td>
         <td>${row.finalTable ? '<span class="pill">FT</span>' : '—'}</td>
