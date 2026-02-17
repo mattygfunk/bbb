@@ -1,4 +1,6 @@
 .poker-v2{background:#0a0d12;color:#e8edf2;min-height:100vh}
+/* winners page also uses .poker-v2 on cards; don't force viewport-height cards there */
+.winners-page .card.poker-v2{min-height:auto}
 .pv2-hero{padding-bottom:1rem}
 .pv2-nav{display:flex;gap:.75rem;flex-wrap:wrap}
 .pv2-nav a{color:#9fb5cc;text-decoration:none;padding:.3rem .6rem;border-radius:999px;border:1px solid #243447}
