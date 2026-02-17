@@ -92,6 +92,17 @@
           </label>
           <label id='customWrap' hidden>Custom event <input id='customEvent' placeholder='eg Tuesday Deepstack' /></label>
           <label>Screenshot reference (optional) <input id='shot' placeholder='uploads/nightly-2026-02-16.png' /></label>
+
+          <div class='pv2-card' style='padding:.75rem'>
+            <h4 style='margin-bottom:.35rem'>Screenshot → OCR → Prefill</h4>
+            <p class='muted'>Upload a screenshot of results. OCR text will be extracted and prefilled into Smart Paste, ready for one-click import.</p>
+            <div class='row-actions'>
+              <input id='ocrFile' type='file' accept='image/*' />
+              <button class='btn' type='button' id='runOcr'>Run OCR</button>
+            </div>
+            <p id='ocrStatus' class='muted'>OCR idle.</p>
+          </div>
+
           <label>Smart paste
             <textarea id='paste' rows='8' placeholder='Examples:\n1 FloppinQuads 123.4\nPlayerName - 55 - Sunday 1300gtd\nAnotherPlayer 22.5'></textarea>
           </label>
@@ -129,6 +140,9 @@
     const previewBtn=document.getElementById('preview');
     const saveBtn=document.getElementById('save');
     const clearBtn=document.getElementById('clear');
+    const ocrFileEl=document.getElementById('ocrFile');
+    const runOcrBtn=document.getElementById('runOcr');
+    const ocrStatusEl=document.getElementById('ocrStatus');
 
     const csvValidateBtn=document.getElementById('csvValidate');
     const csvSaveBtn=document.getElementById('csvSave');
@@ -136,6 +150,68 @@
     eventEl.onchange=()=>customWrap.hidden=eventEl.value!=='custom';
 
     let cached=[];
+
+    function normalizeOcrText(text){
+      return String(text||'')
+        .replace(/[|]/g,' ')
+        .replace(/[“”]/g,'"')
+        .replace(/[‘’]/g,"'")
+        .replace(/\t/g,' ')
+        .replace(/\s{2,}/g,' ')
+        .split(/\r?\n/)
+        .map(l=>l.trim())
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    async function runOcrAndPrefill(){
+      const file=ocrFileEl?.files?.[0];
+      if(!file){ setMessage('warn','Choose a screenshot first.'); return; }
+      if(!window.Tesseract || !window.Tesseract.recognize){
+        setMessage('error','OCR engine unavailable. Reload page and try again.');
+        return;
+      }
+
+      runOcrBtn.disabled=true;
+      previewBtn.disabled=true;
+      if(ocrStatusEl) ocrStatusEl.textContent='OCR running…';
+      setMessage('info','Running OCR on screenshot…');
+
+      try{
+        const result=await window.Tesseract.recognize(file,'eng',{
+          logger:(m)=>{
+            if(!ocrStatusEl) return;
+            if(m?.status==='recognizing text' && Number.isFinite(m.progress)){
+              ocrStatusEl.textContent=`OCR: ${Math.round(m.progress*100)}%`;
+            } else if(m?.status) {
+              ocrStatusEl.textContent=`OCR: ${m.status}`;
+            }
+          }
+        });
+
+        const rawText=result?.data?.text||'';
+        const cleaned=normalizeOcrText(rawText);
+        if(!cleaned){
+          setMessage('warn','OCR finished but found no text. Try a clearer screenshot.');
+          if(ocrStatusEl) ocrStatusEl.textContent='OCR complete (no text found).';
+          return;
+        }
+
+        document.getElementById('paste').value=cleaned;
+        const shot=document.getElementById('shot');
+        if(shot && !shot.value) shot.value=`uploads/${file.name}`;
+
+        if(ocrStatusEl) ocrStatusEl.textContent='OCR complete. Prefilled Smart Paste.';
+        setMessage('success','OCR extracted text and prefilled Smart Paste. Review preview, then save.');
+        await previewRows();
+      }catch(err){
+        if(ocrStatusEl) ocrStatusEl.textContent='OCR failed.';
+        setMessage('error',`OCR failed: ${err.message||'unknown error'}`);
+      }finally{
+        runOcrBtn.disabled=false;
+        previewBtn.disabled=false;
+      }
+    }
 
     function validateEvent(){
       if(eventEl.value!=='custom') return {ok:true,eventId:eventEl.value,eventName:(events.events||[]).find(e=>e.id===eventEl.value)?.name||''};
@@ -200,6 +276,7 @@
     }
 
     previewBtn.onclick=async()=>{ await previewRows(); };
+    runOcrBtn.onclick=async()=>{ await runOcrAndPrefill(); };
 
     saveBtn.onclick=async()=>{
       const ev=validateEvent();
@@ -245,6 +322,8 @@
     clearBtn.onclick=()=>{
       document.getElementById('paste').value='';
       document.getElementById('shot').value='';
+      if(ocrFileEl) ocrFileEl.value='';
+      if(ocrStatusEl) ocrStatusEl.textContent='OCR idle.';
       document.getElementById('previewBox').innerHTML='';
       cached=[];
       setMessage('info','Cleared.');
