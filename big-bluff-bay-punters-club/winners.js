@@ -43,7 +43,7 @@ async function loadWinners(){
       const when = latest.archivedAt ? new Date(latest.archivedAt).toLocaleDateString('en-AU') : '';
       const raceDate = latest.raceDate ? ` • Race date: ${latest.raceDate}` : '';
       if (latest.outrightWinner) {
-        const pts = fw && fw.member === latest.outrightWinner ? ` • ${aud(fw.points)} AUD` : '';
+        const pts = fw && fw.member === latest.outrightWinner ? ` • ${aud(fw.prize ?? fw.points)} AUD` : '';
         featured.textContent = `${latest.outrightWinner} • ${latest.weekLabel}${when ? ` • ${when}` : ''}${raceDate}${pts}`;
       } else {
         const liveJackpot = Number(jackpot?.totalPot || latest.rolloverToNextWeek || 0).toFixed(2);
@@ -51,7 +51,7 @@ async function loadWinners(){
       }
     } else if (fw) {
       const when = fw.archivedAt ? new Date(fw.archivedAt).toLocaleDateString('en-AU') : '';
-      featured.textContent = `${fw.member} • ${fw.weekLabel} ${when ? `• ${when}` : ''} • ${aud(fw.points)} AUD`;
+      featured.textContent = `${fw.member} • ${fw.weekLabel} ${when ? `• ${when}` : ''} • ${aud(fw.prize ?? fw.points)} AUD`;
     } else {
       featured.textContent = 'No archived winners yet.';
     }
@@ -59,7 +59,8 @@ async function loadWinners(){
     historyBody.innerHTML = '';
     (data.winnerHistory || []).forEach((w)=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(w.weekLabel||'-')}</td><td>${esc(w.member||'-')}</td><td>${aud(w.points)}</td><td>${Number(w.winners||0)}</td>`;
+      const winnerCell = w.rolledOver ? `${esc(w.member || '-')} ⚠️` : esc(w.member || '-');
+      tr.innerHTML = `<td>${esc(w.weekLabel||'-')}</td><td>${winnerCell}</td><td>${aud(w.prize ?? w.points)}</td><td>${Number(w.winners||0)}</td>`;
       historyBody.appendChild(tr);
     });
     if (!(data.winnerHistory||[]).length) historyBody.innerHTML = "<tr><td colspan='4' class='muted'>No history yet.</td></tr>";

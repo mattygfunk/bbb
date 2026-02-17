@@ -396,16 +396,39 @@ function computeMilestonesData(store) {
       const winner = String(round?.jackpot?.outrightWinner || '').trim();
       if (!winner) return null;
       const ladderEntry = (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null;
+      const roundPool = Number(round?.jackpot?.roundPool || 0);
+      const previousCarry = Number(round?.jackpot?.previousCarry || 0);
       return {
         member: winner,
         weekNumber: round.weekNumber,
         weekLabel: round.weekLabel,
         archivedAt: Number(round.archivedAt || 0),
         points: Number(ladderEntry?.points || 0),
-        winners: Number(ladderEntry?.winners || 0)
+        winners: Number(ladderEntry?.winners || 0),
+        prize: roundPool + previousCarry
       };
     })
     .filter(Boolean);
+
+  const winnerHistory = [...rounds].reverse().map((round) => {
+    const winner = String(round?.jackpot?.outrightWinner || '').trim();
+    const roundPool = Number(round?.jackpot?.roundPool || 0);
+    const previousCarry = Number(round?.jackpot?.previousCarry || 0);
+    const prize = roundPool + previousCarry;
+    const ladderEntry = winner
+      ? (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null
+      : null;
+    return {
+      member: winner || 'No outright winner (rollover)',
+      weekNumber: round.weekNumber,
+      weekLabel: round.weekLabel,
+      archivedAt: Number(round.archivedAt || 0),
+      points: Number(ladderEntry?.points || 0),
+      winners: Number(ladderEntry?.winners || 0),
+      prize,
+      rolledOver: !winner
+    };
+  });
 
   for (let i = 0; i < winnersChrono.length; i += 1) {
     const current = winnersChrono[i];
@@ -433,8 +456,7 @@ function computeMilestonesData(store) {
     };
   }).sort((a, b) => b.currentStreak - a.currentStreak || b.bestStreak - a.bestStreak || b.totalWins - a.totalWins || a.member.localeCompare(b.member));
 
-  const winnerHistory = [...winnersChrono].reverse();
-  const featuredWinner = winnerHistory[0] || null;
+  const featuredWinner = [...winnersChrono].reverse()[0] || null;
   const latestRound = rounds.length ? rounds[rounds.length - 1] : null;
   const latestRoundSummary = latestRound ? {
     weekNumber: latestRound.weekNumber,
