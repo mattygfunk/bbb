@@ -15,7 +15,7 @@ async function loadWinners(){
     const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes, pokerDashRes] = await Promise.all([
       fetch('/api/milestones'),
       fetch('/api/poker/leaderboards?tab=all-time'),
-      fetch('/api/poker/results?page=1&pageSize=30'),
+      fetch('/api/poker/results?page=1&pageSize=250'),
       fetch('/api/jackpot'),
       fetch('/api/poker/dashboard')
     ]);
@@ -101,17 +101,28 @@ async function loadWinners(){
 
     pokerResultsBody.innerHTML = '';
     const recentRows = pokerResults.results || [];
+    const parseTs = (v) => {
+      if (v == null || v === '') return NaN;
+      if (typeof v === 'number') return v;
+      const asNum = Number(v);
+      if (Number.isFinite(asNum)) return asNum;
+      const asDate = Date.parse(String(v));
+      return Number.isFinite(asDate) ? asDate : NaN;
+    };
+
     const gameMap = new Map();
     recentRows.forEach((row) => {
-      const rawDate = row.date ? Number(row.date) : (row.createdAt ? Number(row.createdAt) : Date.now());
-      const when = Number.isFinite(rawDate) ? new Date(rawDate).toLocaleDateString('en-AU') : '-';
+      const ts = parseTs(row.date) || parseTs(row.createdAt) || Date.now();
+      const when = new Date(ts).toLocaleDateString('en-AU');
       const gameName = String(row.eventName || 'Event').trim() || 'Event';
-      const key = `${when}__${gameName}`;
+      // Prefer eventId (true game identity). Fallback keeps older rows separated by date+event.
+      const key = row.eventId ? `event:${row.eventId}` : `legacy:${when}__${gameName}`;
       if (!gameMap.has(key)) {
-        gameMap.set(key, { when, gameName, eventId: row.eventId || '', rows: [], loggedBy: row.createdBy || 'Admin' });
+        gameMap.set(key, { when, gameName, eventId: row.eventId || '', rows: [], loggedBy: row.createdBy || 'Admin', ts });
       }
       const g = gameMap.get(key);
       if (!g.eventId && row.eventId) g.eventId = row.eventId;
+      if (ts > Number(g.ts || 0)) { g.ts = ts; g.when = new Date(ts).toLocaleDateString('en-AU'); }
       g.rows.push(row);
     });
 
@@ -121,19 +132,18 @@ async function loadWinners(){
         const uniquePlayers = new Set((g.rows || []).map((r) => String(r.playerId || r.playerName || r.player || '').trim()).filter(Boolean));
         return { ...g, winner, entries: uniquePlayers.size || g.rows.length };
       })
-      .sort((a, b) => {
-        const ax = a.rows?.[0]?.date || a.rows?.[0]?.createdAt || 0;
-        const bx = b.rows?.[0]?.date || b.rows?.[0]?.createdAt || 0;
-        return Number(bx) - Number(ax);
-      });
+      .sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0))
+      .slice(0, 20);
 
     games.forEach((game) => {
       const tr = document.createElement('tr');
       const winnerName = game.winner?.playerName || game.winner?.player || '-';
       const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
-      const eventHref = game.eventId ? `/poker/events/${encodeURIComponent(game.eventId)}` : '';
+      const eventHref = game.eventId
+        ? `/poker/events/${encodeURIComponent(game.eventId)}`
+        : `/poker/events?q=${encodeURIComponent(game.gameName)}`;
       tr.innerHTML = `
-        <td>${eventHref ? `<a href="${eventHref}" title="View all results for this game">${game.when}</a>` : game.when}</td>
+        <td><a href="${eventHref}" title="View all results for this game">${game.when}</a></td>
         <td>${esc(game.gameName)}</td>
         <td>${href ? `<a href="${href}">${esc(winnerName)}</a>` : esc(winnerName)}</td>
         <td>${aud(game.winner?.points || 0)}</td>
