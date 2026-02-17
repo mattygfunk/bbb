@@ -283,10 +283,17 @@ async function refresh(){
   state.summary.paidUsers = new Set(activeTips.filter((t) => t.paid).map((t) => String(t.member || '').trim()).filter(Boolean)).size;
 
   try {
-    const pokerAll = await req(`${API.pokerLeaderboard}?range=all`);
-    state.summary.pokerEvents = Number(pokerAll?.stats?.events || 0);
+    // Use Poker V2 totals so admin count matches /api/poker/results and winners/public views.
+    const pokerAll = await req('/poker/results?page=1&pageSize=10');
+    state.summary.pokerEvents = Number(pokerAll?.total || 0);
   } catch {
-    state.summary.pokerEvents = state.summary.pokerEvents || 0;
+    // Fallback to legacy endpoint for resilience on older deployments.
+    try {
+      const legacy = await req(`${API.pokerLeaderboard}?range=all`);
+      state.summary.pokerEvents = Number(legacy?.stats?.events || 0);
+    } catch {
+      state.summary.pokerEvents = state.summary.pokerEvents || 0;
+    }
   }
 
   renderAdminSummaryCounts();
