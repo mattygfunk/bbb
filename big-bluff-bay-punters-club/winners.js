@@ -170,7 +170,7 @@ async function loadWinners(){
       const tr = document.createElement('tr');
       const winnerName = game.winner?.playerName || game.winner?.player || '-';
       const href = game.winner?.playerId ? `/poker/players/${encodeURIComponent(game.winner.playerId)}` : '';
-      const eventHref = game.eventId ? `/poker/events/${encodeURIComponent(game.eventId)}` : `/poker/events?q=${encodeURIComponent(game.gameName)}`;
+      const eventHref = `/poker/events?playedDay=${encodeURIComponent(game.playedDay)}&eventName=${encodeURIComponent(game.gameName)}${game.eventId ? `&eventId=${encodeURIComponent(game.eventId)}` : ''}`;
       tr.innerHTML = `
         <td><a href="${eventHref}" title="View all results for this game">${game.playedDay}</a></td>
         <td>${esc(game.gameName)}</td>

@@ -69,7 +69,6 @@
       <input id='minEvents' type='number' min='0' step='1' value='0' placeholder='Min events' style='max-width:120px' />
       <label><input id='ftOnly' type='checkbox' /> FT only</label>
       <label><input id='cashOnly' type='checkbox' /> Cashed only</label>
-      <label><input id='showAllRows' type='checkbox' /> Show all</label>
       <button class='btn' id='applyFilters'>Apply</button>
     </div>
     <div id='lb-wrap'></div></section>`;
@@ -82,11 +81,10 @@
       const finalTableOnly=document.getElementById('ftOnly')?.checked?'true':'false';
       const cashedOnly=document.getElementById('cashOnly')?.checked?'true':'false';
       const d=await get(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}&seasonId=${encodeURIComponent(active)}&q=${q}&eventType=${eventType}&minEvents=${minEvents}&finalTableOnly=${finalTableOnly}&cashedOnly=${cashedOnly}`);
-      const showAll=document.getElementById('showAllRows')?.checked;
       const sourceRows=(d.leaderboard||[]);
-      const shownRows = showAll ? sourceRows : sourceRows.slice(0,10);
+      const shownRows = sourceRows.slice(0,10);
       const rows=shownRows.map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td>${fmt(r.avgPoints)}</td><td>${r.finalTables}</td><td>${r.cashes}</td><td>${fmt(r.ftPct)}%</td><td>${fmt(r.cashPct)}%</td><td>${r.lastPlayed?new Date(r.lastPlayed).toLocaleDateString('en-AU'):'—'}</td></tr>`).join('');
-      const helper = showAll ? `Showing all ${sourceRows.length} players` : `Showing top ${Math.min(10, sourceRows.length)} players`;
+      const helper = `Showing top ${Math.min(10, sourceRows.length)} players`;
       document.getElementById('lb-wrap').innerHTML=`<p class='muted'>${helper}</p><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Avg</th><th>FT</th><th>Cash</th><th>FT%</th><th>Cash%</th><th>Last Played</th></tr></thead><tbody>${rows||'<tr><td colspan=10>No data</td></tr>'}</tbody></table></div>`;
     }
     document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.tab);});
@@ -115,6 +113,51 @@
   }
 
   async function renderEvents(){
+    const qs=new URLSearchParams(location.search||'');
+    const playedDay=String(qs.get('playedDay')||'').trim();
+    const eventName=String(qs.get('eventName')||'').trim();
+    const eventId=String(qs.get('eventId')||'').trim();
+
+    const parseTs=(v)=>{
+      if(v==null||v==='') return NaN;
+      const n=Number(v);
+      if(Number.isFinite(n)) return n>0&&n<1e12 ? n*1000 : n;
+      const d=Date.parse(String(v));
+      return Number.isFinite(d)?d:NaN;
+    };
+
+    if(playedDay && eventName){
+      let all=[];
+      for(let page=1; page<=30; page+=1){
+        const d=await get(`/api/poker/results?page=${page}&pageSize=100`);
+        const rows=d.results||[];
+        if(!rows.length) break;
+        all=all.concat(rows);
+        if(all.length>=Number(d.total||0)) break;
+      }
+      const filtered=all.filter((r)=>{
+        const ts=parseTs(r.date)||parseTs(r.createdAt);
+        const day=Number.isFinite(ts)?new Date(ts).toLocaleDateString('en-AU'):'';
+        const name=String(r.eventName||'').trim();
+        if(eventId && String(r.eventId||'')===eventId) return true;
+        return day===playedDay && name===eventName;
+      });
+
+      const byPlayer=new Map();
+      filtered.forEach((r)=>{
+        const key=String(r.playerId||r.playerName||r.player||'Unknown');
+        const row=byPlayer.get(key)||{playerId:r.playerId||'',player:r.playerName||r.player||'Unknown',points:0,finalTables:0,cashes:0};
+        row.points += Number(r.points||0);
+        if(r.finalTable) row.finalTables += 1;
+        if(r.cashed) row.cashes += 1;
+        byPlayer.set(key,row);
+      });
+      const lb=[...byPlayer.values()].sort((a,b)=>b.points-a.points).map((r,i)=>({rank:i+1,...r}));
+      const rows=lb.map(r=>`<tr><td>${r.rank}</td><td>${r.playerId?`<a href='/poker/players/${r.playerId}'>${esc(r.player)}</a>`:esc(r.player)}</td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
+      app.innerHTML=`${shellIntro('Specific Game Results')}<section class='pv2-card'><h2>${esc(eventName)}</h2><p class='muted'>Played: ${esc(playedDay)} • Entries: ${filtered.length}</p><p><a class='btn btn-ghost' href='/poker/events'>Back to events</a></p></section><section class='pv2-card'><h3>Game Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Winnings</th><th>Tags</th></tr></thead><tbody>${rows||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
+      return;
+    }
+
     const d=await get('/api/poker/events');
     const list=(d.events||[]).map(e=>`<a class='pv2-card' href='/poker/events/${e.id}'><h3>${esc(e.name)}</h3><p class='muted'>${esc(e.type)} • ${new Date(e.startAt).toLocaleString('en-AU')}</p></a>`).join('');
     app.innerHTML=`${shellIntro('Events')}<section><h2>Events</h2></section><section class='pv2-grid'>${list||'<p>No events</p>'}</section>`;
