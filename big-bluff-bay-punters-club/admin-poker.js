@@ -359,7 +359,18 @@
       const out=[];
       const seen=new Set();
       const clean=(v)=>String(v??'').trim();
-      const n=(v)=>Number(String(v??'').replace(/[^0-9.-]/g,''));
+      const n=(v)=>{
+        const x=Number(String(v??'').replace(/[^0-9.-]/g,''));
+        return Number.isFinite(x)?x:null;
+      };
+      const looksName=(s)=>{
+        const t=clean(s);
+        if(!t) return false;
+        const low=t.toLowerCase();
+        if(['none','player id','nickname','memoname','country/region','ranking','winnings','time'].includes(low)) return false;
+        if(/^\d+$/.test(t)) return false;
+        return /[a-z]/i.test(t);
+      };
 
       function pushRow(row){
         const player=clean(row.player);
@@ -382,16 +393,15 @@
         const ws=workbook.Sheets[sheetName];
         const rows=window.XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
         if(!rows.length) continue;
+        const sheetLower=String(sheetName||'').toLowerCase();
 
-        // Generic object parse from probable header rows
+        // 1) Header-driven parse (best path)
+        let parsedAny=false;
         for(let i=0;i<rows.length;i++){
-          const r=rows[i].map(clean);
+          const r=(rows[i]||[]).map(clean);
           const lower=r.map(x=>x.toLowerCase());
-          const isHeader = lower.includes('nickname') || lower.includes('player') || lower.includes('player id');
-          if(!isHeader) continue;
-
-          const idxNick=lower.findIndex(x=>x==='nickname' || x==='player' || x==='player name' || x==='name');
-          const idxWin=lower.findIndex(x=>x==='winnings' || x==='player winnings' || x==='points' || x==='score');
+          const idxNick=lower.findIndex(x=>x==='nickname' || x==='player' || x==='player name' || x==='name' || x==='memoname');
+          const idxWin=lower.findIndex(x=>x==='winnings' || x==='player winnings' || x==='overall player winnings + events' || x==='points' || x==='score');
           const idxRank=lower.findIndex(x=>x==='ranking' || x==='rank' || x==='position' || x==='place');
           if(idxNick<0 || idxWin<0) continue;
 
@@ -401,7 +411,7 @@
             const player=rr[idxNick];
             const points=n(rr[idxWin]);
             const finish=idxRank>=0?n(rr[idxRank]):null;
-            if(!player || !Number.isFinite(points)) continue;
+            if(!looksName(player) || !Number.isFinite(points)) continue;
             pushRow({
               player,
               points,
@@ -410,33 +420,48 @@
               finalTable:Number.isFinite(finish) ? finish<=9 : false,
               cashed:Number.isFinite(finish) ? finish<=3 : points>0
             });
+            parsedAny=true;
           }
         }
 
-        // PPPoker "Games" sheet fallback pattern: [blank, Player ID, Nickname, ..., Ranking, ..., Winnings]
-        if((sheetName||'').toLowerCase().includes('game')){
-          for(let i=0;i<rows.length;i++){
-            const r=rows[i].map(clean);
-            const lower=r.map(x=>x.toLowerCase());
-            if(!(lower.includes('player id') && lower.includes('nickname') && lower.includes('winnings'))) continue;
-            const idxNick=lower.indexOf('nickname');
-            const idxRank=lower.indexOf('ranking');
-            const idxWin=lower.indexOf('winnings');
-            for(let j=i+1;j<rows.length;j++){
-              const rr=(rows[j]||[]).map(clean);
-              if(!rr.some(Boolean)) break;
-              const player=rr[idxNick];
-              const points=n(rr[idxWin]);
-              const finish=n(rr[idxRank]);
-              if(!player || !Number.isFinite(points)) continue;
-              pushRow({
-                player,
-                points,
-                finish:Number.isFinite(finish)?finish:null,
-                eventName:'Weekly Sheet Import',
-                finalTable:Number.isFinite(finish)?finish<=9:false,
-                cashed:Number.isFinite(finish)?finish<=3:points>0
-              });
+        // 2) Known PPPoker layout fallback by sheet type/indexes
+        if(!parsedAny){
+          for(const rrRaw of rows){
+            const rr=(rrRaw||[]).map(clean);
+            if(!rr.some(Boolean)) continue;
+
+            // Games sheet: [ , playerId, nickname, memoname, ranking, ..., winnings ]
+            if(sheetLower.includes('game') && rr.length>=8){
+              const player=rr[2] || rr[3];
+              const finish=n(rr[4]);
+              const points=n(rr[7]);
+              if(looksName(player) && Number.isFinite(points)){
+                pushRow({
+                  player,
+                  points,
+                  finish,
+                  eventName:'Weekly Sheet Import',
+                  finalTable:Number.isFinite(finish)?finish<=9:false,
+                  cashed:Number.isFinite(finish)?finish<=3:points>0
+                });
+              }
+              continue;
+            }
+
+            // Detailed/Overall sheets: [ , playerId, country, nickname, memoname, ... , winnings around col9 ]
+            if((sheetLower.includes('detailed') || sheetLower.includes('overall')) && rr.length>=10){
+              const player=rr[3] || rr[4];
+              const points=n(rr[9]);
+              if(looksName(player) && Number.isFinite(points)){
+                pushRow({
+                  player,
+                  points,
+                  finish:null,
+                  eventName:sheetName,
+                  finalTable:false,
+                  cashed:points>0
+                });
+              }
             }
           }
         }
@@ -475,7 +500,7 @@
         const wb = await readWorkbookFromFileOrUrl();
         const mapped = mapSheetRows(wb);
         if(!mapped.length){
-          sheetStatus('No valid player/points rows found in sheet. Try selecting an event + ensure the sheet contains Nickname/Ranking/Winnings columns.');
+          sheetStatus('No valid player/points rows found. Tip: use a PPPoker export containing Games/Detailed/Overall tabs with Nickname + Winnings columns.');
           setMessage('warn','Sheet loaded but no valid rows were detected.');
           return [];
         }
