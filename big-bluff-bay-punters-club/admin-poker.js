@@ -389,10 +389,12 @@
         });
       }
 
+      const allSheetRows=[];
       for(const sheetName of workbook.SheetNames||[]){
         const ws=workbook.Sheets[sheetName];
         const rows=window.XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
         if(!rows.length) continue;
+        allSheetRows.push({ sheetName, rows });
         const sheetLower=String(sheetName||'').toLowerCase();
 
         // 1) Header-driven parse (best path)
@@ -467,6 +469,42 @@
         }
       }
 
+      // 3) Last-resort heuristic scan (handles shifted/odd weekly exports)
+      if(!out.length){
+        for(const block of allSheetRows){
+          const sheetName=block.sheetName;
+          for(const rrRaw of block.rows){
+            const rr=(rrRaw||[]).map(clean);
+            if(!rr.some(Boolean)) continue;
+
+            let player='';
+            let points=null;
+            for(const cell of rr){
+              if(!player && looksName(cell)) player=cell;
+              const num=n(cell);
+              if(Number.isFinite(num)){
+                const abs=Math.abs(num);
+                // reject likely IDs and timestamps; keep plausible winnings/points magnitudes
+                if(abs<=50000 && !(Number.isInteger(num) && abs>=1000000)) {
+                  if(points===null || abs<Math.abs(points)) points=num;
+                }
+              }
+            }
+
+            if(player && Number.isFinite(points)){
+              pushRow({
+                player,
+                points,
+                finish:null,
+                eventName:sheetName,
+                finalTable:false,
+                cashed:points>0
+              });
+            }
+          }
+        }
+      }
+
       return out;
     }
 
@@ -499,8 +537,9 @@
       try{
         const wb = await readWorkbookFromFileOrUrl();
         const mapped = mapSheetRows(wb);
+        const sheetList=(wb.SheetNames||[]).join(', ');
         if(!mapped.length){
-          sheetStatus('No valid player/points rows found. Tip: use a PPPoker export containing Games/Detailed/Overall tabs with Nickname + Winnings columns.');
+          sheetStatus(`No valid player/points rows found. Sheets seen: ${sheetList||'none'}`);
           setMessage('warn','Sheet loaded but no valid rows were detected.');
           return [];
         }
@@ -510,7 +549,7 @@
         cached = mapped.map(r=>({...r, duplicateWarning:[]}));
         cachedSheetRows = mapped;
         const preview = await previewRows();
-        sheetStatus(`Sheet mapped ${mapped.length} row(s). Prefilled Smart Paste and previewed.`);
+        sheetStatus(`Sheet mapped ${mapped.length} row(s) from [${sheetList}]. Prefilled Smart Paste and previewed.`);
         return preview;
       } finally {
         sheetPreviewBtn.disabled=false;
