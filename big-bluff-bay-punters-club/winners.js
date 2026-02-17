@@ -115,7 +115,7 @@ async function loadWinners(){
       return Number.isFinite(d) ? d : NaN;
     };
 
-    async function fetchRecentResultRows(minGroups = 12, maxPages = 8) {
+    async function fetchRecentResultRows(minGroups = 12, maxPages = 30) {
       const all = [...(pokerResults.results || [])];
       let page = 2;
       let total = Number(pokerResults.total || all.length);
