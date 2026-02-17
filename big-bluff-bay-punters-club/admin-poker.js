@@ -355,40 +355,97 @@
 
     function sheetStatus(msg){ if(sheetMsgEl) sheetMsgEl.textContent=msg||''; }
 
-    function mapSheetRows(rows){
-      const norm = (k)=>String(k||'').trim().toLowerCase();
-      const pick = (obj, keys)=>{
-        const entries = Object.entries(obj||{});
-        for(const [k,v] of entries){
-          const nk=norm(k);
-          if(keys.includes(nk)) return v;
-        }
-        return null;
-      };
-      const mapped=[];
-      for(const row of rows||[]){
-        const player = pick(row,['player','name','username','member']) || row[0];
-        const points = pick(row,['points','score','pts']) || row[1];
-        const finish = pick(row,['rank','finish','position','place']) || null;
-        const eventName = pick(row,['event','event name','tournament','game']) || '';
-        const ftRaw = pick(row,['finaltable','final table','ft']);
-        const cashRaw = pick(row,['cashed','cash']);
-        if(String(player||'').trim()==='') continue;
-        const pNum=Number(points);
-        if(!Number.isFinite(pNum)) continue;
-        mapped.push({
-          player:String(player).trim(),
-          points:pNum,
-          finish:Number.isFinite(Number(finish))?Number(finish):null,
-          eventName:String(eventName||'').trim(),
-          finalTable: /^(1|y|yes|true|ft)$/i.test(String(ftRaw||'')),
-          cashed: /^(1|y|yes|true|cash)$/i.test(String(cashRaw||''))
+    function mapSheetRows(workbook){
+      const out=[];
+      const seen=new Set();
+      const clean=(v)=>String(v??'').trim();
+      const n=(v)=>Number(String(v??'').replace(/[^0-9.-]/g,''));
+
+      function pushRow(row){
+        const player=clean(row.player);
+        const points=Number(row.points);
+        if(!player || !Number.isFinite(points)) return;
+        const key=`${player.toLowerCase()}|${points}|${row.eventName||''}|${row.finish||''}`;
+        if(seen.has(key)) return;
+        seen.add(key);
+        out.push({
+          player,
+          points,
+          finish:Number.isFinite(Number(row.finish))?Number(row.finish):null,
+          eventName:clean(row.eventName),
+          finalTable:Boolean(row.finalTable),
+          cashed:Boolean(row.cashed)
         });
       }
-      return mapped;
+
+      for(const sheetName of workbook.SheetNames||[]){
+        const ws=workbook.Sheets[sheetName];
+        const rows=window.XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        if(!rows.length) continue;
+
+        // Generic object parse from probable header rows
+        for(let i=0;i<rows.length;i++){
+          const r=rows[i].map(clean);
+          const lower=r.map(x=>x.toLowerCase());
+          const isHeader = lower.includes('nickname') || lower.includes('player') || lower.includes('player id');
+          if(!isHeader) continue;
+
+          const idxNick=lower.findIndex(x=>x==='nickname' || x==='player' || x==='player name' || x==='name');
+          const idxWin=lower.findIndex(x=>x==='winnings' || x==='player winnings' || x==='points' || x==='score');
+          const idxRank=lower.findIndex(x=>x==='ranking' || x==='rank' || x==='position' || x==='place');
+          if(idxNick<0 || idxWin<0) continue;
+
+          for(let j=i+1;j<rows.length;j++){
+            const rr=(rows[j]||[]).map(clean);
+            if(!rr.some(Boolean)) break;
+            const player=rr[idxNick];
+            const points=n(rr[idxWin]);
+            const finish=idxRank>=0?n(rr[idxRank]):null;
+            if(!player || !Number.isFinite(points)) continue;
+            pushRow({
+              player,
+              points,
+              finish,
+              eventName:sheetName,
+              finalTable:Number.isFinite(finish) ? finish<=9 : false,
+              cashed:Number.isFinite(finish) ? finish<=3 : points>0
+            });
+          }
+        }
+
+        // PPPoker "Games" sheet fallback pattern: [blank, Player ID, Nickname, ..., Ranking, ..., Winnings]
+        if((sheetName||'').toLowerCase().includes('game')){
+          for(let i=0;i<rows.length;i++){
+            const r=rows[i].map(clean);
+            const lower=r.map(x=>x.toLowerCase());
+            if(!(lower.includes('player id') && lower.includes('nickname') && lower.includes('winnings'))) continue;
+            const idxNick=lower.indexOf('nickname');
+            const idxRank=lower.indexOf('ranking');
+            const idxWin=lower.indexOf('winnings');
+            for(let j=i+1;j<rows.length;j++){
+              const rr=(rows[j]||[]).map(clean);
+              if(!rr.some(Boolean)) break;
+              const player=rr[idxNick];
+              const points=n(rr[idxWin]);
+              const finish=n(rr[idxRank]);
+              if(!player || !Number.isFinite(points)) continue;
+              pushRow({
+                player,
+                points,
+                finish:Number.isFinite(finish)?finish:null,
+                eventName:'Weekly Sheet Import',
+                finalTable:Number.isFinite(finish)?finish<=9:false,
+                cashed:Number.isFinite(finish)?finish<=3:points>0
+              });
+            }
+          }
+        }
+      }
+
+      return out;
     }
 
-    async function readSheetFromFileOrUrl(){
+    async function readWorkbookFromFileOrUrl(){
       if(!window.XLSX) throw new Error('Sheet parser unavailable');
       let data;
       const file=sheetFileEl?.files?.[0];
@@ -404,11 +461,7 @@
         throw new Error('Select a sheet file or enter a URL');
       }
 
-      const wb = window.XLSX.read(data, {type:'array'});
-      const first = wb.SheetNames[0];
-      if(!first) throw new Error('No sheet found');
-      const ws = wb.Sheets[first];
-      return window.XLSX.utils.sheet_to_json(ws, {defval:''});
+      return window.XLSX.read(data, {type:'array'});
     }
 
     let cachedSheetRows=[];
@@ -419,10 +472,10 @@
       sheetPreviewBtn.disabled=true;
       sheetStatus('Reading sheet…');
       try{
-        const raw = await readSheetFromFileOrUrl();
-        const mapped = mapSheetRows(raw);
+        const wb = await readWorkbookFromFileOrUrl();
+        const mapped = mapSheetRows(wb);
         if(!mapped.length){
-          sheetStatus('No valid player/points rows found in sheet.');
+          sheetStatus('No valid player/points rows found in sheet. Try selecting an event + ensure the sheet contains Nickname/Ranking/Winnings columns.');
           setMessage('warn','Sheet loaded but no valid rows were detected.');
           return [];
         }
