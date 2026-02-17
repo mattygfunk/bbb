@@ -103,9 +103,14 @@ async function loadWinners(){
 
     const parseTs = (v) => {
       if (v == null || v === '') return NaN;
-      if (typeof v === 'number') return v;
+      const toMs = (x) => {
+        if (!Number.isFinite(x)) return NaN;
+        // Many rows are stored as unix seconds; normalize to ms.
+        return x > 0 && x < 1e12 ? x * 1000 : x;
+      };
+      if (typeof v === 'number') return toMs(v);
       const n = Number(v);
-      if (Number.isFinite(n)) return n;
+      if (Number.isFinite(n)) return toMs(n);
       const d = Date.parse(String(v));
       return Number.isFinite(d) ? d : NaN;
     };
