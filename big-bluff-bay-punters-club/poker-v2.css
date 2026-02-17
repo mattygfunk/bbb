@@ -61,6 +61,16 @@
   color:#fff;
 }
 
+/* Winners page compact spacing */
+.winners-page .premium-main{gap:.75rem;padding-top:.95rem}
+.winners-page .card{padding:.8rem .85rem}
+.winners-page .card h2{margin-bottom:.2rem}
+.winners-page .card p{margin:.2rem 0 .35rem;line-height:1.4}
+.winners-page .table-wrap th,.winners-page .table-wrap td{padding:.45rem .5rem}
+.winners-page .row-actions{margin-top:.45rem !important}
+.winners-page .punchy-spotlight{gap:.55rem}
+.winners-page .punchy-spotlight .pv2-card{padding:.75rem}
+
 @media(max-width:700px){
   .pv2-header{flex-direction:column;align-items:flex-start;gap:.5rem}
   .table-wrap{overflow:auto}
