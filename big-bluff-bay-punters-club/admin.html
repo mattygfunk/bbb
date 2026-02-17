@@ -23,7 +23,7 @@
         <div class="menu-links">
           <a class="menu-link" href="/">🏠 Home</a>
           <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
-          <a class="menu-link" href="/poker.html">♠️ Poker Tournaments</a>
+          <a class="menu-link" href="/poker">♠️ Poker Analytics</a>
           <a class="menu-link active" href="/admin.html">🛠️ Admin</a>
         </div>
         <div id="auth-controls"></div>
@@ -151,7 +151,24 @@
           <h2>♠️ Poker Club Operations</h2>
           <p class="muted">Import event outcomes fast and keep the public leaderboard accurate.</p>
         </section>
-        <section class="card"><h2>Poker Leaderboard Results Entry</h2>
+
+        <section class="card">
+          <h2>Poker Hub Control Panel (Advanced)</h2>
+          <p class="muted">Use the new Poker V2 admin for fine control: seasons, aliases, duplicate merges, smart imports, audit logs, and insights.</p>
+          <div class="row-actions">
+            <a class="btn" href="/admin/poker">Open Poker Admin Hub</a>
+            <a class="btn btn-ghost" href="/admin/poker/results">Results Import + Smart Paste</a>
+            <a class="btn btn-ghost" href="/admin/poker/events">Events + Seasons</a>
+            <a class="btn btn-ghost" href="/admin/poker/players">Players + Merges</a>
+          </div>
+          <div class="row-actions" style="margin-top:.55rem">
+            <a class="btn btn-ghost" href="/poker">View Public Poker Hub</a>
+            <a class="btn btn-ghost" href="/poker/leaderboards">View Public Leaderboards</a>
+            <a class="btn btn-ghost" href="/winners.html">View Winners Snapshot</a>
+          </div>
+        </section>
+
+        <section class="card"><h2>Poker Leaderboard Results Entry (Legacy)</h2>
           <p class="muted">Add official poker result rows that feed the live leaderboard on <a href="/poker.html">Poker Tournaments</a>.</p>
           <form id="poker-result-form" class="stack">
             <label>Player
