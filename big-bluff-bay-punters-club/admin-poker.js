@@ -119,7 +119,7 @@
             <button class='btn' type='button' id='clear'>Clear</button>
           </div>
         </form>
-        <div id='msg' class='pv2-alert info'>Ready.</div>
+        <div id='msg' class='pv2-alert info'>Ready (import parser v3).</div>
         <div id='previewBox'></div>
       </section>
 
@@ -411,7 +411,13 @@
             const rr=(rows[j]||[]).map(clean);
             if(!rr.some(Boolean)) break;
             const player=rr[idxNick];
-            const points=n(rr[idxWin]);
+            let points=n(rr[idxWin]);
+            if(!Number.isFinite(points)){
+              for(let k=Math.max(idxWin+1, idxNick+1); k<rr.length; k++){
+                const alt=n(rr[k]);
+                if(Number.isFinite(alt)){ points=alt; break; }
+              }
+            }
             const finish=idxRank>=0?n(rr[idxRank]):null;
             if(!looksName(player) || !Number.isFinite(points)) continue;
             pushRow({
@@ -453,7 +459,13 @@
             // Detailed/Overall sheets: [ , playerId, country, nickname, memoname, ... , winnings around col9 ]
             if((sheetLower.includes('detailed') || sheetLower.includes('overall')) && rr.length>=10){
               const player=rr[3] || rr[4];
-              const points=n(rr[9]);
+              let points=n(rr[9]);
+              if(!Number.isFinite(points)){
+                for(let k=9;k<Math.min(rr.length,24);k++){
+                  const alt=n(rr[k]);
+                  if(Number.isFinite(alt)){ points=alt; break; }
+                }
+              }
               if(looksName(player) && Number.isFinite(points)){
                 pushRow({
                   player,
@@ -539,7 +551,7 @@
         const mapped = mapSheetRows(wb);
         const sheetList=(wb.SheetNames||[]).join(', ');
         if(!mapped.length){
-          sheetStatus(`No valid player/points rows found. Sheets seen: ${sheetList||'none'}`);
+          sheetStatus(`No valid player/points rows found (v3). Sheets seen: ${sheetList||'none'}`);
           setMessage('warn','Sheet loaded but no valid rows were detected.');
           return [];
         }
