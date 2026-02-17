@@ -6,18 +6,22 @@
   const filters = Array.from(document.querySelectorAll('.leaderboard-filter'));
   if(!body || !status || !filters.length) return;
 
-  const storageKey = 'bbb-poker-leaderboard-range';
-  let currentRange = localStorage.getItem(storageKey) || 'week';
+  const storageKey = 'bbb-poker-leaderboard-tab-v2';
+  let currentTab = localStorage.getItem(storageKey) || 'weekly';
 
-  function labelFor(range){
-    if (range === 'all') return 'all-time';
-    if (range === 'month') return 'this month';
-    return 'this week (last 7 days)';
+  const rangeToTab = { week:'weekly', month:'monthly', all:'all-time', weekly:'weekly', monthly:'monthly', 'all-time':'all-time' };
+
+  function labelFor(tab){
+    if (tab === 'all-time') return 'all-time';
+    if (tab === 'monthly') return 'monthly';
+    if (tab === 'season') return 'season';
+    return 'weekly';
   }
 
-  function setActive(range){
+  function setActive(tab){
     filters.forEach((b)=>{
-      b.classList.toggle('active', b.dataset.range === range);
+      const btnTab = rangeToTab[b.dataset.range] || b.dataset.range;
+      b.classList.toggle('active', btnTab === tab);
     });
   }
 
@@ -29,32 +33,41 @@
     }
     rows.forEach((r)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${r.rank}</td><td>${r.player}</td><td>${Number(r.points||0).toFixed(2).replace(/\.00$/,'')}</td><td>${r.finalTables||0}</td><td>${r.cashes||0}</td>`;
+      tr.innerHTML = `<td>${r.rank}</td><td>${r.player}</td><td>${Number(r.points||0).toFixed(1)}</td><td>${r.finalTables||0}</td><td>${r.cashes||0}</td>`;
       body.appendChild(tr);
     });
   }
 
-  async function load(range, silent = false){
-    currentRange = range;
-    localStorage.setItem(storageKey, range);
-    setActive(range);
-    status.textContent = `Range: ${labelFor(range)}`;
+  async function load(tab, silent = false){
+    currentTab = tab;
+    localStorage.setItem(storageKey, tab);
+    setActive(tab);
+    status.textContent = `Range: ${labelFor(tab)}`;
     if (!silent) body.innerHTML = "<tr><td colspan='5' class='muted'>Loading leaderboard…</td></tr>";
 
     try {
-      const res = await fetch(`/api/poker-leaderboard?range=${encodeURIComponent(range)}`);
+      const res = await fetch(`/api/poker/leaderboards?tab=${encodeURIComponent(tab)}`);
       const data = await res.json();
-      render(data.leaderboard || []);
-      if (eventsEl) eventsEl.textContent = String(data?.stats?.events ?? 0);
-      if (playersEl) playersEl.textContent = String(data?.stats?.players ?? 0);
-      const t = new Date(Number(data?.updatedAt || Date.now())).toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
-      status.textContent = `Range: ${labelFor(range)} • Updated ${t}`;
+      const rows = data.leaderboard || [];
+      render(rows);
+      if (eventsEl) {
+        const events = rows.reduce((n, r) => n + Number(r.events || 0), 0);
+        eventsEl.textContent = String(events);
+      }
+      if (playersEl) playersEl.textContent = String(rows.length);
+      const t = new Date().toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+      status.textContent = `Range: ${labelFor(tab)} • Updated ${t}`;
     } catch {
       if (!silent) body.innerHTML = "<tr><td colspan='5' class='muted'>Could not load leaderboard.</td></tr>";
     }
   }
 
-  filters.forEach((btn)=>btn.addEventListener('click',()=>load(btn.dataset.range || 'week')));
-  load(currentRange);
-  setInterval(()=>load(currentRange, true), 30000);
+  filters.forEach((btn)=>btn.addEventListener('click',()=>{
+    const tab = rangeToTab[btn.dataset.range] || 'weekly';
+    load(tab);
+  }));
+
+  if (!['weekly','monthly','all-time','season'].includes(currentTab)) currentTab = 'weekly';
+  load(currentTab);
+  setInterval(()=>load(currentTab, true), 30000);
 })();
