@@ -1,9 +1,12 @@
 .poker-v2{background:#0a0d12;color:#e8edf2;min-height:100vh}
-.pv2-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;border-bottom:1px solid #1f2a36}
+.pv2-hero{padding-bottom:1rem}
 .pv2-nav{display:flex;gap:.75rem;flex-wrap:wrap}
 .pv2-nav a{color:#9fb5cc;text-decoration:none;padding:.3rem .6rem;border-radius:999px;border:1px solid #243447}
 .pv2-nav a:hover{color:#fff;border-color:#d4af37}
+.pv2-nav a.active{background:#d4af37;color:#111;border-color:#d4af37}
 .pv2-main{padding:1rem 0 2rem;display:grid;gap:1rem}
+.pv2-crumbs{display:flex;gap:.45rem;align-items:center;color:#9fb5cc;font-size:.92rem}
+.pv2-footer{margin-top:1rem}
 .pv2-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem}
 .pv2-card{background:linear-gradient(180deg,#121a24,#0e141d);border:1px solid #233244;border-radius:14px;padding:1rem;box-shadow:0 10px 24px rgba(0,0,0,.35)}
 .pv2-card h2,.pv2-card h3,.pv2-card h4{margin:0 0 .35rem;color:#f6f8fa}

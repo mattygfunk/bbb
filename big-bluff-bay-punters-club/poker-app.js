@@ -7,6 +7,18 @@
 
   async function get(url){const r=await fetch(url);return r.json();}
 
+  function setActiveNav(){
+    document.querySelectorAll('.pv2-nav a').forEach((a)=>{
+      const href=a.getAttribute('href')||'';
+      const active = href===route || (href!=='/' && route.startsWith(href));
+      a.classList.toggle('active', active);
+    });
+  }
+
+  function shellIntro(title){
+    return `<nav class='pv2-crumbs'><a href='/'>Home</a><span>›</span><a href='/poker'>Poker</a><span>›</span><span>${esc(title)}</span></nav>`;
+  }
+
   function chartLine(points){
     if(!points.length)return '<div class="muted">No trend data yet</div>';
     const w=800,h=180,pad=20;
@@ -21,7 +33,7 @@
   async function renderHub(){
     const d=await get('/api/poker/dashboard');
     const top=(d.top10||[]).slice(0,10).map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span></td><td><span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
-    app.innerHTML=`
+    app.innerHTML=`${shellIntro('Hub')}
       <section class='pv2-grid'>
         <article class='pv2-card'><h3>Active Players (Season)</h3><p>${d.kpis.activePlayersSeason ?? d.kpis.players ?? 0}</p></article>
         <article class='pv2-card'><h3>Total Results Logged</h3><p>${d.kpis.totalResultsLogged ?? d.kpis.events ?? 0}</p></article>
@@ -44,7 +56,7 @@
   async function renderLeaderboards(){
     const seasons=await get('/api/poker/seasons');
     const active=seasons.activeSeason?.id||'';
-    app.innerHTML=`<section class='pv2-card'><h2>Leaderboards</h2>
+    app.innerHTML=`${shellIntro('Leaderboards')}<section class='pv2-card'><h2>Leaderboards</h2>
     <div class='row-actions'>
     <button class='btn tab' data-tab='season'>Season</button>
     <button class='btn tab' data-tab='monthly'>Monthly</button>
@@ -81,7 +93,7 @@
     const q=new URLSearchParams(location.search).get('q')||'';
     const d=await get(`/api/poker/players?q=${encodeURIComponent(q)}`);
     const cards=(d.players||[]).map(p=>`<a class='pv2-card' href='/poker/players/${p.id}'><h3>${esc(p.displayName)}</h3><p class='muted'>${esc(p.canonicalName)}</p></a>`).join('');
-    app.innerHTML=`<section><h2>Players</h2><form><input name='q' value='${esc(q)}' placeholder='Search players' /><button class='btn'>Search</button></form></section><section class='pv2-grid'>${cards||'<p>No players</p>'}</section>`;
+    app.innerHTML=`${shellIntro('Players')}<section><h2>Players</h2><form><input name='q' value='${esc(q)}' placeholder='Search players' /><button class='btn'>Search</button></form></section><section class='pv2-grid'>${cards||'<p>No players</p>'}</section>`;
   }
 
   async function renderPlayer(){
@@ -92,7 +104,7 @@
     if(d.stats.biggestScore>=300)badges.push('Sun Run Specialist');
     if(d.stats.events>=15)badges.push('Loose Unit');
     const rows=(d.results||[]).slice(0,40).map(r=>`<tr><td>${new Date(r.date).toLocaleDateString('en-AU')}</td><td>${fmt(r.points)}</td><td><span class='pill'>${r.finalTable?'FT':'—'}</span></td><td><span class='pill'>${r.cashed?'Cash':'—'}</span></td></tr>`).join('');
-    app.innerHTML=`<section class='pv2-card'><h2>${esc(d.player.displayName)}</h2><p>${badges.map(b=>`<span class='pill'>${b}</span>`).join(' ')||'—'}</p><p class='muted'>Aliases: ${(d.aliases||[]).map(a=>esc(a.alias)).join(', ')}</p></section>
+    app.innerHTML=`${shellIntro('Player Profile')}<section class='pv2-card'><h2>${esc(d.player.displayName)}</h2><p>${badges.map(b=>`<span class='pill'>${b}</span>`).join(' ')||'—'}</p><p class='muted'>Aliases: ${(d.aliases||[]).map(a=>esc(a.alias)).join(', ')}</p></section>
     <section class='pv2-grid'><article class='pv2-card'><h4>Points</h4><p>${fmt(d.stats.points)}</p></article><article class='pv2-card'><h4>Events</h4><p>${d.stats.events}</p></article><article class='pv2-card'><h4>FT</h4><p>${d.stats.finalTables}</p></article><article class='pv2-card'><h4>Cashes</h4><p>${d.stats.cashes}</p></article></section>
     <section class='pv2-card'><h3>Recent Results</h3><div class='table-wrap'><table><thead><tr><th>Date</th><th>Points</th><th>FT</th><th>Cash</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
   }
@@ -100,16 +112,17 @@
   async function renderEvents(){
     const d=await get('/api/poker/events');
     const list=(d.events||[]).map(e=>`<a class='pv2-card' href='/poker/events/${e.id}'><h3>${esc(e.name)}</h3><p class='muted'>${esc(e.type)} • ${new Date(e.startAt).toLocaleString('en-AU')}</p></a>`).join('');
-    app.innerHTML=`<section><h2>Events</h2></section><section class='pv2-grid'>${list||'<p>No events</p>'}</section>`;
+    app.innerHTML=`${shellIntro('Events')}<section><h2>Events</h2></section><section class='pv2-grid'>${list||'<p>No events</p>'}</section>`;
   }
 
   async function renderEvent(){
     const id=route.split('/').pop();
     const d=await get(`/api/poker/events/${id}`);
     const lb=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td>${esc(r.player)}</td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
-    app.innerHTML=`<section class='pv2-card'><h2>${esc(d.event.name)}</h2><p class='muted'>${esc(d.event.type)}</p></section><section class='pv2-card'><h3>Event Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Tags</th></tr></thead><tbody>${lb||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
+    app.innerHTML=`${shellIntro('Event Detail')}<section class='pv2-card'><h2>${esc(d.event.name)}</h2><p class='muted'>${esc(d.event.type)}</p></section><section class='pv2-card'><h3>Event Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Tags</th></tr></thead><tbody>${lb||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
   }
 
+  setActiveNav();
   if(route==='/poker')renderHub();
   else if(route==='/poker/leaderboards')renderLeaderboards();
   else if(route==='/poker/players')renderPlayers();
