@@ -7,11 +7,14 @@ async function loadWinners(){
   const pokerResultsBody = document.getElementById('poker-results-body');
   const jackpotPill = document.getElementById('winners-jackpot-pill');
 
+  const esc = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  const fmt1 = (n) => Number(n || 0).toFixed(1);
+
   try {
     const [milestonesRes, pokerLbRes, pokerResultsRes, jackpotRes] = await Promise.all([
       fetch('/api/milestones'),
-      fetch('/api/poker-leaderboard?range=all'),
-      fetch('/api/poker-results?limit=30'),
+      fetch('/api/poker/leaderboards?tab=all-time'),
+      fetch('/api/poker/results?page=1&pageSize=30'),
       fetch('/api/jackpot')
     ]);
 
@@ -19,6 +22,7 @@ async function loadWinners(){
     const pokerLb = await pokerLbRes.json();
     const pokerResults = await pokerResultsRes.json();
     const jackpot = await jackpotRes.json();
+
     if (jackpotPill) jackpotPill.textContent = `Jackpot: $${Number(jackpot?.totalPot || 0).toFixed(2)}`;
 
     const latest = data.latestRound || null;
@@ -43,7 +47,7 @@ async function loadWinners(){
     historyBody.innerHTML = '';
     (data.winnerHistory || []).forEach((w)=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${w.weekLabel||'-'}</td><td>${w.member||'-'}</td><td>${w.points||0}</td><td>${w.winners||0}</td>`;
+      tr.innerHTML = `<td>${esc(w.weekLabel||'-')}</td><td>${esc(w.member||'-')}</td><td>${Number(w.points||0)}</td><td>${Number(w.winners||0)}</td>`;
       historyBody.appendChild(tr);
     });
     if (!(data.winnerHistory||[]).length) historyBody.innerHTML = "<tr><td colspan='4' class='muted'>No history yet.</td></tr>";
@@ -51,7 +55,7 @@ async function loadWinners(){
     streakBody.innerHTML = '';
     (data.streakLeaderboard || []).forEach((r)=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${r.rank}</td><td>${r.member}</td><td>${r.currentStreak}</td><td>${r.bestStreak}</td><td>${r.totalWins}</td><td>${(r.badges||[]).join(' • ')||'—'}</td>`;
+      tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.currentStreak}</td><td>${r.bestStreak}</td><td>${r.totalWins}</td><td>${(r.badges||[]).map(esc).join(' • ')||'—'}</td>`;
       streakBody.appendChild(tr);
     });
     if (!(data.streakLeaderboard||[]).length) streakBody.innerHTML = "<tr><td colspan='6' class='muted'>No milestones yet.</td></tr>";
@@ -59,31 +63,47 @@ async function loadWinners(){
     pokerHighlightsBody.innerHTML = '';
     const leaderboardRows = (pokerLb.leaderboard || []).slice(0, 10);
     if (pokerHighlightsSummary) {
-      pokerHighlightsSummary.textContent = `${Number(pokerLb?.stats?.events || 0)} events • ${Number(pokerLb?.stats?.players || 0)} players tracked all-time.`;
+      const activeCount = leaderboardRows.length;
+      pokerHighlightsSummary.textContent = `${activeCount} players shown • All-time tab • Points rounded to 1 decimal.`;
     }
+
     leaderboardRows.forEach((row) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${row.rank}</td><td>${row.player}</td><td>${Number(row.points || 0)}</td><td>${Number(row.finalTables || 0)}</td><td>${Number(row.cashes || 0)}</td>`;
+      tr.innerHTML = `
+        <td>${row.rank}</td>
+        <td>${esc(row.player)}</td>
+        <td>${fmt1(row.points)}</td>
+        <td>${Number(row.events || 0)}</td>
+        <td>${fmt1(row.avgPoints)}</td>
+        <td><span class='pill'>${fmt1(row.ftPct)}%</span></td>
+        <td><span class='pill'>${fmt1(row.cashPct)}%</span></td>`;
       pokerHighlightsBody.appendChild(tr);
     });
-    if (!leaderboardRows.length) pokerHighlightsBody.innerHTML = "<tr><td colspan='5' class='muted'>No poker leaderboard data yet.</td></tr>";
+    if (!leaderboardRows.length) pokerHighlightsBody.innerHTML = "<tr><td colspan='7' class='muted'>No poker leaderboard data yet.</td></tr>";
 
     pokerResultsBody.innerHTML = '';
     const recentRows = pokerResults.results || [];
     recentRows.forEach((row) => {
       const tr = document.createElement('tr');
-      const when = row.createdAt ? new Date(Number(row.createdAt)).toLocaleDateString('en-AU') : '-';
-      tr.innerHTML = `<td>${when}</td><td>${row.player || '-'}</td><td>${row.eventName || 'Event'}</td><td>${Number(row.points || 0)}</td><td>${row.finalTable ? '✅' : '—'}</td><td>${row.cashed ? '✅' : '—'}</td>`;
+      const when = row.date ? new Date(Number(row.date)).toLocaleDateString('en-AU') : (row.createdAt ? new Date(Number(row.createdAt)).toLocaleDateString('en-AU') : '-');
+      tr.innerHTML = `
+        <td>${when}</td>
+        <td>${esc(row.playerName || row.player || '-')}</td>
+        <td>${esc(row.eventName || 'Event')}</td>
+        <td>${fmt1(row.points)}</td>
+        <td>${row.finalTable ? '<span class="pill">FT</span>' : '—'}</td>
+        <td>${row.cashed ? '<span class="pill">Cash</span>' : '—'}</td>
+        <td>${esc(row.createdBy || 'Admin')}</td>`;
       pokerResultsBody.appendChild(tr);
     });
-    if (!recentRows.length) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker results logged yet.</td></tr>";
+    if (!recentRows.length) pokerResultsBody.innerHTML = "<tr><td colspan='7' class='muted'>No poker results logged yet.</td></tr>";
 
   } catch(e){
     featured.textContent = 'Could not load winner data.';
     if (jackpotPill) jackpotPill.textContent = 'Jackpot: unavailable';
     if (pokerHighlightsSummary) pokerHighlightsSummary.textContent = 'Could not load poker highlights.';
-    if (pokerHighlightsBody) pokerHighlightsBody.innerHTML = "<tr><td colspan='5' class='muted'>Could not load poker leaderboard.</td></tr>";
-    if (pokerResultsBody) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>Could not load poker results.</td></tr>";
+    if (pokerHighlightsBody) pokerHighlightsBody.innerHTML = "<tr><td colspan='7' class='muted'>Could not load poker leaderboard.</td></tr>";
+    if (pokerResultsBody) pokerResultsBody.innerHTML = "<tr><td colspan='7' class='muted'>Could not load poker results.</td></tr>";
   }
 }
 loadWinners();
