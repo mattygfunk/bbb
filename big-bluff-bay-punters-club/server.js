@@ -1310,6 +1310,17 @@ function createApp() {
     });
   });
 
+  app.put('/api/tips/edit-deadline', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const deadlineMs = Number(req.body?.deadlineMs || 0);
+    if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) {
+      return res.status(400).json({ error: 'Valid deadlineMs is required' });
+    }
+    store.tipEditDeadlineMs = Math.trunc(deadlineMs);
+    writeStore(store);
+    return res.json({ ok: true, deadlineMs: store.tipEditDeadlineMs, deadlineIso: new Date(store.tipEditDeadlineMs).toISOString() });
+  });
+
   app.get('/api/ladder/:member', (req, res) => {
     const store = readStore();
     const member = String(req.params.member || '').trim();

@@ -260,6 +260,12 @@ async function refresh(){
       const when = dl?.effectiveDeadlineMs ? new Date(Number(dl.effectiveDeadlineMs)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' }) : 'Unknown';
       node.textContent = `Tip edits are currently ${dl?.editableNow ? 'OPEN' : 'LOCKED'} until ${when}.`;
     }
+    const dt = $('tip-lockout-datetime');
+    if (dt && dl?.effectiveDeadlineMs) {
+      const d = new Date(Number(dl.effectiveDeadlineMs));
+      const pad = (n) => String(n).padStart(2, '0');
+      dt.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
   } catch {}
 
   try {
@@ -404,6 +410,26 @@ $('unlock-sat-noon-btn')?.addEventListener('click', async () => {
     const r = await req(API.unlockSatNoon, { method: 'POST' });
     const local = new Date(Number(r.deadlineMs || 0)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
     $('archive-round-msg').textContent = `Tips unlocked until ${local}.`;
+    await refresh();
+  } catch (err) {
+    $('archive-round-msg').textContent = err.message;
+  }
+});
+
+$('tip-lockout-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  const raw = String($('tip-lockout-datetime')?.value || '').trim();
+  const ms = raw ? new Date(raw).getTime() : NaN;
+  if (!Number.isFinite(ms) || ms <= Date.now()) {
+    $('archive-round-msg').textContent = 'Enter a valid future lockout date/time.';
+    return;
+  }
+  try {
+    const r = await req(API.tipEditDeadline, { method: 'PUT', body: JSON.stringify({ deadlineMs: ms }) });
+    const local = new Date(Number(r.deadlineMs || ms)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
+    $('archive-round-msg').textContent = `Tip lockout deadline set to ${local}.`;
+    await refresh();
   } catch (err) {
     $('archive-round-msg').textContent = err.message;
   }

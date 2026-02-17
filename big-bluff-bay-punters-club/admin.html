@@ -81,6 +81,15 @@
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>
           </div>
+          <form id="tip-lockout-form" class="stack" style="margin-top:.6rem">
+            <p class="muted">Punters lockout deadline (Melbourne time)</p>
+            <label>Set custom lockout date/time
+              <input id="tip-lockout-datetime" name="deadlineLocal" type="datetime-local" />
+            </label>
+            <div class="row-actions">
+              <button class="btn btn-ghost" type="submit">Save Lockout Deadline</button>
+            </div>
+          </form>
           <form id="jackpot-form" class="stack" style="margin-top:.6rem">
             <p id="jackpot-current" class="muted">Current rollover: $0</p>
             <label>Set jackpot rollover amount ($)
@@ -279,6 +288,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script src="admin.js?v=20260217-10"></script>
+    <script src="admin.js?v=20260217-11"></script>
   </body>
 </html>
