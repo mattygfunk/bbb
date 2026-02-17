@@ -124,6 +124,24 @@
       </section>
 
       <section class='pv2-card'>
+        <h3>Weekly sheet import (.xls/.xlsx/.csv)</h3>
+        <p class='muted'>Upload your weekly spreadsheet (like <code>a.xls</code>) or fetch from URL, auto-map player/points, preview, then one-click import.</p>
+        <div class='pv2-form-grid'>
+          <label>Sheet file
+            <input id='sheetFile' type='file' accept='.xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv' />
+          </label>
+          <label>Or sheet URL
+            <input id='sheetUrl' placeholder='https://bigbluffbay.au/a.xls' />
+          </label>
+        </div>
+        <div class='row-actions'>
+          <button class='btn' id='sheetPreview'>Preview Sheet</button>
+          <button class='btn btn-primary' id='sheetImport'>Import Sheet Rows</button>
+        </div>
+        <div id='sheetMsg' class='muted'></div>
+      </section>
+
+      <section class='pv2-card'>
         <h3>CSV import</h3>
         <p class='muted'>Format: <code>player,points,event(optional)</code> one per line.</p>
         <textarea id='csv' rows='4' placeholder='FloppinQuads,123.4,Sunday 1300gtd'></textarea>
@@ -143,6 +161,12 @@
     const ocrFileEl=document.getElementById('ocrFile');
     const runOcrBtn=document.getElementById('runOcr');
     const ocrStatusEl=document.getElementById('ocrStatus');
+
+    const sheetFileEl=document.getElementById('sheetFile');
+    const sheetUrlEl=document.getElementById('sheetUrl');
+    const sheetPreviewBtn=document.getElementById('sheetPreview');
+    const sheetImportBtn=document.getElementById('sheetImport');
+    const sheetMsgEl=document.getElementById('sheetMsg');
 
     const csvValidateBtn=document.getElementById('csvValidate');
     const csvSaveBtn=document.getElementById('csvSave');
@@ -327,6 +351,130 @@
       document.getElementById('previewBox').innerHTML='';
       cached=[];
       setMessage('info','Cleared.');
+    };
+
+    function sheetStatus(msg){ if(sheetMsgEl) sheetMsgEl.textContent=msg||''; }
+
+    function mapSheetRows(rows){
+      const norm = (k)=>String(k||'').trim().toLowerCase();
+      const pick = (obj, keys)=>{
+        const entries = Object.entries(obj||{});
+        for(const [k,v] of entries){
+          const nk=norm(k);
+          if(keys.includes(nk)) return v;
+        }
+        return null;
+      };
+      const mapped=[];
+      for(const row of rows||[]){
+        const player = pick(row,['player','name','username','member']) || row[0];
+        const points = pick(row,['points','score','pts']) || row[1];
+        const finish = pick(row,['rank','finish','position','place']) || null;
+        const eventName = pick(row,['event','event name','tournament','game']) || '';
+        const ftRaw = pick(row,['finaltable','final table','ft']);
+        const cashRaw = pick(row,['cashed','cash']);
+        if(String(player||'').trim()==='') continue;
+        const pNum=Number(points);
+        if(!Number.isFinite(pNum)) continue;
+        mapped.push({
+          player:String(player).trim(),
+          points:pNum,
+          finish:Number.isFinite(Number(finish))?Number(finish):null,
+          eventName:String(eventName||'').trim(),
+          finalTable: /^(1|y|yes|true|ft)$/i.test(String(ftRaw||'')),
+          cashed: /^(1|y|yes|true|cash)$/i.test(String(cashRaw||''))
+        });
+      }
+      return mapped;
+    }
+
+    async function readSheetFromFileOrUrl(){
+      if(!window.XLSX) throw new Error('Sheet parser unavailable');
+      let data;
+      const file=sheetFileEl?.files?.[0];
+      const url=String(sheetUrlEl?.value||'').trim();
+
+      if(file){
+        data = await file.arrayBuffer();
+      } else if(url){
+        const r = await fetch(url);
+        if(!r.ok) throw new Error('Could not fetch sheet URL');
+        data = await r.arrayBuffer();
+      } else {
+        throw new Error('Select a sheet file or enter a URL');
+      }
+
+      const wb = window.XLSX.read(data, {type:'array'});
+      const first = wb.SheetNames[0];
+      if(!first) throw new Error('No sheet found');
+      const ws = wb.Sheets[first];
+      return window.XLSX.utils.sheet_to_json(ws, {defval:''});
+    }
+
+    let cachedSheetRows=[];
+
+    async function previewSheetImport(){
+      const ev=validateEvent();
+      if(!ev.ok){ setMessage('error',ev.error); return []; }
+      sheetPreviewBtn.disabled=true;
+      sheetStatus('Reading sheet…');
+      try{
+        const raw = await readSheetFromFileOrUrl();
+        const mapped = mapSheetRows(raw);
+        if(!mapped.length){
+          sheetStatus('No valid player/points rows found in sheet.');
+          setMessage('warn','Sheet loaded but no valid rows were detected.');
+          return [];
+        }
+
+        const smart = mapped.map(r=> r.finish?`${r.finish} ${r.player} ${r.points}`:`${r.player} ${r.points}`).join('\n');
+        document.getElementById('paste').value = smart;
+        cached = mapped.map(r=>({...r, duplicateWarning:[]}));
+        cachedSheetRows = mapped;
+        const preview = await previewRows();
+        sheetStatus(`Sheet mapped ${mapped.length} row(s). Prefilled Smart Paste and previewed.`);
+        return preview;
+      } finally {
+        sheetPreviewBtn.disabled=false;
+      }
+    }
+
+    sheetPreviewBtn.onclick=async()=>{
+      try{ await previewSheetImport(); }
+      catch(err){ setMessage('error', err.message||'Sheet preview failed'); sheetStatus('Sheet preview failed.'); }
+    };
+
+    sheetImportBtn.onclick=async()=>{
+      const ev=validateEvent();
+      if(!ev.ok){ setMessage('error',ev.error); return; }
+      if(!cachedSheetRows.length){
+        try{ await previewSheetImport(); }
+        catch(err){ setMessage('error', err.message||'Sheet preview failed'); return; }
+      }
+      const validRows = renderPreview(cached);
+      if(!validRows.length){ setMessage('error','No valid rows from sheet to import.'); return; }
+      sheetImportBtn.disabled=true;
+      try{
+        await api('/api/poker/results',{
+          method:'POST',
+          body:JSON.stringify({
+            submitToken:submitToken(),
+            results:validRows.map(r=>({
+              ...r,
+              eventId:ev.eventId,
+              eventName:r.eventName||ev.eventName,
+              finalTable:Boolean(r.finalTable),
+              cashed:Boolean(r.cashed)
+            }))
+          })
+        });
+        setMessage('success',`Imported ${validRows.length} row(s) from weekly sheet.`);
+        sheetStatus('Weekly sheet import complete.');
+      } catch(err){
+        setMessage('error', err.message||'Sheet import failed');
+      } finally {
+        sheetImportBtn.disabled=false;
+      }
     };
 
     function validateCsvRows(){
