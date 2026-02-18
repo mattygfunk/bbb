@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
@@ -212,6 +212,34 @@ function renderBossesSuggested(popular){
   box.textContent = lines.length ? `Most popular picks → ${lines.join(' • ')}` : 'No tip data yet to auto-calculate Bosses Bet.';
 }
 
+
+async function refreshClaims(){
+  const body = $('claims-body');
+  if(!body || !isAdmin()) return;
+  try {
+    const out = await req(API.puntersClaims);
+    const rows = (out.claims || []).filter((c)=>String(c.status||'pending')==='pending');
+    body.innerHTML = '';
+    if(!rows.length){ body.innerHTML = "<tr><td colspan='4' class='muted'>No pending claims.</td></tr>"; return; }
+    rows.forEach((c)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${esc(c.status||'pending')}</td><td><button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}'>Mark Paid</button></td>`;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
+      btn.addEventListener('click', async ()=>{
+        try {
+          await req(API.puntersVerifyPayout, { method:'POST', body: JSON.stringify({ claimId: decodeURIComponent(btn.dataset.claimId || '') })});
+          $('punters-payment-msg').textContent = 'Claim marked as paid.';
+          await refreshClaims();
+        } catch (err) { $('punters-payment-msg').textContent = err.message; }
+      });
+    });
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan='4' class='muted'>${esc(err.message || 'Could not load claims')}</td></tr>`;
+  }
+}
+
 async function bootstrap(){if(!state.token)return;try{state.user=(await req(API.me)).user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);}}
 
 async function refresh(){
@@ -305,6 +333,7 @@ async function refresh(){
   renderAdminSummaryCounts();
   refreshPokerPlayerOptions().catch(()=>{});
   loadAdminUsers().catch(()=>{});
+  refreshClaims().catch(()=>{});
 
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
@@ -383,6 +412,26 @@ async function refresh(){
     };
   });
 }
+
+
+$('punters-payment-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ $('punters-payment-msg').textContent='Admin login required.'; return; }
+  const f = new FormData(e.target);
+  try {
+    await req(API.puntersVerifyPayment, { method:'POST', body: JSON.stringify({
+      member: String(f.get('member') || '').trim(),
+      amount: Number(f.get('amount') || 20),
+      reference: String(f.get('reference') || '').trim()
+    })});
+    $('punters-payment-msg').textContent = 'Payment verified and member upgraded to Jackpot Eligible.';
+    e.target.reset();
+    await refresh();
+  } catch (err) {
+    $('punters-payment-msg').textContent = err.message || 'Could not verify payment.';
+  }
+});
+$('refresh-claims-btn')?.addEventListener('click', ()=>refreshClaims().catch(()=>{}));
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
 

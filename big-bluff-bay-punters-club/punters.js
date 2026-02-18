@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -62,7 +62,7 @@ function renderLeaderboard(rows){
   body.innerHTML='';
   (rows||[]).forEach((r)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button></td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
+    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button></td><td>${r.points == null ? '—' : r.points}</td><td>${(r.winners ?? r.correct) == null ? '—' : (r.winners ?? r.correct)}</td>`;
     body.appendChild(tr);
   });
   if(!(rows||[]).length){
@@ -193,6 +193,28 @@ function setVisible(el, show) {
   el.style.display = show ? '' : 'none';
 }
 
+
+function wireTierTabs(){
+  document.querySelectorAll('.tier-tab').forEach((btn)=>{
+    btn.classList.toggle('active', String(btn.dataset.tierView||'free')===state.tierView);
+    btn.onclick = async () => {
+      state.tierView = String(btn.dataset.tierView || 'free');
+      wireTierTabs();
+      await refresh();
+    };
+  });
+}
+
+function renderTierStrip(overview){
+  if(!overview) return;
+  const tierPill = $('tier-pill');
+  const paidPill = $('paid-count-pill');
+  const potPill = $('pot-pill');
+  if(tierPill) tierPill.textContent = `View: ${state.tierView === 'paid' ? 'JACKPOT ELIGIBLE' : 'FREE'}`;
+  if(paidPill) paidPill.textContent = `Jackpot Eligible: ${Number(overview?.tiers?.jackpotEligible || 0)}`;
+  if(potPill) potPill.textContent = `Pot: $${Number(overview?.jackpot?.totalPot || 0).toFixed(0)}`;
+}
+
 function renderTipEntryState() {
   const form = $('tip-form');
   const summaryCard = $('tips-locked-summary');
@@ -251,17 +273,19 @@ async function refresh(){
   state.tipStateResolved = false;
   renderTipEntryState();
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
-  const jackpotRes = await req(API.jackpot).catch(() => null);
+  let fx,tp,allTipsRes,bossesRes,milestonesRes;
+  const overview = await req(API.puntersOverview(state.tierView)).catch(() => null);
+  state.lastOverview = overview || state.lastOverview;
   const rulesJackpot = $('rules-jackpot-value');
-  if (rulesJackpot && jackpotRes) rulesJackpot.textContent = `$${Number(jackpotRes?.totalPot || 0).toFixed(0)}`;
+  if (rulesJackpot && (overview || state.lastOverview)) rulesJackpot.textContent = `$${Number((overview||state.lastOverview)?.jackpot?.totalPot || 0).toFixed(0)}`;
+  renderTierStrip(overview || state.lastOverview);
+  wireTierTabs();
 
   try {
-    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
+    [fx,tp,allTipsRes,bossesRes,milestonesRes]=await Promise.all([
       req(API.fixtures),
       req(`${API.tips}?status=all`),
       req(`${API.tips}?status=all`),
-      req(API.ladder),
       req(API.bossesBet),
       req(API.milestones)
     ]);
@@ -288,9 +312,12 @@ async function refresh(){
   const raceCountChanged = newRaceCount !== state.raceCount;
   state.raceCount = newRaceCount;
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
-  renderLeaderboard(ladderRes.ladder || []);
+  const ladderFallback = $('ladder-fallback');
+  const ladderRows = (overview || state.lastOverview)?.ladder || [];
+  renderLeaderboard(ladderRows);
+  if(ladderFallback) ladderFallback.hidden = ladderRows.length > 0;
   const status = $('leaderboard-status');
-  if (status) status.textContent = ladderRes.afterRace ? `After ${ladderRes.afterRace}` : 'Live';
+  if (status) status.textContent = (overview || state.lastOverview)?.round?.label || 'Live';
   renderBossesBet(bossesRes.bossesBet || {});
   renderMilestones(milestonesRes || {});
   if (state.selectedBreakdownMember) {
@@ -520,6 +547,28 @@ if (profileForm) {
   });
 }
 
+
+
+const claimModal = $('claim-modal');
+$('open-claim-modal-btn')?.addEventListener('click', ()=> claimModal?.showModal());
+$('close-claim-modal-btn')?.addEventListener('click', ()=> claimModal?.close());
+$('upgrade-tier-btn')?.addEventListener('click', ()=>{
+  const msg = $('tip-msg');
+  if(msg) msg.textContent = 'To upgrade: send $20 via PayID 0421 325 503, then ask admin to verify payment.';
+});
+$('claim-form')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = $('claim-msg');
+  if(!state.user){ if(msg) msg.textContent='Log in first.'; return; }
+  const f = new FormData(e.target);
+  try {
+    await req(API.puntersClaim,{method:'POST',body:JSON.stringify({amount:Number(f.get('amount')||0), note:String(f.get('note')||'')})});
+    if(msg) msg.textContent = 'Claim submitted for admin review.';
+    setTimeout(()=>claimModal?.close(),800);
+  } catch (err) {
+    if(msg) msg.textContent = err.message || 'Could not submit claim.';
+  }
+});
 
 (async()=>{
   wirePuntersLeaderboardShare();

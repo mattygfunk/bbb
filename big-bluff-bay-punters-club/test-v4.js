@@ -99,6 +99,42 @@ async function api(url, opts = {}, token) {
     assert.equal(res.status, 200);
     assert.equal(res.body.fixtures.find((f) => f.id === 'f1').date, 'Sun 16 Feb, 4:00 PM');
 
+
+    // Punters overview supports FREE masked tier and paid tier
+    res = await api('/api/punters/overview?tier=free');
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body.ladder));
+
+    res = await api('/api/punters/overview?tier=paid');
+    assert.equal(res.status, 200);
+    assert.ok(res.body.tiers.entryFee >= 20);
+
+    // Admin verifies payment upgrade for user
+    res = await api('/api/punters/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify({ member: 'matt', amount: 20, reference: 'test-payid' })
+    }, adminToken);
+    assert.equal(res.status, 200);
+
+    // Authenticated member can submit payout claim
+    res = await api('/api/punters/claims', {
+      method: 'POST',
+      body: JSON.stringify({ amount: 55, note: 'test claim' })
+    }, userToken);
+    assert.equal(res.status, 201);
+    const claimId = res.body.claim.id;
+
+    res = await api('/api/punters/claims', {}, adminToken);
+    assert.equal(res.status, 200);
+    assert.ok((res.body.claims || []).some((c) => c.id === claimId));
+
+    res = await api('/api/punters/payouts/verify', {
+      method: 'POST',
+      body: JSON.stringify({ claimId })
+    }, adminToken);
+    assert.equal(res.status, 200);
+
+
     proc.kill('SIGTERM');
     console.log('V5 integration tests passed ✅');
     process.exit(0);

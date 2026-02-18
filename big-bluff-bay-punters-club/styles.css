@@ -739,3 +739,15 @@ details p { margin:.55rem 0 0; }
 .profile-settings{gap:1rem}
 .profile-chip{display:inline-flex;align-items:center;gap:.45rem}
 .profile-chip-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.22);background:#1a2228}
+
+.tier-tab.active {
+  border-color: #86efac;
+  background: #052e16;
+  color: #dcfce7;
+}
+#ladder-fallback { color: #fcd34d; }
+#claim-modal::backdrop { background: rgba(2,6,23,.65); }
+@media (max-width: 560px) {
+  #punters-status-strip .pill { width: 100%; text-align: center; }
+  #pricing-explainer .row-actions .btn { width: 100%; }
+}

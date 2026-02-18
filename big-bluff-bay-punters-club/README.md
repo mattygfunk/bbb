@@ -43,6 +43,19 @@ npm test
 npm start
 ```
 
+### Punters Club tiers + jackpot flow (NEW)
+- **FREE tier:** anyone can submit tips and appear on public view.
+- **Jackpot Eligible tier ($20):** verified payment marks member eligible for jackpot + full ladder stats.
+- **Tie rule:** top-point ties roll over full pot to next round (no tiebreak payout).
+- **Admin tooling:**
+  - Verify payment: `POST /api/punters/payments/verify`
+  - Claims queue: `GET /api/punters/claims`
+  - Mark payout complete: `POST /api/punters/payouts/verify`
+  - Rounds management: `GET/POST /api/punters/rounds`, `PATCH /api/punters/rounds/:id`
+  - Audit feeds: `GET /api/punters/audit`
+- **Public tiered ladder endpoint:** `GET /api/punters/overview?tier=free|paid`
+- **Cache:** leaderboard calculations are cached per round signature under `store.puntersClub.leaderboardCache`.
+
 ### Test coverage
 - Integration test: `test-v4.js`
 - Poker V2 unit safeguards: `test-poker-v2.js`
