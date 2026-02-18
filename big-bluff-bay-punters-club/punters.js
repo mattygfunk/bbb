@@ -189,16 +189,19 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes,jackpotRes;
+  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
+  const jackpotRes = await req(API.jackpot).catch(() => null);
+  const rulesJackpot = $('rules-jackpot-value');
+  if (rulesJackpot && jackpotRes) rulesJackpot.textContent = `$${Number(jackpotRes?.totalPot || 0).toFixed(0)}`;
+
   try {
-    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes,jackpotRes]=await Promise.all([
+    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
       req(API.fixtures),
       req(`${API.tips}?status=all`),
       req(`${API.tips}?status=all`),
       req(API.ladder),
       req(API.bossesBet),
-      req(API.milestones),
-      req(API.jackpot)
+      req(API.milestones)
     ]);
   } catch (err) {
     const status = $('leaderboard-status');
@@ -212,8 +215,6 @@ async function refresh(){
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`; if (fixturesList) fixturesList.appendChild(e);});
   const quickFixtureLine = $('quick-fixture-line');
   const nextMeet = (fx.fixtures || [])[0];
-  const rulesJackpot = $('rules-jackpot-value');
-  if (rulesJackpot) rulesJackpot.textContent = `$${Number(jackpotRes?.totalPot || 0).toFixed(0)}`;
   if (quickFixtureLine) {
     quickFixtureLine.textContent = nextMeet
       ? `Next meet: ${nextMeet.date} • ${nextMeet.track} (${nextMeet.event})`
