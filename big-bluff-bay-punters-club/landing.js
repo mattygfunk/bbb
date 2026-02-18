@@ -298,7 +298,7 @@ async function hydrateLandingCritical() {
     const closedRound = String(overview?.round?.status || '').toUpperCase() === 'CLOSED';
     let usedHistoryFallback = false;
     let leaders = closedRound
-      ? (overview?.ladder || [])
+      ? (overview?.ladder || ladder?.ladder || [])
       : (ladder?.ladder || overview?.ladder || []);
 
     if (closedRound && (!leaders || !leaders.length)) {
