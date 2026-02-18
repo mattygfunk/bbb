@@ -56,7 +56,7 @@ function renderFixtures(fixtures) {
 
   const rows = (fixtures || []).slice(0, 3);
   if (!rows.length) {
-    list.innerHTML = '<article class="fixture"><strong>Next meet loading</strong><p class="muted">Fixture details will appear here shortly.</p></article>';
+    list.innerHTML = '<article class="fixture"><strong>Round complete — results below</strong><p class="muted">Next venue announced Friday arvo</p></article>';
     return;
   }
 
@@ -291,7 +291,7 @@ async function hydrateLandingCritical() {
     document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
 
-    const meet = fx?.fixtures?.[0]?.track || 'Meet loading';
+    const meet = fx?.fixtures?.[0]?.track || 'Round complete — results below';
     renderFixtures(fx?.fixtures || []);
 
     const leaders = ladder?.ladder || [];
