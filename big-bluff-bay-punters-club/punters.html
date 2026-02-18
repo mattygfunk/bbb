@@ -94,7 +94,12 @@
         <p id="tip-msg" class="muted"></p>
       </section>
       <div class="split">
-        <section class="card"><h2>Upcoming Fixtures</h2><div class="grid three" id="fixtures-list"></div></section>
+        <section class="card" id="leaderboard">
+          <div class="section-head" style="margin-bottom:.45rem"><h2>Next Meet + Live Leaderboard <span class="pill" id="leaderboard-status">Live</span></h2><div class="row-actions"><button class="btn btn-ghost" type="button" id="share-punters-leaderboard-btn">Share to Messenger Group</button></div></div>
+          <div class="grid three" id="fixtures-list"></div>
+          <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div>
+          <p id="share-punters-msg" class="muted"></p>
+        </section>
         <section class="card"><h2>Rules <span class="pill">Jackpot live: <strong id="rules-jackpot-value">$0</strong></span></h2>
           <div class="stack">
             <p class="muted"><strong>Entry fee (live now):</strong> Fixed <strong>$20 per player</strong>, effective immediately.</p>
@@ -106,10 +111,7 @@
           </div>
         </section>
       </div>
-      <div class="split">
-        <section class="card" id="leaderboard"><div class="section-head" style="margin-bottom:.45rem"><h2>Live Leaderboard <span class="pill" id="leaderboard-status">Live</span></h2><div class="row-actions"><button class="btn btn-ghost" type="button" id="share-punters-leaderboard-btn">Share to Messenger Group</button></div></div><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div><p id="share-punters-msg" class="muted"></p></section>
-        <section class="card"><h2>Bosses Bet Tracker <span class="pill" id="bosses-overall">Live</span></h2><div id="bosses-progress" class="stack"></div></section>
-      </div>
+      <section class="card"><h2>Bosses Bet Tracker <span class="pill" id="bosses-overall">Live</span></h2><div id="bosses-progress" class="stack"></div></section>
 
       <div class="split">
         <section class="card">
