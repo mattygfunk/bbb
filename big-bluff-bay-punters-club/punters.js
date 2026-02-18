@@ -62,7 +62,10 @@ function renderLeaderboard(rows){
   body.innerHTML='';
   (rows||[]).forEach((r)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button></td><td>${r.points == null ? '—' : r.points}</td><td>${(r.winners ?? r.correct) == null ? '—' : (r.winners ?? r.correct)}</td>`;
+    const tierBadge = String(r.tier || '').toUpperCase() === 'JACKPOT'
+      ? " <span class='pill'>💰 Jackpot Eligible</span>"
+      : '';
+    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button>${tierBadge}</td><td>${r.points == null ? '—' : r.points}</td><td>${(r.winners ?? r.correct) == null ? '—' : (r.winners ?? r.correct)}</td>`;
     body.appendChild(tr);
   });
   if(!(rows||[]).length){

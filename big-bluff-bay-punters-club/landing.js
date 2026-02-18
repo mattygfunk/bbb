@@ -108,7 +108,8 @@ function renderLadder(rows) {
   }
   rows.slice(0, 10).forEach((r) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}</td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
+    const tierBadge = String(r.tier || '').toUpperCase() === 'JACKPOT' ? " <span class='pill'>💰</span>" : '';
+    tr.innerHTML = `<td>${r.rank}</td><td>${esc(r.member)}${tierBadge}</td><td>${r.points}</td><td>${r.winners ?? r.correct ?? 0}</td>`;
     body.appendChild(tr);
   });
 }

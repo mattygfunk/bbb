@@ -1182,8 +1182,18 @@ function createApp() {
   app.get('/api/ladder', (_req, res) => {
     const store = readStore();
     const ladder = computeLadder(store);
+    const { round } = computeJackpotTierData(store);
+    const jackpotEligible = new Set(
+      (round?.entries || [])
+        .filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT')
+        .map((e) => String(e.member || '').trim().toLowerCase())
+    );
+    const ladderWithTier = (ladder || []).map((row) => ({
+      ...row,
+      tier: jackpotEligible.has(String(row.member || '').trim().toLowerCase()) ? 'JACKPOT' : 'FREE'
+    }));
     const afterRace = getLastScoredRace(store);
-    return res.json({ ladder, afterRace });
+    return res.json({ ladder: ladderWithTier, afterRace });
   });
 
 
