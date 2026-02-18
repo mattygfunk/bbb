@@ -283,7 +283,7 @@ function renderRoundMeta(overview){
   if (past){
     const rounds = overview?.pastRounds || [];
     if (!rounds.length){
-      past.innerHTML = `<p class='muted'>No archived rounds yet.</p>`;
+      past.innerHTML = ``;
     } else {
       past.innerHTML = rounds.map((r)=>`<a class='menu-link' href='/punters-club/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — Winner: ${esc(r.winner || '—')}</a>`).join('');
     }
@@ -449,6 +449,10 @@ async function refresh(){
     $('tips-list').appendChild(e);
   });
   $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;
+  const communityTipsCard = $('community-tips-card');
+  if (communityTipsCard) {
+    communityTipsCard.style.display = byPunter.size === 0 ? 'none' : '';
+  }
 
   // Prefill current user's existing tips into quick-entry dropdowns
   // Don't overwrite while someone is actively choosing on mobile.
