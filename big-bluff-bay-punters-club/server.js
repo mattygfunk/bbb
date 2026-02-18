@@ -21,6 +21,43 @@ const DEFAULT_FIXTURES = [
   { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra', raceCount: 12 }
 ];
 
+const TRACKS = {
+  greyhounds: {
+    id: 'greyhounds',
+    slug: 'greyhounds',
+    name: 'Greyhounds',
+    accent: '#4aa3ff',
+    raceDay: 3,
+    defaultOpenHour: 9,
+    defaultOpenMinute: 0,
+    defaultLockHour: 18,
+    defaultLockMinute: 0,
+    defaultRaceCount: 10,
+    defaultTrackLabel: 'Sandown Park'
+  },
+  thoroughbreds: {
+    id: 'thoroughbreds',
+    slug: 'thoroughbreds',
+    name: 'Thoroughbreds',
+    accent: '#eab308',
+    raceDay: 6,
+    defaultOpenHour: 9,
+    defaultOpenMinute: 0,
+    defaultLockHour: 15,
+    defaultLockMinute: 0,
+    defaultRaceCount: 12,
+    defaultTrackLabel: 'Caulfield'
+  }
+};
+
+function normalizeTrackId(input) {
+  const raw = String(input || '').trim().toLowerCase();
+  if (!raw) return 'thoroughbreds';
+  if (raw === 'greyhound' || raw === 'dogs') return 'greyhounds';
+  if (raw === 'thoroughbred' || raw === 'horses') return 'thoroughbreds';
+  return TRACKS[raw] ? raw : 'thoroughbreds';
+}
+
 function ensureStore() {
   const dir = path.dirname(DATA_FILE);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -229,14 +266,14 @@ function applySub(selection, raceResult) {
 
 function computeBossesBetProgress(store) {
   const bb = store.bossesBet || { legs: [], selections: {} };
-  const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+  const raceCount = Number(getTrackData(store, trackId)?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
   const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
   const activeLegs = new Set(Array.isArray(bb.legs) && bb.legs.length ? bb.legs : allRaces);
 
   const result = allRaces.map((race) => {
     const inMulti = activeLegs.has(race);
     const pick = String(bb.selections?.[race] || '').trim();
-    const rr = store.raceResults?.[race];
+    const rr = trackData.raceResults?.[race];
     if (!inMulti) return { race, selection: pick, inMulti: false, status: 'inactive' };
     if (!pick) return { race, selection: '', inMulti: true, status: 'pending' };
     if (!rr) return { race, selection: pick, inMulti: true, status: 'pending' };
@@ -255,10 +292,18 @@ function computeBossesBetProgress(store) {
 }
 
 
+function defaultTrackData(trackId) {
+  const t = TRACKS[trackId] || TRACKS.thoroughbreds;
+  return {
+    fixtures: [{ id: `pc-${trackId}-f1`, date: '', event: `${t.name} Meet`, track: t.defaultTrackLabel, raceCount: t.defaultRaceCount }],
+    raceResults: {},
+    bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null }
+  };
+}
+
 function ensurePuntersClubStore(store) {
   if (!store.puntersClub || typeof store.puntersClub !== 'object') {
-    store.puntersClub = { rounds: [], claims: [], payoutAudit: [], paymentAudit: [], leaderboardCache: {}, settings: { nextRoundOpensAt: null } };
-    return true;
+    store.puntersClub = { rounds: [], claims: [], payoutAudit: [], paymentAudit: [], leaderboardCache: {}, settings: { nextRoundOpensAt: null }, tracks: {}, schedule: {} };
   }
   let changed = false;
   if (!Array.isArray(store.puntersClub.rounds)) { store.puntersClub.rounds = []; changed = true; }
@@ -267,21 +312,58 @@ function ensurePuntersClubStore(store) {
   if (!Array.isArray(store.puntersClub.paymentAudit)) { store.puntersClub.paymentAudit = []; changed = true; }
   if (!store.puntersClub.leaderboardCache || typeof store.puntersClub.leaderboardCache !== 'object') { store.puntersClub.leaderboardCache = {}; changed = true; }
   if (!store.puntersClub.settings || typeof store.puntersClub.settings !== 'object') { store.puntersClub.settings = { nextRoundOpensAt: null }; changed = true; }
+  if (!store.puntersClub.tracks || typeof store.puntersClub.tracks !== 'object') { store.puntersClub.tracks = {}; changed = true; }
+  if (!store.puntersClub.schedule || typeof store.puntersClub.schedule !== 'object') { store.puntersClub.schedule = {}; changed = true; }
+
+  Object.keys(TRACKS).forEach((trackId) => {
+    if (!store.puntersClub.tracks[trackId] || typeof store.puntersClub.tracks[trackId] !== 'object') {
+      store.puntersClub.tracks[trackId] = defaultTrackData(trackId);
+      changed = true;
+    }
+    const td = store.puntersClub.tracks[trackId];
+    if (!Array.isArray(td.fixtures) || !td.fixtures.length) { td.fixtures = defaultTrackData(trackId).fixtures; changed = true; }
+    if (!td.raceResults || typeof td.raceResults !== 'object') { td.raceResults = {}; changed = true; }
+    if (!td.bossesBet || typeof td.bossesBet !== 'object') { td.bossesBet = defaultTrackData(trackId).bossesBet; changed = true; }
+
+    if (!store.puntersClub.schedule[trackId] || typeof store.puntersClub.schedule[trackId] !== 'object') {
+      const t = TRACKS[trackId];
+      store.puntersClub.schedule[trackId] = {
+        raceDay: t.raceDay,
+        openHour: t.defaultOpenHour,
+        openMinute: t.defaultOpenMinute,
+        lockHour: t.defaultLockHour,
+        lockMinute: t.defaultLockMinute
+      };
+      changed = true;
+    }
+  });
+
   if (typeof store.puntersClub.settings.nextRoundOpensAt !== 'number' && store.puntersClub.settings.nextRoundOpensAt !== null) {
     store.puntersClub.settings.nextRoundOpensAt = null;
     changed = true;
   }
+
+  for (const r of store.puntersClub.rounds) {
+    if (!r.trackId) { r.trackId = 'thoroughbreds'; changed = true; }
+  }
+  for (const c of store.puntersClub.claims) {
+    if (!c.trackId) { c.trackId = 'thoroughbreds'; changed = true; }
+  }
+
   return changed;
 }
 
-function getCurrentRound(store, { autoCreate = true } = {}) {
+function getCurrentRound(store, { autoCreate = true, trackId = 'thoroughbreds' } = {}) {
   ensurePuntersClubStore(store);
+  const tId = normalizeTrackId(trackId);
   const rounds = store.puntersClub.rounds;
-  let open = rounds.find((r) => String(r.status || '').toLowerCase() === 'open');
+  let open = rounds.find((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'open');
   if (!open && autoCreate) {
+    const trackRounds = rounds.filter((r) => normalizeTrackId(r.trackId) === tId);
     open = {
       id: crypto.randomUUID(),
-      label: `Round ${rounds.length + 1}`,
+      trackId: tId,
+      label: `${TRACKS[tId].name} Round ${trackRounds.length + 1}`,
       status: 'open',
       createdAt: Date.now(),
       entryFee: Number(store.entryFee || 20),
@@ -294,19 +376,26 @@ function getCurrentRound(store, { autoCreate = true } = {}) {
   return open || null;
 }
 
-function getDefaultNextRoundOpenAtMs() {
+function getDefaultNextRoundOpenAtMs(trackId = 'thoroughbreds', store = null) {
+  const tId = normalizeTrackId(trackId);
   const now = new Date();
-  const day = now.getDay();
-  const diff = (5 - day + 7) % 7;
+  const t = TRACKS[tId] || TRACKS.thoroughbreds;
+  const sched = store?.puntersClub?.schedule?.[tId] || {};
+  const day = Number.isFinite(Number(sched.raceDay)) ? Number(sched.raceDay) : t.raceDay;
+  const hour = Number.isFinite(Number(sched.openHour)) ? Number(sched.openHour) : t.defaultOpenHour;
+  const minute = Number.isFinite(Number(sched.openMinute)) ? Number(sched.openMinute) : t.defaultOpenMinute;
+
+  const diff = (day - now.getDay() + 7) % 7;
   const next = new Date(now);
   next.setDate(now.getDate() + diff);
-  next.setHours(16, 0, 0, 0);
+  next.setHours(hour, minute, 0, 0);
   if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 7);
   return next.getTime();
 }
 
-function getLatestClosedRound(store) {
-  return (store.puntersClub?.rounds || []).find((r) => String(r.status || '').toLowerCase() === 'closed') || null;
+function getLatestClosedRound(store, trackId = 'thoroughbreds') {
+  const tId = normalizeTrackId(trackId);
+  return (store.puntersClub?.rounds || []).find((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'closed') || null;
 }
 
 function pickLarrikinLine() {
@@ -318,13 +407,31 @@ function pickLarrikinLine() {
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
+function getTrackData(store, trackId = 'thoroughbreds') {
+  ensurePuntersClubStore(store);
+  const tId = normalizeTrackId(trackId);
+  return store.puntersClub.tracks[tId] || defaultTrackData(tId);
+}
+
+function getTipsForTrack(store, trackId = 'thoroughbreds', { includeRemoved = false } = {}) {
+  const tId = normalizeTrackId(trackId);
+  return (store.tips || []).filter((tip) => {
+    const tipTrack = normalizeTrackId(tip.trackId || 'thoroughbreds');
+    if (tipTrack !== tId) return false;
+    if (!includeRemoved && tip.status === 'removed') return false;
+    return true;
+  });
+}
+
 function buildRoundSnapshot(store, round) {
-  const ladder = computeLadder(store);
+  const trackId = normalizeTrackId(round?.trackId);
+  const ladder = computeLadder(store, { trackId });
   const top10 = ladder.slice(0, 10);
   const top3 = ladder.slice(0, 3);
-  const { paidMembers, freeMembers, currentRoundPot, rollover, totalPot } = computeJackpotTierData(store);
-  const finalFixtures = Array.isArray(store.fixtures) ? JSON.parse(JSON.stringify(store.fixtures || [])) : [];
-  const tipsFeed = (store.tips || []).filter((t) => t.status !== 'removed');
+  const { paidMembers, freeMembers, currentRoundPot, rollover, totalPot } = computeJackpotTierData(store, { trackId, autoCreate: false });
+  const trackData = getTrackData(store, trackId);
+  const finalFixtures = Array.isArray(trackData.fixtures) ? JSON.parse(JSON.stringify(trackData.fixtures || [])) : [];
+  const tipsFeed = getTipsForTrack(store, trackId);
   const winnerMember = String(round?.winner?.member || top3?.[0]?.member || '').trim() || 'tofu';
   const snapshot = {
     finalLeaderboard: ladder.slice(0, 100),
@@ -345,10 +452,11 @@ function buildRoundSnapshot(store, round) {
 }
 
 function syncCurrentRoundEntries(store, opts = {}) {
-  const round = getCurrentRound(store, opts);
+  const trackId = normalizeTrackId(opts.trackId);
+  const round = getCurrentRound(store, { ...opts, trackId });
   if (!round) return null;
   const byMember = new Map();
-  (store.tips || []).filter((t) => t.status !== 'removed').forEach((tip) => {
+  getTipsForTrack(store, trackId).forEach((tip) => {
     const member = String(tip.member || '').trim();
     if (!member) return;
     if (!byMember.has(member)) byMember.set(member, { member, tips: 0, tier: 'FREE', paid: false });
@@ -367,23 +475,27 @@ function syncCurrentRoundEntries(store, opts = {}) {
   return round;
 }
 
-function computeLadderCached(store, roundId = 'live') {
+function computeLadderCached(store, roundId = 'live', trackId = 'thoroughbreds') {
   ensurePuntersClubStore(store);
-  const raceSig = Object.keys(store.raceResults || {}).sort().map((race) => {
-    const rr = store.raceResults[race] || {};
+  const tId = normalizeTrackId(trackId);
+  const trackData = getTrackData(store, tId);
+  const raceSig = Object.keys(trackData.raceResults || {}).sort().map((race) => {
+    const rr = trackData.raceResults[race] || {};
     return `${race}:${(rr.first||[]).join('|')}/${(rr.second||[]).join('|')}/${(rr.third||[]).join('|')}`;
   }).join(';');
-  const tipsSig = (store.tips || []).filter((t)=>t.status==='approved').map((t)=>`${t.member}:${t.race}:${t.selection}:${t.paid?'1':'0'}`).sort().join(';');
+  const tipsSig = getTipsForTrack(store, tId).filter((t)=>t.status==='approved').map((t)=>`${t.member}:${t.race}:${t.selection}:${t.paid?'1':'0'}`).sort().join(';');
+  const cacheKey = `${tId}:${roundId}`;
   const signature = `${raceSig}#${tipsSig}`;
-  const hit = store.puntersClub.leaderboardCache[roundId];
+  const hit = store.puntersClub.leaderboardCache[cacheKey];
   if (hit && hit.signature === signature) return hit.data;
-  const data = computeLadder(store);
-  store.puntersClub.leaderboardCache[roundId] = { signature, data, updatedAt: Date.now() };
+  const data = computeLadder(store, { trackId: tId });
+  store.puntersClub.leaderboardCache[cacheKey] = { signature, data, updatedAt: Date.now() };
   return data;
 }
 
 function computeJackpotTierData(store, opts = {}) {
-  const round = syncCurrentRoundEntries(store, opts);
+  const trackId = normalizeTrackId(opts.trackId);
+  const round = syncCurrentRoundEntries(store, { ...opts, trackId });
   const paidMembers = new Set((round?.entries || []).filter((e) => e.tier === 'JACKPOT').map((e) => String(e.member || '').toLowerCase())).size;
   const freeMembers = new Set((round?.entries || []).map((e) => String(e.member || '').toLowerCase())).size;
   const entryFee = Number(round?.entryFee || store.entryFee || 20);
@@ -393,7 +505,10 @@ function computeJackpotTierData(store, opts = {}) {
   return { round, paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot };
 }
 
-function computeLadder(store) {
+function computeLadder(store, opts = {}) {
+  const trackId = normalizeTrackId(opts.trackId);
+  const trackData = getTrackData(store, trackId);
+  const trackTips = getTipsForTrack(store, trackId, { includeRemoved: true });
   const score = new Map();
 
   const ensureMember = (member) => {
@@ -412,7 +527,7 @@ function computeLadder(store) {
 
   // Ensure anyone who has entered approved tips appears on the live ladder,
   // even before any race results are posted.
-  for (const tip of store.tips || []) {
+  for (const tip of trackTips) {
     if (tip.status !== 'approved') continue;
     ensureMember(tip.member);
   }
@@ -420,7 +535,7 @@ function computeLadder(store) {
   for (const tip of store.tips || []) {
     if (tip.status !== 'approved') continue;
     const race = String(tip.race || '');
-    const rr = store.raceResults?.[race];
+    const rr = trackData.raceResults?.[race];
     if (!rr) continue;
 
     const sel = applySub(String(tip.selection || tip.horse || ''), rr);
@@ -437,8 +552,9 @@ function computeLadder(store) {
     .map((r, i) => ({ rank: i + 1, member: r.member, points: r.points, winners: r.winners, correct: r.winners }));
 }
 
-function getLastScoredRace(store) {
-  const races = Object.entries(store.raceResults || {})
+function getLastScoredRace(store, trackId = 'thoroughbreds') {
+  const trackData = getTrackData(store, trackId);
+  const races = Object.entries(trackData.raceResults || {})
     .filter(([, rr]) => Array.isArray(rr?.first) || Array.isArray(rr?.second) || Array.isArray(rr?.third))
     .filter(([, rr]) => (rr.first || []).length || (rr.second || []).length || (rr.third || []).length)
     .map(([race]) => Number(String(race || 'R0').slice(1)))
@@ -677,7 +793,9 @@ function computeMilestonesData(store) {
   };
 }
 
-function computeMemberBreakdown(store, memberName) {
+function computeMemberBreakdown(store, memberName, opts = {}) {
+  const trackId = normalizeTrackId(opts.trackId);
+  const trackData = getTrackData(store, trackId);
   const target = String(memberName || '').trim().toLowerCase();
   if (!target) return { member: memberName, totalPoints: 0, winners: 0, races: [] };
 
@@ -685,13 +803,13 @@ function computeMemberBreakdown(store, memberName) {
   let totalPoints = 0;
   let winners = 0;
 
-  const myTips = (store.tips || [])
+  const myTips = getTipsForTrack(store, trackId, { includeRemoved: true })
     .filter((t) => t.status === 'approved' && String(t.member || '').trim().toLowerCase() === target)
     .sort((a, b) => Number(String(a.race || 'R0').slice(1)) - Number(String(b.race || 'R0').slice(1)));
 
   for (const tip of myTips) {
     const race = String(tip.race || '');
-    const rr = store.raceResults?.[race];
+    const rr = trackData.raceResults?.[race];
     const selection = String(tip.selection || tip.horse || '');
     if (!rr) {
       rows.push({ race, selection, points: 0, outcome: 'pending' });
@@ -1191,32 +1309,36 @@ function createApp() {
 
   app.get('/api/tips', (req, res) => {
     const status = String(req.query.status || 'approved');
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
     const store = readStore();
-    const sorted = [...store.tips].sort((a, b) => b.createdAt - a.createdAt);
-    if (status === 'all') return res.json({ tips: sorted });
-    return res.json({ tips: sorted.filter((t) => t.status === status) });
+    const sorted = [...(store.tips || [])]
+      .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    if (status === 'all') return res.json({ trackId, tips: sorted });
+    return res.json({ trackId, tips: sorted.filter((t) => t.status === status) });
   });
 
   app.post('/api/tips', auth, (req, res) => {
     const race = String(req.body.race || '').trim().toUpperCase();
     const selection = String(req.body.selection || req.body.horse || '').trim();
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
     const store = readStore();
-    let openRound = getCurrentRound(store, { autoCreate: false });
+    let openRound = getCurrentRound(store, { autoCreate: false, trackId });
     const adminOverride = Boolean(req.body?.adminOverride) && req.user?.role === 'admin';
-    if (!openRound && (store.puntersClub?.rounds || []).length === 0) {
-      openRound = getCurrentRound(store, { autoCreate: true });
+    if (!openRound && (store.puntersClub?.rounds || []).filter((r)=>normalizeTrackId(r.trackId)===trackId).length === 0) {
+      openRound = getCurrentRound(store, { autoCreate: true, trackId });
     }
     if (!openRound && !adminOverride) {
       return res.status(403).json({ error: 'Round finished ✅. Tips are locked until next round opens.' });
     }
-    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const raceCount = Number(getTrackData(store, trackId)?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
     const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
     if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
     if (!selection) return res.status(400).json({ error: 'Selection is required' });
 
     const matches = (store.tips || [])
       .map((t, idx) => ({ t, idx }))
-      .filter(({ t }) => t.member === req.user.username && t.race === race && t.status !== 'removed')
+      .filter(({ t }) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId && t.member === req.user.username && t.race === race && t.status !== 'removed')
       .sort((a, b) => Number(b.t.updatedAt || b.t.createdAt || 0) - Number(a.t.updatedAt || a.t.createdAt || 0));
 
     if (matches.length > 0) {
@@ -1245,6 +1367,7 @@ function createApp() {
       selection,
       status: 'approved',
       paid: false,
+      trackId,
       createdAt: Date.now()
     };
     store.tips.push(tip);
@@ -1285,10 +1408,11 @@ function createApp() {
     return res.json({ ok: true, tip: store.tips[idx] });
   });
 
-  app.get('/api/ladder', (_req, res) => {
+  app.get('/api/ladder', (req, res) => {
     const store = readStore();
-    const ladder = computeLadder(store);
-    const { round } = computeJackpotTierData(store);
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    const ladder = computeLadder(store, { trackId });
+    const { round } = computeJackpotTierData(store, { trackId });
     const jackpotEligible = new Set(
       (round?.entries || [])
         .filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT')
@@ -1298,8 +1422,8 @@ function createApp() {
       ...row,
       tier: jackpotEligible.has(String(row.member || '').trim().toLowerCase()) ? 'JACKPOT' : 'FREE'
     }));
-    const afterRace = getLastScoredRace(store);
-    return res.json({ ladder: ladderWithTier, afterRace });
+    const afterRace = getLastScoredRace(store, trackId);
+    return res.json({ trackId, ladder: ladderWithTier, afterRace });
   });
 
 
@@ -1308,9 +1432,10 @@ function createApp() {
     return res.json(computeMilestonesData(store));
   });
 
-  app.get('/api/jackpot', (_req, res) => {
+  app.get('/api/jackpot', (req, res) => {
     const store = readStore();
-    const { paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot, round } = computeJackpotTierData(store);
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    const { paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot, round } = computeJackpotTierData(store, { trackId });
     writeStore(store);
     return res.json({
       entryFee,
@@ -1336,14 +1461,21 @@ function createApp() {
     return res.json({ ok: true, jackpotCarry: store.jackpotCarry });
   });
 
+  app.get('/api/punters/tracks', (_req, res) => {
+    return res.json({ tracks: Object.values(TRACKS) });
+  });
+
   app.get('/api/punters/overview', (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
     const tier = String(req.query.tier || 'free').toLowerCase();
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
 
-    const openRound = getCurrentRound(store, { autoCreate: false });
-    const closedRound = getLatestClosedRound(store);
-    const nextRoundOpensAt = Number(store.puntersClub?.settings?.nextRoundOpensAt || 0) || getDefaultNextRoundOpenAtMs();
+    const openRound = getCurrentRound(store, { autoCreate: false, trackId });
+    const closedRound = getLatestClosedRound(store, trackId);
+    const trackSettings = store.puntersClub?.settings?.[trackId] || {};
+    const nextRoundOpensAt = Number(trackSettings.nextRoundOpensAt || 0) || getDefaultNextRoundOpenAtMs(trackId, store);
 
     let round = openRound;
     let paidMembers = 0;
@@ -1354,21 +1486,21 @@ function createApp() {
     let totalPot = rollover;
     let ladder = [];
     let tipsFeed = [];
-    let fixtures = Array.isArray(store.fixtures) ? store.fixtures : [];
+    let fixtures = Array.isArray(trackData.fixtures) ? trackData.fixtures : [];
     let recap = null;
     let winnerBanner = null;
     let frozen = false;
 
     if (openRound) {
-      const live = computeJackpotTierData(store, { autoCreate: false });
+      const live = computeJackpotTierData(store, { autoCreate: false, trackId });
       round = live.round;
       paidMembers = live.paidMembers;
       freeMembers = live.freeMembers;
       entryFee = live.entryFee;
       currentRoundPot = live.currentRoundPot;
       totalPot = live.totalPot;
-      ladder = computeLadderCached(store, round.id);
-      tipsFeed = (store.tips || []).filter((t) => t.status !== 'removed');
+      ladder = computeLadderCached(store, round.id, trackId);
+      tipsFeed = getTipsForTrack(store, trackId);
     } else if (closedRound && closedRound.snapshot) {
       const snap = closedRound.snapshot;
       round = closedRound;
@@ -1398,14 +1530,14 @@ function createApp() {
       };
     } else {
       round = getCurrentRound(store, { autoCreate: true });
-      const live = computeJackpotTierData(store, { autoCreate: false });
+      const live = computeJackpotTierData(store, { autoCreate: false, trackId });
       paidMembers = live.paidMembers;
       freeMembers = live.freeMembers;
       entryFee = live.entryFee;
       currentRoundPot = live.currentRoundPot;
       totalPot = live.totalPot;
-      ladder = computeLadderCached(store, round.id);
-      tipsFeed = (store.tips || []).filter((t) => t.status !== 'removed');
+      ladder = computeLadderCached(store, round.id, trackId);
+      tipsFeed = getTipsForTrack(store, trackId);
     }
 
     const masked = tier !== 'paid';
@@ -1417,7 +1549,7 @@ function createApp() {
     });
 
     const pastRounds = (store.puntersClub.rounds || [])
-      .filter((r) => String(r.status || '').toLowerCase() === 'closed')
+      .filter((r) => normalizeTrackId(r.trackId) === trackId && String(r.status || '').toLowerCase() === 'closed')
       .sort((a, b) => Number(b.closedAt || 0) - Number(a.closedAt || 0))
       .slice(0, 10)
       .map((r) => ({
@@ -1428,7 +1560,9 @@ function createApp() {
       }));
 
     return res.json({
-      round: { id: round?.id, label: round?.label, status: String(round?.status || 'open').toUpperCase(), createdAt: round?.createdAt, closedAt: round?.closedAt || null },
+      track: { id: trackId, name: TRACKS[trackId]?.name || trackId, accent: TRACKS[trackId]?.accent || '#999' },
+      tracks: Object.values(TRACKS),
+      round: { id: round?.id, trackId, label: round?.label, status: String(round?.status || 'open').toUpperCase(), createdAt: round?.createdAt, closedAt: round?.closedAt || null },
       tiers: { free: freeMembers, jackpotEligible: paidMembers, entryFee },
       jackpot: { currentRoundPot, rollover, totalPot, tieRule: 'Top-point ties roll over to next round.' },
       ladder: ladderView,
@@ -1445,18 +1579,22 @@ function createApp() {
     });
   });
 
-  app.get('/api/punters/rounds', auth, adminOnly, (_req, res) => {
+  app.get('/api/punters/rounds', auth, adminOnly, (req, res) => {
     const store = readStore();
-    syncCurrentRoundEntries(store);
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    syncCurrentRoundEntries(store, { trackId });
     writeStore(store);
-    return res.json({ rounds: store.puntersClub.rounds || [] });
+    const rounds = (store.puntersClub.rounds || []).filter((r) => normalizeTrackId(r.trackId) === trackId);
+    return res.json({ trackId, rounds });
   });
 
   app.post('/api/punters/rounds', auth, adminOnly, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
-    const label = String(req.body?.label || '').trim() || `Round ${(store.puntersClub.rounds || []).length + 1}`;
-    const round = { id: crypto.randomUUID(), label, status: 'open', createdAt: Date.now(), entryFee: Number(req.body?.entryFee || store.entryFee || 20), payments: [], entries: [], payouts: [] };
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const count = (store.puntersClub.rounds || []).filter((r)=>normalizeTrackId(r.trackId)===trackId).length;
+    const label = String(req.body?.label || '').trim() || `${TRACKS[trackId].name} Round ${count + 1}`;
+    const round = { id: crypto.randomUUID(), trackId, label, status: 'open', createdAt: Date.now(), entryFee: Number(req.body?.entryFee || store.entryFee || 20), payments: [], entries: [], payouts: [] };
     store.puntersClub.rounds.unshift(round);
     writeStore(store);
     return res.status(201).json({ ok: true, round });
@@ -1516,7 +1654,8 @@ function createApp() {
     if (!round) return res.status(404).json({ error: 'Round not found' });
     if (String(round.status || '').toLowerCase() === 'closed') return res.json({ ok: true, round, alreadyClosed: true });
 
-    syncCurrentRoundEntries(store, { autoCreate: false });
+    const trackId = normalizeTrackId(round.trackId);
+    syncCurrentRoundEntries(store, { autoCreate: false, trackId });
     if (!round.winner || !String(round.winner.member || '').trim()) {
       const winnerMember = String(req.body?.winner || 'tofu').trim() || 'tofu';
       const payout = Number(req.body?.payout || 0);
@@ -1530,9 +1669,10 @@ function createApp() {
 
     round.status = 'closed';
     round.closedAt = Date.now();
-    round.nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || store.puntersClub?.settings?.nextRoundOpensAt || getDefaultNextRoundOpenAtMs());
+    round.nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || store.puntersClub?.settings?.[trackId]?.nextRoundOpensAt || getDefaultNextRoundOpenAtMs(trackId, store));
     round.snapshot = buildRoundSnapshot(store, round);
-    store.puntersClub.settings.nextRoundOpensAt = round.nextRoundOpensAt;
+    if (!store.puntersClub.settings[trackId] || typeof store.puntersClub.settings[trackId] !== 'object') store.puntersClub.settings[trackId] = {};
+    store.puntersClub.settings[trackId].nextRoundOpensAt = round.nextRoundOpensAt;
 
     writeStore(store);
     return res.json({ ok: true, round });
@@ -1553,19 +1693,22 @@ function createApp() {
   app.post('/api/punters/rounds/open-next', auth, adminOnly, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
-    const existingOpen = getCurrentRound(store, { autoCreate: false });
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const existingOpen = getCurrentRound(store, { autoCreate: false, trackId });
     if (existingOpen) return res.json({ ok: true, round: existingOpen, alreadyOpen: true });
     const rounds = store.puntersClub.rounds || [];
     const round = {
       id: crypto.randomUUID(),
-      label: String(req.body?.label || `Round ${rounds.length + 1}`).trim(),
+      trackId,
+      label: String(req.body?.label || `${TRACKS[trackId].name} Round ${rounds.filter((r)=>normalizeTrackId(r.trackId)===trackId).length + 1}`).trim(),
       status: 'open',
       createdAt: Date.now(),
       entryFee: Number(req.body?.entryFee || store.entryFee || 20),
       payments: [], entries: [], payouts: []
     };
     rounds.unshift(round);
-    store.puntersClub.settings.nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || getDefaultNextRoundOpenAtMs());
+    if (!store.puntersClub.settings[trackId] || typeof store.puntersClub.settings[trackId] !== 'object') store.puntersClub.settings[trackId] = {};
+    store.puntersClub.settings[trackId].nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || getDefaultNextRoundOpenAtMs(trackId, store));
     writeStore(store);
     return res.status(201).json({ ok: true, round });
   });
@@ -1573,13 +1716,22 @@ function createApp() {
   app.put('/api/punters/settings', auth, adminOnly, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
     const nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || 0);
     if (!Number.isFinite(nextRoundOpensAt) || nextRoundOpensAt <= 0) {
       return res.status(400).json({ error: 'Valid nextRoundOpensAt timestamp is required' });
     }
-    store.puntersClub.settings.nextRoundOpensAt = Math.trunc(nextRoundOpensAt);
+    if (!store.puntersClub.settings[trackId] || typeof store.puntersClub.settings[trackId] !== 'object') store.puntersClub.settings[trackId] = {};
+    store.puntersClub.settings[trackId].nextRoundOpensAt = Math.trunc(nextRoundOpensAt);
+    const sched = req.body?.schedule;
+    if (sched && typeof sched === 'object') {
+      store.puntersClub.schedule[trackId] = {
+        ...(store.puntersClub.schedule[trackId] || {}),
+        ...sched
+      };
+    }
     writeStore(store);
-    return res.json({ ok: true, settings: store.puntersClub.settings });
+    return res.json({ ok: true, trackId, settings: store.puntersClub.settings[trackId], schedule: store.puntersClub.schedule[trackId] });
   });
 
   app.get('/api/punters/results/:roundId', (req, res) => {
@@ -1593,7 +1745,8 @@ function createApp() {
 
   app.post('/api/punters/payments/verify', auth, adminOnly, (req, res) => {
     const store = readStore();
-    const round = syncCurrentRoundEntries(store);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const round = syncCurrentRoundEntries(store, { trackId });
     const member = String(req.body?.member || '').trim();
     if (!member) return res.status(400).json({ error: 'member is required' });
     const amount = Number(req.body?.amount || round.entryFee || store.entryFee || 20);
@@ -1606,9 +1759,10 @@ function createApp() {
     round.payments.push(payment);
     round.entries = (round.entries || []).map((e) => String(e.member || '').toLowerCase() === member.toLowerCase() ? { ...e, tier: 'JACKPOT', paid: true } : e);
     for (const tip of store.tips || []) {
+      if (normalizeTrackId(tip.trackId || 'thoroughbreds') !== trackId) continue;
       if (String(tip.member || '').toLowerCase() === member.toLowerCase() && tip.status !== 'removed') tip.paid = true;
     }
-    store.puntersClub.paymentAudit.push({ action: 'verify', paymentId: payment.id, member, amount, at: Date.now(), by: req.user.username });
+    store.puntersClub.paymentAudit.push({ action: 'verify', trackId, paymentId: payment.id, member, amount, at: Date.now(), by: req.user.username });
     writeStore(store);
     return res.json({ ok: true, payment });
   });
@@ -1616,10 +1770,11 @@ function createApp() {
   app.post('/api/punters/claims', auth, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
-    let openRound = getCurrentRound(store, { autoCreate: false });
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    let openRound = getCurrentRound(store, { autoCreate: false, trackId });
     const adminOverride = Boolean(req.body?.adminOverride) && req.user?.role === 'admin';
-    if (!openRound && (store.puntersClub?.rounds || []).length === 0) {
-      openRound = getCurrentRound(store, { autoCreate: true });
+    if (!openRound && (store.puntersClub?.rounds || []).filter((r) => normalizeTrackId(r.trackId) === trackId).length === 0) {
+      openRound = getCurrentRound(store, { autoCreate: true, trackId });
     }
     if (!openRound && !adminOverride) {
       return res.status(403).json({ error: 'Round finished ✅. Upgrade/payment claims are closed for this round.' });
@@ -1627,6 +1782,7 @@ function createApp() {
     const claim = {
       id: crypto.randomUUID(),
       member: req.user.username,
+      trackId,
       roundId: String(req.body?.roundId || openRound?.id || ''),
       amount: Number(req.body?.amount || 0),
       status: 'pending',
@@ -1638,9 +1794,11 @@ function createApp() {
     return res.status(201).json({ ok: true, claim });
   });
 
-  app.get('/api/punters/claims', auth, adminOnly, (_req, res) => {
+  app.get('/api/punters/claims', auth, adminOnly, (req, res) => {
     const store = readStore();
-    return res.json({ claims: store.puntersClub?.claims || [] });
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    const claims = (store.puntersClub?.claims || []).filter((c) => normalizeTrackId(c.trackId) === trackId);
+    return res.json({ trackId, claims });
   });
 
   app.post('/api/punters/payouts/verify', auth, adminOnly, (req, res) => {
@@ -1809,7 +1967,7 @@ function createApp() {
   app.post('/api/archive-round', auth, adminOnly, (req, res) => {
     const store = readStore();
     const fixture = (store.fixtures || [])[0] || null;
-    const tips = (store.tips || []).filter((t) => t.status !== 'removed');
+    const tips = getTipsForTrack(store, trackId);
 
     if (!fixture && !tips.length && !Object.keys(store.raceResults || {}).length) {
       return res.status(400).json({ error: 'Nothing to archive yet' });
@@ -1904,16 +2062,17 @@ function createApp() {
 
   app.get('/api/ladder/:member', (req, res) => {
     const store = readStore();
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
     const member = String(req.params.member || '').trim();
     if (!member) return res.status(400).json({ error: 'Member is required' });
 
-    const exists = (store.tips || []).some(
+    const exists = getTipsForTrack(store, trackId).some(
       (t) => String(t.member || '').trim().toLowerCase() === member.toLowerCase() && t.status !== 'removed'
     );
     if (!exists) return res.status(404).json({ error: 'Member not found' });
 
-    const breakdown = computeMemberBreakdown(store, member);
-    return res.json({ breakdown });
+    const breakdown = computeMemberBreakdown(store, member, { trackId });
+    return res.json({ trackId, breakdown });
   });
 
   app.get('/api/profile-summary/:member', (req, res) => {
@@ -2019,7 +2178,11 @@ function createApp() {
   });
 
   app.get(['/profile', '/profile/:member'], (_req, res) => res.sendFile(path.join(__dirname, 'profile.html')));
+  app.get('/punters-club', (_req, res) => res.sendFile(path.join(__dirname, 'punters-club.html')));
+  app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
+  app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
+  app.get('/punters.html', (_req, res) => res.redirect(302, '/punters-club/thoroughbreds'));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   return app;
