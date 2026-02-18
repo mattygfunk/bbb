@@ -296,6 +296,7 @@ async function hydrateLandingCritical() {
     renderFixtures(fx?.fixtures || []);
 
     const closedRound = String(overview?.round?.status || '').toUpperCase() === 'CLOSED';
+    let usedHistoryFallback = false;
     let leaders = closedRound
       ? (overview?.ladder || [])
       : (ladder?.ladder || overview?.ladder || []);
@@ -310,6 +311,16 @@ async function hydrateLandingCritical() {
           winners: Number(r.winners || 0)
         }));
       }
+    }
+
+    if ((!leaders || !leaders.length) && Array.isArray(milestones?.winnerHistory) && milestones.winnerHistory.length) {
+      usedHistoryFallback = true;
+      leaders = milestones.winnerHistory.slice(0, 10).map((w, idx) => ({
+        rank: idx + 1,
+        member: String(w.member || '—'),
+        points: Number.isFinite(Number(w.points)) ? Number(w.points) : '—',
+        winners: Number.isFinite(Number(w.winners)) ? Number(w.winners) : '—'
+      }));
     }
 
     renderLadder(leaders);
@@ -362,10 +373,10 @@ async function hydrateLandingCritical() {
     document.getElementById('stat-paid').textContent = money.format(recentPayoutTotal);
 
     const cutoff = document.getElementById('ladder-after-race');
-    if (cutoff) cutoff.textContent = closedRound ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
+    if (cutoff) cutoff.textContent = (closedRound || usedHistoryFallback) ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
 
     const tickerNode = document.getElementById('payout-ticker');
-    if (tickerNode && closedRound) {
+    if (tickerNode && (closedRound || usedHistoryFallback)) {
       tickerNode.textContent = 'Showing last round results until tipping opens Friday arvo.';
     }
 
