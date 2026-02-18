@@ -94,7 +94,8 @@ function renderMilestones(data){
   winnerHistory.innerHTML='';
   (data?.winnerHistory || []).slice(0,8).forEach((row)=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${esc(row.weekLabel || '-')}</td><td>${esc(row.member || '-')}</td><td>${Number(row.points || 0)}</td>`;
+    const winnerCell = row.rolledOver ? `${esc(row.member || '-')} ⚠️` : esc(row.member || '-');
+    tr.innerHTML=`<td>${esc(row.weekLabel || '-')}</td><td>${winnerCell}</td><td>$${Number(row.prize ?? row.points || 0).toFixed(2)}</td>`;
     winnerHistory.appendChild(tr);
   });
   if(!(data?.winnerHistory || []).length){
