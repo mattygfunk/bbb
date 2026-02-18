@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
+const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
 const $=id=>document.getElementById(id);
@@ -189,15 +189,16 @@ function tipInteractionActive(){ return (Date.now() - Number(state.lastTipIntera
 
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
+  let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes,jackpotRes;
   try {
-    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes]=await Promise.all([
+    [fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes,jackpotRes]=await Promise.all([
       req(API.fixtures),
       req(`${API.tips}?status=all`),
       req(`${API.tips}?status=all`),
       req(API.ladder),
       req(API.bossesBet),
-      req(API.milestones)
+      req(API.milestones),
+      req(API.jackpot)
     ]);
   } catch (err) {
     const status = $('leaderboard-status');
@@ -211,6 +212,8 @@ async function refresh(){
   (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`; if (fixturesList) fixturesList.appendChild(e);});
   const quickFixtureLine = $('quick-fixture-line');
   const nextMeet = (fx.fixtures || [])[0];
+  const rulesJackpot = $('rules-jackpot-value');
+  if (rulesJackpot) rulesJackpot.textContent = `$${Number(jackpotRes?.totalPot || 0).toFixed(0)}`;
   if (quickFixtureLine) {
     quickFixtureLine.textContent = nextMeet
       ? `Next meet: ${nextMeet.date} • ${nextMeet.track} (${nextMeet.event})`
