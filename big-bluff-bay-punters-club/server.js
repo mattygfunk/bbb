@@ -1292,7 +1292,8 @@ function createApp() {
 
     const first = ladder[0];
     const second = ladder[1];
-    const outright = !!first && (!second || first.points > second.points || (first.points === second.points && first.winners > second.winners));
+    // Policy: equal top points = jackpot rollover (no winner tie-breakers).
+    const outright = !!first && (!second || first.points > second.points);
 
     const snapshot = {
       id: crypto.randomUUID(),
