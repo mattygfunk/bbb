@@ -165,7 +165,7 @@ async function loadMemberBreakdown(member, scrollToSection = true){
   }
 }
 
-// Buy-in vote removed: fixed $20 entry from next week.
+// Buy-in vote removed: fixed $20 entry is live now.
 
 function renderRaceInputs(count){
 
@@ -312,7 +312,7 @@ if (loginForm) {
   });
 }
 
-// Buy-in vote submission removed: fixed $20 entry from next week.
+// Buy-in vote submission removed: fixed $20 entry is live now.
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
