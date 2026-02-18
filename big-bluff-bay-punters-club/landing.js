@@ -296,9 +296,22 @@ async function hydrateLandingCritical() {
     renderFixtures(fx?.fixtures || []);
 
     const closedRound = String(overview?.round?.status || '').toUpperCase() === 'CLOSED';
-    const leaders = closedRound
+    let leaders = closedRound
       ? (overview?.ladder || [])
       : (ladder?.ladder || overview?.ladder || []);
+
+    if (closedRound && (!leaders || !leaders.length)) {
+      const recapTop = Array.isArray(overview?.recap?.top3) ? overview.recap.top3 : [];
+      if (recapTop.length) {
+        leaders = recapTop.map((r, idx) => ({
+          rank: idx + 1,
+          member: String(r.member || '—'),
+          points: Number(r.points || 0),
+          winners: Number(r.winners || 0)
+        }));
+      }
+    }
+
     renderLadder(leaders);
 
     const winnerHistory = milestones?.winnerHistory || [];
