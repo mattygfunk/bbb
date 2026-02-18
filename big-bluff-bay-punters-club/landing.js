@@ -131,6 +131,30 @@ function renderWinners(items) {
   }
 }
 
+function renderTopWinners(history) {
+  const n1 = document.getElementById('top-winner-1');
+  const n2 = document.getElementById('top-winner-2');
+  const n3 = document.getElementById('top-winner-3');
+  const nodes = [n1, n2, n3].filter(Boolean);
+  if (!nodes.length) return;
+
+  const rows = (history || []).slice(0, 3);
+  const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+
+  for (let i = 0; i < 3; i += 1) {
+    const node = nodes[i];
+    if (!node) continue;
+    const row = rows[i];
+    if (!row) {
+      node.textContent = '—';
+      continue;
+    }
+    const winner = row.rolledOver ? 'Rollover' : String(row.member || '—');
+    const prize = money.format(Number(row.prize ?? row.points ?? 0));
+    node.textContent = `${row.weekLabel || `Week ${i + 1}`}: ${winner} ${prize}`;
+  }
+}
+
 function renderSocialFeed(items) {
   const wrap = document.getElementById('social-feed-list');
   if (!wrap) return;
@@ -205,10 +229,11 @@ async function hydrateLandingCritical() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [jackpot, fx, ladder] = await Promise.all([
+    const [jackpot, fx, ladder, milestones] = await Promise.all([
       fetchApi('/jackpot'),
       fetchApi('/fixtures'),
-      fetchApi('/ladder')
+      fetchApi('/ladder'),
+      fetchApi('/milestones')
     ]);
 
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
@@ -229,6 +254,16 @@ async function hydrateLandingCritical() {
 
     const leaders = ladder?.ladder || [];
     renderLadder(leaders);
+
+    const winnerHistory = milestones?.winnerHistory || [];
+    renderTopWinners(winnerHistory);
+    renderWinners(
+      winnerHistory.slice(0, 6).map((w) => ({
+        handle: w.rolledOver ? 'Rollover' : `@${String(w.member || '').replace(/^@/, '')}`,
+        week: w.weekLabel || 'Week —',
+        prize: money.format(Number(w.prize ?? w.points ?? 0))
+      }))
+    );
 
     document.getElementById('status-meet').textContent = meet;
     document.getElementById('status-entries').textContent = 'Live';
