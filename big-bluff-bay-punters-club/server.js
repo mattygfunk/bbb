@@ -504,8 +504,47 @@ function normalizeArchivedRounds(store) {
   }));
 }
 
+function normalizeMilestoneRounds(store) {
+  const archived = normalizeArchivedRounds(store);
+  const closed = (store.puntersClub?.rounds || [])
+    .filter((r) => String(r.status || '').toLowerCase() === 'closed')
+    .map((r) => {
+      const snap = r.snapshot || {};
+      const topWinner = snap?.winner?.member || r?.winner?.member || '';
+      const payout = Number(snap?.winner?.payout ?? r?.winner?.payout ?? snap?.finalPotAmount ?? 0);
+      const tips = Array.isArray(snap.finalTipsFeed) ? snap.finalTipsFeed : [];
+      return {
+        id: r.id,
+        archivedAt: Number(r.closedAt || r.updatedAt || Date.now()),
+        fixture: (Array.isArray(snap.finalFixtures) && snap.finalFixtures[0]) ? snap.finalFixtures[0] : { date: '' },
+        tips,
+        ladder: Array.isArray(snap.finalLeaderboard) ? snap.finalLeaderboard : [],
+        jackpot: {
+          outrightWinner: String(topWinner || '').trim() || null,
+          roundPool: Number(snap?.finalJackpot?.currentRoundPot || 0),
+          previousCarry: Number(snap?.finalJackpot?.rollover || 0),
+          rolloverToNextWeek: 0
+        },
+        winner: {
+          member: String(topWinner || '').trim() || null,
+          payout
+        },
+        label: r.label
+      };
+    });
+
+  const merged = [...archived, ...closed]
+    .sort((a, b) => Number(a.archivedAt || 0) - Number(b.archivedAt || 0));
+
+  return merged.map((round, idx) => ({
+    ...round,
+    weekNumber: idx + 1,
+    weekLabel: round.weekLabel || round.label || `Week ${idx + 1}`
+  }));
+}
+
 function computeMilestonesData(store) {
-  const rounds = normalizeArchivedRounds(store);
+  const rounds = normalizeMilestoneRounds(store);
   const streakThresholds = [4, 8, 12, 26, 52];
   const winThresholds = [3, 5, 10];
 
@@ -554,6 +593,7 @@ function computeMilestonesData(store) {
       const ladderEntry = (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null;
       const roundPool = Number(round?.jackpot?.roundPool || 0);
       const previousCarry = Number(round?.jackpot?.previousCarry || 0);
+      const explicitPayout = Number(round?.winner?.payout);
       return {
         member: winner,
         weekNumber: round.weekNumber,
@@ -561,7 +601,7 @@ function computeMilestonesData(store) {
         archivedAt: Number(round.archivedAt || 0),
         points: Number(ladderEntry?.points || 0),
         winners: Number(ladderEntry?.winners || 0),
-        prize: roundPool + previousCarry
+        prize: Number.isFinite(explicitPayout) && explicitPayout > 0 ? explicitPayout : (roundPool + previousCarry)
       };
     })
     .filter(Boolean);
@@ -571,7 +611,9 @@ function computeMilestonesData(store) {
     const roundPool = Number(round?.jackpot?.roundPool || 0);
     const previousCarry = Number(round?.jackpot?.previousCarry || 0);
     const rolloverToNextWeek = Number(round?.jackpot?.rolloverToNextWeek || 0);
-    const prize = winner ? (roundPool + previousCarry) : (rolloverToNextWeek || (roundPool + previousCarry));
+    const explicitPayout = Number(round?.winner?.payout);
+    const computedPrize = winner ? (roundPool + previousCarry) : (rolloverToNextWeek || (roundPool + previousCarry));
+    const prize = winner && Number.isFinite(explicitPayout) && explicitPayout > 0 ? explicitPayout : computedPrize;
     const ladderEntry = winner
       ? (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null
       : null;
