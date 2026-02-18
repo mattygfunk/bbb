@@ -254,12 +254,26 @@ function computeBossesBetProgress(store) {
 function computeLadder(store) {
   const score = new Map();
 
+  const ensureMember = (member) => {
+    const key = String(member || 'Unknown').trim() || 'Unknown';
+    if (!score.has(key)) score.set(key, { member: key, points: 0, winners: 0 });
+    return key;
+  };
+
   const addPoints = (member, pts, isWinner) => {
-    const row = score.get(member) || { member, points: 0, winners: 0 };
+    const key = ensureMember(member);
+    const row = score.get(key);
     row.points += pts;
     if (isWinner) row.winners += 1;
-    score.set(member, row);
+    score.set(key, row);
   };
+
+  // Ensure anyone who has entered approved tips appears on the live ladder,
+  // even before any race results are posted.
+  for (const tip of store.tips || []) {
+    if (tip.status !== 'approved') continue;
+    ensureMember(tip.member);
+  }
 
   for (const tip of store.tips || []) {
     if (tip.status !== 'approved') continue;
