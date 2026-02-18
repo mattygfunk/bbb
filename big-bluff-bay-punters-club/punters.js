@@ -356,7 +356,7 @@ async function refresh(){
     const e=document.createElement('article');
     e.className='tip';
     const reminder = data.unpaid
-      ? `<p class='meta unpaid-reminder'>⚠️ Payment reminder: not marked paid — PayID for today: <strong>0421 325 503</strong></p>`
+      ? `<p class='meta unpaid-reminder'>⚠️ Not jackpot-eligible yet. Upgrade path: click <strong>Upgrade to Jackpot Eligible</strong>, pay <strong>$20 via PayID 0421 325 503</strong>, then submit confirmation for admin verification.</p>`
       : "";
     e.innerHTML=`<strong>${esc(member)}</strong>${data.unpaid ? " <span class='pill unpaid-pill'>UNPAID</span>" : ""}<p class='meta'>${lines || 'No tips yet'}</p>${reminder}`;
     $('tips-list').appendChild(e);
