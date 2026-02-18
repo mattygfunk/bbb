@@ -318,8 +318,9 @@ async function hydrateLandingCritical() {
     }
 
     renderTopWinners(combined);
+    const winnersWallRows = combined.slice(0, 8);
     renderWinners(
-      combined.slice(0, 6).map((w) => ({
+      winnersWallRows.map((w) => ({
         handle: w.type === 'poker'
           ? `♠ ${w.winner}`
           : (w.rolledOver ? '🏇 Rollover' : `🏇 @${String(w.winner || '').replace(/^@/, '')}`),
@@ -328,20 +329,22 @@ async function hydrateLandingCritical() {
       }))
     );
 
+    const recentPayoutTotal = winnersWallRows.reduce((sum, r) => sum + Number(r.prize || 0), 0);
+
     document.getElementById('status-meet').textContent = meet;
     document.getElementById('status-entries').textContent = 'Live';
-    document.getElementById('stat-weeks').textContent = String(fx?.fixtures?.length || '—');
-    document.getElementById('stat-paid').textContent = potText;
+    document.getElementById('stat-weeks').textContent = String(puntersRecent.length || '—');
+    document.getElementById('stat-paid').textContent = money.format(recentPayoutTotal);
 
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
 
-    scheduleIdle(() => hydrateLandingDeferred(potText), 3000);
+    scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
   }
 }
 
-async function hydrateLandingDeferred(potText) {
+async function hydrateLandingDeferred() {
   try {
     const [tips, social] = await Promise.all([
       fetchApi('/tips?status=all'),
@@ -356,7 +359,6 @@ async function hydrateLandingDeferred(potText) {
       renderSocialFeed(social?.items || []);
       document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
       document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
-      if (potText) document.getElementById('stat-paid').textContent = potText;
     });
   } catch {
     // deferred non-critical data failed; keep placeholders
