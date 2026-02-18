@@ -297,14 +297,21 @@ async function hydrateLandingCritical() {
     renderLadder(leaders);
 
     const winnerHistory = milestones?.winnerHistory || [];
-    const puntersRecent = winnerHistory.slice(0, 6).map((w) => ({
-      type: 'punters',
-      ts: Number(w.archivedAt || 0),
-      label: w.weekLabel || 'Week —',
-      winner: w.rolledOver ? 'Rollover' : String(w.member || '—'),
-      prize: Number(w.prize ?? w.points ?? 0),
-      rolledOver: Boolean(w.rolledOver)
-    }));
+    const puntersRecent = winnerHistory.slice(0, 6).map((w) => {
+      let prize = Number(w.prize ?? w.points ?? 0);
+      if (Boolean(w.rolledOver) && prize <= 0) {
+        // Fallback for older archived rows that did not persist rollover amount.
+        prize = Number(jackpot?.totalPot || jackpot?.rollover || 0);
+      }
+      return {
+        type: 'punters',
+        ts: Number(w.archivedAt || 0),
+        label: w.weekLabel || 'Week —',
+        winner: w.rolledOver ? 'Rollover' : String(w.member || '—'),
+        prize,
+        rolledOver: Boolean(w.rolledOver)
+      };
+    });
     const pokerRecent = buildRecentPokerWinners(pokerResults);
 
     let combined = [...puntersRecent, ...pokerRecent].sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
