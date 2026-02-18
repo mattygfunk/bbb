@@ -131,14 +131,14 @@ function renderWinners(items) {
   }
 }
 
-function renderTopWinners(history) {
+function renderTopWinners(items) {
   const n1 = document.getElementById('top-winner-1');
   const n2 = document.getElementById('top-winner-2');
   const n3 = document.getElementById('top-winner-3');
   const nodes = [n1, n2, n3].filter(Boolean);
   if (!nodes.length) return;
 
-  const rows = (history || []).slice(0, 3);
+  const rows = (items || []).slice(0, 3);
   const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
 
   for (let i = 0; i < 3; i += 1) {
@@ -149,10 +149,50 @@ function renderTopWinners(history) {
       node.textContent = '—';
       continue;
     }
-    const winner = row.rolledOver ? 'Rollover' : String(row.member || '—');
-    const prize = money.format(Number(row.prize ?? row.points ?? 0));
-    node.textContent = `${row.weekLabel || `Week ${i + 1}`}: ${winner} ${prize}`;
+    if (row.type === 'poker') {
+      node.textContent = `♠ Poker: ${row.winner || '—'} ${money.format(Number(row.prize || 0))}`;
+    } else {
+      const winner = row.rolledOver ? 'Rollover' : String(row.winner || '—');
+      node.textContent = `🏇 Punters: ${winner} ${money.format(Number(row.prize || 0))}`;
+    }
   }
+}
+
+function toMs(v) {
+  if (v == null || v === '') return 0;
+  const n = Number(v);
+  if (Number.isFinite(n)) return n > 0 && n < 1e12 ? n * 1000 : n;
+  const d = Date.parse(String(v));
+  return Number.isFinite(d) ? d : 0;
+}
+
+function buildRecentPokerWinners(results) {
+  const rows = Array.isArray(results?.results) ? results.results : [];
+  const grouped = new Map();
+  for (const r of rows) {
+    const ts = toMs(r.date) || toMs(r.createdAt) || Date.now();
+    const day = new Date(ts).toLocaleDateString('en-AU');
+    const eventName = String(r.eventName || 'Poker Event').trim();
+    const key = `${day}__${eventName}`;
+    if (!grouped.has(key)) grouped.set(key, { ts, eventName, rows: [] });
+    const g = grouped.get(key);
+    if (ts > g.ts) g.ts = ts;
+    g.rows.push(r);
+  }
+
+  return [...grouped.values()]
+    .map((g) => {
+      const winner = g.rows.reduce((best, r) => (Number(r.points || 0) > Number(best?.points || -Infinity) ? r : best), null);
+      return {
+        type: 'poker',
+        ts: Number(g.ts || 0),
+        label: g.eventName,
+        winner: String(winner?.playerName || winner?.player || '—'),
+        prize: Number(winner?.points || 0)
+      };
+    })
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, 5);
 }
 
 function renderSocialFeed(items) {
@@ -229,11 +269,12 @@ async function hydrateLandingCritical() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [jackpot, fx, ladder, milestones] = await Promise.all([
+    const [jackpot, fx, ladder, milestones, pokerResults] = await Promise.all([
       fetchApi('/jackpot'),
       fetchApi('/fixtures'),
       fetchApi('/ladder'),
-      fetchApi('/milestones')
+      fetchApi('/milestones'),
+      fetchApi('/poker/results?page=1&pageSize=100')
     ]);
 
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
@@ -256,12 +297,34 @@ async function hydrateLandingCritical() {
     renderLadder(leaders);
 
     const winnerHistory = milestones?.winnerHistory || [];
-    renderTopWinners(winnerHistory);
+    const puntersRecent = winnerHistory.slice(0, 6).map((w) => ({
+      type: 'punters',
+      ts: Number(w.archivedAt || 0),
+      label: w.weekLabel || 'Week —',
+      winner: w.rolledOver ? 'Rollover' : String(w.member || '—'),
+      prize: Number(w.prize ?? w.points ?? 0),
+      rolledOver: Boolean(w.rolledOver)
+    }));
+    const pokerRecent = buildRecentPokerWinners(pokerResults);
+
+    let combined = [...puntersRecent, ...pokerRecent].sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+    // Ensure both categories appear when available.
+    if (puntersRecent.length && pokerRecent.length) {
+      const top = combined.slice(0, 3);
+      const hasPunters = top.some((x) => x.type === 'punters');
+      const hasPoker = top.some((x) => x.type === 'poker');
+      if (!hasPunters) combined = [puntersRecent[0], ...combined.filter((x) => x.type !== 'punters')];
+      if (!hasPoker) combined = [pokerRecent[0], ...combined.filter((x) => x.type !== 'poker')];
+    }
+
+    renderTopWinners(combined);
     renderWinners(
-      winnerHistory.slice(0, 6).map((w) => ({
-        handle: w.rolledOver ? 'Rollover' : `@${String(w.member || '').replace(/^@/, '')}`,
-        week: w.weekLabel || 'Week —',
-        prize: money.format(Number(w.prize ?? w.points ?? 0))
+      combined.slice(0, 6).map((w) => ({
+        handle: w.type === 'poker'
+          ? `♠ ${w.winner}`
+          : (w.rolledOver ? '🏇 Rollover' : `🏇 @${String(w.winner || '').replace(/^@/, '')}`),
+        week: w.label || '—',
+        prize: money.format(Number(w.prize || 0))
       }))
     );
 
