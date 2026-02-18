@@ -399,4 +399,9 @@ async function initLockCountdown() {
   scheduleIdle(() => wirePickToggles(), 2000);
   wireLeaderboardShare();
   hydrateLandingCritical();
+
+  // Keep homepage ladder status (e.g. After R1 -> After R2) fresh without reload.
+  setInterval(() => {
+    hydrateLandingCritical();
+  }, 60000);
 })();
