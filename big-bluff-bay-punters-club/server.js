@@ -1007,15 +1007,28 @@ function createApp() {
     if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
     if (!selection) return res.status(400).json({ error: 'Selection is required' });
 
-    const existingIdx = store.tips.findIndex((t) => t.member === req.user.username && t.race === race && t.status !== 'removed');
+    const matches = (store.tips || [])
+      .map((t, idx) => ({ t, idx }))
+      .filter(({ t }) => t.member === req.user.username && t.race === race && t.status !== 'removed')
+      .sort((a, b) => Number(b.t.updatedAt || b.t.createdAt || 0) - Number(a.t.updatedAt || a.t.createdAt || 0));
 
-    if (existingIdx >= 0) {
+    if (matches.length > 0) {
       if (!canEditTipsNow(store)) {
         return res.status(403).json({ error: `Tips can only be edited until ${TIP_EDIT_DEADLINE_ISO}` });
       }
-      store.tips[existingIdx] = { ...store.tips[existingIdx], selection, status: 'approved', updatedAt: Date.now() };
+
+      const primary = matches[0];
+      store.tips[primary.idx] = { ...store.tips[primary.idx], selection, status: 'approved', updatedAt: Date.now() };
+
+      // Defensive dedupe: if legacy duplicates exist for same member/race,
+      // retire older ones so future edits and displays are consistent.
+      for (let i = 1; i < matches.length; i += 1) {
+        const old = matches[i];
+        store.tips[old.idx] = { ...store.tips[old.idx], status: 'removed', updatedAt: Date.now() };
+      }
+
       writeStore(store);
-      return res.json({ ok: true, tip: store.tips[existingIdx], updated: true });
+      return res.json({ ok: true, tip: store.tips[primary.idx], updated: true, deduped: Math.max(0, matches.length - 1) });
     }
 
     const tip = {
