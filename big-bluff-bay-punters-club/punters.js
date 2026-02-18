@@ -187,6 +187,12 @@ function renderRaceInputs(count){
 function markTipInteraction(){ state.lastTipInteractionAt = Date.now(); }
 function tipInteractionActive(){ return (Date.now() - Number(state.lastTipInteractionAt || 0)) < 20000; }
 
+function setVisible(el, show) {
+  if (!el) return;
+  el.hidden = !show;
+  el.style.display = show ? '' : 'none';
+}
+
 function renderTipEntryState() {
   const form = $('tip-form');
   const summaryCard = $('tips-locked-summary');
@@ -195,16 +201,16 @@ function renderTipEntryState() {
   if (!form || !summaryCard || !summaryText) return;
 
   if (!state.tipStateResolved) {
-    summaryCard.hidden = false;
+    setVisible(summaryCard, true);
     summaryText.textContent = 'Checking your saved tips…';
-    form.hidden = true;
+    setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
     return;
   }
 
   if (!state.user) {
-    summaryCard.hidden = true;
-    form.hidden = false;
+    setVisible(summaryCard, false);
+    setVisible(form, true);
     if (editBtn) editBtn.hidden = true;
     return;
   }
@@ -224,8 +230,8 @@ function renderTipEntryState() {
 
   const full = fullByFixture || fullByContiguousSet;
   if (!full) {
-    summaryCard.hidden = true;
-    form.hidden = false;
+    setVisible(summaryCard, false);
+    setVisible(form, true);
     if (editBtn) editBtn.hidden = true;
     return;
   }
@@ -236,8 +242,8 @@ function renderTipEntryState() {
     .join(' • ');
 
   summaryText.textContent = lines || 'All races entered.';
-  summaryCard.hidden = false;
-  form.hidden = true;
+  setVisible(summaryCard, true);
+  setVisible(form, false);
   if (editBtn) editBtn.hidden = false;
 }
 
@@ -402,8 +408,8 @@ if (tipsEditBtn) {
   tipsEditBtn.addEventListener('click', () => {
     const form = $('tip-form');
     const summary = $('tips-locked-summary');
-    if (form) form.hidden = false;
-    if (summary) summary.hidden = true;
+    setVisible(form, true);
+    setVisible(summary, false);
     markTipInteraction();
     document.querySelector('#quick-race-list select')?.focus();
   });
