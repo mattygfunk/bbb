@@ -1,6 +1,7 @@
 (async function () {
   const esc = (s) => String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
   const trackId = location.pathname.includes('greyhounds') ? 'greyhounds' : 'thoroughbreds';
+  document.body.classList.add(trackId === 'greyhounds' ? 'track-greyhounds' : 'track-thoroughbreds');
   const q = `?track=${encodeURIComponent(trackId)}`;
 
   const tabA = document.getElementById(`tab-${trackId}`);
@@ -51,6 +52,14 @@
       ? past.map((r) => `<a class='menu-link' href='/punters-club/${encodeURIComponent(trackId)}/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — ${esc(r.winner || '—')}</a>`).join('')
       : `<p class='muted'>No archived rounds yet on this track.</p>`;
   } catch (err) {
-    copy.textContent = `Could not load track data: ${err.message || 'request failed'}`;
+    const msg = `Could not load track data: ${err.message || 'request failed'}`;
+    copy.textContent = msg;
+    winner.textContent = 'No snapshot available yet. Retry shortly.';
+    roundMeta.textContent = 'Round status unavailable right now.';
+    jackpotMeta.textContent = 'Jackpot status unavailable right now.';
+    ladderBody.innerHTML = `<tr><td colspan='4' class='muted'>${esc(msg)}</td></tr>`;
+    ladderEmpty.hidden = false;
+    fixtures.innerHTML = `<p class='muted'>Fixtures unavailable right now.</p>`;
+    archives.innerHTML = `<p class='muted'>Archives unavailable right now.</p>`;
   }
 })();

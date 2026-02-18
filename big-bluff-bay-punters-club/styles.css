@@ -751,3 +751,30 @@ details p { margin:.55rem 0 0; }
   #punters-status-strip .pill { width: 100%; text-align: center; }
   #pricing-explainer .row-actions .btn { width: 100%; }
 }
+
+/* Punters Club dual-track polish */
+.punters-track-card { position: relative; overflow: hidden; }
+.punters-track-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -55% -20%;
+  height: 80%;
+  filter: blur(24px);
+  opacity: .25;
+  pointer-events: none;
+}
+.punters-track-card--greyhounds { border-top: 3px solid #4aa3ff; }
+.punters-track-card--greyhounds::after { background: radial-gradient(circle at center, #4aa3ff 0%, transparent 68%); }
+.punters-track-card--thoroughbreds { border-top: 3px solid #eab308; }
+.punters-track-card--thoroughbreds::after { background: radial-gradient(circle at center, #eab308 0%, transparent 68%); }
+
+#tab-greyhounds.active,
+#tab-thoroughbreds.active {
+  border-color: #475569;
+  background: linear-gradient(180deg,#172033 0%, #111827 100%);
+  color: #f8fafc;
+}
+
+#track-hero { border-left: 3px solid #334155; }
+body.track-greyhounds #track-hero { border-left-color: #4aa3ff; }
+body.track-thoroughbreds #track-hero { border-left-color: #eab308; }

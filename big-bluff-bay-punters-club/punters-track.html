@@ -17,13 +17,18 @@
     <section class="card" id="track-hero">
       <h1 id="track-title">Punters Track</h1>
       <p id="track-copy" class="muted">Loading track status…</p>
-      <p id="winner-banner" class="muted"></p>
+      <p id="winner-banner" class="muted">Checking latest round snapshot…</p>
+      <div class="row-actions">
+        <a class="btn btn-ghost" href="/punters-rules.html">Rules</a>
+        <a class="btn btn-ghost" href="/promo-terms.html">Promo Terms</a>
+      </div>
     </section>
 
     <section class="card">
       <h2>Round & Jackpot</h2>
       <p id="round-meta" class="muted">Loading round…</p>
       <p id="jackpot-meta" class="muted">Loading jackpot…</p>
+      <p class="muted">Upgrade path: pay <strong>$20</strong> (track-scoped), then submit claim for admin verification to become jackpot-eligible.</p>
     </section>
 
     <section class="card">
@@ -40,6 +45,15 @@
     <section class="card">
       <h2>Recent Archives</h2>
       <div id="archives" class="stack"></div>
+    </section>
+
+    <section class="card">
+      <h2>Why players trust this format</h2>
+      <ul class="muted">
+        <li>Track-specific lock/open schedule (Wednesday vs Saturday cadence).</li>
+        <li>Track-specific snapshots and winner banners.</li>
+        <li>Track-specific payment audit trail and archive links.</li>
+      </ul>
     </section>
   </main>
   <script defer src="/punters-track.js"></script>
