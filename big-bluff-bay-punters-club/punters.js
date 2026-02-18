@@ -187,6 +187,36 @@ function renderRaceInputs(count){
 function markTipInteraction(){ state.lastTipInteractionAt = Date.now(); }
 function tipInteractionActive(){ return (Date.now() - Number(state.lastTipInteractionAt || 0)) < 20000; }
 
+function renderTipEntryState() {
+  const form = $('tip-form');
+  const summaryCard = $('tips-locked-summary');
+  const summaryText = $('tips-locked-summary-text');
+  if (!form || !summaryCard || !summaryText) return;
+
+  if (!state.user) {
+    summaryCard.hidden = true;
+    form.hidden = false;
+    return;
+  }
+
+  const count = state.existingByRace.size;
+  const full = state.raceCount > 0 && count >= state.raceCount;
+  if (!full) {
+    summaryCard.hidden = true;
+    form.hidden = false;
+    return;
+  }
+
+  const lines = Array.from(state.existingByRace.entries())
+    .sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))
+    .map(([race,sel])=>`${race}: ${sel}`)
+    .join(' • ');
+
+  summaryText.textContent = lines || 'All races entered.';
+  summaryCard.hidden = false;
+  form.hidden = true;
+}
+
 async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
@@ -292,6 +322,8 @@ async function refresh(){
       : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
   }
 
+  renderTipEntryState();
+
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
@@ -333,6 +365,18 @@ const tipForm = $('tip-form');
 if (tipForm) {
   ['focusin','pointerdown','touchstart','change','input'].forEach((evt)=>{
     tipForm.addEventListener(evt, markTipInteraction, { passive: true });
+  });
+}
+
+const tipsEditBtn = $('tips-edit-btn');
+if (tipsEditBtn) {
+  tipsEditBtn.addEventListener('click', () => {
+    const form = $('tip-form');
+    const summary = $('tips-locked-summary');
+    if (form) form.hidden = false;
+    if (summary) summary.hidden = true;
+    markTipInteraction();
+    document.querySelector('#quick-race-list select')?.focus();
   });
 }
 
