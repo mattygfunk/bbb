@@ -428,7 +428,8 @@ function computeMilestonesData(store) {
     const winner = String(round?.jackpot?.outrightWinner || '').trim();
     const roundPool = Number(round?.jackpot?.roundPool || 0);
     const previousCarry = Number(round?.jackpot?.previousCarry || 0);
-    const prize = roundPool + previousCarry;
+    const rolloverToNextWeek = Number(round?.jackpot?.rolloverToNextWeek || 0);
+    const prize = winner ? (roundPool + previousCarry) : (rolloverToNextWeek || (roundPool + previousCarry));
     const ladderEntry = winner
       ? (round.ladder || []).find((r) => String(r.member || '').trim().toLowerCase() === winner.toLowerCase()) || null
       : null;
