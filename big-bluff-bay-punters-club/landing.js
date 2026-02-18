@@ -270,12 +270,13 @@ async function hydrateLandingCritical() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [jackpot, fx, ladder, milestones, pokerResults] = await Promise.all([
+    const [jackpot, fx, ladder, milestones, pokerResults, overview] = await Promise.all([
       fetchApi('/jackpot'),
       fetchApi('/fixtures'),
       fetchApi('/ladder'),
       fetchApi('/milestones'),
-      fetchApi('/poker/results?page=1&pageSize=100')
+      fetchApi('/poker/results?page=1&pageSize=100'),
+      fetchApi('/punters/overview?tier=paid')
     ]);
 
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
@@ -294,7 +295,10 @@ async function hydrateLandingCritical() {
     const meet = fx?.fixtures?.[0]?.track || 'Round complete — results below';
     renderFixtures(fx?.fixtures || []);
 
-    const leaders = ladder?.ladder || [];
+    const closedRound = String(overview?.round?.status || '').toUpperCase() === 'CLOSED';
+    const leaders = closedRound
+      ? (overview?.ladder || [])
+      : (ladder?.ladder || overview?.ladder || []);
     renderLadder(leaders);
 
     const winnerHistory = milestones?.winnerHistory || [];
@@ -345,7 +349,12 @@ async function hydrateLandingCritical() {
     document.getElementById('stat-paid').textContent = money.format(recentPayoutTotal);
 
     const cutoff = document.getElementById('ladder-after-race');
-    if (cutoff) cutoff.textContent = ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live';
+    if (cutoff) cutoff.textContent = closedRound ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
+
+    const tickerNode = document.getElementById('payout-ticker');
+    if (tickerNode && closedRound) {
+      tickerNode.textContent = 'Showing last round results until tipping opens Friday arvo.';
+    }
 
     scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
