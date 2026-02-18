@@ -202,7 +202,19 @@ function renderTipEntryState() {
   }
 
   const count = state.existingByRace.size;
-  const full = state.raceCount > 0 && count >= state.raceCount;
+  const fullByFixture = state.raceCount > 0 && count >= state.raceCount;
+
+  const enteredRaceNums = Array.from(state.existingByRace.keys())
+    .map((r) => Number(String(r || '').replace('R', '')))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => a - b);
+  const maxEnteredRace = enteredRaceNums.length ? enteredRaceNums[enteredRaceNums.length - 1] : 0;
+  const contiguousFromStart = enteredRaceNums.every((n, i) => n === i + 1);
+  // Fallback: if fixture raceCount is stale but user has a full contiguous set (e.g. R1..R10),
+  // treat as complete and collapse form.
+  const fullByContiguousSet = contiguousFromStart && count >= 10 && count === maxEnteredRace;
+
+  const full = fullByFixture || fullByContiguousSet;
   if (!full) {
     summaryCard.hidden = true;
     form.hidden = false;
