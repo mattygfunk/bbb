@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
+const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN'};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -307,6 +307,14 @@ function renderTipEntryState() {
     return;
   }
 
+  if (!state.tipsEditableNow) {
+    setVisible(summaryCard, true);
+    summaryText.textContent = 'Tips are locked for this round 🔒';
+    setVisible(form, false);
+    if (editBtn) editBtn.hidden = true;
+    return;
+  }
+
   if (!state.user) {
     setVisible(summaryCard, false);
     setVisible(form, true);
@@ -350,7 +358,7 @@ async function refresh(){
   state.tipStateResolved = false;
   renderTipEntryState();
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
-  let fx,tp,allTipsRes,bossesRes,milestonesRes;
+  let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
   const overview = await req(API.puntersOverview(state.tierView)).catch(() => null);
   state.lastOverview = overview || state.lastOverview;
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
@@ -361,12 +369,13 @@ async function refresh(){
   wireTierTabs();
 
   try {
-    [fx,tp,allTipsRes,bossesRes,milestonesRes]=await Promise.all([
+    [fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes]=await Promise.all([
       req(API.fixtures),
       req(`${API.tips}?status=all`),
       req(`${API.tips}?status=all`),
       req(API.bossesBet),
-      req(API.milestones)
+      req(API.milestones),
+      req(API.tipEditDeadline)
     ]);
   } catch (err) {
     const status = $('leaderboard-status');
@@ -377,6 +386,7 @@ async function refresh(){
     renderTipEntryState();
     return;
   }
+  state.tipsEditableNow = Boolean(tipDeadlineRes?.editableNow ?? true);
   const overviewData = overview || state.lastOverview || {};
   const effectiveFixtures = (overviewData.frozen && Array.isArray(overviewData.fixtures) && overviewData.fixtures.length)
     ? overviewData.fixtures
@@ -509,7 +519,7 @@ if (loginForm) {
 
 // Buy-in vote submission removed: fixed $20 entry is live now.
 
-$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(state.roundStatus!=='OPEN'){$('tip-msg').textContent='Round finished ✅. Tips reopen next round.';return;}if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
+$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(state.roundStatus!=='OPEN'){$('tip-msg').textContent='Round finished ✅. Tips reopen next round.';return;}if(!state.tipsEditableNow){$('tip-msg').textContent='Tips are locked for this round 🔒';return;}if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
 const tipForm = $('tip-form');
 if (tipForm) {
