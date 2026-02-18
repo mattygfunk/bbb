@@ -264,9 +264,11 @@ function applySub(selection, raceResult) {
   return hit ? String(hit.substitute) : String(selection);
 }
 
-function computeBossesBetProgress(store) {
-  const bb = store.bossesBet || { legs: [], selections: {} };
-  const raceCount = Number(getTrackData(store, trackId)?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
+function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
+  const tId = normalizeTrackId(trackId);
+  const trackData = getTrackData(store, tId);
+  const bb = trackData.bossesBet || { legs: [], selections: {} };
+  const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[tId].defaultRaceCount || 12);
   const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
   const activeLegs = new Set(Array.isArray(bb.legs) && bb.legs.length ? bb.legs : allRaces);
 
@@ -288,7 +290,7 @@ function computeBossesBetProgress(store) {
   const allResolved = active.every((l) => l.status === 'placed' || l.status === 'missed');
   const overall = anyMiss ? 'lost' : allPlaced && allResolved ? 'landed' : 'live';
 
-  return { ...bb, legs: [...activeLegs], progress: result, overall };
+  return { ...bb, trackId: tId, legs: [...activeLegs], progress: result, overall };
 }
 
 
@@ -299,6 +301,34 @@ function defaultTrackData(trackId) {
     raceResults: {},
     bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null }
   };
+}
+
+function getTrackJackpotCarry(store, trackId = 'thoroughbreds') {
+  const tId = normalizeTrackId(trackId);
+  ensurePuntersClubStore(store);
+  const byTrack = store.puntersClub?.jackpotCarryByTrack || {};
+  if (typeof byTrack[tId] === 'number' && Number.isFinite(byTrack[tId]) && byTrack[tId] >= 0) {
+    return Number(byTrack[tId]);
+  }
+  if (tId === 'thoroughbreds') {
+    const legacy = Number(store.jackpotCarry || 0);
+    return Number.isFinite(legacy) && legacy >= 0 ? legacy : 0;
+  }
+  return 0;
+}
+
+function setTrackJackpotCarry(store, trackId = 'thoroughbreds', amount = 0) {
+  const tId = normalizeTrackId(trackId);
+  ensurePuntersClubStore(store);
+  const safe = Math.max(0, Math.round(Number(amount || 0) * 100) / 100);
+  if (!store.puntersClub.jackpotCarryByTrack || typeof store.puntersClub.jackpotCarryByTrack !== 'object') {
+    store.puntersClub.jackpotCarryByTrack = {};
+  }
+  store.puntersClub.jackpotCarryByTrack[tId] = safe;
+  if (tId === 'thoroughbreds') {
+    store.jackpotCarry = safe;
+  }
+  return safe;
 }
 
 function ensurePuntersClubStore(store) {
@@ -314,6 +344,7 @@ function ensurePuntersClubStore(store) {
   if (!store.puntersClub.settings || typeof store.puntersClub.settings !== 'object') { store.puntersClub.settings = { nextRoundOpensAt: null }; changed = true; }
   if (!store.puntersClub.tracks || typeof store.puntersClub.tracks !== 'object') { store.puntersClub.tracks = {}; changed = true; }
   if (!store.puntersClub.schedule || typeof store.puntersClub.schedule !== 'object') { store.puntersClub.schedule = {}; changed = true; }
+  if (!store.puntersClub.jackpotCarryByTrack || typeof store.puntersClub.jackpotCarryByTrack !== 'object') { store.puntersClub.jackpotCarryByTrack = {}; changed = true; }
 
   Object.keys(TRACKS).forEach((trackId) => {
     if (!store.puntersClub.tracks[trackId] || typeof store.puntersClub.tracks[trackId] !== 'object') {
@@ -324,6 +355,25 @@ function ensurePuntersClubStore(store) {
     if (!Array.isArray(td.fixtures) || !td.fixtures.length) { td.fixtures = defaultTrackData(trackId).fixtures; changed = true; }
     if (!td.raceResults || typeof td.raceResults !== 'object') { td.raceResults = {}; changed = true; }
     if (!td.bossesBet || typeof td.bossesBet !== 'object') { td.bossesBet = defaultTrackData(trackId).bossesBet; changed = true; }
+
+    if (trackId === 'thoroughbreds') {
+      if (Array.isArray(store.fixtures) && store.fixtures.length) {
+        const looksUnmigrated = !Array.isArray(td.fixtures) || !td.fixtures.length || String(td.fixtures?.[0]?.id || '').startsWith('pc-thoroughbreds-');
+        if (looksUnmigrated) { td.fixtures = JSON.parse(JSON.stringify(store.fixtures)); changed = true; }
+      }
+      if (store.raceResults && typeof store.raceResults === 'object' && Object.keys(store.raceResults).length && (!td.raceResults || !Object.keys(td.raceResults).length)) {
+        td.raceResults = JSON.parse(JSON.stringify(store.raceResults));
+        changed = true;
+      }
+      if (store.bossesBet && typeof store.bossesBet === 'object') {
+        const hasLegacyBosses = (Array.isArray(store.bossesBet.legs) && store.bossesBet.legs.length) || Object.keys(store.bossesBet.selections || {}).length;
+        const hasTrackBosses = (Array.isArray(td.bossesBet?.legs) && td.bossesBet.legs.length) || Object.keys(td.bossesBet?.selections || {}).length;
+        if (hasLegacyBosses && !hasTrackBosses) {
+          td.bossesBet = JSON.parse(JSON.stringify(store.bossesBet));
+          changed = true;
+        }
+      }
+    }
 
     if (!store.puntersClub.schedule[trackId] || typeof store.puntersClub.schedule[trackId] !== 'object') {
       const t = TRACKS[trackId];
@@ -336,10 +386,20 @@ function ensurePuntersClubStore(store) {
       };
       changed = true;
     }
+    if (typeof store.puntersClub.jackpotCarryByTrack[trackId] !== 'number' || !Number.isFinite(store.puntersClub.jackpotCarryByTrack[trackId]) || store.puntersClub.jackpotCarryByTrack[trackId] < 0) {
+      const fallback = trackId === 'thoroughbreds' ? Number(store.jackpotCarry || 0) : 0;
+      store.puntersClub.jackpotCarryByTrack[trackId] = Number.isFinite(fallback) && fallback >= 0 ? fallback : 0;
+      changed = true;
+    }
   });
 
   if (typeof store.puntersClub.settings.nextRoundOpensAt !== 'number' && store.puntersClub.settings.nextRoundOpensAt !== null) {
     store.puntersClub.settings.nextRoundOpensAt = null;
+    changed = true;
+  }
+  const thCarry = Number(store.puntersClub.jackpotCarryByTrack?.thoroughbreds || 0);
+  if (typeof store.jackpotCarry !== 'number' || !Number.isFinite(store.jackpotCarry) || store.jackpotCarry < 0 || Math.abs(store.jackpotCarry - thCarry) > 0.000001) {
+    store.jackpotCarry = thCarry;
     changed = true;
   }
 
@@ -500,7 +560,7 @@ function computeJackpotTierData(store, opts = {}) {
   const freeMembers = new Set((round?.entries || []).map((e) => String(e.member || '').toLowerCase())).size;
   const entryFee = Number(round?.entryFee || store.entryFee || 20);
   const currentRoundPot = paidMembers * entryFee;
-  const rollover = Number(store.jackpotCarry || 0);
+  const rollover = getTrackJackpotCarry(store, trackId);
   const totalPot = currentRoundPot + rollover;
   return { round, paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot };
 }
@@ -532,7 +592,7 @@ function computeLadder(store, opts = {}) {
     ensureMember(tip.member);
   }
 
-  for (const tip of store.tips || []) {
+  for (const tip of trackTips || []) {
     if (tip.status !== 'approved') continue;
     const race = String(tip.race || '');
     const rr = trackData.raceResults?.[race];
@@ -1125,19 +1185,28 @@ function createApp() {
     return res.json({ ok: true, profile: next });
   });
 
-  app.get('/api/fixtures', (_req, res) => {
+  app.get('/api/fixtures', (req, res) => {
     const store = readStore();
-    return res.json({ fixtures: store.fixtures || [] });
+    const trackKey = req.query.track || req.query.trackId;
+    const trackId = normalizeTrackId(trackKey);
+    const fixtures = trackKey ? (getTrackData(store, trackId).fixtures || []) : (store.fixtures || []);
+    return res.json({ trackId, fixtures });
   });
 
-  app.get('/api/results', auth, adminOnly, (_req, res) => {
+  app.get('/api/results', auth, adminOnly, (req, res) => {
     const store = readStore();
-    return res.json({ raceResults: store.raceResults || {} });
+    const trackKey = req.query.track || req.query.trackId;
+    const trackId = normalizeTrackId(trackKey);
+    const raceResults = trackKey ? (getTrackData(store, trackId).raceResults || {}) : (store.raceResults || {});
+    return res.json({ trackId, raceResults });
   });
 
-  app.get('/api/bosses-bet', (_req, res) => {
+  app.get('/api/bosses-bet', (req, res) => {
     const store = readStore();
-    return res.json({ bossesBet: computeBossesBetProgress(store) });
+    const trackKey = req.query.track || req.query.trackId;
+    const trackId = normalizeTrackId(trackKey);
+    const bossesBet = trackKey ? computeBossesBetProgress(store, trackId) : computeBossesBetProgress(store, 'thoroughbreds');
+    return res.json({ trackId, bossesBet });
   });
 
   function getBuyInVotePayload(req) {
@@ -1208,7 +1277,9 @@ function createApp() {
 
   app.put('/api/bosses-bet', auth, adminOnly, (req, res) => {
     const store = readStore();
-    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
     const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
 
     const legsRaw = Array.isArray(req.body.legs) ? req.body.legs : ['R9', 'R10', 'R11', 'R12'];
@@ -1219,41 +1290,59 @@ function createApp() {
     const inSel = req.body.selections && typeof req.body.selections === 'object' ? req.body.selections : {};
     legs.forEach((race) => { selections[race] = String(inSel[race] || '').trim(); });
 
-    store.bossesBet = {
+    trackData.bossesBet = {
       legs,
       selections,
       updatedAt: Date.now(),
       updatedBy: req.user.username
     };
 
+    if (trackId === 'thoroughbreds') {
+      store.bossesBet = trackData.bossesBet;
+    }
+
     writeStore(store);
-    return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
+    return res.json({ ok: true, trackId, bossesBet: computeBossesBetProgress(store, trackId) });
   });
 
   app.delete('/api/bosses-bet', auth, adminOnly, (req, res) => {
     const store = readStore();
-    store.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    trackData.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    if (trackId === 'thoroughbreds') {
+      store.bossesBet = trackData.bossesBet;
+    }
     writeStore(store);
-    return res.json({ ok: true, bossesBet: computeBossesBetProgress(store) });
+    return res.json({ ok: true, trackId, bossesBet: computeBossesBetProgress(store, trackId) });
   });
 
   app.delete('/api/bosses-bet/results', auth, adminOnly, (req, res) => {
     const store = readStore();
-    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
     const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
 
-    // Hard reset all meet results + bosses selections to avoid stale "missed" states.
-    store.raceResults = {};
-    store.bossesBet = { legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    // Hard reset selected meet results + bosses selections to avoid stale "missed" states.
+    trackData.raceResults = {};
+    trackData.bossesBet = { legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+
+    if (trackId === 'thoroughbreds') {
+      store.raceResults = {};
+      store.bossesBet = trackData.bossesBet;
+    }
 
     writeStore(store);
-    return res.json({ ok: true, clearedLegs: allRaces, bossesBet: computeBossesBetProgress(store) });
+    return res.json({ ok: true, trackId, clearedLegs: allRaces, bossesBet: computeBossesBetProgress(store, trackId) });
   });
 
   app.put('/api/results/:race', auth, adminOnly, (req, res) => {
     const race = String(req.params.race || '').toUpperCase();
     const store = readStore();
-    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
     const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
     if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
 
@@ -1262,8 +1351,8 @@ function createApp() {
     const third = parseRunnerList(req.body.third);
     const substitutions = parseSubs(req.body.substitutions);
 
-    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
-    store.raceResults[race] = {
+    if (!trackData.raceResults || typeof trackData.raceResults !== 'object') trackData.raceResults = {};
+    trackData.raceResults[race] = {
       first,
       second,
       third,
@@ -1272,21 +1361,30 @@ function createApp() {
       updatedBy: req.user.username
     };
 
+    if (trackId === 'thoroughbreds') {
+      store.raceResults = trackData.raceResults;
+    }
+
     writeStore(store);
-    return res.json({ ok: true, race, result: store.raceResults[race] });
+    return res.json({ ok: true, trackId, race, result: trackData.raceResults[race] });
   });
 
   app.delete('/api/results/:race', auth, adminOnly, (req, res) => {
     const race = String(req.params.race || '').toUpperCase();
     const store = readStore();
-    const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
     const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
     if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
 
-    if (!store.raceResults || typeof store.raceResults !== 'object') store.raceResults = {};
-    delete store.raceResults[race];
+    if (!trackData.raceResults || typeof trackData.raceResults !== 'object') trackData.raceResults = {};
+    delete trackData.raceResults[race];
+    if (trackId === 'thoroughbreds') {
+      store.raceResults = trackData.raceResults;
+    }
     writeStore(store);
-    return res.json({ ok: true, race, removed: true });
+    return res.json({ ok: true, trackId, race, removed: true });
   });
 
   app.put('/api/fixtures/:id', auth, adminOnly, (req, res) => {
@@ -1299,12 +1397,17 @@ function createApp() {
     if (!Number.isInteger(raceCount) || raceCount < 1 || raceCount > 24) return res.status(400).json({ error: 'raceCount must be 1-24' });
 
     const store = readStore();
-    const idx = (store.fixtures || []).findIndex((f) => f.id === id);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const idx = (trackData.fixtures || []).findIndex((f) => f.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Fixture not found' });
 
-    store.fixtures[idx] = { ...store.fixtures[idx], date, event, track, raceCount };
+    trackData.fixtures[idx] = { ...trackData.fixtures[idx], date, event, track, raceCount };
+    if (trackId === 'thoroughbreds') {
+      store.fixtures = trackData.fixtures;
+    }
     writeStore(store);
-    return res.json({ ok: true, fixture: store.fixtures[idx] });
+    return res.json({ ok: true, trackId, fixture: trackData.fixtures[idx] });
   });
 
   app.get('/api/tips', (req, res) => {
@@ -1398,7 +1501,8 @@ function createApp() {
 
     if (typeof req.body.race !== 'undefined') {
       const race = String(req.body.race || '').trim().toUpperCase();
-      const raceCount = Number(store.fixtures?.[0]?.raceCount || 12);
+      const tipTrack = normalizeTrackId(store.tips[idx]?.trackId || 'thoroughbreds');
+      const raceCount = Number(getTrackData(store, tipTrack)?.fixtures?.[0]?.raceCount || TRACKS[tipTrack].defaultRaceCount || 12);
       const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
       if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
       store.tips[idx].race = race;
@@ -1438,27 +1542,30 @@ function createApp() {
     const { paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot, round } = computeJackpotTierData(store, { trackId });
     writeStore(store);
     return res.json({
+      trackId,
       entryFee,
       paidMembers,
       freeMembers,
       currentRoundPot,
       rollover,
+      jackpotCarry: rollover,
       totalPot,
       tiers: { free: freeMembers, jackpotEligible: paidMembers, entryFee },
-      roundId: round.id,
+      roundId: round?.id || null,
       lastWinner: store.lastJackpotWinner || ''
     });
   });
 
   app.put('/api/jackpot', auth, adminOnly, (req, res) => {
     const store = readStore();
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
     const rollover = Number(req.body?.rollover);
     if (!Number.isFinite(rollover) || rollover < 0) {
       return res.status(400).json({ error: 'Rollover must be a non-negative number' });
     }
-    store.jackpotCarry = Math.round(rollover * 100) / 100;
+    const jackpotCarry = setTrackJackpotCarry(store, trackId, rollover);
     writeStore(store);
-    return res.json({ ok: true, jackpotCarry: store.jackpotCarry });
+    return res.json({ ok: true, trackId, jackpotCarry, rollover: jackpotCarry });
   });
 
   app.get('/api/punters/tracks', (_req, res) => {
@@ -1482,7 +1589,7 @@ function createApp() {
     let freeMembers = 0;
     let entryFee = Number(store.entryFee || 20);
     let currentRoundPot = 0;
-    let rollover = Number(store.jackpotCarry || 0);
+    let rollover = getTrackJackpotCarry(store, trackId);
     let totalPot = rollover;
     let ladder = [];
     let tipsFeed = [];
@@ -1508,7 +1615,7 @@ function createApp() {
       paidMembers = Number(snap.finalCounts?.paidEntries || 0);
       freeMembers = Number(snap.finalCounts?.entries || 0);
       currentRoundPot = Number(snap.finalJackpot?.currentRoundPot || snap.finalPotAmount || 0);
-      rollover = Number(snap.finalJackpot?.rollover || store.jackpotCarry || 0);
+      rollover = Number(snap.finalJackpot?.rollover || getTrackJackpotCarry(store, trackId) || 0);
       totalPot = Number(snap.finalPotAmount || snap.finalJackpot?.totalPot || 0);
       ladder = Array.isArray(snap.finalTop10) ? snap.finalTop10 : [];
       tipsFeed = Array.isArray(snap.finalTipsFeed) ? snap.finalTipsFeed : [];
@@ -1529,7 +1636,7 @@ function createApp() {
         statusText: 'Next round opens Friday afternoon'
       };
     } else {
-      round = getCurrentRound(store, { autoCreate: true });
+      round = getCurrentRound(store, { autoCreate: true, trackId });
       const live = computeJackpotTierData(store, { autoCreate: false, trackId });
       paidMembers = live.paidMembers;
       freeMembers = live.freeMembers;
@@ -1738,9 +1845,12 @@ function createApp() {
     const store = readStore();
     ensurePuntersClubStore(store);
     const roundId = String(req.params.roundId || '');
+    const requestedTrackId = req.query.track || req.query.trackId ? normalizeTrackId(req.query.track || req.query.trackId) : null;
     const round = (store.puntersClub.rounds || []).find((r) => String(r.id) === roundId);
     if (!round) return res.status(404).json({ error: 'Round not found' });
-    return res.json({ round, snapshot: round.snapshot || null });
+    const trackId = normalizeTrackId(round.trackId);
+    if (requestedTrackId && requestedTrackId !== trackId) return res.status(404).json({ error: 'Round not found for track' });
+    return res.json({ trackId, round, snapshot: round.snapshot || null });
   });
 
   app.post('/api/punters/payments/verify', auth, adminOnly, (req, res) => {
@@ -1966,18 +2076,20 @@ function createApp() {
 
   app.post('/api/archive-round', auth, adminOnly, (req, res) => {
     const store = readStore();
-    const fixture = (store.fixtures || [])[0] || null;
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const fixture = (trackData.fixtures || [])[0] || null;
     const tips = getTipsForTrack(store, trackId);
 
-    if (!fixture && !tips.length && !Object.keys(store.raceResults || {}).length) {
+    if (!fixture && !tips.length && !Object.keys(trackData.raceResults || {}).length) {
       return res.status(400).json({ error: 'Nothing to archive yet' });
     }
 
-    const ladder = computeLadder(store);
+    const ladder = computeLadder(store, { trackId });
     const entryFee = Number(store.entryFee || 20);
     const paidMembers = new Set(tips.filter((t) => t.paid).map((t) => String(t.member || ''))).size;
     const roundPool = paidMembers * entryFee;
-    const previousCarry = Number(store.jackpotCarry || 0);
+    const previousCarry = getTrackJackpotCarry(store, trackId);
 
     const first = ladder[0];
     const second = ladder[1];
@@ -1986,12 +2098,13 @@ function createApp() {
 
     const snapshot = {
       id: crypto.randomUUID(),
+      trackId,
       archivedAt: Date.now(),
       archivedBy: req.user.username,
       fixture,
       tips,
-      raceResults: store.raceResults || {},
-      bossesBet: store.bossesBet || { legs: [], selections: {} },
+      raceResults: trackData.raceResults || {},
+      bossesBet: trackData.bossesBet || { legs: [], selections: {} },
       ladder,
       jackpot: {
         entryFee,
@@ -2007,25 +2120,30 @@ function createApp() {
     store.archiveRounds.unshift(snapshot);
 
     if (outright) {
-      store.jackpotCarry = 0;
+      setTrackJackpotCarry(store, trackId, 0);
       store.lastJackpotWinner = String(first?.member || '');
     } else {
-      store.jackpotCarry = previousCarry + roundPool;
+      setTrackJackpotCarry(store, trackId, previousCarry + roundPool);
     }
 
-    store.tips = [];
-    store.raceResults = {};
-    store.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    store.tips = (store.tips || []).filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') !== trackId);
+    trackData.raceResults = {};
+    trackData.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    if (trackId === 'thoroughbreds') {
+      store.raceResults = {};
+      store.bossesBet = trackData.bossesBet;
+    }
     store.buyInVotes = {};
 
     writeStore(store);
     return res.json({
       ok: true,
+      trackId,
       archivedRoundId: snapshot.id,
       tipsArchived: tips.length,
       fixture: fixture?.event || null,
       outrightWinner: outright ? first?.member || null : null,
-      rolloverToNextWeek: Number(store.jackpotCarry || 0)
+      rolloverToNextWeek: getTrackJackpotCarry(store, trackId)
     });
   });
 
@@ -2163,7 +2281,7 @@ function createApp() {
   app.get('/share/leaderboard', (req, res) => {
     const host = req.headers.host || 'bigbluffbay.au';
     const imageUrl = `https://${host}/api/leaderboard-image.svg`;
-    const targetUrl = `https://${host}/punters.html`;
+    const targetUrl = `https://${host}/punters-club`;
     const html = `<!doctype html><html><head>
 <meta charset="utf-8" />
 <meta property="og:title" content="Big Bluff Bay Leaderboard" />
@@ -2182,6 +2300,7 @@ function createApp() {
   app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
+  app.get('/punters-club/:track/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
   app.get('/punters.html', (_req, res) => res.redirect(302, '/punters-club/thoroughbreds'));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
