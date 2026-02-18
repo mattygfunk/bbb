@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN'};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -221,6 +221,12 @@ function renderTierStrip(overview){
 function renderUpgradeButtonState(){
   const btn = $('upgrade-tier-btn');
   if(!btn) return;
+  if(state.roundStatus !== 'OPEN'){
+    btn.textContent = 'Round finished ✅';
+    btn.disabled = true;
+    btn.classList.add('btn-ghost');
+    return;
+  }
   if(state.isJackpotEligible){
     btn.textContent = 'You’re in ✅';
     btn.disabled = true;
@@ -230,6 +236,52 @@ function renderUpgradeButtonState(){
   btn.textContent = 'Upgrade to Jackpot Eligible';
   btn.disabled = false;
   btn.classList.remove('btn-ghost');
+}
+
+function renderRoundMeta(overview){
+  const finalLabel = $('final-results-label');
+  if(finalLabel){
+    finalLabel.hidden = !overview?.frozen;
+  }
+
+  const winnerBanner = $('winner-banner');
+  if (winnerBanner) winnerBanner.hidden = !overview?.winnerBanner;
+  if (overview?.winnerBanner){
+    $('winner-banner-name').textContent = overview.winnerBanner.member || 'tofu';
+    $('winner-banner-range').textContent = overview.winnerBanner.dateRange || '';
+    $('winner-banner-pot').textContent = `Pot: $${Number(overview.winnerBanner.pot || 0).toFixed(2)}`;
+    $('winner-banner-line').textContent = overview.winnerBanner.oneLiner || '';
+  }
+
+  const recap = $('round-recap');
+  if (recap) recap.hidden = !overview?.recap;
+  const top3Body = $('round-recap-top3');
+  if (overview?.recap && top3Body){
+    top3Body.innerHTML = '';
+    (overview.recap.top3 || []).forEach((row, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${idx+1}</td><td>${esc(row.member || '-')}</td><td>${Number(row.points || 0)}</td>`;
+      top3Body.appendChild(tr);
+    });
+    $('round-recap-summary').textContent = `${overview.recap.winner} won • ${overview.recap.totalEntries} entries • ${overview.recap.paidEntries} paid • Pot $${Number(overview.recap.finalPot||0).toFixed(2)} • ${overview.recap.statusText || ''}`;
+  }
+
+  const teaser = $('next-round-teaser');
+  if (teaser) teaser.hidden = !overview?.nextRoundTeaser;
+  if (overview?.nextRoundTeaser){
+    $('next-round-teaser-text').textContent = overview.nextRoundTeaser.title || 'Next Punters Club opens Friday afternoon';
+    $('next-round-teaser-venue').textContent = overview.nextRoundTeaser.venue || 'Venue TBA';
+  }
+
+  const past = $('past-rounds-list');
+  if (past){
+    const rounds = overview?.pastRounds || [];
+    if (!rounds.length){
+      past.innerHTML = `<p class='muted'>No archived rounds yet.</p>`;
+    } else {
+      past.innerHTML = rounds.map((r)=>`<a class='menu-link' href='/punters-club/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — Winner: ${esc(r.winner || '—')}</a>`).join('');
+    }
+  }
 }
 
 function renderTipEntryState() {
@@ -242,6 +294,14 @@ function renderTipEntryState() {
   if (!state.tipStateResolved) {
     setVisible(summaryCard, true);
     summaryText.textContent = 'Checking your saved tips…';
+    setVisible(form, false);
+    if (editBtn) editBtn.hidden = true;
+    return;
+  }
+
+  if (state.roundStatus !== 'OPEN') {
+    setVisible(summaryCard, true);
+    summaryText.textContent = 'Round finished ✅';
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
     return;
@@ -293,9 +353,11 @@ async function refresh(){
   let fx,tp,allTipsRes,bossesRes,milestonesRes;
   const overview = await req(API.puntersOverview(state.tierView)).catch(() => null);
   state.lastOverview = overview || state.lastOverview;
+  state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
   const rulesJackpot = $('rules-jackpot-value');
   if (rulesJackpot && (overview || state.lastOverview)) rulesJackpot.textContent = `$${Number((overview||state.lastOverview)?.jackpot?.totalPot || 0).toFixed(0)}`;
   renderTierStrip(overview || state.lastOverview);
+  renderRoundMeta(overview || state.lastOverview);
   wireTierTabs();
 
   try {
@@ -315,11 +377,15 @@ async function refresh(){
     renderTipEntryState();
     return;
   }
+  const overviewData = overview || state.lastOverview || {};
+  const effectiveFixtures = (overviewData.frozen && Array.isArray(overviewData.fixtures) && overviewData.fixtures.length)
+    ? overviewData.fixtures
+    : (fx.fixtures || []);
   const fixturesList = $('fixtures-list');
   if (fixturesList) fixturesList.innerHTML='';
-  (fx.fixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`; if (fixturesList) fixturesList.appendChild(e);});
+  (effectiveFixtures||[]).forEach(f=>{const e=document.createElement('article');e.className='fixture';e.innerHTML=`<strong>${esc(f.event)}</strong><p>${esc(f.date)} • ${esc(f.track)}</p>`; if (fixturesList) fixturesList.appendChild(e);});
   const quickFixtureLine = $('quick-fixture-line');
-  const nextMeet = (fx.fixtures || [])[0];
+  const nextMeet = (effectiveFixtures || [])[0];
   if (quickFixtureLine) {
     quickFixtureLine.textContent = nextMeet
       ? `Next meet: ${nextMeet.date} • ${nextMeet.track} (${nextMeet.event})`
@@ -334,7 +400,7 @@ async function refresh(){
   renderLeaderboard(ladderRows);
   if(ladderFallback) ladderFallback.hidden = ladderRows.length > 0;
   const status = $('leaderboard-status');
-  if (status) status.textContent = (overview || state.lastOverview)?.round?.label || 'Live';
+  if (status) status.textContent = state.roundStatus === 'CLOSED' ? 'Round finished ✅' : ((overview || state.lastOverview)?.round?.label || 'Live');
   renderBossesBet(bossesRes.bossesBet || {});
   renderMilestones(milestonesRes || {});
   if (state.selectedBreakdownMember) {
@@ -342,7 +408,8 @@ async function refresh(){
   }
   $('tips-list').innerHTML='';
   const byPunter = new Map();
-  (tp.tips||[]).filter(t=>t.status!=='removed').forEach((t) => {
+  const visibleTips = Array.isArray(overviewData.tipsFeed) && overviewData.frozen ? overviewData.tipsFeed : (tp.tips||[]);
+  (visibleTips||[]).filter(t=>t.status!=='removed').forEach((t) => {
     const member = String(t.member || 'Unknown');
     if (!byPunter.has(member)) byPunter.set(member, { picks: new Map(), unpaid: false });
     const row = byPunter.get(member);
@@ -442,7 +509,7 @@ if (loginForm) {
 
 // Buy-in vote submission removed: fixed $20 entry is live now.
 
-$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
+$('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(state.roundStatus!=='OPEN'){$('tip-msg').textContent='Round finished ✅. Tips reopen next round.';return;}if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 
 const tipForm = $('tip-form');
 if (tipForm) {
@@ -574,6 +641,10 @@ const claimModal = $('claim-modal');
 $('close-claim-modal-btn')?.addEventListener('click', ()=> claimModal?.close());
 $('upgrade-tier-btn')?.addEventListener('click', ()=>{
   const msg = $('tip-msg');
+  if(state.roundStatus !== 'OPEN'){
+    if(msg) msg.textContent = 'Round finished ✅. Upgrades reopen with the next round.';
+    return;
+  }
   if(!state.user){
     if(msg) msg.textContent = 'Log in first to upgrade.';
     return;

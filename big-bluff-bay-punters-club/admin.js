@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
@@ -413,6 +413,67 @@ async function refresh(){
   });
 }
 
+
+async function getCurrentPuntersRound(){
+  const out = await req(API.puntersRounds);
+  const rounds = out.rounds || [];
+  return rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || rounds[0] || null;
+}
+
+function getRoundWinnerPayload(){
+  const form = $('round-winner-form');
+  const f = form ? new FormData(form) : new FormData();
+  const rawOpen = String(f.get('nextRoundOpensAt') || '').trim();
+  const openAt = rawOpen ? new Date(rawOpen).getTime() : null;
+  return {
+    winner: String(f.get('winner') || 'tofu').trim() || 'tofu',
+    payout: Number(f.get('payout') || 0),
+    notes: String(f.get('notes') || '').trim(),
+    nextRoundOpensAt: Number.isFinite(openAt) ? openAt : undefined
+  };
+}
+
+$('close-round-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  try {
+    const round = await getCurrentPuntersRound();
+    if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
+    const payload = getRoundWinnerPayload();
+    await req(API.closeRound(round.id), { method:'POST', body: JSON.stringify(payload) });
+    $('archive-round-msg').textContent = 'Round closed and snapshot frozen.';
+    await refresh();
+  } catch (err) { $('archive-round-msg').textContent = err.message; }
+});
+
+$('recompute-snapshot-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  try {
+    const round = await getCurrentPuntersRound();
+    if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
+    await req(API.recomputeSnapshot(round.id), { method:'POST' });
+    $('archive-round-msg').textContent = 'Snapshot recomputed.';
+  } catch (err) { $('archive-round-msg').textContent = err.message; }
+});
+
+$('open-next-round-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
+  try {
+    const payload = getRoundWinnerPayload();
+    await req(API.openNextRound, { method:'POST', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
+    $('archive-round-msg').textContent = 'Next round is open.';
+    await refresh();
+  } catch (err) { $('archive-round-msg').textContent = err.message; }
+});
+
+$('round-winner-form')?.addEventListener('change', async () => {
+  if(!isAdmin()) return;
+  try {
+    const payload = getRoundWinnerPayload();
+    if (payload.nextRoundOpensAt) {
+      await req(API.puntersSettings, { method:'PUT', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
+    }
+  } catch {}
+});
 
 $('punters-payment-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();

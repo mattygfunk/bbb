@@ -56,6 +56,30 @@ npm start
 - **Public tiered ladder endpoint:** `GET /api/punters/overview?tier=free|paid`
 - **Cache:** leaderboard calculations are cached per round signature under `store.puntersClub.leaderboardCache`.
 
+### Close Round + Archive + Friday rollover flow (NEW)
+
+- **Close round:** admin can close the current round via `POST /api/punters/rounds/:id/close`.
+  - Sets `round.status = "closed"`
+  - Sets `round.closedAt`
+  - Freezes snapshot payload on the round:
+    - `finalLeaderboard` (Top 100)
+    - `finalTop10`
+    - `finalPotAmount`
+    - `finalCounts` (`entries`, `paidEntries`)
+    - `finalFixtures`
+    - `finalTipsFeed`
+- **Freeze behavior:** when there is no open round and latest round is closed, `GET /api/punters/overview` serves frozen snapshot data so the page stays populated (no drift / no `$0` dead states).
+- **Winner + recap:** closed-round overview returns `winnerBanner` + `recap` blocks for the Punters page.
+- **Archive route:**
+  - `GET /api/punters/results/:roundId` returns the frozen round snapshot.
+  - Public route `/punters-club/results/:roundId` renders round archive UI.
+- **Friday rollover:** `puntersClub.settings.nextRoundOpensAt` stores the next-open timestamp (default Friday 4:00pm style target), and admin can open next via `POST /api/punters/rounds/open-next`.
+- **Admin actions added:**
+  - Close Round
+  - Recompute & Freeze Snapshot
+  - Open Next Round
+  - Set winner/payout/notes + nextRoundOpensAt
+
 ### Test coverage
 - Integration test: `test-v4.js`
 - Poker V2 unit safeguards: `test-poker-v2.js`

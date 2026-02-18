@@ -76,6 +76,17 @@
         <span>›</span>
         <span aria-current="page">🏇 Punters Club</span>
       </nav>
+      <section class="card" id="winner-banner" hidden>
+        <h2>🏆 Round Winner: <span id="winner-banner-name">tofu</span></h2>
+        <p class="muted" id="winner-banner-range">Round date range</p>
+        <p class="muted" id="winner-banner-pot">Final pot: $0</p>
+        <p class="muted" id="winner-banner-line"></p>
+      </section>
+      <section class="card" id="round-recap" hidden>
+        <h2>Round Recap</h2>
+        <p class="muted" id="round-recap-summary">Next round opens Friday afternoon</p>
+        <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th></tr></thead><tbody id="round-recap-top3"><tr><td colspan="3" class="muted">No recap yet.</td></tr></tbody></table></div>
+      </section>
       <section class="card"><h2>Quick Tips Entry (R1–R12)</h2><p class="muted">Best next step: <a href="/punters.html#tip-form">Enter This Week’s Tips</a>, then <a href="/winners.html">See Winners & Streaks</a>.</p>
         <div class="status-strip" id="punters-status-strip">
           <span class="pill" id="tier-pill">Tier: FREE</span>
@@ -115,6 +126,7 @@
       <div class="split">
         <section class="card" id="leaderboard">
           <div class="section-head" style="margin-bottom:.45rem"><h2>Next Meet + Live Leaderboard <span class="pill" id="leaderboard-status">Live</span></h2><div class="row-actions"><button class="btn btn-ghost" type="button" id="share-punters-leaderboard-btn">Share to Messenger Group</button></div></div>
+          <p class="muted" id="final-results-label" hidden>Final results (Round closed)</p>
           <div class="grid three" id="fixtures-list"></div>
           <div class="row-actions" style="margin:.55rem 0">
             <button class="btn btn-ghost tier-tab active" type="button" data-tier-view="free">FREE View</button>
@@ -156,6 +168,8 @@
           <div class="row-actions"><a class="btn chip-btn" href="/poker.html">Become a Poker Legend</a></div>
         </div>
       </section>
+      <section class="card" id="next-round-teaser" hidden><h2>Next Round Teaser</h2><p class="muted" id="next-round-teaser-text">Next Punters Club opens Friday afternoon</p><p class="muted" id="next-round-teaser-venue">Venue TBA</p></section>
+      <section class="card"><h2>Past rounds</h2><div class="stack" id="past-rounds-list"><p class="muted">No archived rounds yet.</p></div></section>
       <section class="card"><h2>Community Tips <span class="pill" id="tips-count">0</span></h2><div class="grid three" id="tips-list"></div></section>
 
     </main>
