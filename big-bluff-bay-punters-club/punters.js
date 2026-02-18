@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:''};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -194,6 +194,14 @@ function renderTipEntryState() {
   const editBtn = $('tips-edit-btn');
   if (!form || !summaryCard || !summaryText) return;
 
+  if (!state.tipStateResolved) {
+    summaryCard.hidden = false;
+    summaryText.textContent = 'Checking your saved tips…';
+    form.hidden = true;
+    if (editBtn) editBtn.hidden = true;
+    return;
+  }
+
   if (!state.user) {
     summaryCard.hidden = true;
     form.hidden = false;
@@ -234,6 +242,8 @@ function renderTipEntryState() {
 }
 
 async function refresh(){
+  state.tipStateResolved = false;
+  renderTipEntryState();
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,ladderRes,bossesRes,milestonesRes;
   const jackpotRes = await req(API.jackpot).catch(() => null);
@@ -254,6 +264,8 @@ async function refresh(){
     if (status) status.textContent = 'Offline';
     const tipMsg = $('tip-msg');
     if (tipMsg) tipMsg.textContent = `Live data unavailable: ${err.message}`;
+    state.tipStateResolved = true;
+    renderTipEntryState();
     return;
   }
   const fixturesList = $('fixtures-list');
@@ -338,6 +350,7 @@ async function refresh(){
       : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
   }
 
+  state.tipStateResolved = true;
   renderTipEntryState();
 
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
