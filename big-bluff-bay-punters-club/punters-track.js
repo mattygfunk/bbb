@@ -48,7 +48,7 @@
 
     const past = data?.pastRounds || [];
     archives.innerHTML = past.length
-      ? past.map((r) => `<a class='menu-link' href='/punters-club/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — ${esc(r.winner || '—')}</a>`).join('')
+      ? past.map((r) => `<a class='menu-link' href='/punters-club/${encodeURIComponent(trackId)}/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — ${esc(r.winner || '—')}</a>`).join('')
       : `<p class='muted'>No archived rounds yet on this track.</p>`;
   } catch (err) {
     copy.textContent = `Could not load track data: ${err.message || 'request failed'}`;

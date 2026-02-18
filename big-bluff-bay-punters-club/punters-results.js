@@ -1,8 +1,12 @@
 (async function(){
   const esc=(s)=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-  const roundId = decodeURIComponent((location.pathname.split('/').pop() || '').trim());
+  const parts = location.pathname.split('/').filter(Boolean);
+  const roundId = decodeURIComponent((parts[parts.length - 1] || '').trim());
+  const trackCandidate = decodeURIComponent((parts[parts.length - 3] || '').trim()).toLowerCase();
+  const trackId = ['greyhounds','thoroughbreds'].includes(trackCandidate) ? trackCandidate : '';
   if(!roundId) return;
-  const out = await fetch(`/api/punters/results/${encodeURIComponent(roundId)}`).then(r=>r.json());
+  const q = trackId ? `?track=${encodeURIComponent(trackId)}` : '';
+  const out = await fetch(`/api/punters/results/${encodeURIComponent(roundId)}${q}`).then(r=>r.json());
   if(out.error){ document.getElementById('results-round-label').textContent = out.error; return; }
   const round = out.round || {};
   const snap = out.snapshot || {};

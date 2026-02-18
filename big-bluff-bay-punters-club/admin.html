@@ -56,7 +56,10 @@
         <section class="card admin-hub">
           <div class="section-head">
             <h2>Admin Command Center</h2>
-            <span class="pill" id="admin-active-view-pill">View: all</span>
+            <div class="row" style="gap:.4rem">
+              <span class="pill" id="admin-active-view-pill">View: all</span>
+              <span class="pill" id="admin-active-track-pill">Thoroughbreds (thoroughbreds)</span>
+            </div>
           </div>
           <p class="muted">Clean split by workflow: Racing operations and Poker leaderboard operations.</p>
           <div class="admin-mode-switch row-actions">
@@ -75,6 +78,7 @@
         <section class="card">
           <h2>🏇 Racing Operations</h2>
           <p class="muted">Fixture setup, race results, round settlement, and Bosses Bet controls.</p>
+          <p class="muted">Active track for legacy fixture/results/bosses controls: <strong id="legacy-active-track">Thoroughbreds (thoroughbreds)</strong></p>
         </section>
         <section class="card"><h2>Round Archive</h2>
           <p class="muted">Archive current meet tips + results into history, then reset active round for next week.</p>
@@ -84,6 +88,7 @@
               <option value="thoroughbreds" selected>Thoroughbreds (Sat)</option>
             </select>
           </label>
+          <p class="muted">Round/jackpot actions below apply to: <strong id="archive-active-track">Thoroughbreds (thoroughbreds)</strong></p>
           <div class="row-actions">
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>

@@ -1,7 +1,8 @@
 const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const trackKey='bbb-admin-track-v1';
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -9,6 +10,15 @@ function isAdmin(){return state.user?.role==='admin';}
 function withTrack(path){
   const join = path.includes('?') ? '&' : '?';
   return `${path}${join}track=${encodeURIComponent(state.trackId || 'thoroughbreds')}`;
+}
+
+function updateTrackLabels(){
+  const name = state.trackId === 'greyhounds' ? 'Greyhounds' : 'Thoroughbreds';
+  const text = `${name} (${state.trackId})`;
+  ['admin-active-track-pill','legacy-active-track','archive-active-track'].forEach((id)=>{
+    const el = $(id);
+    if (el) el.textContent = text;
+  });
 }
 
 function setPokerResultMsg(type, text){
@@ -125,7 +135,7 @@ async function applyRolloverFromQueryIfRequested(){
   }
 
   try {
-    const r = await req(API.jackpot, { method: 'PUT', body: JSON.stringify({ rollover }) });
+    const r = await req(withTrack(API.jackpot), { method: 'PUT', body: JSON.stringify({ rollover, trackId: state.trackId }) });
     const val = Number(r.jackpotCarry || 0);
     const input = $('jackpot-rollover-input');
     const current = $('jackpot-current');
@@ -254,13 +264,15 @@ async function refresh(){
   if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
   $('admin-list').innerHTML='';
+  updateTrackLabels();
   renderAdminSummaryCounts();
   if(!isAdmin()){ return; }
   applyAdminViewFilter();
 
   try {
-    const fx = await req(API.fixtures);
+    const fx = await req(withTrack(API.fixtures));
     const meet = (fx.fixtures || [])[0] || {};
+    state.fixtureId = String(meet.id || `pc-${state.trackId}-f1`);
     state.raceCount = Number(meet.raceCount || 12);
     const form = $('fixture-form');
     if (form) {
@@ -272,13 +284,13 @@ async function refresh(){
   } catch {}
 
   try {
-    const rr = await req(API.results);
+    const rr = await req(withTrack(API.results));
     state.raceResults = rr.raceResults || {};
     renderRaceOptions();
   } catch {}
 
   try {
-    const bb = await req(API.bossesBet);
+    const bb = await req(withTrack(API.bossesBet));
     state.bossesBet = bb.bossesBet || { legs:[], selections:{} };
   } catch {
     state.bossesBet = { legs:[], selections:{} };
@@ -301,7 +313,7 @@ async function refresh(){
   } catch {}
 
   try {
-    const j = await req(API.jackpot);
+    const j = await req(withTrack(API.jackpot));
     const rollover = Number(j?.rollover || 0);
     const input = $('jackpot-rollover-input');
     const current = $('jackpot-current');
@@ -512,13 +524,13 @@ $('refresh-claims-btn')?.addEventListener('click', ()=>refreshClaims().catch(()=
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
 
-$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);try{await req(API.updateFixture('f1'),{method:'PUT',body:JSON.stringify({date:String(f.get('date')||'').trim(),event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim(),raceCount:Number(f.get('raceCount')||12)})});$('fixture-msg').textContent='Fixture updated.';await refresh();}catch(err){$('fixture-msg').textContent=err.message;}});
+$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);try{await req(withTrack(API.updateFixture(state.fixtureId || `pc-${state.trackId}-f1`)),{method:'PUT',body:JSON.stringify({date:String(f.get('date')||'').trim(),event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim(),raceCount:Number(f.get('raceCount')||12),trackId:state.trackId})});$('fixture-msg').textContent=`Fixture updated (${state.trackId}).`;await refresh();}catch(err){$('fixture-msg').textContent=err.message;}});
 
 $('archive-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   if(!confirm('Archive current meet tips/results and reset active round?')) return;
   try {
-    const r = await req(API.archiveRound, { method: 'POST' });
+    const r = await req(withTrack(API.archiveRound), { method: 'POST', body: JSON.stringify({ trackId: state.trackId }) });
     const outcome = r.outrightWinner
       ? `Outright winner: ${r.outrightWinner}. Jackpot resets.`
       : `No outright winner. Jackpot rolls to next week: $${Number(r.rolloverToNextWeek || 0)}.`;
@@ -568,8 +580,8 @@ $('jackpot-form')?.addEventListener('submit', async (e) => {
   const rollover = Number(f.get('rollover'));
   if(!Number.isFinite(rollover) || rollover < 0){ $('archive-round-msg').textContent='Enter a valid jackpot amount.'; return; }
   try {
-    const r = await req(API.jackpot, { method: 'PUT', body: JSON.stringify({ rollover }) });
-    $('archive-round-msg').textContent = `Jackpot rollover set to $${Number(r.jackpotCarry || 0)}.`;
+    const r = await req(withTrack(API.jackpot), { method: 'PUT', body: JSON.stringify({ rollover, trackId: state.trackId }) });
+    $('archive-round-msg').textContent = `Jackpot rollover set to $${Number(r.jackpotCarry || 0)} (${state.trackId}).`;
     const current = $('jackpot-current');
     if (current) current.textContent = `Current rollover: $${Number(r.jackpotCarry || 0)}`;
   } catch (err) {
@@ -586,13 +598,14 @@ $('results-form')?.addEventListener('submit', async (e) => {
   const f = new FormData(e.target);
   const race = String(f.get('race') || '').toUpperCase();
   try {
-    await req(API.updateResult(race), {
+    await req(withTrack(API.updateResult(race)), {
       method: 'PUT',
       body: JSON.stringify({
         first: String(f.get('first') || ''),
         second: String(f.get('second') || ''),
         third: String(f.get('third') || ''),
-        substitutions: String(f.get('substitutions') || '')
+        substitutions: String(f.get('substitutions') || ''),
+        trackId: state.trackId
       })
     });
     $('results-msg').textContent = 'Results saved.';
@@ -618,9 +631,9 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
   }
 
   try {
-    await req(API.bossesBet, {
+    await req(withTrack(API.bossesBet), {
       method: 'PUT',
-      body: JSON.stringify({ legs, selections })
+      body: JSON.stringify({ legs, selections, trackId: state.trackId })
     });
     $('bosses-msg').textContent = 'Bosses bet saved.';
     await refresh();
@@ -634,7 +647,7 @@ $('clear-results-btn')?.addEventListener('click', async () => {
   const race = String($('results-race')?.value || 'R1').toUpperCase();
   if(!confirm(`Clear saved result for ${race}?`)) return;
   try {
-    await req(API.clearResult(race), { method: 'DELETE' });
+    await req(withTrack(API.clearResult(race)), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
     $('results-msg').textContent = `${race} result cleared.`;
     await refresh();
     fillResultsForm(race);
@@ -680,7 +693,7 @@ $('reset-bosses-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
   if(!confirm('Reset Bosses Bet for all races?')) return;
   try {
-    await req(API.bossesBet, { method: 'DELETE' });
+    await req(withTrack(API.bossesBet), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
     $('bosses-msg').textContent = 'Bosses bet reset.';
     await refresh();
   } catch (err) {
@@ -693,9 +706,9 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
   if(!confirm('Reset ALL Bosses Multi results and clear selections for this meet?')) return;
   try {
     // Primary reset endpoint
-    await req(API.bossesBetResults, { method: 'DELETE' });
+    await req(withTrack(API.bossesBetResults), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
     // Defensive follow-up to avoid stale selections from older deployments/caches
-    await req(API.bossesBet, { method: 'DELETE' });
+    await req(withTrack(API.bossesBet), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
     $('bosses-msg').textContent = 'Bosses multi results and selections reset.';
     await refresh();
   } catch (err) {
@@ -709,9 +722,13 @@ const trackSelect = $('punters-track-select');
 if (trackSelect) {
   const qTrack = new URLSearchParams(window.location.search || '').get('track');
   if (qTrack) state.trackId = qTrack;
+  localStorage.setItem(trackKey, state.trackId);
   trackSelect.value = state.trackId;
+  updateTrackLabels();
   trackSelect.addEventListener('change', async () => {
     state.trackId = String(trackSelect.value || 'thoroughbreds');
+    localStorage.setItem(trackKey, state.trackId);
+    updateTrackLabels();
     await refresh();
   });
 }
