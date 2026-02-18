@@ -388,6 +388,11 @@ async function refresh(){
     if (status) status.textContent = 'Offline';
     const tipMsg = $('tip-msg');
     if (tipMsg) tipMsg.textContent = `Live data unavailable: ${err.message}`;
+    const ladderFallback = $('ladder-fallback');
+    if (ladderFallback) {
+      ladderFallback.hidden = false;
+      ladderFallback.textContent = 'Leaderboard data unavailable right now. Please refresh in a moment.';
+    }
     state.tipStateResolved = true;
     renderTipEntryState();
     return;
@@ -415,7 +420,16 @@ async function refresh(){
   const ladderFallback = $('ladder-fallback');
   const ladderRows = (overview || state.lastOverview)?.ladder || [];
   renderLeaderboard(ladderRows);
-  if(ladderFallback) ladderFallback.hidden = ladderRows.length > 0;
+  if (ladderFallback) {
+    if (ladderRows.length > 0) {
+      ladderFallback.hidden = true;
+    } else {
+      ladderFallback.hidden = false;
+      ladderFallback.textContent = state.roundStatus === 'CLOSED'
+        ? 'Round complete — results below. Next venue announced Friday arvo.'
+        : 'Leaderboard is warming up — results will appear after races are scored.';
+    }
+  }
   const status = $('leaderboard-status');
   if (status) status.textContent = state.roundStatus === 'CLOSED' ? 'Round finished ✅' : ((overview || state.lastOverview)?.round?.label || 'Live');
   renderBossesBet(bossesRes.bossesBet || {});
