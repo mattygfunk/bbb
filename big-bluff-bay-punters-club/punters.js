@@ -263,6 +263,7 @@ async function refresh(){
     }
   }
   state.existingByRace = new Map();
+  let myTipCount = 0;
   if(state.user){
     const currentUser = String(state.user.username || '').toLowerCase();
     const mine=(allTipsRes.tips||[]).filter(t=>String(t.member||'').toLowerCase()===currentUser && t.status!=='removed');
@@ -270,6 +271,7 @@ async function refresh(){
     for(const t of mine){
       if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
     }
+    myTipCount = latestByRace.size;
     latestByRace.forEach((t,race)=>{
       state.existingByRace.set(race, String(t.selection||''));
       if (!isEditingTips) {
@@ -277,6 +279,13 @@ async function refresh(){
         if(el) el.value=String(t.selection||'');
       }
     });
+  }
+
+  const pokerLiveNudge = $('poker-live-nudge');
+  if (pokerLiveNudge) {
+    pokerLiveNudge.textContent = myTipCount > 0
+      ? 'You tipped this week — tonight’s poker seat is live.'
+      : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
   }
 
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
