@@ -78,6 +78,12 @@
         </section>
         <section class="card"><h2>Round Archive</h2>
           <p class="muted">Archive current meet tips + results into history, then reset active round for next week.</p>
+          <label>Track
+            <select id="punters-track-select">
+              <option value="greyhounds">Greyhounds (Wed)</option>
+              <option value="thoroughbreds" selected>Thoroughbreds (Sat)</option>
+            </select>
+          </label>
           <div class="row-actions">
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>

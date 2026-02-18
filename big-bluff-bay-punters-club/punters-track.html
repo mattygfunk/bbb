@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Punters Club Track • Big Bluff Bay</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <nav class="row-actions" style="margin:.8rem 0">
+      <a class="btn btn-ghost" href="/punters-club">Hub</a>
+      <a id="tab-greyhounds" class="btn btn-ghost" href="/punters-club/greyhounds">Greyhounds</a>
+      <a id="tab-thoroughbreds" class="btn btn-ghost" href="/punters-club/thoroughbreds">Thoroughbreds</a>
+    </nav>
+
+    <section class="card" id="track-hero">
+      <h1 id="track-title">Punters Track</h1>
+      <p id="track-copy" class="muted">Loading track status…</p>
+      <p id="winner-banner" class="muted"></p>
+    </section>
+
+    <section class="card">
+      <h2>Round & Jackpot</h2>
+      <p id="round-meta" class="muted">Loading round…</p>
+      <p id="jackpot-meta" class="muted">Loading jackpot…</p>
+    </section>
+
+    <section class="card">
+      <h2>Leaderboard</h2>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Member</th><th>Points</th><th>Winners</th></tr></thead><tbody id="ladder-body"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody></table></div>
+      <p id="ladder-empty" class="muted" hidden>Leaderboard is warming up — no dead states, just waiting on scored races.</p>
+    </section>
+
+    <section class="card">
+      <h2>Fixtures</h2>
+      <div id="fixtures" class="grid three"></div>
+    </section>
+
+    <section class="card">
+      <h2>Recent Archives</h2>
+      <div id="archives" class="stack"></div>
+    </section>
+  </main>
+  <script defer src="/punters-track.js"></script>
+</body>
+</html>

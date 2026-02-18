@@ -1,11 +1,15 @@
 const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function isAdmin(){return state.user?.role==='admin';}
+function withTrack(path){
+  const join = path.includes('?') ? '&' : '?';
+  return `${path}${join}track=${encodeURIComponent(state.trackId || 'thoroughbreds')}`;
+}
 
 function setPokerResultMsg(type, text){
   const el = $('poker-result-msg');
@@ -217,7 +221,7 @@ async function refreshClaims(){
   const body = $('claims-body');
   if(!body || !isAdmin()) return;
   try {
-    const out = await req(API.puntersClaims);
+    const out = await req(withTrack(API.puntersClaims));
     const rows = (out.claims || []).filter((c)=>String(c.status||'pending')==='pending');
     body.innerHTML = '';
     if(!rows.length){ body.innerHTML = "<tr><td colspan='4' class='muted'>No pending claims.</td></tr>"; return; }
@@ -229,7 +233,7 @@ async function refreshClaims(){
     body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
       btn.addEventListener('click', async ()=>{
         try {
-          await req(API.puntersVerifyPayout, { method:'POST', body: JSON.stringify({ claimId: decodeURIComponent(btn.dataset.claimId || '') })});
+          await req(withTrack(API.puntersVerifyPayout), { method:'POST', body: JSON.stringify({ claimId: decodeURIComponent(btn.dataset.claimId || '') })});
           $('punters-payment-msg').textContent = 'Claim marked as paid.';
           await refreshClaims();
         } catch (err) { $('punters-payment-msg').textContent = err.message; }
@@ -307,7 +311,7 @@ async function refresh(){
 
   await applyRolloverFromQueryIfRequested();
 
-  const p=await req(`${API.tips}?status=all`);
+  const p=await req(`${API.tips}?status=all&track=${encodeURIComponent(state.trackId)}`);
   state.tipsAll = p.tips || [];
   state.popularByRace = computePopularByRace(state.tipsAll);
   renderBossesSuggested(state.popularByRace);
@@ -415,7 +419,7 @@ async function refresh(){
 
 
 async function getCurrentPuntersRound(){
-  const out = await req(API.puntersRounds);
+  const out = await req(withTrack(API.puntersRounds));
   const rounds = out.rounds || [];
   return rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || rounds[0] || null;
 }
@@ -439,7 +443,7 @@ $('publish-winner-btn')?.addEventListener('click', async () => {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No active round found.'; return; }
     const payload = getRoundWinnerPayload();
-    await req(API.publishWinner(round.id), { method:'POST', body: JSON.stringify(payload) });
+    await req(withTrack(API.publishWinner(round.id)), { method:'POST', body: JSON.stringify(payload) });
     $('archive-round-msg').textContent = 'Winner published for this round.';
     await refresh();
   } catch (err) { $('archive-round-msg').textContent = err.message; }
@@ -451,7 +455,7 @@ $('close-round-btn')?.addEventListener('click', async () => {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
     const payload = getRoundWinnerPayload();
-    await req(API.closeRound(round.id), { method:'POST', body: JSON.stringify(payload) });
+    await req(withTrack(API.closeRound(round.id)), { method:'POST', body: JSON.stringify(payload) });
     $('archive-round-msg').textContent = 'Round closed and snapshot frozen.';
     await refresh();
   } catch (err) { $('archive-round-msg').textContent = err.message; }
@@ -462,7 +466,7 @@ $('recompute-snapshot-btn')?.addEventListener('click', async () => {
   try {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
-    await req(API.recomputeSnapshot(round.id), { method:'POST' });
+    await req(withTrack(API.recomputeSnapshot(round.id)), { method:'POST' });
     $('archive-round-msg').textContent = 'Snapshot recomputed.';
   } catch (err) { $('archive-round-msg').textContent = err.message; }
 });
@@ -471,7 +475,7 @@ $('open-next-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   try {
     const payload = getRoundWinnerPayload();
-    await req(API.openNextRound, { method:'POST', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
+    await req(withTrack(API.openNextRound), { method:'POST', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
     $('archive-round-msg').textContent = 'Next round is open.';
     await refresh();
   } catch (err) { $('archive-round-msg').textContent = err.message; }
@@ -482,7 +486,7 @@ $('round-winner-form')?.addEventListener('change', async () => {
   try {
     const payload = getRoundWinnerPayload();
     if (payload.nextRoundOpensAt) {
-      await req(API.puntersSettings, { method:'PUT', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
+      await req(withTrack(API.puntersSettings), { method:'PUT', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
     }
   } catch {}
 });
@@ -492,7 +496,7 @@ $('punters-payment-form')?.addEventListener('submit', async (e) => {
   if(!isAdmin()){ $('punters-payment-msg').textContent='Admin login required.'; return; }
   const f = new FormData(e.target);
   try {
-    await req(API.puntersVerifyPayment, { method:'POST', body: JSON.stringify({
+    await req(withTrack(API.puntersVerifyPayment), { method:'POST', body: JSON.stringify({
       member: String(f.get('member') || '').trim(),
       amount: Number(f.get('amount') || 20),
       reference: String(f.get('reference') || '').trim()
@@ -644,7 +648,7 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
 
   try {
     // Always fetch latest tips before auto-fill so it works even if prior refresh failed.
-    const p = await req(`${API.tips}?status=all`);
+    const p = await req(`${API.tips}?status=all&track=${encodeURIComponent(state.trackId)}`);
     state.tipsAll = p.tips || [];
     state.popularByRace = computePopularByRace(state.tipsAll);
     renderBossesSuggested(state.popularByRace);
@@ -700,6 +704,17 @@ $('reset-bosses-results-btn')?.addEventListener('click', async () => {
 });
 
 async function logout(){try{await req(API.logout,{method:'POST'});}catch{}state.token=null;state.user=null;localStorage.removeItem(tokenKey);await refresh();}
+
+const trackSelect = $('punters-track-select');
+if (trackSelect) {
+  const qTrack = new URLSearchParams(window.location.search || '').get('track');
+  if (qTrack) state.trackId = qTrack;
+  trackSelect.value = state.trackId;
+  trackSelect.addEventListener('change', async () => {
+    state.trackId = String(trackSelect.value || 'thoroughbreds');
+    await refresh();
+  });
+}
 
 (async()=>{await bootstrap();await refresh();refreshPokerPlayerOptions().catch(()=>{});})();
 
