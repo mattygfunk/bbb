@@ -1,7 +1,7 @@
 const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -215,6 +215,20 @@ function renderTierStrip(overview){
   if(potPill) potPill.textContent = `Pot: $${Number(overview?.jackpot?.totalPot || 0).toFixed(0)}`;
 }
 
+function renderUpgradeButtonState(){
+  const btn = $('upgrade-tier-btn');
+  if(!btn) return;
+  if(state.isJackpotEligible){
+    btn.textContent = 'You’re in ✅';
+    btn.disabled = true;
+    btn.classList.add('btn-ghost');
+    return;
+  }
+  btn.textContent = 'Upgrade to Jackpot Eligible';
+  btn.disabled = false;
+  btn.classList.remove('btn-ghost');
+}
+
 function renderTipEntryState() {
   const form = $('tip-form');
   const summaryCard = $('tips-locked-summary');
@@ -358,10 +372,12 @@ async function refresh(){
     }
   }
   state.existingByRace = new Map();
+  state.isJackpotEligible = false;
   let myTipCount = 0;
   if(state.user){
     const currentUser = String(state.user.username || '').toLowerCase();
     const mine=(allTipsRes.tips||[]).filter(t=>String(t.member||'').toLowerCase()===currentUser && t.status!=='removed');
+    state.isJackpotEligible = mine.some((t)=>Boolean(t.paid));
     const latestByRace=new Map();
     for(const t of mine){
       if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
@@ -382,6 +398,8 @@ async function refresh(){
       ? 'You tipped this week — tonight’s poker seat is live.'
       : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
   }
+
+  renderUpgradeButtonState();
 
   state.tipStateResolved = true;
   renderTipEntryState();
@@ -550,11 +568,22 @@ if (profileForm) {
 
 
 const claimModal = $('claim-modal');
-$('open-claim-modal-btn')?.addEventListener('click', ()=> claimModal?.showModal());
 $('close-claim-modal-btn')?.addEventListener('click', ()=> claimModal?.close());
 $('upgrade-tier-btn')?.addEventListener('click', ()=>{
   const msg = $('tip-msg');
-  if(msg) msg.textContent = 'To upgrade: send $20 via PayID 0421 325 503, then ask admin to verify payment.';
+  if(!state.user){
+    if(msg) msg.textContent = 'Log in first to upgrade.';
+    return;
+  }
+  if(state.isJackpotEligible){
+    if(msg) msg.textContent = 'You are already jackpot eligible for this round ✅';
+    return;
+  }
+  const amountInput = document.querySelector('#claim-form input[name="amount"]');
+  const noteInput = document.querySelector('#claim-form textarea[name="note"]');
+  if(amountInput) amountInput.value = '20';
+  if(noteInput && !noteInput.value) noteInput.value = `Paid via PayID for ${state.user.username}`;
+  claimModal?.showModal();
 });
 $('claim-form')?.addEventListener('submit', async (e)=>{
   e.preventDefault();

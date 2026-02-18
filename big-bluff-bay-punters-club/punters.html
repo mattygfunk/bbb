@@ -87,7 +87,6 @@
           <p class="muted" style="margin:.4rem 0 0">Everyone can tip for FREE. Upgrade to <strong>Jackpot Eligible</strong> for $20 to unlock full ladder visibility and jackpot payout eligibility.</p>
           <div class="row-actions" style="margin-top:.45rem">
             <button class="btn" id="upgrade-tier-btn" type="button">Upgrade to Jackpot Eligible</button>
-            <button class="btn btn-ghost" id="open-claim-modal-btn" type="button">Submit payout claim</button>
           </div>
         </div>
         <aside class="card" id="poker-freeroll-widget" aria-label="Punters to Poker freeroll eligibility" style="margin:.6rem 0 0">
@@ -163,16 +162,16 @@
 
     <dialog id="claim-modal" class="card" style="max-width:520px;width:92%">
       <form method="dialog" class="stack" id="claim-form">
-        <h3>Submit payout claim</h3>
-        <p class="muted">Use this after a winning round if payout hasn’t been received yet.</p>
+        <h3>Confirm $20 Jackpot upgrade</h3>
+        <p class="muted">Send <strong>$20</strong> via PayID <strong>0421 325 503</strong>, then click confirm below so admin can verify and mark you jackpot-eligible for this round.</p>
         <label>Amount (A$)
-          <input name="amount" type="number" step="0.01" min="0" placeholder="e.g. 240" required />
+          <input name="amount" type="number" step="0.01" min="20" value="20" required />
         </label>
         <label>Note
-          <textarea name="note" rows="3" placeholder="Optional transfer/payment note"></textarea>
+          <textarea name="note" rows="3" placeholder="Optional transfer note/reference (use your BBB username as reference)"></textarea>
         </label>
         <div class="row-actions">
-          <button class="btn" type="submit">Submit claim</button>
+          <button class="btn" type="submit">I’ve paid $20</button>
           <button class="btn btn-ghost" type="button" id="close-claim-modal-btn">Cancel</button>
         </div>
         <p class="muted" id="claim-msg"></p>
@@ -200,6 +199,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260218-16"></script>
+    <script defer src="punters.js?v=20260218-17"></script>
   </body>
 </html>
