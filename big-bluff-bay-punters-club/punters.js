@@ -191,11 +191,13 @@ function renderTipEntryState() {
   const form = $('tip-form');
   const summaryCard = $('tips-locked-summary');
   const summaryText = $('tips-locked-summary-text');
+  const editBtn = $('tips-edit-btn');
   if (!form || !summaryCard || !summaryText) return;
 
   if (!state.user) {
     summaryCard.hidden = true;
     form.hidden = false;
+    if (editBtn) editBtn.hidden = true;
     return;
   }
 
@@ -204,6 +206,7 @@ function renderTipEntryState() {
   if (!full) {
     summaryCard.hidden = true;
     form.hidden = false;
+    if (editBtn) editBtn.hidden = true;
     return;
   }
 
@@ -215,6 +218,7 @@ function renderTipEntryState() {
   summaryText.textContent = lines || 'All races entered.';
   summaryCard.hidden = false;
   form.hidden = true;
+  if (editBtn) editBtn.hidden = false;
 }
 
 async function refresh(){

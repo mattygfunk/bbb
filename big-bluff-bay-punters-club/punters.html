@@ -86,14 +86,14 @@
           </div>
         </aside>
         <p class="muted" id="quick-fixture-line">Loading next meet…</p>
-        <section class="card" id="tips-locked-summary" hidden>
+        <section class="card" id="tips-locked-summary">
           <h3>Your tips are in ✅</h3>
-          <p class="muted" id="tips-locked-summary-text">All races entered.</p>
+          <p class="muted" id="tips-locked-summary-text">Checking your saved tips…</p>
           <div class="row-actions">
-            <button class="btn btn-ghost" type="button" id="tips-edit-btn">Edit tips</button>
+            <button class="btn btn-ghost" type="button" id="tips-edit-btn" hidden>Edit tips</button>
           </div>
         </section>
-        <form id="tip-form" class="stack">
+        <form id="tip-form" class="stack" hidden>
           <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>
           <div class="quick-grid" id="quick-race-list"></div>
           <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Enter This Week’s Tips</button>
