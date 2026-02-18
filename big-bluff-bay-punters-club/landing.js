@@ -17,7 +17,7 @@ const MOCK = {
     { handle: '@___', week: 'Wk --', prize: 'Prize pending' },
     { handle: '@___', week: 'Wk --', prize: 'Payout board loading' }
   ],
-  payoutsTicker: 'Payout board refreshes after weekly settlement.'
+  payoutsTicker: 'Next venue announced Friday arvo.'
 };
 
 function esc(s) {
@@ -103,7 +103,7 @@ function renderLadder(rows) {
   if (!body) return;
   body.innerHTML = '';
   if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4" class="muted">Leaderboard updates when results are posted.</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="muted">Round complete — results below.</td></tr>';
     return;
   }
   rows.slice(0, 10).forEach((r) => {
