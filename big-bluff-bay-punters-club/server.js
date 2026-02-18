@@ -1433,6 +1433,39 @@ function createApp() {
     return res.json({ ok: true, round });
   });
 
+  app.post('/api/punters/rounds/:id/publish-winner', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    ensurePuntersClubStore(store);
+    const id = String(req.params.id || '');
+    const round = (store.puntersClub?.rounds || []).find((r) => String(r.id) === id);
+    if (!round) return res.status(404).json({ error: 'Round not found' });
+
+    const winnerMember = String(req.body?.winner || round?.winner?.member || '').trim();
+    if (!winnerMember) return res.status(400).json({ error: 'winner is required' });
+    const payout = Number(req.body?.payout);
+    const notes = String(req.body?.notes || '').trim();
+
+    round.winner = {
+      member: winnerMember,
+      payout: Number.isFinite(payout) && payout >= 0 ? payout : Number(round?.winner?.payout || 0),
+      notes: notes || String(round?.winner?.notes || pickLarrikinLine()),
+      publishedAt: Date.now(),
+      publishedBy: req.user.username
+    };
+
+    if (round.snapshot && typeof round.snapshot === 'object') {
+      round.snapshot.winner = {
+        member: round.winner.member,
+        payout: round.winner.payout,
+        notes: round.winner.notes
+      };
+    }
+
+    round.updatedAt = Date.now();
+    writeStore(store);
+    return res.json({ ok: true, round });
+  });
+
   app.post('/api/punters/rounds/:id/close', auth, adminOnly, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);
@@ -1442,14 +1475,17 @@ function createApp() {
     if (String(round.status || '').toLowerCase() === 'closed') return res.json({ ok: true, round, alreadyClosed: true });
 
     syncCurrentRoundEntries(store, { autoCreate: false });
-    const winnerMember = String(req.body?.winner || round?.winner?.member || 'tofu').trim() || 'tofu';
-    const payout = Number(req.body?.payout || 0);
-    const notes = String(req.body?.notes || '').trim();
-    round.winner = {
-      member: winnerMember,
-      payout: Number.isFinite(payout) && payout >= 0 ? payout : Number(round?.winner?.payout || 0),
-      notes: notes || String(round?.winner?.notes || pickLarrikinLine())
-    };
+    if (!round.winner || !String(round.winner.member || '').trim()) {
+      const winnerMember = String(req.body?.winner || 'tofu').trim() || 'tofu';
+      const payout = Number(req.body?.payout || 0);
+      const notes = String(req.body?.notes || '').trim();
+      round.winner = {
+        member: winnerMember,
+        payout: Number.isFinite(payout) && payout >= 0 ? payout : 0,
+        notes: notes || pickLarrikinLine()
+      };
+    }
+
     round.status = 'closed';
     round.closedAt = Date.now();
     round.nextRoundOpensAt = Number(req.body?.nextRoundOpensAt || store.puntersClub?.settings?.nextRoundOpensAt || getDefaultNextRoundOpenAtMs());

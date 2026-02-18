@@ -58,6 +58,7 @@ npm start
 
 ### Close Round + Archive + Friday rollover flow (NEW)
 
+- **Publish winner (separate step):** admin can publish/edit winner details before close via `POST /api/punters/rounds/:id/publish-winner`.
 - **Close round:** admin can close the current round via `POST /api/punters/rounds/:id/close`.
   - Sets `round.status = "closed"`
   - Sets `round.closedAt`
