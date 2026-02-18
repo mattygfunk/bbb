@@ -239,6 +239,12 @@ function renderUpgradeButtonState(){
 }
 
 function renderRoundMeta(overview){
+  const lockWholeEntry = state.roundStatus !== 'OPEN' || !state.tipsEditableNow;
+  const quickTipsCard = $('quick-tips-entry-card');
+  const bossesCard = $('bosses-bet-card');
+  if (quickTipsCard) quickTipsCard.style.display = lockWholeEntry ? 'none' : '';
+  if (bossesCard) bossesCard.style.display = lockWholeEntry ? 'none' : '';
+
   const finalLabel = $('final-results-label');
   if(finalLabel){
     finalLabel.hidden = !overview?.frozen;
@@ -388,6 +394,7 @@ async function refresh(){
   }
   state.tipsEditableNow = Boolean(tipDeadlineRes?.editableNow ?? true);
   const overviewData = overview || state.lastOverview || {};
+  renderRoundMeta(overviewData);
   const effectiveFixtures = (overviewData.frozen && Array.isArray(overviewData.fixtures) && overviewData.fixtures.length)
     ? overviewData.fixtures
     : (fx.fixtures || []);
