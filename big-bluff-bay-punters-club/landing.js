@@ -324,6 +324,42 @@ function scheduleIdle(task, timeout = 2500) {
   }
 }
 
+async function hydrateNextTipHomeFallback(trackId, token, section, card, body, raceEl, pickEl, primary, secondary) {
+  try {
+    const [meRes, tipsRes, ladderRes] = await Promise.all([
+      fetch('/api/me', { credentials: 'same-origin', headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`/api/tips?status=all&trackId=${encodeURIComponent(trackId)}`, { credentials: 'same-origin' }),
+      fetch(`/api/ladder?trackId=${encodeURIComponent(trackId)}`, { credentials: 'same-origin' })
+    ]);
+    if (!meRes.ok || !tipsRes.ok) return;
+    const me = await meRes.json();
+    const tipsData = await tipsRes.json();
+    const ladder = ladderRes.ok ? await ladderRes.json() : {};
+    const userKey = String(me?.user?.username || '').trim().toLowerCase();
+    if (!userKey) return;
+
+    const afterRaceNum = Number(String(ladder?.afterRace || '').replace('R', ''));
+    const nextRace = Number.isFinite(afterRaceNum) && afterRaceNum > 0 ? `R${afterRaceNum + 1}` : 'R1';
+    const userTip = (tipsData?.tips || [])
+      .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+      .find((t) => String(t.race || '').toUpperCase() === nextRace);
+
+    if (!userTip) return;
+
+    section.hidden = false;
+    card.className = 'card next-tip-card next-tip-card--highlight';
+    raceEl.textContent = nextRace;
+    pickEl.textContent = userTip.runnerName
+      ? `${userTip.selection || '—'} • ${userTip.runnerName}`
+      : String(userTip.selection || '—');
+    body.textContent = 'Live sync mode • Your next-race tip is locked and ready.';
+    primary.textContent = 'Edit This Tip';
+    primary.href = '/punters.html#tip-form';
+    secondary.textContent = 'View Full Card';
+    secondary.href = '/punters.html';
+  } catch {}
+}
+
 async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   const section = document.getElementById('next-tip-home');
   const card = document.getElementById('next-tip-home-card');
@@ -347,7 +383,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.status === 401) return;
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      await hydrateNextTipHomeFallback(trackId, token, section, card, body, raceEl, pickEl, primary, secondary);
+      return;
+    }
     const data = await res.json();
 
     if (data.roundStatus === 'CLOSED') return;
@@ -371,7 +410,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     secondary.textContent = 'View Full Card';
     secondary.href = '/punters.html';
   } catch {
-    section.hidden = true;
+    await hydrateNextTipHomeFallback(trackId, token, section, card, body, raceEl, pickEl, primary, secondary);
   }
 }
 
