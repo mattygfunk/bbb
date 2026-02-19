@@ -508,6 +508,12 @@ async function refresh(){
     $('tips-list').appendChild(e);
   });
   $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;
+  const pcWeeks = $('pc-stat-weeks');
+  const pcEntries = $('pc-stat-entries');
+  const pcPaid = $('pc-stat-paid');
+  if (pcWeeks) pcWeeks.textContent = String((overviewData?.pastRounds || []).length || '—');
+  if (pcEntries) pcEntries.textContent = String(byPunter.size || '—');
+  if (pcPaid) pcPaid.textContent = `$${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
   const communityTipsCard = $('community-tips-card');
   if (communityTipsCard) {
     communityTipsCard.style.display = byPunter.size === 0 ? 'none' : '';

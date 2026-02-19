@@ -180,8 +180,8 @@ function renderWinners(items) {
   wrap.innerHTML = '';
   (items || []).forEach((w) => {
     const card = document.createElement('article');
-    card.className = 'pill winner-item';
-    card.innerHTML = `${esc(w.handle)} • ${esc(w.week)} • ${esc(w.prize)}`;
+    card.className = 'card winner-item';
+    card.innerHTML = `<strong>${esc(w.handle)}</strong><p class='muted'>${esc(w.week)}</p><p class='muted'>${esc(w.prize)}</p>`;
     wrap.appendChild(card);
   });
   if (!items?.length) {
