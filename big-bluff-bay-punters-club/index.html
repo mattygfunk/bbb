@@ -39,9 +39,9 @@
       .card{background:linear-gradient(180deg,#0b1221 0%,#0b1220 100%);border:1px solid var(--line);border-radius:1rem;padding:1rem}.login-card{width:min(560px,100%)}main{padding:1.1rem 0 2.4rem;display:grid;gap:1rem}
       @media (min-width:980px){.hero-layout{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:1.2rem}}
     </style>
-    <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="styles.css" /></noscript>
+    <link rel="preload" href="styles.css?v=20260219-2" as="style" />
+    <link rel="stylesheet" href="styles.css?v=20260219-2" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="styles.css?v=20260219-2" /></noscript>
     <script defer src="analytics.js"></script>
   </head>
   <body class="landing-page">
@@ -98,6 +98,19 @@
         </section>
 
         <section class="card login-card hero-login" id="enter-table" aria-label="Enter this week's card table">
+          <section id="next-tip-home" aria-labelledby="next-tip-home-heading" hidden>
+            <div class="section-head"><h2 id="next-tip-home-heading">Your Next Race Tip</h2></div>
+            <article class="card next-tip-card next-tip-card--tease" id="next-tip-home-card">
+              <p class="next-tip-kicker">LOCKED IN</p>
+              <h3 id="next-tip-home-race">RACE —</h3>
+              <p class="next-tip-pick" id="next-tip-home-pick">—</p>
+              <p class="muted" id="next-tip-home-content">Log in to see your next race tip.</p>
+              <div class="row-actions">
+                <a class="btn chip-btn" id="next-tip-home-primary" href="/punters-club">Enter Tips</a>
+                <a class="btn btn-ghost" id="next-tip-home-secondary" href="/punters-club">View All My Tips</a>
+              </div>
+            </article>
+          </section>
           <p id="home-next-race-callout" class="next-race-callout">NEXT RACE: R1</p>
           <h2>Member Access</h2>
           <p class="muted"><strong>Returning legend?</strong> Log in and pick up where you left off. <strong>New here?</strong> Create your account in under 30 seconds — you’ll stay signed in on this device.</p>
@@ -208,19 +221,6 @@
         </div>
       </section>
 
-      <section class="rail-section" id="next-tip-home" aria-labelledby="next-tip-home-heading" hidden>
-        <div class="section-head"><h2 id="next-tip-home-heading">Your Next Race Tip</h2></div>
-        <article class="card next-tip-card next-tip-card--tease" id="next-tip-home-card">
-          <p class="next-tip-kicker">LOCKED IN</p>
-          <h3 id="next-tip-home-race">RACE —</h3>
-          <p class="next-tip-pick" id="next-tip-home-pick">—</p>
-          <p class="muted" id="next-tip-home-content">Log in to see your next race tip.</p>
-          <div class="row-actions">
-            <a class="btn chip-btn" id="next-tip-home-primary" href="/punters-club">Enter Tips</a>
-            <a class="btn btn-ghost" id="next-tip-home-secondary" href="/punters-club">View All My Tips</a>
-          </div>
-        </article>
-      </section>
 
       <section class="rail-section" id="home-fixtures" aria-labelledby="fixtures-heading">
         <div class="section-head"><h2 id="fixtures-heading">📅 Upcoming Fixtures</h2></div>

@@ -626,6 +626,7 @@ code {
 details summary { cursor:pointer; font-weight:700; }
 .hero-copy { max-width: 68ch; }
 .hero-login { box-shadow: 0 10px 30px rgba(0,0,0,.22); }
+.hero-login #next-tip-home { margin-bottom: .65rem; }
 details p { margin:.55rem 0 0; }
 
 .faq-columns {
