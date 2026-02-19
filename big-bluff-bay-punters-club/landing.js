@@ -542,6 +542,10 @@ async function hydrateLandingCritical() {
     hydrateNextTipHome(String(overview?.track?.id || 'thoroughbreds'));
     scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
+    const nextRaceCallout = document.getElementById('home-next-race-callout');
+    if (nextRaceCallout && !String(nextRaceCallout.textContent || '').trim()) {
+      nextRaceCallout.textContent = 'NEXT RACE: R1';
+    }
   }
 }
 
