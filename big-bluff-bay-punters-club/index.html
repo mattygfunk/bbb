@@ -67,7 +67,7 @@
           <h1>Australia’s sharpest punters-to-poker club. One account. Real scores. No fluff.</h1>
           <p class="muted">Tip weekly races, climb the live ladder, and roll momentum into poker nights — all with clear rules and verified outcomes.</p>
 
-          <div class="hero-actions major-actions" aria-label="Primary actions">
+          <div class="hero-actions major-actions" role="group" aria-label="Primary actions">
             <a class="btn chip-btn major-btn" href="/punters.html" data-cta="enter-racing-tips" data-sem="primary">Enter Punters Club</a>
             <a class="btn btn-ghost major-btn" href="/winners.html" data-cta="view-winners" data-sem="secondary">See Winners</a>
           </div>
@@ -80,14 +80,14 @@
 
           <p class="muted" style="margin-top:.25rem">New here? <a href="/winners.html">See recent winners, streaks, and payout history</a>.</p>
 
-          <div class="status-strip" aria-label="Live round status">
+          <div class="status-strip" role="group" aria-label="Live round status">
             <span class="pill" id="status-state-pill">🟢 Open now</span>
             <span class="pill">💰 <span id="status-jackpot-label">Jackpot live</span>: <strong id="status-jackpot">$0</strong></span>
             <span class="pill">🏁 Meet: <strong id="status-meet">Round complete — results below</strong></span>
             <span class="pill chip-red live-pulse">🔒 Lock: <strong id="status-lock" aria-live="polite">--:--:--</strong></span>
             <span class="pill">🕒 Updated: <strong id="status-last-updated">--</strong></span>
           </div>
-          <div class="status-strip" aria-label="Recent winners and payouts" id="top-winners-strip">
+          <div class="status-strip" role="group" aria-label="Recent winners and payouts" id="top-winners-strip">
             <span class="pill">🏆 Recent winners (Punters + Poker):</span>
             <span class="pill" id="top-winner-1">Latest winner pending</span>
             <span class="pill" id="top-winner-2">Scoreboard warming up</span>
@@ -119,7 +119,7 @@
             <p id="home-next-race-callout" class="next-race-callout">NEXT RACE: R1</p>
             <h2>Member Access</h2>
             <p class="muted"><strong>Returning legend?</strong> Log in and pick up where you left off. <strong>New here?</strong> Create your account in under 30 seconds — you’ll stay signed in on this device.</p>
-            <div class="status-strip" aria-label="Social proof metrics">
+            <div class="status-strip" role="group" aria-label="Social proof metrics">
               <span class="pill">✅ Verified results feed</span>
               <span class="pill">🏇 <strong id="hero-social-entries">—</strong> weekly entries</span>
               <span class="pill">💸 <strong id="hero-social-paid">$0</strong> recent payouts shown</span>
@@ -133,12 +133,13 @@
               <label>Username
                 <input required name="member" type="text" minlength="3" placeholder="choose or enter username" autocomplete="username" />
               </label>
-              <label>Password
+              <div>
+                <label for="home-password">Password</label>
                 <div class="password-wrap">
                   <input required name="pin" id="home-password" type="password" placeholder="your password" autocomplete="current-password" />
                   <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
                 </div>
-              </label>
+              </div>
               <label id="home-email-wrap" hidden>Email (for updates + account recovery)
                 <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
               </label>
@@ -160,6 +161,7 @@
         <div class="section-head"><h2 id="club-banner-heading">Inside the Poker Club</h2></div>
         <div class="split">
           <article class="card banner-photo-card">
+            <h3>Clubroom Snapshot</h3>
             <img class="club-banner-photo" src="/assets/theme-banner-768.jpg" alt="Big Bluff Bay Poker Club banner with players in the clubhouse" loading="eager" fetchpriority="high" decoding="async" width="768" height="386" onerror="this.onerror=null;this.src='/assets/theme-banner.jpg';" />
             <p class="muted">Real clubhouse energy: country pub feel, cards on the table, and proper tournament nights.</p>
           </article>
@@ -215,12 +217,12 @@
           <p class="muted muted-strong">Private. Transparent. Properly Run.</p>
         </div>
         <div class="why-join-grid" role="list">
-          <article class="card why-join-card" role="listitem"><h3>📅 Clear Weekly Format</h3><p class="muted">Wednesday → Greyhounds<br/>Saturday → Thoroughbreds<br/>Visible lock time<br/>Live pot display<br/>Immediate results posting</p></article>
-          <article class="card why-join-card" role="listitem"><h3>🔒 Simple Lock Rules</h3><p class="muted">Countdown timer visible<br/>No late edits<br/>No backdating<br/>Same clock for everyone</p></article>
-          <article class="card why-join-card" role="listitem"><h3>📊 Visible Scoring</h3><p class="muted">Live points<br/>Instant leaderboard updates<br/>Clear final table markers<br/>No hidden formulas</p></article>
-          <article class="card why-join-card" role="listitem"><h3>🧭 No Confusing Edge Cases</h3><p class="muted">Clearly defined ties<br/>Transparent rollover<br/>Separate jackpots for Dogs &amp; Galls</p></article>
-          <article class="card why-join-card" role="listitem"><h3>🗂️ Proper Results Archive</h3><p class="muted">Winners saved<br/>Pots recorded<br/>Full leaderboard snapshots<br/>Historical access</p></article>
-          <article class="card why-join-card" role="listitem"><h3>💸 Free to Track. $20 to Win.</h3><p class="muted">Free = points only<br/>$20 = jackpot eligible (per track)<br/>Simple pay-in structure</p></article>
+          <article class="card why-join-card"><h3>📅 Clear Weekly Format</h3><p class="muted">Wednesday → Greyhounds<br/>Saturday → Thoroughbreds<br/>Visible lock time<br/>Live pot display<br/>Immediate results posting</p></article>
+          <article class="card why-join-card"><h3>🔒 Simple Lock Rules</h3><p class="muted">Countdown timer visible<br/>No late edits<br/>No backdating<br/>Same clock for everyone</p></article>
+          <article class="card why-join-card"><h3>📊 Visible Scoring</h3><p class="muted">Live points<br/>Instant leaderboard updates<br/>Clear final table markers<br/>No hidden formulas</p></article>
+          <article class="card why-join-card"><h3>🧭 No Confusing Edge Cases</h3><p class="muted">Clearly defined ties<br/>Transparent rollover<br/>Separate jackpots for Dogs &amp; Galls</p></article>
+          <article class="card why-join-card"><h3>🗂️ Proper Results Archive</h3><p class="muted">Winners saved<br/>Pots recorded<br/>Full leaderboard snapshots<br/>Historical access</p></article>
+          <article class="card why-join-card"><h3>💸 Free to Track. $20 to Win.</h3><p class="muted">Free = points only<br/>$20 = jackpot eligible (per track)<br/>Simple pay-in structure</p></article>
         </div>
         <div class="row-actions" style="margin-top:.8rem">
           <a class="btn chip-btn major-btn" href="/punters-club">Join This Week’s Round</a>
@@ -312,7 +314,7 @@
         </div>
         <p class="muted">Every round is archived with winner, payout, and final-ladder snapshot context.</p>
 
-        <div class="stats-grid winners-proof-inline" aria-label="Winners Wall snapshot stats">
+        <div class="stats-grid winners-proof-inline" role="group" aria-label="Winners Wall snapshot stats">
           <article class="card"><h3 id="stat-weeks">—</h3><p class="muted">Punters rounds archived</p></article>
           <article class="card"><h3 id="stat-entries">—</h3><p class="muted">This week’s tip entries</p></article>
           <article class="card"><h3 id="stat-paid">$0</h3><p class="muted">Recent payouts total</p></article>
@@ -340,6 +342,7 @@
       <section class="rail-section" id="social-feed" aria-labelledby="social-feed-heading">
         <div class="section-head"><h2 id="social-feed-heading">📱 Big Bluff Bay Social Feed</h2></div>
         <article class="card social-feed-card">
+          <h3>Latest Posts</h3>
           <p class="muted">Latest updates synced from Big Bluff Bay Facebook/Instagram.</p>
           <div class="social-feed-grid" id="social-feed-list"></div>
           <p class="muted">Follow direct: <a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" /></a></p>
@@ -436,7 +439,7 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
 
-    <div class="mobile-sticky-cta" aria-label="Quick actions">
+    <div class="mobile-sticky-cta" role="group" aria-label="Quick actions">
       <a class="btn chip-btn" id="mobile-primary-cta" href="/punters.html">Enter Tips</a>
       <a class="btn btn-ghost" id="mobile-secondary-cta" href="#lobby">Jackpot + Ladder</a>
     </div>
