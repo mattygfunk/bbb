@@ -328,12 +328,16 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   const section = document.getElementById('next-tip-home');
   const card = document.getElementById('next-tip-home-card');
   const body = document.getElementById('next-tip-home-content');
+  const raceEl = document.getElementById('next-tip-home-race');
+  const pickEl = document.getElementById('next-tip-home-pick');
   const primary = document.getElementById('next-tip-home-primary');
   const secondary = document.getElementById('next-tip-home-secondary');
-  if (!section || !card || !body || !primary || !secondary) return;
+  if (!section || !card || !body || !raceEl || !pickEl || !primary || !secondary) return;
 
   section.hidden = true;
   card.className = 'card next-tip-card next-tip-card--tease';
+  raceEl.textContent = 'RACE —';
+  pickEl.textContent = '—';
   const token = localStorage.getItem('bbb-token-v3');
   if (!token) return;
 
@@ -358,12 +362,14 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     section.hidden = false;
     card.className = 'card next-tip-card next-tip-card--highlight';
-    const runner = data.tip?.runnerName ? `${data.tip.selection} (${data.tip.runnerName})` : `${data.tip?.selection || '—'}`;
-    body.textContent = `${data.trackName || 'Track'} • ${data.fixture?.track || 'Venue TBA'} • ${data.nextRace} • Pick: ${runner} • ${data.statusBadge || 'Editable'} • ${h}:${m}`;
-    primary.textContent = data.editable ? 'Edit Tips' : 'View Tips';
-    primary.href = '/punters-club';
-    secondary.textContent = 'View All My Tips';
-    secondary.href = '/punters-club';
+    const runner = data.tip?.runnerName ? `${data.tip.selection} • ${data.tip.runnerName}` : `${data.tip?.selection || '—'}`;
+    raceEl.textContent = `${data.nextRace || 'Next Race'}`;
+    pickEl.textContent = runner;
+    body.textContent = `${data.trackName || 'Track'} • ${data.fixture?.track || 'Venue TBA'} • ${data.statusBadge || 'Locked'} • ${h}:${m} to lock`;
+    primary.textContent = data.editable ? 'Edit This Tip' : 'View Tips';
+    primary.href = '/punters.html#tip-form';
+    secondary.textContent = 'View Full Card';
+    secondary.href = '/punters.html';
   } catch {
     section.hidden = true;
   }
