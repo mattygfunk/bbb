@@ -426,9 +426,11 @@ async function hydrateLandingCritical() {
     if (lifeLastWinner) lifeLastWinner.textContent = (puntersRecent[0]?.winner && puntersRecent[0].winner !== 'Rollover') ? puntersRecent[0].winner : 'No outright winner last round';
     if (lifeHotPlayer) lifeHotPlayer.textContent = hotPlayer;
     if (lifeBiggestScore) lifeBiggestScore.textContent = biggest?.player ? `${biggest.player} • ${money.format(Number(biggest.biggestScore || 0))}` : 'No posted score yet';
-    if (lifeNextRound) lifeNextRound.textContent = opensAt > Date.now()
-      ? `Opens ${new Date(opensAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}`
-      : 'Round is open now';
+    if (lifeNextRound) lifeNextRound.textContent = roundStatus === 'OPEN'
+      ? 'Round is open now'
+      : (opensAt > Date.now()
+        ? `Opens ${new Date(opensAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}`
+        : 'Next round timing update shortly');
 
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = (closedRound || usedHistoryFallback) ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
