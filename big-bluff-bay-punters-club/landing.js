@@ -419,10 +419,14 @@ async function hydrateLandingCritical() {
 
     const hotPlayer = (pokerDash?.top10 || [])[0]?.player || 'No heater yet';
     const biggest = pokerDash?.hype?.biggestScore;
-    document.getElementById('life-last-winner').textContent = (puntersRecent[0]?.winner && puntersRecent[0].winner !== 'Rollover') ? puntersRecent[0].winner : 'No outright winner last round';
-    document.getElementById('life-hot-player').textContent = hotPlayer;
-    document.getElementById('life-biggest-score').textContent = biggest?.player ? `${biggest.player} • ${money.format(Number(biggest.biggestScore || 0))}` : 'No posted score yet';
-    document.getElementById('life-next-round').textContent = opensAt > Date.now()
+    const lifeLastWinner = document.getElementById('life-last-winner');
+    const lifeHotPlayer = document.getElementById('life-hot-player');
+    const lifeBiggestScore = document.getElementById('life-biggest-score');
+    const lifeNextRound = document.getElementById('life-next-round');
+    if (lifeLastWinner) lifeLastWinner.textContent = (puntersRecent[0]?.winner && puntersRecent[0].winner !== 'Rollover') ? puntersRecent[0].winner : 'No outright winner last round';
+    if (lifeHotPlayer) lifeHotPlayer.textContent = hotPlayer;
+    if (lifeBiggestScore) lifeBiggestScore.textContent = biggest?.player ? `${biggest.player} • ${money.format(Number(biggest.biggestScore || 0))}` : 'No posted score yet';
+    if (lifeNextRound) lifeNextRound.textContent = opensAt > Date.now()
       ? `Opens ${new Date(opensAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}`
       : 'Round is open now';
 
