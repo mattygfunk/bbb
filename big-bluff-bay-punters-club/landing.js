@@ -388,9 +388,9 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   card.dataset.state = 'tease';
   badgeEl.textContent = 'MEMBERS';
   raceEl.textContent = 'Race —';
-  contextEl.textContent = 'Track details sync after login • Meeting synced ✅';
+  contextEl.textContent = 'Thoroughbreds • Meeting synced';
   pickEl.textContent = 'Your pick: —';
-  locklineEl.textContent = 'Locks in --:--';
+  locklineEl.textContent = 'Locks in --:-- (Melbourne time)';
   body.textContent = 'Live Sync: Active • Private member view.';
   socialEl.textContent = 'You + 0 others have entered';
   ladderEl.textContent = 'Position updates after results.';
@@ -472,17 +472,17 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race —';
-    const venue = d?.venue || 'Venue TBA';
+    const venue = d?.venue || 'Track';
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    raceEl.textContent = raceLabel;
-    contextEl.textContent = `${venue} • ${trackType} • Meeting synced ✅`;
+    raceEl.textContent = venue;
+    contextEl.textContent = `${trackType} • Meeting synced`;
     const lockRef = Number(d?.lockTime || d?.startTime || 0);
     if (activeCountdown > 0) {
-      locklineEl.textContent = `Locks in ${mm}:${ss}`;
+      locklineEl.textContent = `Locks in ${mm}:${ss} (Melbourne time)`;
     } else if (lockRef > 0) {
-      locklineEl.textContent = `Locked at ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
+      locklineEl.textContent = `Locked at ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne time)`;
     } else {
-      locklineEl.textContent = 'Lock time syncing';
+      locklineEl.textContent = 'Locked at --:-- (Melbourne time)';
     }
 
     if (String(d?.state || '') === 'ROUND_COMPLETE') {
@@ -504,8 +504,9 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       if (imminent) card.classList.add('countdown-pulse');
       badgeEl.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
       pickEl.textContent = 'Your pick: —';
-      body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for the next race.';
-      socialEl.textContent = `${Number(d?.othersCount || 0)} punters already locked`;
+      body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for this race.';
+      const others = Number(d?.othersCount || 0);
+      socialEl.textContent = others <= 0 ? 'You’re first on the card.' : `You + ${others} others locked in.`;
       ladderEl.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Current ladder position: #${d.ladderRank}` : 'Position updates after results.';
       primary.textContent = 'Add Tip Now';
       primary.href = '/punters.html#tip-form';
@@ -516,9 +517,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     const pickNo = String(d?.userPick?.selection || '—');
     pickEl.textContent = `Your pick: #${pickNo}`;
-    socialEl.textContent = imminent
-      ? `You + ${Number(d?.othersCount || 0)} others are locked for this race`
-      : `You + ${Number(d?.othersCount || 0)} others ${d?.canEdit ? 'have entered' : 'are locked for this race'}`;
+    const others = Number(d?.othersCount || 0);
+    socialEl.textContent = others <= 0 ? 'You’re first on the card.' : `You + ${others} others locked in.`;
     ladderEl.textContent = d?.ladderRankAvailable
       ? `Current ladder position: #${d?.ladderRank || '—'}${d?.canEdit ? '' : ' (updates after results)'}`
       : 'Position updates after results.';
@@ -538,7 +538,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     if (d?.canEdit) {
       card.className = 'card next-tip-card next-tip-card--warn';
       badgeEl.textContent = 'EDITABLE';
-      body.textContent = 'Live Sync: Active • Changes allowed until lock.';
+      body.textContent = 'Live sync active — edits allowed until lock.';
       primary.textContent = 'Edit Tip';
       primary.href = '/punters.html#tip-form';
       secondary.textContent = 'View Full Card';
@@ -548,7 +548,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     card.className = 'card next-tip-card next-tip-card--highlight';
     badgeEl.textContent = 'LOCKED IN';
-    body.textContent = 'Live Sync: Active • Your pick is confirmed.';
+    body.textContent = 'Live sync active — pick confirmed.';
     primary.textContent = 'View Full Card';
     primary.href = '/punters.html';
     secondary.textContent = 'View Full Card';
