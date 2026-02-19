@@ -1540,7 +1540,9 @@ function createApp() {
       try {
         const store = readStore();
         const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-        const fixture = (getTrackData(store, trackId)?.fixtures || [])[0] || null;
+        const fixture = (Array.isArray(store?.puntersClub?.tracks?.[trackId]?.fixtures)
+          ? store.puntersClub.tracks[trackId].fixtures[0]
+          : (Array.isArray(store?.fixtures) ? store.fixtures[0] : null)) || null;
         const userKey = String(req.user?.username || '').trim().toLowerCase();
         const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
         const mine = tipsArr
@@ -1688,7 +1690,9 @@ function createApp() {
       try {
         const store = readStore();
         const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-        const fixture = (getTrackData(store, trackId)?.fixtures || [])[0] || null;
+        const fixture = (Array.isArray(store?.puntersClub?.tracks?.[trackId]?.fixtures)
+          ? store.puntersClub.tracks[trackId].fixtures[0]
+          : (Array.isArray(store?.fixtures) ? store.fixtures[0] : null)) || null;
         const userKey = String(req.user?.username || '').trim().toLowerCase();
         const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
         const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
