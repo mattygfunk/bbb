@@ -82,6 +82,15 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
+function fmtHHMMSS(ms) {
+  if (!Number.isFinite(ms)) return '--:--:--';
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = String(Math.floor(total / 3600)).padStart(2, '0');
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+  const s = String(total % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 function renderFixtures(fixtures, overview, jackpot, lockText = 'Updating…') {
   const rows = (fixtures || []).slice(0, 1);
   const fallback = document.getElementById('next-event-fallback');
@@ -387,6 +396,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   const socialEl = document.getElementById('next-tip-home-social');
   const primary = document.getElementById('next-tip-home-primary');
   const secondary = document.getElementById('next-tip-home-secondary');
+  const inlineState = document.getElementById('next-tip-home-inline-state');
+  const inlineJackpot = document.getElementById('next-tip-home-inline-jackpot');
+  const inlineMeet = document.getElementById('next-tip-home-inline-meet');
+  const inlineLock = document.getElementById('next-tip-home-inline-lock');
   if (!section || !card || !raceEl || !pickEl || !badgeEl || !countdownEl || !contextEl || !socialEl || !primary || !secondary) return;
   const setLockline = (text = '') => {
     if (!locklineEl) return;
@@ -498,6 +511,11 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
+
+    if (inlineState) inlineState.textContent = String(d?.roundStatus || '').toUpperCase() === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
+    if (inlineJackpot) inlineJackpot.textContent = `💰 Jackpot live: ${document.getElementById('status-jackpot')?.textContent || '$0'}`;
+    if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${venue || '—'}`;
+    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : '--:--:--'}`;
     if (lockRef > 0 && !hardLocked) {
       contextEl.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
       setLockline('');
