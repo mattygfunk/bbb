@@ -1424,6 +1424,60 @@ function createApp() {
   app.get('/api/punters/next-tip', auth, (req, res) => {
     try {
       const store = readStore();
+
+      // Simple, robust mode: derive next-tip state from tips only.
+      // This intentionally avoids fixture/results/track lifecycle complexity.
+      {
+      const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
+      const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
+      const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
+      const baseTips = trackTips.length ? trackTips : usableTips;
+      const userKey = String(req.user?.username || '').trim().toLowerCase();
+      const mine = baseTips
+        .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+        .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+
+      const raceNums = baseTips
+        .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
+      const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
+      let nextRace = null;
+      for (let i = 1; i <= raceCount; i += 1) {
+        const r = `R${i}`;
+        if (!mineSet.has(r)) { nextRace = r; break; }
+      }
+      const allComplete = !nextRace;
+      if (!nextRace) nextRace = String(mine[0]?.race || 'R1').toUpperCase();
+
+      const tip = mine.find((t) => String(t.race || '').toUpperCase() === nextRace) || null;
+      const editable = canEditTipsNow(store);
+      const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+      const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
+
+      return res.json({
+        trackId: requestedTrackId,
+        trackName: TRACKS[requestedTrackId]?.name || requestedTrackId,
+        roundStatus: allComplete ? 'CLOSED' : 'OPEN',
+        editable,
+        statusBadge: allComplete ? 'Closed' : (editable ? 'Editable' : 'Locked'),
+        fixture,
+        nextRace,
+        startAtMs: null,
+        lockAtMs,
+        countdownToMs: lockAtMs,
+        hasTip: Boolean(tip),
+        tip: tip ? {
+          race: String(tip.race || nextRace),
+          selection: String(tip.selection || ''),
+          runnerName: String(tip.runnerName || tip.horseName || '')
+        } : null,
+        missingTip: !tip,
+        allComplete
+      });
+      }
+
     const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
     const trackDataRaw = getTrackData(store, trackId) || {};
     const trackData = {
@@ -1581,6 +1635,63 @@ function createApp() {
   app.get('/api/punters/next-tip-summary', auth, (req, res) => {
     try {
       const store = readStore();
+
+      // Simple, robust mode: derive next-tip summary from tips only.
+      {
+      const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
+      const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
+      const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
+      const baseTips = trackTips.length ? trackTips : usableTips;
+
+      const userKey = String(req.user?.username || '').trim().toLowerCase();
+      const mine = baseTips
+        .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+        .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+
+      const raceNums = baseTips
+        .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
+      const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
+      let raceNumber = null;
+      for (let i = 1; i <= raceCount; i += 1) {
+        const r = `R${i}`;
+        if (!mineSet.has(r)) { raceNumber = r; break; }
+      }
+      const allComplete = !raceNumber;
+      if (!raceNumber) raceNumber = String(mine[0]?.race || 'R1').toUpperCase();
+
+      const raceTips = baseTips.filter((t) => String(t.race || '').toUpperCase() === raceNumber);
+      const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
+      const userTip = raceTips.find((t) => String(t.member || '').trim().toLowerCase() === userKey) || null;
+      const userHasTip = Boolean(userTip);
+      const canEdit = canEditTipsNow(store);
+      const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
+      const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
+
+      return res.json({
+        roundStatus: allComplete ? 'CLOSED' : 'OPEN',
+        trackId: requestedTrackId,
+        trackName: TRACKS[requestedTrackId]?.name || requestedTrackId,
+        venue: String(fixture?.track || ''),
+        raceNumber,
+        startTime: null,
+        lockTime: Number(getEffectiveTipEditDeadlineMs(store) || 0) || null,
+        userHasTip,
+        userPick: userTip ? {
+          race: String(userTip.race || raceNumber),
+          selection: String(userTip.selection || ''),
+          runnerName: String(userTip.runnerName || userTip.horseName || '')
+        } : null,
+        canEdit,
+        othersCount,
+        ladderRank: null,
+        ladderRankAvailable: false,
+        state: allComplete ? 'ROUND_COMPLETE' : (userHasTip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
+      });
+      }
+
       const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
       const trackDataRaw = getTrackData(store, trackId) || {};
       const trackData = {
