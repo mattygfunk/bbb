@@ -242,8 +242,12 @@
 
       <section class="rail-section" id="this-week-tips" aria-labelledby="tips-heading">
         <div class="section-head">
-          <h2 id="tips-heading">This Week’s Activity</h2>
-          <a class="menu-link" href="/punters-club">View All Tips</a>
+          <h2 id="tips-heading">Live This Week</h2>
+          <div class="row-actions">
+            <span class="pill">Entries: <strong id="live-week-entries">0</strong></span>
+            <span class="pill">Pot: <strong id="live-week-pot">$0</strong></span>
+            <a class="menu-link" href="/punters.html#leaderboard">View Full Ladder</a>
+          </div>
         </div>
         <div class="grid three" id="tips-preview-list"></div>
         <p class="muted" id="tips-more-count"></p>
@@ -251,30 +255,29 @@
 
       <section class="rail-section" id="how-it-works" aria-labelledby="how-heading">
         <div class="section-head">
-          <h2 id="how-heading">How it Works</h2>
-          <p class="muted muted-strong">Fast format, clean rules, separate jackpots.</p>
+          <h2 id="how-heading">How It Works</h2>
         </div>
         <div class="steps-grid">
-          <article class="card step-tile"><h3>🔒 Lock Picks</h3><p class="muted">Countdown clock is public. No late edits, same lock for everyone.</p></article>
-          <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st, 2 = 2nd, 1 = 3rd. Live ladder updates after scored races.</p></article>
-          <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Top score wins. Ties roll over. Dogs and Galls jackpots stay separate.</p></article>
+          <article class="card step-tile"><h3>🔒 Lock Picks</h3><p class="muted">Public countdown • No late edits • Same lock for everyone</p></article>
+          <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st • 2 = 2nd • 1 = 3rd • Live ladder updates</p></article>
+          <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Highest total wins • Ties roll over • Separate Dogs/Galls jackpots</p></article>
         </div>
       </section>
 
       <section class="rail-section" aria-labelledby="home-poker-legends-heading">
-        <div class="section-head"><h2 id="home-poker-legends-heading">From Punters Club Legends to Poker Legends</h2></div>
+        <div class="section-head"><h2 id="home-poker-legends-heading">From Punters Club to Poker Legends</h2></div>
         <div class="split">
-          <article class="card">
-            <p class="muted"><strong>Last week’s big-event winner:</strong> Sylvia 🔥</p>
-            <p class="muted">Some major events include a <strong>$2,500 holiday package for 1st place</strong>.</p>
-            <p class="muted"><strong>Sunday 6:00 PM:</strong> $1,300 GTD Main Event</p>
-            <p class="muted"><strong>Nightly:</strong> 8:00 PM — $500 GTD + Main Event Ticket • 10:00 PM — $700 GTD</p>
-            <div class="row-actions"><a class="btn chip-btn" href="/poker.html">Play Poker Tournaments</a></div>
+          <article class="card poker-major-card">
+            <p class="muted"><strong>Last week’s big-event winner:</strong> <strong>Sylvia</strong> 🔥</p>
+            <p class="muted"><strong>$2,500 holiday package events</strong> are in rotation for major weeks.</p>
+            <p class="muted"><strong>Sunday Main:</strong> 6:00 PM — $1,300 GTD</p>
+            <p class="muted"><strong>Nightly:</strong> 8:00 PM — $500 GTD + Ticket • 10:00 PM — $700 GTD</p>
+            <div class="row-actions"><a class="btn chip-btn" href="/poker-schedule.html">Play Poker Tournaments</a></div>
           </article>
-          <article class="card">
-            <h3>Bring your edge to the felt</h3>
-            <p class="muted">If you can read races, manage pressure, and stay disciplined, you already have the foundation to win at tournament poker.</p>
-            <p class="muted">Start with the nightly schedule, then take your shot in the Sunday Main.</p>
+          <article class="card poker-sunday-main">
+            <h3>Sunday Main Event</h3>
+            <p class="muted"><strong>6:00 PM — $1,300 GTD</strong></p>
+            <p class="muted">Prime weekly spot. Structured fields, cleaner edges, bigger upside.</p>
           </article>
         </div>
       </section>
@@ -428,6 +431,6 @@
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
     <script defer src="home-login.js?v=20260218-1"></script>
-    <script defer src="landing.js?v=20260219-10"></script>
+    <script defer src="landing.js?v=20260219-11"></script>
   </body>
 </html>

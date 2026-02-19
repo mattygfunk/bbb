@@ -491,6 +491,7 @@ async function refresh(){
     if (!t.paid) row.unpaid = true;
   });
   const raceOrder = Array.from({length:state.raceCount}, (_,i)=>`R${i+1}`);
+  const currentUserLower = String(state.user?.username || '').toLowerCase();
   Array.from(byPunter.entries()).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([member, data]) => {
     const picks = data.picks;
     const lines = raceOrder
@@ -498,11 +499,12 @@ async function refresh(){
       .map((r) => `<span>${esc(r)}: <strong>${esc(picks.get(r))}</strong></span>`)
       .join(' • ');
     const e=document.createElement('article');
-    e.className='tip';
+    const mine = currentUserLower && String(member).toLowerCase() === currentUserLower;
+    e.className=`tip${mine ? ' tip-own' : ''}`;
     const reminder = data.unpaid
       ? `<p class='meta unpaid-reminder'>⚠️ Not jackpot-eligible yet. Upgrade path: click <strong>Upgrade to Jackpot Eligible</strong>, pay <strong>$20 via PayID 0421 325 503</strong>, then submit confirmation for admin verification.</p>`
       : "";
-    e.innerHTML=`<strong>${esc(member)}</strong>${data.unpaid ? " <span class='pill unpaid-pill'>UNPAID</span>" : ""}<p class='meta'>${lines || 'No tips yet'}</p>${reminder}`;
+    e.innerHTML=`<strong>${esc(member)}</strong>${mine ? " <span class='pill'>You</span>" : ""} <span class='pill'>Locked</span>${data.unpaid ? " <span class='pill unpaid-pill'>UNPAID</span>" : ""}<p class='meta'>${lines || 'No tips yet'}</p>${reminder}`;
     $('tips-list').appendChild(e);
   });
   $('tips-count').textContent=`${byPunter.size} punter${byPunter.size===1?'':'s'}`;

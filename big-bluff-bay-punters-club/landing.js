@@ -125,7 +125,7 @@ function renderFixtures(fixtures, overview, jackpot, lockText = 'Updating…') {
   if (fallback) fallback.hidden = true;
 }
 
-function renderTipsByPlayer(tips) {
+function renderTipsByPlayer(tips, currentUser = '') {
   const list = document.getElementById('tips-preview-list');
   const more = document.getElementById('tips-more-count');
   if (!list) return;
@@ -145,12 +145,13 @@ function renderTipsByPlayer(tips) {
 
   const raceNum = (r) => Number(String(r || '').replace('R', '')) || 999;
   const entries = Array.from(byMember.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  entries.slice(0, 3).forEach(([member, picks]) => {
+  entries.slice(0, 4).forEach(([member, picks]) => {
     const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
-    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)} ${esc(p.selection)}`).join(' • ');
+    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)}: ${esc(p.selection)}`).join(' • ');
     const card = document.createElement('article');
-    card.className = 'tip';
-    card.innerHTML = `<h3>${esc(member)}</h3><p class="meta">${lines || 'No tips yet'}</p>`;
+    const mine = currentUser && String(member).toLowerCase() === String(currentUser).toLowerCase();
+    card.className = `tip${mine ? ' tip-own' : ''}`;
+    card.innerHTML = `<h3>${esc(member)} ${mine ? "<span class='pill'>You</span>" : ''} <span class='pill'>Locked</span></h3><p class="meta">${lines || 'No tips yet'}</p>`;
     list.appendChild(card);
   });
   const extra = Math.max(0, entries.length - 3);
@@ -396,6 +397,8 @@ async function hydrateLandingCritical() {
     document.getElementById('jackpot-value').textContent = potText;
     document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
+    const livePot = document.getElementById('live-week-pot');
+    if (livePot) livePot.textContent = potText;
 
     const effectiveFixtures = (Array.isArray(overview?.fixtures) && overview.fixtures.length)
       ? overview.fixtures
@@ -540,12 +543,25 @@ async function hydrateLandingDeferred() {
 
     const tipRows = (tips?.tips || []).filter((t) => t.status !== 'removed');
     const entries = new Set(tipRows.map((t) => t.member)).size;
+    let currentUser = '';
+    const token = localStorage.getItem('bbb-token-v3');
+    if (token) {
+      try {
+        const meRes = await fetch('/api/me', { credentials: 'same-origin', headers: { Authorization: `Bearer ${token}` } });
+        if (meRes.ok) {
+          const me = await meRes.json();
+          currentUser = String(me?.user?.username || '');
+        }
+      } catch {}
+    }
 
     requestAnimationFrame(() => {
-      renderTipsByPlayer(tipRows);
+      renderTipsByPlayer(tipRows, currentUser);
       renderSocialFeed(social?.items || []);
       document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
       document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
+      const liveEntries = document.getElementById('live-week-entries');
+      if (liveEntries) liveEntries.textContent = String(entries || 0);
       const heroEntries = document.getElementById('hero-social-entries');
       if (heroEntries && entries) heroEntries.textContent = String(entries);
       applyTableCards();

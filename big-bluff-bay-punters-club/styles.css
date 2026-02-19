@@ -857,6 +857,7 @@ details p { margin:.55rem 0 0; }
 .next-tip-card--warn { border-color:#eab308; box-shadow: 0 0 0 1px #eab30855, 0 0 16px #eab30822; }
 .next-tip-card--closed { border-color:#ef4444; box-shadow: 0 0 0 1px #ef444455, 0 0 14px #ef444422; }
 .next-tip-card--tease { border-color:#35506e; }
+.tip-own { border-color:#22c55e; box-shadow: 0 0 0 1px #22c55e40; }
 
 
 #tab-greyhounds.active,
