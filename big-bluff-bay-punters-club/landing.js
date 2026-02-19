@@ -185,8 +185,18 @@ function renderWinners(items) {
   wrap.innerHTML = '';
   (items || []).forEach((w) => {
     const card = document.createElement('article');
-    card.className = 'card winner-item';
-    card.innerHTML = `<strong>${esc(w.handle)}</strong><p class='muted'>${esc(w.week)}</p><p class='muted'>${esc(w.prize)}</p>`;
+    card.className = 'card winner-item winner-item-premium';
+    const handleRaw = String(w.handle || '').trim();
+    const icon = handleRaw.startsWith('♠') ? '♠' : '🏇';
+    const name = handleRaw.replace(/^([♠🏇])\s*/, '') || '—';
+    card.innerHTML = `
+      <div class='row-actions' style='justify-content:space-between;align-items:center'>
+        <span class='pill'>${esc(icon === '♠' ? 'Poker Result' : 'Racing Result')}</span>
+        <span class='pill'>${esc(w.week || '—')}</span>
+      </div>
+      <h3 class='winner-name'>${esc(`${icon} ${name}`)}</h3>
+      <p class='winner-prize'>${esc(w.prize || '$0.00')}</p>
+    `;
     wrap.appendChild(card);
   });
   if (!items?.length) {

@@ -703,6 +703,22 @@ details p { margin:.55rem 0 0; }
 .password-wrap { display:grid; grid-template-columns:1fr auto; gap:.45rem; align-items:center; }
 .tiny-btn { padding:.5rem .6rem; min-width:68px; }
 #winners-strip .winner-item { min-width: 220px; }
+#winners-strip .winner-item-premium {
+  background: radial-gradient(800px 220px at 0% -40%, rgba(56,189,248,.12), transparent 45%), linear-gradient(180deg, #0b1524, #0a1320);
+  border: 1px solid rgba(120,140,180,.35);
+  box-shadow: 0 10px 24px rgba(0,0,0,.28);
+}
+#winners-strip .winner-item-premium .winner-name {
+  margin: .2rem 0;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+#winners-strip .winner-item-premium .winner-prize {
+  margin: .2rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
 #winners-strip .empty-state { color: var(--muted); }
 
 .banner-photo-card {
