@@ -479,7 +479,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
     raceEl.textContent = `${raceLabel} — ${venue}`;
-    contextEl.textContent = `${trackType} • Meeting synced`;
+    contextEl.textContent = `${trackType} • ${venue} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -490,7 +490,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       contextEl.textContent = `${trackType} • Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
       setLockline('');
     } else {
-      contextEl.textContent = `${trackType} • Meeting synced`;
+      contextEl.textContent = `${trackType} • ${venue} meeting`;
       setLockline('');
     }
 

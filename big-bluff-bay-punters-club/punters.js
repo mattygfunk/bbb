@@ -450,9 +450,10 @@ async function hydrateNextTipCard(trackId){
 
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
-    race.textContent = `${raceLabel} — ${d?.venue || 'Track'}`;
+    const venue = d?.venue || 'Track';
+    race.textContent = `${raceLabel} — ${venue}`;
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    context.textContent = `${trackType} • Meeting synced`;
+    context.textContent = `${trackType} • ${venue} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -465,7 +466,7 @@ async function hydrateNextTipCard(trackId){
       lockline.textContent = '';
       lockline.style.display='none';
     } else {
-      context.textContent = `${trackType} • Meeting synced`;
+      context.textContent = `${trackType} • ${venue} meeting`;
       lockline.textContent = '';
       lockline.style.display='none';
     }
@@ -530,8 +531,9 @@ async function hydrateNextTipCard(trackId){
       const raceNum = Number(String(lg?.nextRace || '').replace('R',''));
       const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
       const trackType = String(lg?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-      race.textContent = `${raceLabel} — ${lg?.fixture?.track || 'Venue TBA'}`;
-      context.textContent = `${trackType} • Meeting synced`;
+      const venue = lg?.fixture?.track || 'Venue TBA';
+      race.textContent = `${raceLabel} — ${venue}`;
+      context.textContent = `${trackType} • ${venue} meeting`;
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
