@@ -45,7 +45,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css?v=20260219-6" />
+    <link rel="stylesheet" href="styles.css?v=20260219-7" />
     <script defer src="analytics.js"></script>
   </head>
   <body>
@@ -76,21 +76,41 @@
         <span>›</span>
         <span aria-current="page">🏇 Punters Club</span>
       </nav>
-      <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading">
-        <h2 id="next-tip-punters-heading">Your Next Race Tip</h2>
-        <div class="row-actions" style="justify-content:space-between;align-items:center">
-          <p class="next-tip-kicker" id="next-tip-punters-badge">LOCKED IN</p>
-          <p class="next-tip-countdown" id="next-tip-punters-countdown">--:--</p>
-        </div>
-        <h3 id="next-tip-punters-race">Race —</h3>
-        <p class="muted" id="next-tip-punters-context">Track Type • Locks in --:-- (Melbourne)</p>
-        <p class="next-tip-runner" id="next-tip-punters-pick">#—</p>
-        <p class="muted" id="next-tip-punters-social">You’re first on the card</p>
-        <div class="row-actions">
-          <a class="btn chip-btn" id="next-tip-punters-primary" href="/">Log In</a>
-          <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#community-tips-card">View Full Card</a>
-        </div>
-      </section>
+      <div class="split" id="next-tip-entry-split">
+        <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading">
+          <h2 id="next-tip-punters-heading">Your Next Race Tip</h2>
+          <div class="row-actions" style="justify-content:space-between;align-items:center">
+            <p class="next-tip-kicker" id="next-tip-punters-badge">LOCKED IN</p>
+            <p class="next-tip-countdown" id="next-tip-punters-countdown">--:--</p>
+          </div>
+          <h3 id="next-tip-punters-race">Race —</h3>
+          <p class="muted" id="next-tip-punters-context">Track Type • Locks in --:-- (Melbourne)</p>
+          <p class="next-tip-runner" id="next-tip-punters-pick">#—</p>
+          <p class="muted" id="next-tip-punters-social">You’re first on the card</p>
+          <div class="row-actions">
+            <a class="btn chip-btn" id="next-tip-punters-primary" href="/">Log In</a>
+            <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#community-tips-card">View Full Card</a>
+          </div>
+        </section>
+
+        <section class="card" id="quick-tips-entry-card"><h2>Tips Entry</h2>
+          <p class="muted" id="quick-fixture-line">Loading next meet…</p>
+          <section class="card" id="tips-locked-summary">
+            <h3>Your tips are in ✅</h3>
+            <p class="muted" id="tips-locked-summary-text">Checking your saved tips…</p>
+            <div class="row-actions">
+              <button class="btn btn-ghost" type="button" id="tips-edit-btn" hidden>Edit tips</button>
+            </div>
+          </section>
+          <form id="tip-form" class="stack" hidden style="display:none">
+            <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>
+            <div class="quick-grid" id="quick-race-list"></div>
+            <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Enter This Week’s Tips</button>
+          </form>
+          <p id="tip-msg" class="muted"></p>
+        </section>
+      </div>
+
       <section class="card" id="winner-banner" hidden>
         <h2>🏆 Round Winner: <span id="winner-banner-name">tofu</span></h2>
         <p class="muted" id="winner-banner-range">Round date range</p>
@@ -101,22 +121,6 @@
         <h2>Round Recap</h2>
         <p class="muted" id="round-recap-summary">Next round opens Friday afternoon</p>
         <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th></tr></thead><tbody id="round-recap-top3"><tr><td colspan="3" class="muted">No recap yet.</td></tr></tbody></table></div>
-      </section>
-      <section class="card" id="quick-tips-entry-card"><h2>Tips Entry</h2>
-        <p class="muted" id="quick-fixture-line">Loading next meet…</p>
-        <section class="card" id="tips-locked-summary">
-          <h3>Your tips are in ✅</h3>
-          <p class="muted" id="tips-locked-summary-text">Checking your saved tips…</p>
-          <div class="row-actions">
-            <button class="btn btn-ghost" type="button" id="tips-edit-btn" hidden>Edit tips</button>
-          </div>
-        </section>
-        <form id="tip-form" class="stack" hidden style="display:none">
-          <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>
-          <div class="quick-grid" id="quick-race-list"></div>
-          <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Enter This Week’s Tips</button>
-        </form>
-        <p id="tip-msg" class="muted"></p>
       </section>
 
       <section class="card" id="pricing-explainer-section">
