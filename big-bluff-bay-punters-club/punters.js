@@ -764,9 +764,14 @@ async function refresh(){
   const pcWeeks = $('pc-stat-weeks');
   const pcEntries = $('pc-stat-entries');
   const pcPaid = $('pc-stat-paid');
+  const payoutHistory = Array.isArray(milestonesRes?.winnerHistory) ? milestonesRes.winnerHistory : [];
+  const recentPayoutTotal = payoutHistory
+    .filter((r) => !r?.rolledOver)
+    .slice(0, 8)
+    .reduce((sum, r) => sum + Number(r?.prize ?? 0), 0);
   if (pcWeeks) pcWeeks.textContent = String((overviewData?.pastRounds || []).length || '—');
   if (pcEntries) pcEntries.textContent = String(byPunter.size || '—');
-  if (pcPaid) pcPaid.textContent = `$${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
+  if (pcPaid) pcPaid.textContent = `$${recentPayoutTotal.toFixed(2)}`;
   const communityTipsCard = $('community-tips-card');
   if (communityTipsCard) {
     communityTipsCard.style.display = byPunter.size === 0 ? 'none' : '';
