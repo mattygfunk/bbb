@@ -395,24 +395,28 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   };
 
   const token = localStorage.getItem('bbb-token-v3');
+  if (!token) {
+    section.hidden = true;
+    return;
+  }
+
   section.hidden = false;
   card.className = 'card next-tip-card next-tip-card--tease';
   card.classList.remove('countdown-pulse');
   card.dataset.state = 'tease';
   badgeEl.textContent = 'MEMBER PREVIEW';
-  raceEl.textContent = 'Log in to unlock your next race tip';
-  contextEl.textContent = 'Punters Club • Private member card';
+  raceEl.textContent = 'Loading your next race tip…';
+  contextEl.textContent = 'Punters Club • Member card';
   pickEl.textContent = '#—';
   setLockline('');
-  socialEl.textContent = 'Track + lock details appear after login';
+  socialEl.textContent = 'Syncing your member card…';
   countdownEl.style.display = 'none';
   countdownEl.textContent = '';
-  primary.textContent = 'Log In';
-  primary.href = '/';
+  primary.textContent = 'Open Tip Form';
+  primary.href = '/punters.html#tip-form';
   secondary.hidden = false;
   secondary.textContent = 'View Full Card';
   secondary.href = '/punters.html';
-  if (!token) return;
 
   try {
     const res = await fetch(`/api/punters/next-tip-summary?trackId=${encodeURIComponent(trackId)}`, {

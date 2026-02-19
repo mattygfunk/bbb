@@ -468,24 +468,27 @@ async function hydrateNextTipCard(trackId){
     lockline.style.display = text ? '' : 'none';
   };
 
+  if(!state.user){
+    card.hidden = true;
+    return;
+  }
+
   card.hidden = false;
   card.className = 'card next-tip-card next-tip-card--tease';
   card.classList.remove('countdown-pulse');
   badge.textContent = 'MEMBER PREVIEW';
-  race.textContent = 'Log in to unlock your next race tip';
-  context.textContent = 'Punters Club • Private member card';
+  race.textContent = 'Loading your next race tip…';
+  context.textContent = 'Punters Club • Member card';
   pick.textContent = '#—';
   setLockline('');
-  social.textContent = 'Track + lock details appear after login';
+  social.textContent = 'Syncing your member card…';
   countdown.style.display = 'none';
   countdown.textContent = '';
-  primary.textContent = 'Log In';
-  primary.href = '/';
+  primary.textContent = 'Open Tip Form';
+  primary.href = '/punters.html#tip-form';
   secondary.hidden = false;
   secondary.textContent = 'View Full Card';
   secondary.href = '/punters.html#leaderboard';
-
-  if(!state.user) return;
 
   // Signed-in users should never see a login CTA.
   social.textContent = 'Syncing your member card…';
