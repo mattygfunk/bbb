@@ -87,19 +87,27 @@ function renderMilestones(data){
   const streakBody = $('streak-body');
   if(!winnerCard || !winnerHistory || !streakBody) return;
 
+  const formatRoundLabel = (row) => {
+    const ts = Number(row?.archivedAt || 0);
+    if (Number.isFinite(ts) && ts > 0) {
+      return new Date(ts).toLocaleDateString('en-AU', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    return String(row?.weekLabel || 'Round —');
+  };
+
   const featured = data?.featuredWinner || null;
   if(!featured){
     winnerCard.innerHTML = "<p class='muted'>No weekly winner recorded yet.</p>";
   } else {
-    const date = featured.archivedAt ? new Date(featured.archivedAt).toLocaleDateString('en-AU',{ day:'2-digit', month:'short', year:'numeric' }) : '';
-    winnerCard.innerHTML = `<div class='stack'><strong>${esc(featured.member)}</strong><p class='muted'>${esc(featured.weekLabel)}${date ? ` • ${date}` : ''}</p><p class='muted'>${featured.points} pts • ${featured.winners} winners</p></div>`;
+    const label = formatRoundLabel(featured);
+    winnerCard.innerHTML = `<div class='stack'><strong>${esc(featured.member)}</strong><p class='muted'>${esc(label)}</p><p class='muted'>${featured.points} pts • ${featured.winners} winners</p></div>`;
   }
 
   winnerHistory.innerHTML='';
   (data?.winnerHistory || []).slice(0,8).forEach((row)=>{
     const tr=document.createElement('tr');
     const winnerCell = row.rolledOver ? `${esc(row.member || '-')} ⚠️` : esc(row.member || '-');
-    tr.innerHTML=`<td>${esc(row.weekLabel || '-')}</td><td>${winnerCell}</td><td>$${Number((row.prize ?? row.points ?? 0)).toFixed(2)}</td>`;
+    tr.innerHTML=`<td>${esc(formatRoundLabel(row))}</td><td>${winnerCell}</td><td>$${Number((row.prize ?? row.points ?? 0)).toFixed(2)}</td>`;
     winnerHistory.appendChild(tr);
   });
   if(!(data?.winnerHistory || []).length){
