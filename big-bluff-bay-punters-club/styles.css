@@ -850,6 +850,12 @@ details p { margin:.55rem 0 0; }
 .profile-head{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap}
 .profile-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;background:#1a2228;border:1px solid rgba(255,255,255,.14)}
 .profile-settings{gap:1rem}
+.profile-form-pro{gap:.75rem}
+.profile-panel{border:1px solid rgba(120,140,180,.28);background:linear-gradient(180deg,#0d1728,#0a1320)}
+.profile-panel h3{margin:.1rem 0 .45rem}
+.profile-settings-grid{gap:.7rem}
+.profile-toggle-stack{gap:.5rem}
+.profile-toggle-stack label{display:flex;align-items:center;gap:.5rem}
 .profile-chip{display:inline-flex;align-items:center;gap:.45rem}
 .profile-chip-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.22);background:#1a2228}
 
