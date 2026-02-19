@@ -377,7 +377,12 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   const socialEl = document.getElementById('next-tip-home-social');
   const primary = document.getElementById('next-tip-home-primary');
   const secondary = document.getElementById('next-tip-home-secondary');
-  if (!section || !card || !raceEl || !pickEl || !badgeEl || !countdownEl || !contextEl || !locklineEl || !socialEl || !primary || !secondary) return;
+  if (!section || !card || !raceEl || !pickEl || !badgeEl || !countdownEl || !contextEl || !socialEl || !primary || !secondary) return;
+  const setLockline = (text = '') => {
+    if (!locklineEl) return;
+    locklineEl.textContent = text;
+    locklineEl.style.display = text ? '' : 'none';
+  };
 
   const token = localStorage.getItem('bbb-token-v3');
   section.hidden = false;
@@ -388,8 +393,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   raceEl.textContent = 'Log in to unlock your next race tip';
   contextEl.textContent = 'Punters Club • Private member card';
   pickEl.textContent = '#—';
-  locklineEl.style.display = 'none';
-  locklineEl.textContent = '';
+  setLockline('');
   socialEl.textContent = 'Track + lock details appear after login';
   countdownEl.style.display = 'none';
   countdownEl.textContent = '';
@@ -481,16 +485,13 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
     if (lockRef > 0 && !hardLocked) {
       contextEl.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
-      locklineEl.style.display = 'none';
-      locklineEl.textContent = '';
+      setLockline('');
     } else if (lockRef > 0 && hardLocked) {
       contextEl.textContent = `${trackType} • Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
-      locklineEl.style.display = 'none';
-      locklineEl.textContent = '';
+      setLockline('');
     } else {
       contextEl.textContent = `${trackType} • Meeting synced`;
-      locklineEl.style.display = 'none';
-      locklineEl.textContent = '';
+      setLockline('');
     }
 
     if (String(d?.state || '') === 'ROUND_COMPLETE') {
