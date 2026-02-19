@@ -39,9 +39,9 @@
       .card{background:linear-gradient(180deg,#0b1221 0%,#0b1220 100%);border:1px solid var(--line);border-radius:1rem;padding:1rem}.login-card{width:min(560px,100%)}main{padding:1.1rem 0 2.4rem;display:grid;gap:1rem}
       @media (min-width:980px){.hero-layout{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:1.2rem}}
     </style>
-    <link rel="preload" href="styles.css?v=20260219-6" as="style" />
-    <link rel="stylesheet" href="styles.css?v=20260219-6" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="styles.css?v=20260219-6" /></noscript>
+    <link rel="preload" href="styles.css?v=20260219-7" as="style" />
+    <link rel="stylesheet" href="styles.css?v=20260219-7" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="styles.css?v=20260219-7" /></noscript>
     <script defer src="analytics.js"></script>
   </head>
   <body class="landing-page">
@@ -306,19 +306,25 @@
       </section>
 
       <section class="rail-section" aria-labelledby="proof-heading">
-        <div class="section-head"><h2 id="proof-heading">Winners Wall</h2></div>
-        <p class="muted">Proof-of-performance from recent racing and poker results.</p>
-        <div class="winners-strip winners-wall-grid" id="winners-strip"></div>
-      </section>
+        <div class="section-head">
+          <h2 id="proof-heading">Winners Wall</h2>
+          <p class="muted muted-strong">Proof-of-Performance. No stories. Just results.</p>
+        </div>
+        <p class="muted">Every round is archived with winner, payout, and final-ladder snapshot context.</p>
 
-      <section class="rail-section" aria-labelledby="snapshot-heading">
-        <div class="section-head"><h2 id="snapshot-heading">Live Club Snapshot</h2></div>
-        <div class="stats-grid">
+        <div class="stats-grid winners-proof-inline" aria-label="Winners Wall snapshot stats">
           <article class="card"><h3 id="stat-weeks">—</h3><p class="muted">Punters rounds archived</p></article>
           <article class="card"><h3 id="stat-entries">—</h3><p class="muted">This week’s tip entries</p></article>
           <article class="card"><h3 id="stat-paid">$0</h3><p class="muted">Recent payouts total</p></article>
         </div>
-        <p class="muted" style="margin-top:.45rem">Private. Transparent. Running every Wednesday and Saturday.</p>
+
+        <div class="row-actions" style="margin:.45rem 0 .2rem">
+          <span class="pill">📸 Snapshot-first archive</span>
+          <span class="pill">🏇 Wednesday + Saturday rounds</span>
+          <span class="pill">✅ Transparent rollover handling</span>
+        </div>
+
+        <div class="winners-strip winners-wall-grid" id="winners-strip"></div>
       </section>
 
       <section class="rail-section" id="social-feed" aria-labelledby="social-feed-heading">
