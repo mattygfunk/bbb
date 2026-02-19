@@ -400,7 +400,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.status === 401) return;
-    let d = await res.json();
+    let d = null;
+    if (res.ok) {
+      d = await res.json();
+    }
     if (String(d?.state || '') === 'ERROR' || (!d?.raceNumber && String(d?.roundStatus || '').toUpperCase() !== 'CLOSED')) {
       const legacyRes = await fetch(`/api/punters/next-tip?trackId=${encodeURIComponent(trackId)}`, {
         credentials: 'same-origin',

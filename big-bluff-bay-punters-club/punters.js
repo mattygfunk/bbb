@@ -484,7 +484,27 @@ async function hydrateNextTipCard(trackId){
     body.textContent = 'Live Sync: Active • Your pick is confirmed.';
     primary.textContent = 'View Full Card';
     primary.href = '/punters.html#leaderboard';
-  }catch{}
+  }catch{
+    try {
+      const lg = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+      race.textContent = lg?.nextRace || 'Next Race';
+      context.textContent = `${lg?.trackName || 'Track'} • ${lg?.fixture?.track || 'Venue TBA'}`;
+      const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
+      const mm = String(Math.floor(ms/60000)).padStart(2,'0');
+      const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
+      countdown.textContent = `${mm}:${ss}`;
+      if (lg?.hasTip) {
+        card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
+        badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
+        pick.textContent = lg?.tip?.runnerName ? `${lg.tip.selection} • ${lg.tip.runnerName}` : `${lg?.tip?.selection || '—'}`;
+        body.textContent = lg?.editable ? 'Live Sync: Active • Changes allowed until lock.' : 'Live Sync: Active • Your pick is confirmed.';
+        social.textContent = lg?.editable ? 'You have entered this race' : 'You are locked for this race';
+        ladder.textContent = 'Position updates after results.';
+        primary.textContent = lg?.editable ? 'Edit Tip' : 'View Full Card';
+        primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';
+      }
+    } catch {}
+  }
 }
 
 async function refresh(){
