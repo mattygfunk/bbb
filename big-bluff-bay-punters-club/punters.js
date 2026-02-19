@@ -1,7 +1,8 @@
 const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
 const tokenKey='bbb-token-v3';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true};
+const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl)};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -626,7 +627,7 @@ async function refresh(){
   renderTipEntryState();
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
-  const overview = await req(API.puntersOverview(state.tierView)).catch(() => null);
+  const overview = await req(`${API.puntersOverview(state.tierView)}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null);
   state.lastOverview = overview || state.lastOverview;
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
   const rulesJackpot = $('rules-jackpot-value');
@@ -637,12 +638,12 @@ async function refresh(){
 
   try {
     [fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes]=await Promise.all([
-      req(API.fixtures),
-      req(`${API.tips}?status=all`),
-      req(`${API.tips}?status=all`),
-      req(API.bossesBet),
-      req(API.milestones),
-      req(API.tipEditDeadline)
+      req(`${API.fixtures}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`),
+      req(`${API.tips}?status=all&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`),
+      req(`${API.tips}?status=all&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`),
+      req(`${API.bossesBet}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`),
+      req(`${API.milestones}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`),
+      req(`${API.tipEditDeadline}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`)
     ]);
   } catch (err) {
     const status = $('leaderboard-status');
@@ -698,7 +699,7 @@ async function refresh(){
   }
   const status = $('leaderboard-status');
   if (status) status.textContent = state.roundStatus === 'CLOSED' ? 'Round finished ✅' : ((overview || state.lastOverview)?.round?.label || 'Live');
-  renderBossesBet(bossesRes.bossesBet || {});
+  renderBossesBet((bossesRes && bossesRes.bossesBet) || overview?.bossesBet || {});
   renderMilestones(milestonesRes || {});
   if (state.selectedBreakdownMember) {
     loadMemberBreakdown(state.selectedBreakdownMember, false).catch(()=>{});
