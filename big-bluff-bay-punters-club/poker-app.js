@@ -19,6 +19,19 @@
     return `<nav class='pv2-crumbs'><a href='/'>Home</a><span>›</span><a href='/poker'>Poker</a><span>›</span><span>${esc(title)}</span></nav>`;
   }
 
+  function applyTableCards(){
+    document.querySelectorAll('.table-wrap').forEach((wrap)=>{
+      const table=wrap.querySelector('table');
+      if(!table) return;
+      const headers=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());
+      if(!headers.length) return;
+      wrap.classList.add('table-cards');
+      table.querySelectorAll('tbody tr').forEach((tr)=>{
+        [...tr.children].forEach((td,i)=>{ if(!td.getAttribute('data-label')) td.setAttribute('data-label', headers[i]||'Value'); });
+      });
+    });
+  }
+
   function chartLine(points){
     if(!points.length)return '<div class="muted">No trend data yet</div>';
     const w=800,h=180,pad=20;
@@ -51,6 +64,7 @@
       </section>
       <section class='pv2-card'><h2>Top 10</h2><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>FT</th><th>Cash</th></tr></thead><tbody>${top||'<tr><td colspan=5 class=muted>No data</td></tr>'}</tbody></table></div></section>
     `;
+    applyTableCards();
   }
 
   async function renderLeaderboards(){
@@ -86,6 +100,7 @@
       const rows=shownRows.map(r=>`<tr><td>${r.rank}</td><td><a href='/poker/players/${r.playerId}'>${esc(r.player)}</a></td><td>${fmt(r.points)}</td><td>${r.events}</td><td>${fmt(r.avgPoints)}</td><td>${r.finalTables}</td><td>${r.cashes}</td><td>${fmt(r.ftPct)}%</td><td>${fmt(r.cashPct)}%</td><td>${r.lastPlayed?new Date(r.lastPlayed).toLocaleDateString('en-AU'):'—'}</td></tr>`).join('');
       const helper = `Showing top ${Math.min(10, sourceRows.length)} players`;
       document.getElementById('lb-wrap').innerHTML=`<p class='muted'>${helper}</p><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Avg</th><th>FT</th><th>Cash</th><th>FT%</th><th>Cash%</th><th>Last Played</th></tr></thead><tbody>${rows||'<tr><td colspan=10>No data</td></tr>'}</tbody></table></div>`;
+      applyTableCards();
     }
     document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');load(b.dataset.tab);});
     document.getElementById('applyFilters').onclick=()=>load(currentTab);
@@ -110,6 +125,7 @@
     app.innerHTML=`${shellIntro('Player Profile')}<section class='pv2-card'><h2>${esc(d.player.displayName)}</h2><p>${badges.map(b=>`<span class='pill'>${b}</span>`).join(' ')||'—'}</p><p class='muted'>Aliases: ${(d.aliases||[]).map(a=>esc(a.alias)).join(', ')}</p></section>
     <section class='pv2-grid'><article class='pv2-card'><h4>Points</h4><p>${fmt(d.stats.points)}</p></article><article class='pv2-card'><h4>Events</h4><p>${d.stats.events}</p></article><article class='pv2-card'><h4>FT</h4><p>${d.stats.finalTables}</p></article><article class='pv2-card'><h4>Cashes</h4><p>${d.stats.cashes}</p></article></section>
     <section class='pv2-card'><h3>Recent Results</h3><div class='table-wrap'><table><thead><tr><th>Date</th><th>Points</th><th>FT</th><th>Cash</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+    applyTableCards();
   }
 
   async function renderEvents(){
@@ -155,6 +171,7 @@
       const lb=[...byPlayer.values()].sort((a,b)=>b.points-a.points).map((r,i)=>({rank:i+1,...r}));
       const rows=lb.map(r=>`<tr><td>${r.rank}</td><td>${r.playerId?`<a href='/poker/players/${r.playerId}'>${esc(r.player)}</a>`:esc(r.player)}</td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
       app.innerHTML=`${shellIntro('Specific Game Results')}<section class='pv2-card'><h2>${esc(eventName)}</h2><p class='muted'>Played: ${esc(playedDay)} • Entries: ${filtered.length}</p><p><a class='btn btn-ghost' href='/poker/events'>Back to events</a></p></section><section class='pv2-card'><h3>Game Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Winnings</th><th>Tags</th></tr></thead><tbody>${rows||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
+      applyTableCards();
       return;
     }
 
@@ -168,6 +185,7 @@
     const d=await get(`/api/poker/events/${id}`);
     const lb=(d.leaderboard||[]).map(r=>`<tr><td>${r.rank}</td><td>${esc(r.player)}</td><td>${fmt(r.points)}</td><td><span class='pill'>FT ${r.finalTables}</span> <span class='pill'>Cash ${r.cashes}</span></td></tr>`).join('');
     app.innerHTML=`${shellIntro('Event Detail')}<section class='pv2-card'><h2>${esc(d.event.name)}</h2><p class='muted'>${esc(d.event.type)}</p></section><section class='pv2-card'><h3>Event Leaderboard</h3><div class='table-wrap'><table><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Tags</th></tr></thead><tbody>${lb||'<tr><td colspan=4>No data</td></tr>'}</tbody></table></div></section>`;
+    applyTableCards();
   }
 
   setActiveNav();

@@ -1,3 +1,5 @@
+function applyTableCards(){document.querySelectorAll('.table-wrap').forEach((wrap)=>{const table=wrap.querySelector('table');if(!table)return;const heads=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());if(!heads.length)return;wrap.classList.add('table-cards');table.querySelectorAll('tbody tr').forEach((tr)=>{[...tr.children].forEach((td,i)=>{if(!td.getAttribute('data-label'))td.setAttribute('data-label',heads[i]||'Value');});});});}
+
 async function loadWinners(){
   const featured = document.getElementById('featured-winner');
   const historyBody = document.getElementById('winner-history-body');
@@ -182,6 +184,7 @@ async function loadWinners(){
       pokerResultsBody.appendChild(tr);
     });
     if (!games.length) pokerResultsBody.innerHTML = "<tr><td colspan='6' class='muted'>No poker results logged yet.</td></tr>";
+    applyTableCards();
 
   } catch(e){
     featured.textContent = 'Could not load winner data.';

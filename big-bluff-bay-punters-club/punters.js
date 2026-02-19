@@ -27,6 +27,7 @@ async function req(path,opt={}){
   throw new Error(lastErr||'Request failed');
 }
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+function applyTableCards(){document.querySelectorAll('.table-wrap').forEach((wrap)=>{const table=wrap.querySelector('table');if(!table)return;const heads=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());if(!heads.length)return;wrap.classList.add('table-cards');table.querySelectorAll('tbody tr').forEach((tr)=>{[...tr.children].forEach((td,i)=>{if(!td.getAttribute('data-label'))td.setAttribute('data-label',heads[i]||'Value');});});});}
 
 function getProfile(){
   return state.user?.profile || { bio:'', profilePic:'', settings:{ emailNotifications:false, publicProfile:false, theme:'system' } };
@@ -508,6 +509,7 @@ async function refresh(){
 
   state.tipStateResolved = true;
   renderTipEntryState();
+  applyTableCards();
 
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/'>Log in</a>`;
   const adminNav = $('admin-nav-link');
