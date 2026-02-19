@@ -372,7 +372,12 @@ async function hydrateNextTipCard(trackId){
   const lockline = $('next-tip-punters-lockline');
   const pick = $('next-tip-punters-pick');
   const social = $('next-tip-punters-social');
-  if(!card || !primary || !secondary || !badge || !countdown || !race || !context || !lockline || !pick || !social) return;
+  if(!card || !primary || !secondary || !badge || !countdown || !race || !context || !pick || !social) return;
+  const setLockline = (text = '') => {
+    if (!lockline) return;
+    lockline.textContent = text;
+    lockline.style.display = text ? '' : 'none';
+  };
 
   card.hidden = false;
   card.className = 'card next-tip-card next-tip-card--tease';
@@ -381,8 +386,7 @@ async function hydrateNextTipCard(trackId){
   race.textContent = 'Log in to unlock your next race tip';
   context.textContent = 'Punters Club • Private member card';
   pick.textContent = '#—';
-  lockline.style.display = 'none';
-  lockline.textContent = '';
+  setLockline('');
   social.textContent = 'Track + lock details appear after login';
   countdown.style.display = 'none';
   countdown.textContent = '';
@@ -460,16 +464,13 @@ async function hydrateNextTipCard(trackId){
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
     if (lockRef > 0 && !hardLocked) {
       context.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
-      lockline.textContent = '';
-      lockline.style.display='none';
+      setLockline('');
     } else if (lockRef > 0 && hardLocked) {
       context.textContent = `${trackType} • Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
-      lockline.textContent = '';
-      lockline.style.display='none';
+      setLockline('');
     } else {
       context.textContent = `${trackType} • ${venue} meeting`;
-      lockline.textContent = '';
-      lockline.style.display='none';
+      setLockline('');
     }
 
     if(String(d?.state||'')==='ROUND_COMPLETE'){
@@ -540,8 +541,7 @@ async function hydrateNextTipCard(trackId){
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
       countdown.style.display = '';
       countdown.textContent = `${mm}:${ss}`;
-      lockline.textContent = ms > 0 ? `Locks in ${mm}:${ss} (Melbourne time)` : '';
-      lockline.style.display = ms > 0 ? '' : 'none';
+      setLockline(ms > 0 ? `Locks in ${mm}:${ss} (Melbourne time)` : '');
       if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
