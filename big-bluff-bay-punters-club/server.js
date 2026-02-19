@@ -1454,7 +1454,11 @@ function createApp() {
 
     const editable = canEditTipsNow(store);
     const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
-    const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
+    const fixture = (
+      (Array.isArray(store?.puntersClub?.tracks?.[requestedTrackId]?.fixtures) && store.puntersClub.tracks[requestedTrackId].fixtures[0])
+      || (Array.isArray(store?.fixtures) && store.fixtures[0])
+      || null
+    );
     const userHasTip = Boolean(tip);
     const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
 
