@@ -28,7 +28,7 @@ function esc(s) {
 function stampUpdated() {
   const n = document.getElementById('status-last-updated');
   if (!n) return;
-  n.textContent = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+  n.textContent = `${new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne)`;
 }
 
 function setStatusState(stateText, tone = 'open') {
@@ -239,10 +239,10 @@ function renderTopWinners(items) {
       continue;
     }
     if (row.type === 'poker') {
-      node.textContent = `♠ Poker: ${row.winner || '—'} ${money.format(Number(row.prize || 0))}`;
+      node.textContent = `♠ ${row.winner || '—'} — ${money.format(Number(row.prize || 0))}`;
     } else {
       const winner = row.rolledOver ? 'Rollover' : String(row.winner || '—');
-      node.textContent = `🏇 Punters: ${winner} ${money.format(Number(row.prize || 0))}`;
+      node.textContent = `🏇 ${winner} — ${money.format(Number(row.prize || 0))}`;
     }
   }
 }
