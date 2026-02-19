@@ -397,6 +397,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   countdownEl.textContent = '--:--';
   primary.textContent = 'Log In';
   primary.href = '/';
+  secondary.hidden = false;
   secondary.textContent = 'View Full Card';
   secondary.href = '/punters.html';
   if (!token) return;
@@ -455,7 +456,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
             d.raceNumber = mine[0].race || 'R1';
             d.state = d.canEdit ? 'EDITABLE' : 'LOCKED';
             d.trackName = d.trackName || 'Track';
-            d.venue = d.venue || 'Meeting synced';
+            d.venue = d.venue || 'Venue TBA';
           }
         }
       }
@@ -470,19 +471,24 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
     countdownEl.textContent = `${mm}:${ss}`;
 
-    const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
-    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race —';
     const venue = d?.venue || 'Track';
+    const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
+    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    raceEl.textContent = venue;
+    raceEl.textContent = `${raceLabel} — ${venue}`;
     contextEl.textContent = `${trackType} • Meeting synced`;
-    const lockRef = Number(d?.lockTime || d?.startTime || 0);
-    if (activeCountdown > 0) {
+    const lockRef = Number(d?.lockTime || 0);
+    const hardLocked = lockRef > 0 && now >= lockRef;
+    const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
+    if (lockRef > 0 && !hardLocked) {
+      locklineEl.style.display = '';
       locklineEl.textContent = `Locks in ${mm}:${ss} (Melbourne time)`;
-    } else if (lockRef > 0) {
+    } else if (lockRef > 0 && hardLocked) {
+      locklineEl.style.display = '';
       locklineEl.textContent = `Locked at ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne time)`;
     } else {
-      locklineEl.textContent = 'Locked at --:-- (Melbourne time)';
+      locklineEl.style.display = 'none';
+      locklineEl.textContent = '';
     }
 
     if (String(d?.state || '') === 'ROUND_COMPLETE') {
@@ -507,7 +513,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for this race.';
       const others = Number(d?.othersCount || 0);
       socialEl.textContent = others <= 0 ? 'You’re first on the card.' : `You + ${others} others locked in.`;
-      ladderEl.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Current ladder position: #${d.ladderRank}` : 'Position updates after results.';
+      ladderEl.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Position: #${d.ladderRank}` : 'Position updates after results.';
       primary.textContent = 'Add Tip Now';
       primary.href = '/punters.html#tip-form';
       secondary.textContent = 'View Full Card';
@@ -520,27 +526,29 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const others = Number(d?.othersCount || 0);
     socialEl.textContent = others <= 0 ? 'You’re first on the card.' : `You + ${others} others locked in.`;
     ladderEl.textContent = d?.ladderRankAvailable
-      ? `Current ladder position: #${d?.ladderRank || '—'}${d?.canEdit ? '' : ' (updates after results)'}`
+      ? `Position: #${d?.ladderRank || '—'}`
       : 'Position updates after results.';
 
-    if (imminent) {
+    if (imminent && canEditEffective) {
       card.className = 'card next-tip-card next-tip-card--imminent';
       card.classList.add('countdown-pulse');
       badgeEl.textContent = 'LOCK IMMINENT';
       body.textContent = 'No late edits. Same clock for everyone.';
-      primary.textContent = d?.canEdit ? 'Edit Tip' : 'View Full Card';
-      primary.href = d?.canEdit ? '/punters.html#tip-form' : '/punters.html';
+      primary.textContent = 'Edit Tip';
+      primary.href = '/punters.html#tip-form';
+      secondary.hidden = false;
       secondary.textContent = 'View Full Card';
       secondary.href = '/punters.html';
       return;
     }
 
-    if (d?.canEdit) {
+    if (canEditEffective) {
       card.className = 'card next-tip-card next-tip-card--warn';
       badgeEl.textContent = 'EDITABLE';
       body.textContent = 'Live sync active — edits allowed until lock.';
       primary.textContent = 'Edit Tip';
       primary.href = '/punters.html#tip-form';
+      secondary.hidden = false;
       secondary.textContent = 'View Full Card';
       secondary.href = '/punters.html';
       return;
@@ -551,8 +559,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     body.textContent = 'Live sync active — pick confirmed.';
     primary.textContent = 'View Full Card';
     primary.href = '/punters.html';
-    secondary.textContent = 'View Full Card';
-    secondary.href = '/punters.html';
+    secondary.hidden = true;
   } catch {}
 }
 
