@@ -597,6 +597,14 @@ code {
 
 .why-join-card h3 { margin-top: .1rem; }
 
+.next-event-hero {
+  border-color: #6a5410;
+  background: linear-gradient(180deg, #151009 0%, #0c1424 100%);
+}
+.next-event-meta { display:flex; flex-wrap:wrap; gap:.45rem; margin:.6rem 0; }
+#next-event-title { margin:.25rem 0 .4rem; font-size: clamp(1.25rem, 3vw, 1.9rem); }
+#tips-more-count { margin-top:.45rem; }
+
 @media (min-width: 980px) {
   .why-join-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

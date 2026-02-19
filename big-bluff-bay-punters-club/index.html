@@ -208,30 +208,45 @@
       </section>
 
       <section class="rail-section" id="home-fixtures" aria-labelledby="fixtures-heading">
-        <div class="section-head">
-          <h2 id="fixtures-heading">📅 Upcoming Fixtures</h2>
-          <a class="menu-link" href="/punters.html">Open Punters Club</a>
-        </div>
-        <div class="grid three" id="home-fixtures-list"></div>
+        <div class="section-head"><h2 id="fixtures-heading">📅 Upcoming Fixtures</h2></div>
+        <article class="card next-event-hero" id="next-event-hero">
+          <p class="pill" id="next-track-accent">🐎 Thoroughbreds Track</p>
+          <h3 id="next-event-title">Next Up: Saturday Thoroughbreds</h3>
+          <div class="next-event-meta" id="next-event-meta">
+            <span class="pill">Venue: <strong id="next-venue">TBA</strong></span>
+            <span class="pill">Date: <strong id="next-date">TBA</strong></span>
+            <span class="pill">First race: <strong id="next-first-race">TBA</strong></span>
+            <span class="pill">Races: <strong id="next-races">--</strong></span>
+            <span class="pill">Lock: <strong id="next-lock">Updating…</strong></span>
+            <span class="pill">Jackpot: <strong id="next-pot">$0</strong></span>
+            <span class="pill">Entries: <strong id="next-entries">0</strong> • Paid: <strong id="next-paid">0</strong></span>
+          </div>
+          <div class="row-actions">
+            <a class="btn chip-btn" href="/punters-club">Enter Tips</a>
+            <a class="btn btn-ghost" href="/punters-club">Upgrade $20</a>
+          </div>
+          <p class="muted" id="next-event-fallback" hidden>Next Round Opens soon • Last winner: <span id="next-last-winner">TBA</span></p>
+        </article>
       </section>
 
       <section class="rail-section" id="this-week-tips" aria-labelledby="tips-heading">
         <div class="section-head">
-          <h2 id="tips-heading">This Week’s Tips</h2>
-          <a class="menu-link" href="/punters.html">View all tips</a>
+          <h2 id="tips-heading">This Week’s Activity</h2>
+          <a class="menu-link" href="/punters-club">View All Tips</a>
         </div>
         <div class="grid three" id="tips-preview-list"></div>
+        <p class="muted" id="tips-more-count"></p>
       </section>
 
       <section class="rail-section" id="how-it-works" aria-labelledby="how-heading">
         <div class="section-head">
           <h2 id="how-heading">How it Works</h2>
-          <p class="muted muted-strong">Poker-table discipline applied to racing.</p>
+          <p class="muted muted-strong">Fast format, clean rules, separate jackpots.</p>
         </div>
         <div class="steps-grid">
-          <article class="card step-tile"><h3>🔒 1. Lock Picks</h3><p class="muted">Submit fast before lock. Clean, simple, fair.</p></article>
-          <article class="card step-tile"><h3>📊 2. Score Points</h3><p class="muted">3 for 1st, 2 for 2nd, 1 for 3rd.</p></article>
-          <article class="card step-tile"><h3>💰 3. Chase Jackpot</h3><p class="muted">Outright winner takes it. Ties roll over.</p></article>
+          <article class="card step-tile"><h3>🔒 Lock Picks</h3><p class="muted">Countdown clock is public. No late edits, same lock for everyone.</p></article>
+          <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st, 2 = 2nd, 1 = 3rd. Live ladder updates after scored races.</p></article>
+          <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Top score wins. Ties roll over. Dogs and Galls jackpots stay separate.</p></article>
         </div>
       </section>
 
@@ -402,6 +417,6 @@
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
     <script defer src="home-login.js?v=20260218-1"></script>
-    <script defer src="landing.js?v=20260219-5"></script>
+    <script defer src="landing.js?v=20260219-6"></script>
   </body>
 </html>

@@ -77,31 +77,62 @@ function fmtCountdown(ms) {
   return `${h}:${m}:${sec}`;
 }
 
-function renderFixtures(fixtures) {
-  const list = document.getElementById('home-fixtures-list');
-  if (!list) return;
-  list.innerHTML = '';
+function renderFixtures(fixtures, overview, jackpot, lockText = 'Updating…') {
+  const rows = (fixtures || []).slice(0, 1);
+  const fallback = document.getElementById('next-event-fallback');
+  const winner = document.getElementById('next-last-winner');
+  const f = rows[0] || null;
 
-  const rows = (fixtures || []).slice(0, 3);
-  if (!rows.length) {
-    list.innerHTML = '<article class="fixture"><strong>Round complete — results below</strong><p class="muted">Next venue announced Friday arvo</p></article>';
+  const title = document.getElementById('next-event-title');
+  const venue = document.getElementById('next-venue');
+  const date = document.getElementById('next-date');
+  const firstRace = document.getElementById('next-first-race');
+  const races = document.getElementById('next-races');
+  const lock = document.getElementById('next-lock');
+  const pot = document.getElementById('next-pot');
+  const entries = document.getElementById('next-entries');
+  const paid = document.getElementById('next-paid');
+  const accent = document.getElementById('next-track-accent');
+  if (!title || !venue || !date || !firstRace || !races || !lock || !pot || !entries || !paid || !accent) return;
+
+  const trackId = String(overview?.track?.id || 'thoroughbreds');
+  const isDogs = trackId === 'greyhounds';
+  accent.textContent = isDogs ? '🐕 Greyhounds Track' : '🐎 Thoroughbreds Track';
+  title.textContent = isDogs ? 'Next Up: Wednesday Greyhounds' : 'Next Up: Saturday Thoroughbreds';
+
+  if (!f) {
+    venue.textContent = 'TBA';
+    date.textContent = 'TBA';
+    firstRace.textContent = 'TBA';
+    races.textContent = '--';
+    lock.textContent = lockText;
+    pot.textContent = `$${Number(jackpot?.totalPot || 0).toFixed(0)}`;
+    entries.textContent = String(Number(overview?.tiers?.free || 0));
+    paid.textContent = String(Number(overview?.tiers?.jackpotEligible || 0));
+    if (fallback) fallback.hidden = false;
+    if (winner) winner.textContent = String(overview?.winnerBanner?.member || overview?.pastRounds?.[0]?.winner || 'No winner yet');
     return;
   }
 
-  rows.forEach((f) => {
-    const card = document.createElement('article');
-    card.className = 'fixture';
-    card.innerHTML = `<strong>${esc(f.event || 'Upcoming Meet')}</strong><p>${esc(f.date || 'TBA')} • ${esc(f.track || 'TBA')}</p><p class='muted'>Races: ${Number(f.raceCount || 12)}</p>`;
-    list.appendChild(card);
-  });
+  venue.textContent = String(f.track || 'TBA');
+  date.textContent = String(f.date || 'TBA');
+  firstRace.textContent = String(f.firstRaceTime || 'As listed');
+  races.textContent = String(Number(f.raceCount || 12));
+  lock.textContent = lockText;
+  pot.textContent = `$${Number(jackpot?.totalPot || 0).toFixed(0)}`;
+  entries.textContent = String(Number(overview?.tiers?.free || 0));
+  paid.textContent = String(Number(overview?.tiers?.jackpotEligible || 0));
+  if (fallback) fallback.hidden = true;
 }
 
 function renderTipsByPlayer(tips) {
   const list = document.getElementById('tips-preview-list');
+  const more = document.getElementById('tips-more-count');
   if (!list) return;
   list.innerHTML = '';
   if (!tips.length) {
     list.innerHTML = '<article class="tip"><p class="muted">No tips posted yet. Be first in.</p></article>';
+    if (more) more.textContent = '';
     return;
   }
 
@@ -113,17 +144,17 @@ function renderTipsByPlayer(tips) {
   });
 
   const raceNum = (r) => Number(String(r || '').replace('R', '')) || 999;
-  Array.from(byMember.entries())
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .slice(0, 6)
-    .forEach(([member, picks]) => {
-      const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
-      const lines = ordered.map((p) => `${esc(p.race)}: ${esc(p.selection)}`).join(' • ');
-      const card = document.createElement('article');
-      card.className = 'tip';
-      card.innerHTML = `<h3>${esc(member)}</h3><p class="meta">${lines || 'No tips yet'}</p>`;
-      list.appendChild(card);
-    });
+  const entries = Array.from(byMember.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  entries.slice(0, 3).forEach(([member, picks]) => {
+    const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
+    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)} ${esc(p.selection)}`).join(' • ');
+    const card = document.createElement('article');
+    card.className = 'tip';
+    card.innerHTML = `<h3>${esc(member)}</h3><p class="meta">${lines || 'No tips yet'}</p>`;
+    list.appendChild(card);
+  });
+  const extra = Math.max(0, entries.length - 3);
+  if (more) more.textContent = extra > 0 ? `+ ${extra} more punters locked in` : '';
 }
 
 function renderLadder(rows) {
@@ -325,7 +356,8 @@ async function hydrateLandingCritical() {
       ? overview.fixtures
       : (fx?.fixtures || []);
     const meet = effectiveFixtures?.[0]?.track || 'Round complete — results below';
-    renderFixtures(effectiveFixtures);
+    const lockText = document.getElementById('status-lock')?.textContent || 'Updating…';
+    renderFixtures(effectiveFixtures, overview, jackpot, lockText);
 
     const roundStatus = String(overview?.round?.status || '').toUpperCase();
     const closedRound = roundStatus === 'CLOSED';
