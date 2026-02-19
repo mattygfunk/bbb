@@ -47,10 +47,8 @@ async function applyLoggedInState() {
     if (!me?.user) return;
 
     sessionActive = true;
-    if (loginCard) {
-      loginCard.hidden = true;
-      loginCard.style.display = 'none';
-    }
+    // Keep the hero card visible so the "Your Next Race Tip" module (nested in it)
+    // stays above-the-fold after login.
     if (msg) msg.textContent = `Signed in as ${me.user.username}. Continue to Punters Area.`;
     if (submitBtn) submitBtn.textContent = 'Open Punters Area';
   } catch {
