@@ -1531,6 +1531,115 @@ function createApp() {
     });
   });
 
+  app.get('/api/punters/next-tip-summary', auth, (req, res) => {
+    try {
+      const store = readStore();
+      const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+      const trackData = getTrackData(store, trackId);
+      const round = getCurrentRound(store, { autoCreate: false, trackId });
+      const latestClosed = getLatestClosedRound(store, trackId);
+      const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
+      const now = Date.now();
+
+      const fixture = (trackData.fixtures || [])[0] || null;
+      const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
+      const races = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
+      const raceResults = trackData.raceResults || {};
+      const completed = new Set(Object.entries(raceResults)
+        .filter(([, v]) => (v?.first?.length || v?.second?.length || v?.third?.length))
+        .map(([k]) => String(k).toUpperCase()));
+
+      const raceTimes = {};
+      const addRaceTime = (race, startTime) => {
+        const r = String(race || '').toUpperCase();
+        const t = Date.parse(String(startTime || ''));
+        if (!/^R\d+$/.test(r) || !Number.isFinite(t)) return;
+        raceTimes[r] = t;
+      };
+      if (fixture?.raceTimes && typeof fixture.raceTimes === 'object' && !Array.isArray(fixture.raceTimes)) {
+        Object.entries(fixture.raceTimes).forEach(([race, startTime]) => addRaceTime(race, startTime));
+      }
+      if (Array.isArray(fixture?.raceTimes)) fixture.raceTimes.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
+      if (Array.isArray(fixture?.races)) fixture.races.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
+
+      const upcoming = races.filter((r) => !completed.has(r));
+      const timedUpcoming = upcoming.filter((r) => Number.isFinite(raceTimes[r]) && raceTimes[r] > now).sort((a, b) => raceTimes[a] - raceTimes[b]);
+      const nextRace = timedUpcoming.length
+        ? timedUpcoming[0]
+        : (upcoming.length ? upcoming.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))[0] : null);
+
+      if (roundStatus === 'CLOSED' || !nextRace) {
+        return res.json({
+          roundStatus: 'CLOSED',
+          trackId,
+          trackName: TRACKS[trackId]?.name || trackId,
+          venue: String(fixture?.track || ''),
+          raceNumber: null,
+          startTime: null,
+          lockTime: null,
+          userHasTip: false,
+          userPick: null,
+          canEdit: false,
+          othersCount: 0,
+          ladderRank: null,
+          ladderRankAvailable: false,
+          state: 'ROUND_COMPLETE'
+        });
+      }
+
+      const userKey = String(req.user?.username || '').trim().toLowerCase();
+      const allTips = (store.tips || [])
+        .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+        .filter((t) => String(t.status || '') !== 'removed')
+        .filter((t) => !round?.id || String(t.roundId || '') === String(round.id));
+
+      const raceTips = allTips.filter((t) => String(t.race || '').toUpperCase() === nextRace);
+      const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
+      const userTip = raceTips.find((t) => String(t.member || '').trim().toLowerCase() === userKey) || null;
+      const userHasTip = Boolean(userTip);
+      const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
+
+      const ladder = computeLadder(store, { trackId });
+      const userLadder = ladder.find((r) => String(r.member || '').trim().toLowerCase() === userKey) || null;
+      const ladderRank = userLadder ? Number(userLadder.rank || 0) : null;
+      const ladderRankAvailable = Boolean(getLastScoredRace(store, trackId));
+
+      const startTime = Number.isFinite(raceTimes[nextRace]) ? raceTimes[nextRace] : null;
+      const lockTime = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+      const canEdit = Boolean(round) && canEditTipsNow(store);
+
+      return res.json({
+        roundStatus,
+        trackId,
+        trackName: TRACKS[trackId]?.name || trackId,
+        venue: String(fixture?.track || ''),
+        raceNumber: nextRace,
+        startTime,
+        lockTime,
+        userHasTip,
+        userPick: userTip ? {
+          race: String(userTip.race || nextRace),
+          selection: String(userTip.selection || ''),
+          runnerName: String(userTip.runnerName || userTip.horseName || '')
+        } : null,
+        canEdit,
+        othersCount,
+        ladderRank,
+        ladderRankAvailable,
+        state: userHasTip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP'
+      });
+    } catch {
+      return res.status(200).json({
+        roundStatus: 'ERROR',
+        state: 'ERROR',
+        userHasTip: false,
+        canEdit: false,
+        othersCount: 0,
+        ladderRankAvailable: false
+      });
+    }
+  });
+
   app.post('/api/tips', auth, (req, res) => {
     const race = String(req.body.race || '').trim().toUpperCase();
     const selection = String(req.body.selection || req.body.horse || '').trim();

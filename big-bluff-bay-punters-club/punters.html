@@ -45,7 +45,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260219-3" />
     <script defer src="analytics.js"></script>
   </head>
   <body>
@@ -84,12 +84,21 @@
           <li>Optional jackpot eligibility and poker freeroll upside.</li>
         </ul>
       </section>
-      <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading" hidden>
-        <h2 id="next-tip-punters-heading">✅ Your Next Race Tip</h2>
+      <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading">
+        <h2 id="next-tip-punters-heading">Your Next Race Tip</h2>
+        <div class="row-actions" style="justify-content:space-between;align-items:center">
+          <p class="next-tip-kicker" id="next-tip-punters-badge">LOCKED IN</p>
+          <p class="next-tip-countdown" id="next-tip-punters-countdown">--:--</p>
+        </div>
+        <h3 id="next-tip-punters-race">RACE —</h3>
+        <p class="muted" id="next-tip-punters-context">Track • Venue</p>
+        <p class="next-tip-pick" id="next-tip-punters-pick">—</p>
         <p class="muted" id="next-tip-punters-content">Log in to see your next race tip.</p>
+        <p class="muted" id="next-tip-punters-social">You + 0 others have entered</p>
+        <p class="muted" id="next-tip-punters-ladder">Position updates after results.</p>
         <div class="row-actions">
-          <a class="btn chip-btn" id="next-tip-punters-primary" href="/punters.html#tip-form">Enter Tips</a>
-          <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#community-tips-card">View All My Tips</a>
+          <a class="btn chip-btn" id="next-tip-punters-primary" href="/">Log In</a>
+          <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#community-tips-card">View Full Card</a>
         </div>
       </section>
       <section class="card" id="winner-banner" hidden>
@@ -302,6 +311,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260219-24"></script>
+    <script defer src="punters.js?v=20260219-25"></script>
   </body>
 </html>

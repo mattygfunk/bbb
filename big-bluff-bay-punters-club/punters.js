@@ -366,36 +366,105 @@ async function hydrateNextTipCard(trackId){
   const body = $('next-tip-punters-content');
   const primary = $('next-tip-punters-primary');
   const secondary = $('next-tip-punters-secondary');
-  if(!card || !body || !primary || !secondary) return;
+  const badge = $('next-tip-punters-badge');
+  const countdown = $('next-tip-punters-countdown');
+  const race = $('next-tip-punters-race');
+  const context = $('next-tip-punters-context');
+  const pick = $('next-tip-punters-pick');
+  const social = $('next-tip-punters-social');
+  const ladder = $('next-tip-punters-ladder');
+  if(!card || !body || !primary || !secondary || !badge || !countdown || !race || !context || !pick || !social || !ladder) return;
 
-  card.hidden = true;
-  const base = 'card next-tip-card';
+  card.hidden = false;
+  card.className = 'card next-tip-card next-tip-card--tease';
+  card.classList.remove('countdown-pulse');
+  badge.textContent = 'MEMBERS';
+  race.textContent = 'Next Race Tip';
+  context.textContent = 'Log in to see your personalised pick.';
+  pick.textContent = '—';
+  body.textContent = 'Live Sync: Active • Private member view.';
+  social.textContent = 'You + 0 others have entered';
+  ladder.textContent = 'Position updates after results.';
+  countdown.textContent = '--:--';
+  primary.textContent = 'Log In';
+  primary.href = '/';
+  secondary.textContent = 'View Full Card';
+  secondary.href = '/punters.html#leaderboard';
+
   if(!state.user) return;
 
   try{
-    const d = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+    const d = await req(`/punters/next-tip-summary?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
     const now = Date.now();
-    const ms = Math.max(0, Number(d?.countdownToMs || 0) - now);
-    const hh = String(Math.floor(ms/3600000)).padStart(2,'0');
-    const mm = String(Math.floor((ms%3600000)/60000)).padStart(2,'0');
+    const toLock = Number(d?.lockTime || 0) - now;
+    const toStart = Number(d?.startTime || 0) - now;
+    const activeCountdown = [toLock, toStart].filter((n) => Number.isFinite(n) && n > 0).sort((a,b)=>a-b)[0] || 0;
+    const mm = String(Math.max(0, Math.floor(activeCountdown/60000))).padStart(2,'0');
+    const ss = String(Math.max(0, Math.floor((activeCountdown%60000)/1000))).padStart(2,'0');
+    const imminent = activeCountdown > 0 && activeCountdown < 60000;
+    countdown.textContent = `${mm}:${ss}`;
 
-    if(String(d?.roundStatus||'').toUpperCase()==='CLOSED') return;
+    race.textContent = d?.raceNumber || 'Round Complete';
+    context.textContent = `${d?.trackName || 'Track'} • ${d?.venue || 'Venue TBA'}`;
 
-    if(d?.allComplete) return;
+    if(String(d?.state||'')==='ROUND_COMPLETE'){
+      card.className = 'card next-tip-card next-tip-card--closed';
+      badge.textContent = 'ROUND COMPLETE';
+      pick.textContent = 'Results Ready';
+      body.textContent = 'Round complete — view results';
+      social.textContent = 'Next round opens soon.';
+      ladder.textContent = 'Position updates after results.';
+      primary.textContent = 'View Results';
+      primary.href = '/punters.html#leaderboard';
+      return;
+    }
 
-    if(!d?.hasTip) return;
+    if(!d?.userHasTip){
+      card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
+      if (imminent) card.classList.add('countdown-pulse');
+      badge.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
+      pick.textContent = 'No tip entered';
+      body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for the next race.';
+      social.textContent = `${Number(d?.othersCount || 0)} punters already locked`;
+      ladder.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Current ladder position: #${d.ladderRank}` : 'Position updates after results.';
+      primary.textContent = 'Add Tip Now';
+      primary.href = '/punters.html#tip-form';
+      return;
+    }
 
-    card.hidden = false;
-    card.className = `${base} next-tip-card--highlight`;
-    const pick = d?.tip?.runnerName ? `${d.tip.selection} (${d.tip.runnerName})` : `${d?.tip?.selection || '—'}`;
-    body.textContent = `${d?.trackName || 'Track'} • ${d?.fixture?.track || 'Venue TBA'} • ${d?.nextRace || 'R?'} • Pick: ${pick} • ${d?.statusBadge || 'Editable'} • ${hh}:${mm}`;
-    primary.textContent = d?.editable ? 'Edit Tips' : 'View Tips';
-    primary.href = '/punters.html#tip-form';
-    secondary.textContent = 'View All My Tips';
-    secondary.href = '/punters.html#community-tips-card';
-  }catch{
-    card.hidden = true;
-  }
+    pick.textContent = d?.userPick?.runnerName ? `${d.userPick.selection} • ${d.userPick.runnerName}` : `${d?.userPick?.selection || '—'}`;
+    social.textContent = imminent
+      ? `You + ${Number(d?.othersCount || 0)} others are locked for this race`
+      : `You + ${Number(d?.othersCount || 0)} others ${d?.canEdit ? 'have entered' : 'are locked for this race'}`;
+    ladder.textContent = d?.ladderRankAvailable
+      ? `Current ladder position: #${d?.ladderRank || '—'}${d?.canEdit ? '' : ' (updates after results)'}`
+      : 'Position updates after results.';
+
+    if(imminent){
+      card.className = 'card next-tip-card next-tip-card--imminent';
+      card.classList.add('countdown-pulse');
+      badge.textContent = 'LOCK IMMINENT';
+      body.textContent = 'No late edits. Same clock for everyone.';
+      primary.textContent = d?.canEdit ? 'Edit Tip' : 'View Full Card';
+      primary.href = d?.canEdit ? '/punters.html#tip-form' : '/punters.html#leaderboard';
+      return;
+    }
+
+    if(d?.canEdit){
+      card.className = 'card next-tip-card next-tip-card--warn';
+      badge.textContent = 'EDITABLE';
+      body.textContent = 'Live Sync: Active • Changes allowed until lock.';
+      primary.textContent = 'Edit Tip';
+      primary.href = '/punters.html#tip-form';
+      return;
+    }
+
+    card.className = 'card next-tip-card next-tip-card--highlight';
+    badge.textContent = 'LOCKED IN';
+    body.textContent = 'Live Sync: Active • Your pick is confirmed.';
+    primary.textContent = 'View Full Card';
+    primary.href = '/punters.html#leaderboard';
+  }catch{}
 }
 
 async function refresh(){
