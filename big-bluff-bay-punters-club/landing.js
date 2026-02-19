@@ -321,8 +321,11 @@ async function hydrateLandingCritical() {
     document.getElementById('jackpot-growth').textContent = `+${money.format(roundValue)}${rolloverValue ? ` (incl. rollover ${money.format(rolloverValue)})` : ''}`;
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
 
-    const meet = fx?.fixtures?.[0]?.track || 'Round complete — results below';
-    renderFixtures(fx?.fixtures || []);
+    const effectiveFixtures = (Array.isArray(overview?.fixtures) && overview.fixtures.length)
+      ? overview.fixtures
+      : (fx?.fixtures || []);
+    const meet = effectiveFixtures?.[0]?.track || 'Round complete — results below';
+    renderFixtures(effectiveFixtures);
 
     const roundStatus = String(overview?.round?.status || '').toUpperCase();
     const closedRound = roundStatus === 'CLOSED';
