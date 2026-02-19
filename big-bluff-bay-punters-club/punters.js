@@ -407,11 +407,18 @@ function renderRoundMeta(overview){
 }
 
 function renderTipEntryState() {
+  const entryCard = $('quick-tips-entry-card');
   const form = $('tip-form');
   const summaryCard = $('tips-locked-summary');
   const summaryText = $('tips-locked-summary-text');
   const editBtn = $('tips-edit-btn');
   if (!form || !summaryCard || !summaryText) return;
+
+  if (!state.user) {
+    setVisible(entryCard, false);
+    return;
+  }
+  setVisible(entryCard, true);
 
   if (!state.tipStateResolved) {
     setVisible(summaryCard, true);
@@ -437,12 +444,7 @@ function renderTipEntryState() {
     return;
   }
 
-  if (!state.user) {
-    setVisible(summaryCard, false);
-    setVisible(form, true);
-    if (editBtn) editBtn.hidden = true;
-    return;
-  }
+  // logged-out state handled at top (entry card hidden)
 
   const count = state.existingByRace.size;
   const fullByFixture = state.raceCount > 0 && count >= state.raceCount;
