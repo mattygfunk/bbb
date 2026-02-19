@@ -514,8 +514,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     if (inlineState) inlineState.textContent = String(d?.roundStatus || '').toUpperCase() === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
     if (inlineJackpot) inlineJackpot.textContent = `💰 Jackpot live: ${document.getElementById('status-jackpot')?.textContent || '$0'}`;
-    if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${venue || '—'}`;
-    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : '--:--:--'}`;
+    const meetFallback = String(document.getElementById('status-meet')?.textContent || '').trim();
+    if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${venue || meetFallback || '—'}`;
+    const statusLockText = String(document.getElementById('status-lock')?.textContent || '').trim();
+    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : (statusLockText || '--:--:--')}`;
     if (lockRef > 0 && !hardLocked) {
       contextEl.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
       setLockline('');
@@ -819,7 +821,12 @@ async function initLockCountdown() {
     if (apiEnd > 0) end = apiEnd;
   } catch {}
 
-  const tick = () => { lockNode.textContent = fmtCountdown(end - Date.now()); };
+  const tick = () => {
+    const text = fmtCountdown(end - Date.now());
+    lockNode.textContent = text;
+    const inlineLock = document.getElementById('next-tip-home-inline-lock');
+    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${text}`;
+  };
   tick();
   setInterval(tick, 1000);
 }
