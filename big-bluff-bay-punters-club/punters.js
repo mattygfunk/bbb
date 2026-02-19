@@ -518,10 +518,12 @@ async function hydrateNextTipCard(trackId){
 
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
-    const venue = d?.venue || 'Track';
-    race.textContent = `${raceLabel} — ${venue}`;
+    const apiVenue = String(d?.venue || '').trim();
+    const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
+    const venue = (apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (fallbackVenue || 'Track');
+    race.textContent = venue && venue !== 'Track' ? `${raceLabel} — ${venue}` : raceLabel;
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    context.textContent = `${trackType} • ${venue} meeting`;
+    context.textContent = venue && venue !== 'Track' ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -596,9 +598,11 @@ async function hydrateNextTipCard(trackId){
       const raceNum = Number(String(lg?.nextRace || '').replace('R',''));
       const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
       const trackType = String(lg?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-      const venue = lg?.fixture?.track || 'Venue TBA';
-      race.textContent = `${raceLabel} — ${venue}`;
-      context.textContent = `${trackType} • ${venue} meeting`;
+      const apiVenue = String(lg?.venue || lg?.fixture?.track || lg?.fixture?.event || '').trim();
+      const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
+      const venue = (apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (fallbackVenue || '');
+      race.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
+      context.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
