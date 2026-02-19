@@ -31,20 +31,23 @@
     winner.textContent = wb ? `🏆 ${wb.member} • Pot $${Number(wb.pot || 0).toFixed(2)} • ${wb.oneLiner || ''}` : 'No winner banner yet for this track.';
 
     const status = String(data?.round?.status || 'OPEN').toUpperCase();
+    const humanStatus = status === 'OPEN' ? 'Tips open now' : (status === 'LOCKED' ? 'Tips closed — waiting for results' : 'Round finished — results live');
     const lockAt = Number(data?.round?.lockAt || 0);
     const opensAt = Number(data?.nextRoundOpensAt || 0);
-    roundMeta.textContent = `${data?.round?.label || 'Round'} • ${status}`;
+    roundMeta.textContent = `${data?.round?.label || 'Round'} • ${humanStatus}`;
     if (lockMeta) {
       if (status === 'OPEN' && lockAt > 0) {
         const diff = Math.max(0, lockAt - Date.now());
         const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
         const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-        lockMeta.textContent = `Lock countdown: ${h}h ${m}m`;
+        const when = new Date(lockAt).toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' });
+        lockMeta.textContent = `Locks in ${h}h ${m}m • ${when}`;
       } else if (opensAt > 0) {
         const diff = Math.max(0, opensAt - Date.now());
         const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
         const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-        lockMeta.textContent = `Next round opens in: ${h}h ${m}m`;
+        const when = new Date(opensAt).toLocaleString('en-AU', { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' });
+        lockMeta.textContent = `Opens in ${h}h ${m}m • ${when}`;
       } else {
         lockMeta.textContent = 'Round timing updates shortly.';
       }

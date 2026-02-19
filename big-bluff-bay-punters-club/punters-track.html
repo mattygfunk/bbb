@@ -19,12 +19,14 @@
       <p id="track-copy" class="muted">Loading track status…</p>
       <p id="winner-banner" class="muted">Checking latest round snapshot…</p>
       <div class="row-actions">
+        <a class="btn" href="#free-entry">Enter Free (points only)</a>
+        <a class="btn" href="#upgrade">Upgrade $20 (jackpot)</a>
         <a class="btn btn-ghost" href="/punters-rules.html">Rules</a>
         <a class="btn btn-ghost" href="/promo-terms.html">Promo Terms</a>
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" id="free-entry">
       <h2>Round & Jackpot</h2>
       <p id="round-meta" class="muted">Loading round…</p>
       <p id="lock-meta" class="muted">Loading lock countdown…</p>
@@ -33,7 +35,17 @@
       <p class="muted"><strong>Fair go policy:</strong> Separate jackpots for Dogs and Galls so nobody gets stitched up.</p>
     </section>
 
-    <section class="card">
+    <section class="card" id="upgrade">
+      <h2>What does my $20 buy?</h2>
+      <ul class="muted">
+        <li>Jackpot eligibility for this track only.</li>
+        <li>PAID status visibility on this track leaderboard.</li>
+        <li>Eligibility for track-specific prizes and settlement.</li>
+      </ul>
+      <p class="muted">3-step flow: Pay $20 → Submit claim → Admin verifies → PAID ✅</p>
+    </section>
+
+    <section class="card" id="results">
       <h2>Leaderboard</h2>
       <div class="table-wrap"><table><thead><tr><th>#</th><th>Member</th><th>Points</th><th>Winners</th></tr></thead><tbody id="ladder-body"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody></table></div>
       <p id="ladder-empty" class="muted" hidden>Leaderboard is warming up — no dead states, just waiting on scored races.</p>
