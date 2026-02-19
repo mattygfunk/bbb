@@ -24,6 +24,34 @@ function esc(s) {
   return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
+function stampUpdated() {
+  const n = document.getElementById('status-last-updated');
+  if (!n) return;
+  n.textContent = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function setStatusState(stateText, tone = 'open') {
+  const node = document.getElementById('status-state-pill');
+  if (!node) return;
+  node.textContent = stateText;
+  node.classList.remove('chip-red');
+  if (tone !== 'open') node.classList.add('chip-red');
+}
+
+function applyTableCards() {
+  document.querySelectorAll('.table-wrap').forEach((wrap) => {
+    const table = wrap.querySelector('table');
+    const headers = [...(table?.querySelectorAll('thead th') || [])].map((th) => th.textContent.trim());
+    if (!table || !headers.length) return;
+    wrap.classList.add('table-cards');
+    table.querySelectorAll('tbody tr').forEach((tr) => {
+      [...tr.children].forEach((td, i) => {
+        if (!td.getAttribute('data-label')) td.setAttribute('data-label', headers[i] || 'Value');
+      });
+    });
+  });
+}
+
 async function fetchApi(path) {
   for (const root of LANDING_API_ROOTS) {
     const url = `${root}${path}`;
@@ -270,13 +298,14 @@ async function hydrateLandingCritical() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
-    const [jackpot, fx, ladder, milestones, pokerResults, overview] = await Promise.all([
+    const [jackpot, fx, ladder, milestones, pokerResults, overview, pokerDash] = await Promise.all([
       fetchApi('/jackpot'),
       fetchApi('/fixtures'),
       fetchApi('/ladder'),
       fetchApi('/milestones'),
       fetchApi('/poker/results?page=1&pageSize=100'),
-      fetchApi('/punters/overview?tier=paid')
+      fetchApi('/punters/overview?tier=paid'),
+      fetchApi('/poker/dashboard')
     ]);
 
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
@@ -295,7 +324,19 @@ async function hydrateLandingCritical() {
     const meet = fx?.fixtures?.[0]?.track || 'Round complete — results below';
     renderFixtures(fx?.fixtures || []);
 
-    const closedRound = String(overview?.round?.status || '').toUpperCase() === 'CLOSED';
+    const roundStatus = String(overview?.round?.status || '').toUpperCase();
+    const closedRound = roundStatus === 'CLOSED';
+    const opensAt = Number(overview?.nextRoundOpensAt || 0);
+    if (closedRound) {
+      const preOpenText = opensAt > Date.now()
+        ? `🟠 Pre-open • opens ${new Date(opensAt).toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' })}`
+        : '🟠 Pre-open';
+      setStatusState(preOpenText, 'closed');
+    } else if (roundStatus === 'OPEN') {
+      setStatusState('🟢 Open now', 'open');
+    } else {
+      setStatusState('🔴 Closed', 'closed');
+    }
     let usedHistoryFallback = false;
     let leaders = closedRound
       ? (overview?.ladder || ladder?.ladder || [])
@@ -371,6 +412,19 @@ async function hydrateLandingCritical() {
     document.getElementById('status-entries').textContent = 'Live';
     document.getElementById('stat-weeks').textContent = String(puntersRecent.length || '—');
     document.getElementById('stat-paid').textContent = money.format(recentPayoutTotal);
+    const heroEntries = document.getElementById('hero-social-entries');
+    const heroPaid = document.getElementById('hero-social-paid');
+    if (heroEntries) heroEntries.textContent = String(overview?.tiers?.free || 0);
+    if (heroPaid) heroPaid.textContent = money.format(recentPayoutTotal);
+
+    const hotPlayer = (pokerDash?.top10 || [])[0]?.player || 'No heater yet';
+    const biggest = pokerDash?.hype?.biggestScore;
+    document.getElementById('life-last-winner').textContent = (puntersRecent[0]?.winner && puntersRecent[0].winner !== 'Rollover') ? puntersRecent[0].winner : 'No outright winner last round';
+    document.getElementById('life-hot-player').textContent = hotPlayer;
+    document.getElementById('life-biggest-score').textContent = biggest?.player ? `${biggest.player} • ${money.format(Number(biggest.biggestScore || 0))}` : 'No posted score yet';
+    document.getElementById('life-next-round').textContent = opensAt > Date.now()
+      ? `Opens ${new Date(opensAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}`
+      : 'Round is open now';
 
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = (closedRound || usedHistoryFallback) ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
@@ -380,6 +434,11 @@ async function hydrateLandingCritical() {
       tickerNode.textContent = 'Showing last round results until tipping opens Friday arvo.';
     }
 
+    const mobilePrimary = document.getElementById('mobile-primary-cta');
+    if (mobilePrimary) mobilePrimary.textContent = closedRound ? 'View Results' : 'Enter Tips';
+
+    stampUpdated();
+    applyTableCards();
     scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
   }
@@ -400,6 +459,9 @@ async function hydrateLandingDeferred() {
       renderSocialFeed(social?.items || []);
       document.getElementById('status-entries').textContent = entries ? String(entries) : 'Building';
       document.getElementById('stat-entries').textContent = entries ? String(entries) : '—';
+      const heroEntries = document.getElementById('hero-social-entries');
+      if (heroEntries && entries) heroEntries.textContent = String(entries);
+      applyTableCards();
     });
   } catch {
     // deferred non-critical data failed; keep placeholders
