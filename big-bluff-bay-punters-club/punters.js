@@ -189,15 +189,40 @@ function renderMilestones(data){
 function renderBossesBet(bb){
   const wrap = $('bosses-progress');
   const overall = $('bosses-overall');
+  const summary = $('bosses-summary');
   if(!wrap || !overall) return;
   const data = bb || { progress:[], overall:'live' };
   overall.textContent = String(data.overall || 'live').toUpperCase();
+
+  const active = (data.progress || []).filter((l)=>l?.inMulti);
+  const placed = active.filter((l)=>String(l.status)==='placed').length;
+  const missed = active.filter((l)=>String(l.status)==='missed').length;
+  const pending = active.filter((l)=>String(l.status)==='pending').length;
+
+  if (summary) {
+    summary.innerHTML = `
+      <span class='pill'>Legs: <strong>${active.length}</strong></span>
+      <span class='pill'>✅ Placed: <strong>${placed}</strong></span>
+      <span class='pill ${missed ? 'chip-red' : ''}'>❌ Missed: <strong>${missed}</strong></span>
+      <span class='pill'>⏳ Pending: <strong>${pending}</strong></span>
+    `;
+  }
+
   wrap.innerHTML = '';
-  (data.progress || []).forEach((leg)=>{
-    const row = document.createElement('div');
-    row.className = 'row';
-    row.innerHTML = `<strong>${esc(leg.race)}</strong><span class='muted'>${esc(leg.selection || '—')}</span><span class='pill'>${esc(leg.status || 'pending')}</span>`;
-    wrap.appendChild(row);
+  if (!active.length) {
+    wrap.innerHTML = "<p class='muted'>No Bosses Bet legs configured yet.</p>";
+    return;
+  }
+
+  active.forEach((leg)=>{
+    const item = document.createElement('article');
+    item.className = `bosses-leg-chip status-${esc(leg.status || 'pending')}`;
+    item.innerHTML = `
+      <div><strong>${esc(leg.race || 'R?')}</strong></div>
+      <div class='muted'>#${esc(leg.selection || '—')}</div>
+      <div><span class='pill'>${esc(String(leg.status || 'pending').toUpperCase())}</span></div>
+    `;
+    wrap.appendChild(item);
   });
 }
 
