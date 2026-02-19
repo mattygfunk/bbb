@@ -87,6 +87,9 @@ function renderMilestones(data){
   const streakBody = $('streak-body');
   if(!winnerCard || !winnerHistory || !streakBody) return;
 
+  const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const historyRows = (data?.winnerHistory || []).slice(0, 12);
+
   const formatRoundLabel = (row) => {
     const ts = Number(row?.archivedAt || 0);
     if (Number.isFinite(ts) && ts > 0) {
@@ -95,24 +98,76 @@ function renderMilestones(data){
     return String(row?.weekLabel || 'Round —');
   };
 
-  const featured = data?.featuredWinner || null;
+  const snapshotHref = (row) => {
+    const id = String(row?.roundId || row?.id || '').trim();
+    return id ? `/punters-club/results/${encodeURIComponent(id)}` : '/punters.html#round-recap';
+  };
+
+  const featured = data?.featuredWinner || historyRows[0] || null;
+  const recentRollover = historyRows.find((r) => Boolean(r?.rolledOver)) || null;
+
   if(!featured){
     winnerCard.innerHTML = "<p class='muted'>No weekly winner recorded yet.</p>";
   } else {
     const label = formatRoundLabel(featured);
-    winnerCard.innerHTML = `<div class='stack'><strong>${esc(featured.member)}</strong><p class='muted'>${esc(label)}</p><p class='muted'>${featured.points} pts • ${featured.winners} winners</p></div>`;
+    const isRollover = Boolean(featured.rolledOver);
+    const winnerName = isRollover ? 'No outright winner' : String(featured.member || '—');
+    const points = Number(featured.points || 0);
+    const winners = Number(featured.winners || 0);
+    const prize = Number(featured.prize ?? featured.points ?? 0);
+    winnerCard.innerHTML = `
+      <article class='card winners-feature-card ${isRollover ? 'is-rollover' : 'is-paid'}'>
+        <p class='next-tip-kicker'>Latest Result</p>
+        <h3 class='winners-feature-name'>${esc(winnerName)}</h3>
+        <p class='muted'>${esc(label)}</p>
+        <p class='winners-feature-prize'>${money.format(prize)}</p>
+        <div class='row-actions'>
+          <span class='pill'>${points} pts</span>
+          <span class='pill'>${winners} winners</span>
+          <span class='pill ${isRollover ? 'chip-red' : ''}'>${isRollover ? 'Rollover' : 'Paid ✅'}</span>
+        </div>
+        <div class='row-actions'>
+          <a class='btn chip-btn' href='${snapshotHref(featured)}'>View Round Snapshot</a>
+          <a class='btn btn-ghost' href='/punters-club/results'>View Full Archive</a>
+        </div>
+      </article>
+      ${recentRollover ? `
+      <article class='card winners-rollover-card'>
+        <p class='next-tip-kicker'>Rollover Round ⚠️</p>
+        <h4>${esc(formatRoundLabel(recentRollover))}</h4>
+        <p class='muted'>No outright winner — jackpot rolls over</p>
+        <p class='winners-feature-prize'>${money.format(Number(recentRollover.prize ?? 0))}</p>
+        <div class='row-actions'>
+          <span class='pill chip-red'>Rollover</span>
+        </div>
+        <p class='muted'>Rollover keeps the pot honest. Next round gets bigger.</p>
+        <div class='row-actions'>
+          <a class='btn btn-ghost' href='${snapshotHref(recentRollover)}'>View Round Snapshot</a>
+        </div>
+      </article>` : ''}
+    `;
   }
 
+  const statRounds = $('proof-stat-rounds');
+  const statPaid = $('proof-stat-paid');
+  const statRoll = $('proof-stat-rollovers');
+  const paidTotal = historyRows.filter((r) => !r?.rolledOver).reduce((sum, r) => sum + Number(r?.prize ?? 0), 0);
+  const rolloverCount = historyRows.filter((r) => Boolean(r?.rolledOver)).length;
+  if (statRounds) statRounds.textContent = `${historyRows.length}`;
+  if (statPaid) statPaid.textContent = money.format(paidTotal);
+  if (statRoll) statRoll.textContent = `${rolloverCount}`;
+
   winnerHistory.innerHTML='';
-  (data?.winnerHistory || []).slice(0,8).forEach((row)=>{
+  historyRows.slice(0,8).forEach((row)=>{
     const tr=document.createElement('tr');
-    const winnerCell = row.rolledOver ? `${esc(row.member || '-')} ⚠️` : esc(row.member || '-');
-    tr.innerHTML=`<td>${esc(formatRoundLabel(row))}</td><td>${winnerCell}</td><td>$${Number((row.prize ?? row.points ?? 0)).toFixed(2)}</td>`;
+    const isRollover = Boolean(row.rolledOver);
+    const winnerCell = isRollover ? `${esc(row.member || '-')} ⚠️` : esc(row.member || '-');
+    tr.innerHTML=`<td><a class='menu-link' href='${snapshotHref(row)}'>${esc(formatRoundLabel(row))}</a></td><td>${winnerCell}</td><td><span class='pill ${isRollover ? 'chip-red' : ''}'>${isRollover ? 'Rollover' : 'Paid'}</span></td><td>${money.format(Number((row.prize ?? row.points ?? 0)))}</td><td><a class='btn btn-ghost tiny-btn' href='${snapshotHref(row)}'>📸 Snapshot</a></td>`;
     winnerHistory.appendChild(tr);
   });
-  if(!(data?.winnerHistory || []).length){
+  if(!historyRows.length){
     const tr=document.createElement('tr');
-    tr.innerHTML="<td colspan='3' class='muted'>No winners archived yet.</td>";
+    tr.innerHTML="<td colspan='5' class='muted'>No winners archived yet.</td>";
     winnerHistory.appendChild(tr);
   }
 

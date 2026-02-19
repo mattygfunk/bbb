@@ -45,7 +45,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css?v=20260219-3" />
+    <link rel="stylesheet" href="styles.css?v=20260219-4" />
     <script defer src="analytics.js"></script>
   </head>
   <body>
@@ -154,12 +154,27 @@
 
 
       <div class="split">
-        <section class="card">
+        <section class="card winners-proof-module" id="winners-wall-proof">
           <h2>Winners Wall</h2>
-          <div id="weekly-winner-card" class="stack"><p class="muted">No weekly winner recorded yet.</p></div>
-          <p class="muted">Proof-of-performance wall with winner records, payouts, and snapshots.</p>
+          <p class="muted muted-strong">Proof-of-Performance. No stories. Just results.</p>
+          <p class="muted">Every round is archived with the winner, payout, and a frozen snapshot of the final ladder.</p>
+
+          <div id="weekly-winner-card" class="stack winners-feature-wrap"><p class="muted">No weekly winner recorded yet.</p></div>
+
+          <div class="stats-grid winners-proof-stats" id="winners-proof-stats">
+            <article class="card"><h3 id="proof-stat-rounds">—</h3><p class="muted">Rounds archived</p></article>
+            <article class="card"><h3 id="proof-stat-paid">$0.00</h3><p class="muted">Paid recently</p></article>
+            <article class="card"><h3 id="proof-stat-rollovers">—</h3><p class="muted">Rollovers recorded</p></article>
+          </div>
+
           <div class="stack" id="past-rounds-list" style="margin-top:.45rem"><p class="muted">No archived rounds yet.</p></div>
-          <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Round Date</th><th>Winner</th><th>Prize (A$)</th></tr></thead><tbody id="winner-history-body"><tr><td colspan="3" class="muted">Loading history…</td></tr></tbody></table></div>
+
+          <div class="table-wrap winners-archive-table-wrap" style="margin-top:.6rem">
+            <table class="winners-archive-table">
+              <thead><tr><th>Round Date</th><th>Winner</th><th>Outcome</th><th>Prize (A$)</th><th>Snapshot</th></tr></thead>
+              <tbody id="winner-history-body"><tr><td colspan="5" class="muted">Loading history…</td></tr></tbody>
+            </table>
+          </div>
         </section>
         <section class="card"><h2>Consecutive Weeks Milestones</h2><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Current Streak</th><th>Best</th><th>Wins</th><th>Badges</th></tr></thead><tbody id="streak-body"><tr><td colspan="6" class="muted">Loading milestones…</td></tr></tbody></table></div></section>
       </div>
@@ -278,6 +293,6 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260219-41"></script>
+    <script defer src="punters.js?v=20260219-42"></script>
   </body>
 </html>

@@ -890,3 +890,25 @@ details p { margin:.55rem 0 0; }
 #track-hero { border-left: 3px solid #334155; }
 body.track-greyhounds #track-hero { border-left-color: #4aa3ff; }
 body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
+
+.winners-proof-module {
+  background: radial-gradient(1200px 500px at 10% -20%, rgba(21,128,61,.18), transparent 45%), linear-gradient(180deg, rgba(9,16,28,.98), rgba(8,14,24,.98));
+  border: 1px solid rgba(120,140,180,.35);
+}
+.winners-feature-wrap { gap: .75rem; margin-top: .4rem; }
+.winners-feature-card, .winners-rollover-card {
+  border: 1px solid rgba(120,140,180,.35);
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+}
+.winners-feature-name { font-size: 1.5rem; line-height: 1.15; margin: .1rem 0; }
+.winners-feature-prize { font-size: 1.4rem; font-weight: 800; margin: .2rem 0; color: #f8fafc; }
+.winners-rollover-card { border-color: rgba(239,68,68,.35); }
+.winners-proof-stats .card { min-height: 92px; }
+.winners-archive-table-wrap { border: 1px solid rgba(120,140,180,.25); border-radius: .8rem; }
+.winners-archive-table thead th { position: sticky; top: 0; background: #0d1828; z-index: 1; }
+.winners-archive-table tbody tr:nth-child(odd) { background: rgba(148,163,184,.06); }
+.winners-archive-table tbody tr:hover { background: rgba(56,189,248,.08); }
+@media (max-width: 760px) {
+  .winners-feature-name { font-size: 1.25rem; }
+  .winners-feature-prize { font-size: 1.2rem; }
+}
