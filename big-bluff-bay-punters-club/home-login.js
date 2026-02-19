@@ -13,6 +13,7 @@ const modeRegisterBtn = document.getElementById('home-mode-register');
 const submitBtn = document.getElementById('home-auth-submit');
 const emailWrap = document.getElementById('home-email-wrap');
 const emailInput = document.getElementById('home-email');
+const memberAccessBlock = document.getElementById('home-member-access-block');
 let sessionActive = false;
 
 async function req(path, opt = {}) {
@@ -47,8 +48,11 @@ async function applyLoggedInState() {
     if (!me?.user) return;
 
     sessionActive = true;
-    // Keep the hero card visible so the "Your Next Race Tip" module (nested in it)
-    // stays above-the-fold after login.
+    // Keep hero card visible for next-tip, but hide member access UI when already signed in.
+    if (memberAccessBlock) {
+      memberAccessBlock.hidden = true;
+      memberAccessBlock.style.display = 'none';
+    }
     if (msg) msg.textContent = `Signed in as ${me.user.username}. Continue to Punters Area.`;
     if (submitBtn) submitBtn.textContent = 'Open Punters Area';
   } catch {

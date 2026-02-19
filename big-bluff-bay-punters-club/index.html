@@ -111,35 +111,37 @@
               </div>
             </article>
           </section>
-          <p id="home-next-race-callout" class="next-race-callout">NEXT RACE: R1</p>
-          <h2>Member Access</h2>
-          <p class="muted"><strong>Returning legend?</strong> Log in and pick up where you left off. <strong>New here?</strong> Create your account in under 30 seconds — you’ll stay signed in on this device.</p>
-          <div class="status-strip" aria-label="Social proof metrics">
-            <span class="pill">✅ Verified results feed</span>
-            <span class="pill">🏇 <strong id="hero-social-entries">—</strong> weekly entries</span>
-            <span class="pill">💸 <strong id="hero-social-paid">$0</strong> recent payouts shown</span>
-          </div>
-          <form id="home-login-form" class="stack" novalidate>
-            <input type="hidden" name="authMode" id="home-auth-mode" value="login" />
-            <div class="row-actions" role="tablist" aria-label="Account mode">
-              <button type="button" class="btn chip-btn" id="home-mode-login" aria-pressed="true">I have an account</button>
-              <button type="button" class="btn btn-ghost" id="home-mode-register" aria-pressed="false">I'm new (create account)</button>
+          <div id="home-member-access-block">
+            <p id="home-next-race-callout" class="next-race-callout">NEXT RACE: R1</p>
+            <h2>Member Access</h2>
+            <p class="muted"><strong>Returning legend?</strong> Log in and pick up where you left off. <strong>New here?</strong> Create your account in under 30 seconds — you’ll stay signed in on this device.</p>
+            <div class="status-strip" aria-label="Social proof metrics">
+              <span class="pill">✅ Verified results feed</span>
+              <span class="pill">🏇 <strong id="hero-social-entries">—</strong> weekly entries</span>
+              <span class="pill">💸 <strong id="hero-social-paid">$0</strong> recent payouts shown</span>
             </div>
-            <label>Username
-              <input required name="member" type="text" minlength="3" placeholder="choose or enter username" autocomplete="username" />
-            </label>
-            <label>Password
-              <div class="password-wrap">
-                <input required name="pin" id="home-password" type="password" placeholder="your password" autocomplete="current-password" />
-                <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
+            <form id="home-login-form" class="stack" novalidate>
+              <input type="hidden" name="authMode" id="home-auth-mode" value="login" />
+              <div class="row-actions" role="tablist" aria-label="Account mode">
+                <button type="button" class="btn chip-btn" id="home-mode-login" aria-pressed="true">I have an account</button>
+                <button type="button" class="btn btn-ghost" id="home-mode-register" aria-pressed="false">I'm new (create account)</button>
               </div>
-            </label>
-            <label id="home-email-wrap" hidden>Email (for updates + account recovery)
-              <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
-            </label>
-            <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
-          </form>
-          <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
+              <label>Username
+                <input required name="member" type="text" minlength="3" placeholder="choose or enter username" autocomplete="username" />
+              </label>
+              <label>Password
+                <div class="password-wrap">
+                  <input required name="pin" id="home-password" type="password" placeholder="your password" autocomplete="current-password" />
+                  <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
+                </div>
+              </label>
+              <label id="home-email-wrap" hidden>Email (for updates + account recovery)
+                <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
+              </label>
+              <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
+            </form>
+            <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
+          </div>
         </section>
       </div>
     </header>
@@ -471,7 +473,7 @@
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
-    <script defer src="home-login.js?v=20260219-1"></script>
+    <script defer src="home-login.js?v=20260219-2"></script>
     <script defer src="landing.js?v=20260219-16"></script>
   </body>
 </html>
