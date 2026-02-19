@@ -27,7 +27,7 @@ async function req(path,opt={}){
   throw new Error(lastErr||'Request failed');
 }
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
-function applyTableCards(){document.querySelectorAll('.table-wrap').forEach((wrap)=>{const table=wrap.querySelector('table');if(!table)return;const heads=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());if(!heads.length)return;wrap.classList.add('table-cards');table.querySelectorAll('tbody tr').forEach((tr)=>{[...tr.children].forEach((td,i)=>{if(!td.getAttribute('data-label'))td.setAttribute('data-label',heads[i]||'Value');});});});}
+function applyTableCards(){document.querySelectorAll('.table-wrap').forEach((wrap)=>{const table=wrap.querySelector('table');if(!table)return;const heads=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());if(!heads.length)return;const rowCount=table.querySelectorAll('tbody tr').length;const sig=`${heads.join('|')}::${rowCount}`;if(wrap.dataset.cardSig===sig)return;wrap.dataset.cardSig=sig;wrap.classList.add('table-cards');table.querySelectorAll('tbody tr').forEach((tr)=>{[...tr.children].forEach((td,i)=>{if(!td.getAttribute('data-label'))td.setAttribute('data-label',heads[i]||'Value');});});});}
 
 function getProfile(){
   return state.user?.profile || { bio:'', profilePic:'', settings:{ emailNotifications:false, publicProfile:false, theme:'system' } };
@@ -893,6 +893,7 @@ $('claim-form')?.addEventListener('submit', async (e)=>{
   await bootstrap();
   await refresh().catch(()=>{});
   setInterval(()=>{
+    if (document.hidden) return;
     if (tipInteractionActive()) return;
     const interacting = !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
     if (interacting) return;

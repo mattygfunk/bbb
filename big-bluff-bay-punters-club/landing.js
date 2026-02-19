@@ -41,8 +41,13 @@ function setStatusState(stateText, tone = 'open') {
 function applyTableCards() {
   document.querySelectorAll('.table-wrap').forEach((wrap) => {
     const table = wrap.querySelector('table');
-    const headers = [...(table?.querySelectorAll('thead th') || [])].map((th) => th.textContent.trim());
-    if (!table || !headers.length) return;
+    if (!table) return;
+    const headers = [...(table.querySelectorAll('thead th') || [])].map((th) => th.textContent.trim());
+    if (!headers.length) return;
+    const rowCount = table.querySelectorAll('tbody tr').length;
+    const sig = `${headers.join('|')}::${rowCount}`;
+    if (wrap.dataset.cardSig === sig) return;
+    wrap.dataset.cardSig = sig;
     wrap.classList.add('table-cards');
     table.querySelectorAll('tbody tr').forEach((tr) => {
       [...tr.children].forEach((td, i) => {
@@ -785,11 +790,13 @@ async function initLockCountdown() {
 
   // Keep homepage ladder status (e.g. After R1 -> After R2) fresh without reload.
   setInterval(() => {
+    if (document.hidden) return;
     hydrateLandingCritical();
   }, 60000);
 
   // Keep next-tip card in sync with auth changes that happen after initial render.
   setInterval(() => {
+    if (document.hidden) return;
     hydrateNextTipHome();
   }, 15000);
   window.addEventListener('focus', () => hydrateNextTipHome());
