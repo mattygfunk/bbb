@@ -518,6 +518,17 @@ async function hydrateLandingCritical() {
     const cutoff = document.getElementById('ladder-after-race');
     if (cutoff) cutoff.textContent = (closedRound || usedHistoryFallback) ? 'Final' : (ladder?.afterRace ? `After ${ladder.afterRace}` : 'Live');
 
+    const nextRaceCallout = document.getElementById('home-next-race-callout');
+    if (nextRaceCallout) {
+      const afterRace = Number(String(ladder?.afterRace || '').replace('R', ''));
+      const nextRaceNum = Number.isFinite(afterRace) && afterRace > 0 ? afterRace + 1 : 1;
+      if (closedRound) {
+        nextRaceCallout.textContent = 'ROUND COMPLETE — RESULTS BELOW';
+      } else {
+        nextRaceCallout.textContent = `NEXT RACE: R${nextRaceNum}`;
+      }
+    }
+
     const tickerNode = document.getElementById('payout-ticker');
     if (tickerNode && (closedRound || usedHistoryFallback)) {
       tickerNode.textContent = 'Showing last round results until tipping opens Friday arvo.';

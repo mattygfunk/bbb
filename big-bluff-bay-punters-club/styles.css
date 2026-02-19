@@ -851,6 +851,14 @@ details p { margin:.55rem 0 0; }
 .poker-schedule-card { border-color:#3d5673; }
 .poker-sunday-main { border-color:#eab308; background:linear-gradient(180deg,#1f1807 0%,#111a2b 100%); }
 
+.next-race-callout {
+  margin:.1rem 0 .45rem;
+  font-size: clamp(1.1rem, 3.6vw, 1.55rem);
+  font-weight: 900;
+  letter-spacing: .02em;
+  color: #facc15;
+}
+
 .next-tip-card {
   border-width: 2px;
   box-shadow: 0 0 0 1px #2f4a68, 0 10px 24px #00000044;
