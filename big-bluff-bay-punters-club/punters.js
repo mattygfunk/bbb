@@ -394,6 +394,11 @@ async function hydrateNextTipCard(trackId){
 
   if(!state.user) return;
 
+  // Signed-in users should never see a login CTA.
+  social.textContent = 'Syncing your member card…';
+  primary.textContent = 'Open Tip Form';
+  primary.href = '/punters.html#tip-form';
+
   try{
     let d = await req(`/punters/next-tip-summary?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
     if (String(d?.state || '') === 'ERROR' || (!d?.raceNumber && String(d?.roundStatus || '').toUpperCase() !== 'CLOSED')) {
