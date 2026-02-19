@@ -1422,7 +1422,8 @@ function createApp() {
   });
 
   app.get('/api/punters/next-tip', auth, (req, res) => {
-    const store = readStore();
+    try {
+      const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
     const trackData = getTrackData(store, trackId);
     const round = getCurrentRound(store, { autoCreate: false, trackId });
@@ -1529,6 +1530,9 @@ function createApp() {
       } : null,
       missingTip: !tip
     });
+    } catch {
+      return res.status(200).json({ roundStatus: 'ERROR', hasTip: false, allComplete: false, editable: false, statusBadge: 'Syncing' });
+    }
   });
 
   app.get('/api/punters/next-tip-summary', auth, (req, res) => {
@@ -1599,7 +1603,12 @@ function createApp() {
       const userHasTip = Boolean(userTip);
       const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
 
-      const ladder = computeLadder(store, { trackId });
+      let ladder = [];
+      try {
+        ladder = computeLadder(store, { trackId });
+      } catch {
+        ladder = [];
+      }
       const userLadder = ladder.find((r) => String(r.member || '').trim().toLowerCase() === userKey) || null;
       const ladderRank = userLadder ? Number(userLadder.rank || 0) : null;
       const ladderRankAvailable = Boolean(getLastScoredRace(store, trackId));
