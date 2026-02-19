@@ -614,4 +614,13 @@ async function initLockCountdown() {
   setInterval(() => {
     hydrateLandingCritical();
   }, 60000);
+
+  // Keep next-tip card in sync with auth changes that happen after initial render.
+  setInterval(() => {
+    hydrateNextTipHome();
+  }, 15000);
+  window.addEventListener('focus', () => hydrateNextTipHome());
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'bbb-token-v3') hydrateNextTipHome();
+  });
 })();
