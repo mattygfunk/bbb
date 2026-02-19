@@ -495,7 +495,7 @@ async function hydrateNextTipCard(trackId){
       return;
     }
 
-    pick.textContent = `#${String(d?.userPick?.selection || '—')}`;
+    pick.textContent = `Your Selection: #${String(d?.userPick?.selection || '—')}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
     social.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
@@ -545,7 +545,7 @@ async function hydrateNextTipCard(trackId){
       if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
-        pick.textContent = `#${String(lg?.tip?.selection || '—')}`;
+        pick.textContent = `Your Selection: #${String(lg?.tip?.selection || '—')}`;
         social.textContent = 'You’re first on the card';
         primary.textContent = lg?.editable ? 'Edit' : 'Full Card';
         primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';

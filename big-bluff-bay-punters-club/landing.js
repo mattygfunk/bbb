@@ -355,8 +355,8 @@ async function hydrateNextTipHomeFallback(trackId, token, section, card, body, r
     card.className = 'card next-tip-card next-tip-card--highlight';
     raceEl.textContent = nextRace;
     pickEl.textContent = userTip.runnerName
-      ? `${userTip.selection || '—'} • ${userTip.runnerName}`
-      : String(userTip.selection || '—');
+      ? `Your Selection: #${userTip.selection || '—'} • ${userTip.runnerName}`
+      : `Your Selection: #${String(userTip.selection || '—')}`;
     body.textContent = 'Live sync mode • Your next-race tip is locked and ready.';
     primary.textContent = 'Edit This Tip';
     primary.href = '/punters.html#tip-form';
@@ -522,7 +522,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     }
 
     const pickNo = String(d?.userPick?.selection || '—');
-    pickEl.textContent = `#${pickNo}`;
+    pickEl.textContent = `Your Selection: #${pickNo}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
     socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
