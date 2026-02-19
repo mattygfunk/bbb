@@ -370,18 +370,20 @@ async function hydrateNextTipCard(trackId){
   const countdown = $('next-tip-punters-countdown');
   const race = $('next-tip-punters-race');
   const context = $('next-tip-punters-context');
+  const lockline = $('next-tip-punters-lockline');
   const pick = $('next-tip-punters-pick');
   const social = $('next-tip-punters-social');
   const ladder = $('next-tip-punters-ladder');
-  if(!card || !body || !primary || !secondary || !badge || !countdown || !race || !context || !pick || !social || !ladder) return;
+  if(!card || !body || !primary || !secondary || !badge || !countdown || !race || !context || !lockline || !pick || !social || !ladder) return;
 
   card.hidden = false;
   card.className = 'card next-tip-card next-tip-card--tease';
   card.classList.remove('countdown-pulse');
   badge.textContent = 'MEMBERS';
-  race.textContent = 'Next Race Tip';
-  context.textContent = 'Log in to see your personalised pick.';
-  pick.textContent = '—';
+  race.textContent = 'Race —';
+  context.textContent = 'Track details sync after login • Meeting synced ✅';
+  pick.textContent = 'Your pick: —';
+  lockline.textContent = 'Locks in --:--';
   body.textContent = 'Live Sync: Active • Private member view.';
   social.textContent = 'You + 0 others have entered';
   ladder.textContent = 'Position updates after results.';
@@ -442,8 +444,14 @@ async function hydrateNextTipCard(trackId){
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
     countdown.textContent = `${mm}:${ss}`;
 
-    race.textContent = d?.raceNumber || 'Round Complete';
-    context.textContent = `${d?.trackName || 'Track'} • ${d?.venue || 'Venue TBA'}`;
+    const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
+    race.textContent = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race —';
+    const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+    context.textContent = `${d?.venue || 'Venue TBA'} • ${trackType} • Meeting synced ✅`;
+    const lockRef = Number(d?.lockTime || d?.startTime || 0);
+    if (activeCountdown > 0) lockline.textContent = `Locks in ${mm}:${ss}`;
+    else if (lockRef > 0) lockline.textContent = `Locked at ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
+    else lockline.textContent = 'Lock time syncing';
 
     if(String(d?.state||'')==='ROUND_COMPLETE'){
       card.className = 'card next-tip-card next-tip-card--closed';
@@ -461,7 +469,7 @@ async function hydrateNextTipCard(trackId){
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
       badge.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
-      pick.textContent = 'No tip entered';
+      pick.textContent = 'Your pick: —';
       body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for the next race.';
       social.textContent = `${Number(d?.othersCount || 0)} punters already locked`;
       ladder.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Current ladder position: #${d.ladderRank}` : 'Position updates after results.';
@@ -470,7 +478,7 @@ async function hydrateNextTipCard(trackId){
       return;
     }
 
-    pick.textContent = d?.userPick?.runnerName ? `${d.userPick.selection} • ${d.userPick.runnerName}` : `${d?.userPick?.selection || '—'}`;
+    pick.textContent = `Your pick: #${String(d?.userPick?.selection || '—')}`;
     social.textContent = imminent
       ? `You + ${Number(d?.othersCount || 0)} others are locked for this race`
       : `You + ${Number(d?.othersCount || 0)} others ${d?.canEdit ? 'have entered' : 'are locked for this race'}`;
@@ -505,16 +513,19 @@ async function hydrateNextTipCard(trackId){
   }catch{
     try {
       const lg = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
-      race.textContent = lg?.nextRace || 'Next Race';
-      context.textContent = `${lg?.trackName || 'Track'} • ${lg?.fixture?.track || 'Venue TBA'}`;
+      const raceNum = Number(String(lg?.nextRace || '').replace('R',''));
+      race.textContent = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race —';
+      const trackType = String(lg?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+      context.textContent = `${lg?.fixture?.track || 'Venue TBA'} • ${trackType} • Meeting synced ✅`;
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
       countdown.textContent = `${mm}:${ss}`;
+      lockline.textContent = ms > 0 ? `Locks in ${mm}:${ss}` : 'Lock time synced';
       if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
-        pick.textContent = lg?.tip?.runnerName ? `${lg.tip.selection} • ${lg.tip.runnerName}` : `${lg?.tip?.selection || '—'}`;
+        pick.textContent = `Your pick: #${String(lg?.tip?.selection || '—')}`;
         body.textContent = lg?.editable ? 'Live Sync: Active • Changes allowed until lock.' : 'Live Sync: Active • Your pick is confirmed.';
         social.textContent = lg?.editable ? 'You have entered this race' : 'You are locked for this race';
         ladder.textContent = 'Position updates after results.';

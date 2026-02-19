@@ -374,11 +374,12 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   const badgeEl = document.getElementById('next-tip-home-badge');
   const countdownEl = document.getElementById('next-tip-home-countdown');
   const contextEl = document.getElementById('next-tip-home-context');
+  const locklineEl = document.getElementById('next-tip-home-lockline');
   const socialEl = document.getElementById('next-tip-home-social');
   const ladderEl = document.getElementById('next-tip-home-ladder');
   const primary = document.getElementById('next-tip-home-primary');
   const secondary = document.getElementById('next-tip-home-secondary');
-  if (!section || !card || !body || !raceEl || !pickEl || !badgeEl || !countdownEl || !contextEl || !socialEl || !ladderEl || !primary || !secondary) return;
+  if (!section || !card || !body || !raceEl || !pickEl || !badgeEl || !countdownEl || !contextEl || !locklineEl || !socialEl || !ladderEl || !primary || !secondary) return;
 
   const token = localStorage.getItem('bbb-token-v3');
   section.hidden = false;
@@ -386,9 +387,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   card.classList.remove('countdown-pulse');
   card.dataset.state = 'tease';
   badgeEl.textContent = 'MEMBERS';
-  raceEl.textContent = 'Next Race Tip';
-  contextEl.textContent = 'Log in to see your personalised pick.';
-  pickEl.textContent = '—';
+  raceEl.textContent = 'Race —';
+  contextEl.textContent = 'Track details sync after login • Meeting synced ✅';
+  pickEl.textContent = 'Your pick: —';
+  locklineEl.textContent = 'Locks in --:--';
   body.textContent = 'Live Sync: Active • Private member view.';
   socialEl.textContent = 'You + 0 others have entered';
   ladderEl.textContent = 'Position updates after results.';
@@ -468,9 +470,20 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
     countdownEl.textContent = `${mm}:${ss}`;
 
+    const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
+    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race —';
     const venue = d?.venue || 'Venue TBA';
-    raceEl.textContent = d?.raceNumber || 'Round Complete';
-    contextEl.textContent = `${d?.trackName || 'Track'} • ${venue}`;
+    const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+    raceEl.textContent = raceLabel;
+    contextEl.textContent = `${venue} • ${trackType} • Meeting synced ✅`;
+    const lockRef = Number(d?.lockTime || d?.startTime || 0);
+    if (activeCountdown > 0) {
+      locklineEl.textContent = `Locks in ${mm}:${ss}`;
+    } else if (lockRef > 0) {
+      locklineEl.textContent = `Locked at ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
+    } else {
+      locklineEl.textContent = 'Lock time syncing';
+    }
 
     if (String(d?.state || '') === 'ROUND_COMPLETE') {
       card.className = 'card next-tip-card next-tip-card--closed';
@@ -490,7 +503,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
       badgeEl.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
-      pickEl.textContent = 'No tip entered';
+      pickEl.textContent = 'Your pick: —';
       body.textContent = imminent ? 'No late edits. Same clock for everyone.' : 'No tip entered for the next race.';
       socialEl.textContent = `${Number(d?.othersCount || 0)} punters already locked`;
       ladderEl.textContent = d?.ladderRankAvailable && d?.ladderRank ? `Current ladder position: #${d.ladderRank}` : 'Position updates after results.';
@@ -501,8 +514,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       return;
     }
 
-    const pick = d?.userPick?.runnerName ? `${d.userPick.selection} • ${d.userPick.runnerName}` : `${d?.userPick?.selection || '—'}`;
-    pickEl.textContent = pick;
+    const pickNo = String(d?.userPick?.selection || '—');
+    pickEl.textContent = `Your pick: #${pickNo}`;
     socialEl.textContent = imminent
       ? `You + ${Number(d?.othersCount || 0)} others are locked for this race`
       : `You + ${Number(d?.othersCount || 0)} others ${d?.canEdit ? 'have entered' : 'are locked for this race'}`;

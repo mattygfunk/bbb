@@ -866,6 +866,7 @@ details p { margin:.55rem 0 0; }
 }
 .next-tip-kicker { margin:0; font-size:.72rem; letter-spacing:.08em; font-weight:800; color:#86efac; }
 .next-tip-countdown { margin:0; font-weight:800; color:#f8fafc; }
+.next-tip-lockline { margin:0; font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight:900; color:#f8fafc; }
 .next-tip-pick { margin:0; font-size: clamp(1.1rem, 2.8vw, 1.5rem); font-weight:800; color:#f8fafc; }
 #next-tip-home-race, #next-tip-punters-race { margin:0; font-size: clamp(1.3rem, 3.4vw, 1.85rem); }
 .next-tip-card--highlight { border-color:#22c55e; box-shadow: 0 0 0 1px #22c55e66, 0 0 18px #22c55e22; background:linear-gradient(180deg,#112418 0%,#0f172a 100%); }
