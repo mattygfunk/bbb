@@ -53,6 +53,11 @@ async function applyLoggedInState() {
       memberAccessBlock.hidden = true;
       memberAccessBlock.style.display = 'none';
     }
+    const heroPrimary = document.getElementById('next-tip-home-primary');
+    if (heroPrimary) {
+      heroPrimary.textContent = 'Open Punters Area';
+      heroPrimary.setAttribute('href', '/punters.html');
+    }
     if (msg) msg.textContent = `Signed in as ${me.user.username}. Continue to Punters Area.`;
     if (submitBtn) submitBtn.textContent = 'Open Punters Area';
   } catch {
