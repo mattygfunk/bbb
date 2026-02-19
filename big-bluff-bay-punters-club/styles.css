@@ -842,6 +842,14 @@ details p { margin:.55rem 0 0; }
 .punters-track-card--thoroughbreds { border-top: 3px solid #eab308; }
 .punters-track-card--thoroughbreds::after { background: radial-gradient(circle at center, #eab308 0%, transparent 68%); }
 
+.poker-legends-hub { border-color:#35506e; background:linear-gradient(180deg,#0c1627 0%,#0b1422 100%); }
+.poker-legends-grid { align-items:stretch; }
+.poker-spotlight-card { border-color:#2f4b68; }
+.poker-major-card { border-color:#7a5e18; background:linear-gradient(180deg,#1a1407 0%,#0d1422 100%); }
+.poker-schedule-card { border-color:#3d5673; }
+.poker-sunday-main { border-color:#eab308; background:linear-gradient(180deg,#1f1807 0%,#111a2b 100%); }
+
+
 #tab-greyhounds.active,
 #tab-thoroughbreds.active {
   border-color: #475569;
