@@ -140,6 +140,13 @@
           </div>
           <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"><tr><td colspan="4" class="muted">Loading leaderboard…</td></tr></tbody></table></div>
           <p class="muted" id="ladder-fallback" hidden>Leaderboard data unavailable. Showing last known values.</p>
+
+          <div class="card" id="points-breakdown" style="margin-top:.7rem">
+            <h3>Points Breakdown by Race</h3>
+            <p class="muted" id="breakdown-title">Tap a punter name in the leaderboard to view race-by-race points.</p>
+            <div class="table-wrap"><table><thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead><tbody id="breakdown-body"><tr><td colspan="4" class="muted">No punter selected yet.</td></tr></tbody></table></div>
+          </div>
+
           <p id="share-punters-msg" class="muted"></p>
         </section>
         <section class="card"><h2>Rules <span class="pill">Jackpot live: <strong id="rules-jackpot-value">$0</strong></span></h2>
@@ -194,7 +201,7 @@
         </div>
         <p class="muted">Private. Transparent. Running every week.</p>
       </section>
-      <section class="card" id="points-breakdown"><h2>Points Breakdown by Race</h2><p class="muted" id="breakdown-title">Tap a punter name in the leaderboard to view race-by-race points.</p><div class="table-wrap"><table><thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead><tbody id="breakdown-body"><tr><td colspan="4" class="muted">No punter selected yet.</td></tr></tbody></table></div></section>
+      <!-- points-breakdown moved into leaderboard card -->
       
       <section class="card poker-legends-hub" aria-labelledby="poker-legends-heading">
         <div class="section-head">
