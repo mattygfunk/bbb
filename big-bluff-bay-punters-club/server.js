@@ -1421,435 +1421,127 @@ function createApp() {
     return res.json({ trackId, tips: sorted.filter((t) => t.status === status) });
   });
 
+  function buildSimpleNextTipState(req, store) {
+    const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+    const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
+    const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
+    const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
+    const baseTips = trackTips.length ? trackTips : usableTips;
+
+    const userKey = String(req.user?.username || '').trim().toLowerCase();
+    const mine = baseTips
+      .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+      .sort((a, b) => Number(String(a.race || 'R999').replace('R', '')) - Number(String(b.race || 'R999').replace('R', '')));
+
+    const raceNums = baseTips
+      .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
+
+    const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
+    let nextRace = null;
+    for (let i = 1; i <= raceCount; i += 1) {
+      const race = `R${i}`;
+      if (!mineSet.has(race)) { nextRace = race; break; }
+    }
+
+    const allComplete = !nextRace;
+    if (!nextRace) nextRace = String(mine[0]?.race || 'R1').toUpperCase();
+
+    const tip = mine.find((t) => String(t.race || '').toUpperCase() === nextRace) || null;
+    const raceTips = baseTips.filter((t) => String(t.race || '').toUpperCase() === nextRace);
+    const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
+
+    const editable = canEditTipsNow(store);
+    const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+    const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
+    const userHasTip = Boolean(tip);
+    const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
+
+    return {
+      requestedTrackId,
+      roundStatus: allComplete ? 'CLOSED' : 'OPEN',
+      allComplete,
+      editable,
+      lockAtMs,
+      fixture,
+      nextRace,
+      tip,
+      userHasTip,
+      othersCount
+    };
+  }
+
   app.get('/api/punters/next-tip', auth, (req, res) => {
     try {
       const store = readStore();
-
-      // Simple, robust mode: derive next-tip state from tips only.
-      // This intentionally avoids fixture/results/track lifecycle complexity.
-      {
-      const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-      const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
-      const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
-      const baseTips = trackTips.length ? trackTips : usableTips;
-      const userKey = String(req.user?.username || '').trim().toLowerCase();
-      const mine = baseTips
-        .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
-        .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
-
-      const raceNums = baseTips
-        .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
-        .filter((n) => Number.isFinite(n) && n > 0);
-      const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
-      const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
-      let nextRace = null;
-      for (let i = 1; i <= raceCount; i += 1) {
-        const r = `R${i}`;
-        if (!mineSet.has(r)) { nextRace = r; break; }
-      }
-      const allComplete = !nextRace;
-      if (!nextRace) nextRace = String(mine[0]?.race || 'R1').toUpperCase();
-
-      const tip = mine.find((t) => String(t.race || '').toUpperCase() === nextRace) || null;
-      const editable = canEditTipsNow(store);
-      const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
-      const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
-
+      const s = buildSimpleNextTipState(req, store);
       return res.json({
-        trackId: requestedTrackId,
-        trackName: TRACKS[requestedTrackId]?.name || requestedTrackId,
-        roundStatus: allComplete ? 'CLOSED' : 'OPEN',
-        editable,
-        statusBadge: allComplete ? 'Closed' : (editable ? 'Editable' : 'Locked'),
-        fixture,
-        nextRace,
+        trackId: s.requestedTrackId,
+        trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
+        roundStatus: s.roundStatus,
+        editable: s.editable,
+        statusBadge: s.allComplete ? 'Closed' : (s.editable ? 'Editable' : 'Locked'),
+        fixture: s.fixture,
+        nextRace: s.nextRace,
         startAtMs: null,
-        lockAtMs,
-        countdownToMs: lockAtMs,
-        hasTip: Boolean(tip),
-        tip: tip ? {
-          race: String(tip.race || nextRace),
-          selection: String(tip.selection || ''),
-          runnerName: String(tip.runnerName || tip.horseName || '')
+        lockAtMs: s.lockAtMs,
+        countdownToMs: s.lockAtMs,
+        hasTip: s.userHasTip,
+        tip: s.tip ? {
+          race: String(s.tip.race || s.nextRace),
+          selection: String(s.tip.selection || ''),
+          runnerName: String(s.tip.runnerName || s.tip.horseName || '')
         } : null,
-        missingTip: !tip,
-        allComplete
+        missingTip: !s.userHasTip,
+        allComplete: s.allComplete
       });
-      }
-
-    const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-    const trackDataRaw = getTrackData(store, trackId) || {};
-    const trackData = {
-      fixtures: Array.isArray(trackDataRaw.fixtures) ? trackDataRaw.fixtures : [],
-      raceResults: (trackDataRaw.raceResults && typeof trackDataRaw.raceResults === 'object') ? trackDataRaw.raceResults : {}
-    };
-    const round = getCurrentRound(store, { autoCreate: false, trackId });
-    const latestClosed = getLatestClosedRound(store, trackId);
-    const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-    const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
-    const now = Date.now();
-
-    if (roundStatus === 'CLOSED') {
-      return res.json({
-        trackId,
-        roundStatus,
-        message: 'Round finished — view results',
-        editable: false,
-        statusBadge: 'Closed',
-        lastWinner: latestClosed?.snapshot?.winner?.member || latestClosed?.winner?.member || '—'
-      });
-    }
-
-    const fixture = (trackData.fixtures || [])[0] || null;
-    const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
-    const races = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
-    const raceResults = trackData.raceResults || {};
-    const completed = new Set(
-      Object.entries(raceResults)
-        .filter(([, v]) => (v?.first?.length || v?.second?.length || v?.third?.length))
-        .map(([k]) => String(k).toUpperCase())
-    );
-
-    const raceTimes = {};
-    const addRaceTime = (race, startTime) => {
-      const r = String(race || '').toUpperCase();
-      const t = Date.parse(String(startTime || ''));
-      if (!/^R\d+$/.test(r) || !Number.isFinite(t)) return;
-      raceTimes[r] = t;
-    };
-    if (fixture?.raceTimes && typeof fixture.raceTimes === 'object' && !Array.isArray(fixture.raceTimes)) {
-      Object.entries(fixture.raceTimes).forEach(([race, startTime]) => addRaceTime(race, startTime));
-    }
-    if (Array.isArray(fixture?.raceTimes)) {
-      fixture.raceTimes.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
-    }
-    if (Array.isArray(fixture?.races)) {
-      fixture.races.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
-    }
-
-    const upcoming = races.filter((r) => !completed.has(r));
-    let nextRace = null;
-    const timedUpcoming = upcoming
-      .filter((r) => Number.isFinite(raceTimes[r]) && raceTimes[r] > now)
-      .sort((a, b) => raceTimes[a] - raceTimes[b]);
-    if (timedUpcoming.length) {
-      nextRace = timedUpcoming[0];
-    } else if (upcoming.length) {
-      nextRace = upcoming.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))[0];
-    }
-
-    const userKey = String(req.user?.username || '').trim().toLowerCase();
-    const userTips = tipsArr
-      .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
-      .filter((t) => String(t.status || '') !== 'removed')
-      .filter((t) => !round?.id || String(t.roundId || '') === String(round.id))
-      .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
-      .sort((a, b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
-
-    const byRace = new Map();
-    userTips.forEach((t) => { if (!byRace.has(String(t.race || '').toUpperCase())) byRace.set(String(t.race || '').toUpperCase(), t); });
-
-    const editable = Boolean(round) && canEditTipsNow(store);
-    const statusBadge = roundStatus === 'OPEN' ? (editable ? 'Editable' : 'Locked') : 'Closed';
-
-    if (!nextRace) {
-      return res.json({
-        trackId,
-        roundStatus,
-        editable,
-        statusBadge,
-        message: 'All races complete — results coming',
-        hasTip: false,
-        allComplete: true,
-        fixture
-      });
-    }
-
-    const tip = byRace.get(nextRace) || null;
-    const startAtMs = Number.isFinite(raceTimes[nextRace]) ? raceTimes[nextRace] : null;
-    const lockAtMs = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
-
-    return res.json({
-      trackId,
-      trackName: TRACKS[trackId]?.name || trackId,
-      roundStatus,
-      editable,
-      statusBadge,
-      fixture,
-      nextRace,
-      startAtMs,
-      lockAtMs,
-      countdownToMs: startAtMs || lockAtMs,
-      hasTip: Boolean(tip),
-      tip: tip ? {
-        race: String(tip.race || nextRace),
-        selection: String(tip.selection || ''),
-        runnerName: String(tip.runnerName || tip.horseName || '')
-      } : null,
-      missingTip: !tip
-    });
     } catch (err) {
       console.error('[next-tip] failed', err?.stack || err);
-      try {
-        const store = readStore();
-        const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-        const fixture = (Array.isArray(store?.puntersClub?.tracks?.[trackId]?.fixtures)
-          ? store.puntersClub.tracks[trackId].fixtures[0]
-          : (Array.isArray(store?.fixtures) ? store.fixtures[0] : null)) || null;
-        const userKey = String(req.user?.username || '').trim().toLowerCase();
-        const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-        const mine = tipsArr
-          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
-          .filter((t) => String(t.status || '') !== 'removed')
-          .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
-          .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
-        const tip = mine[0] || null;
-        const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
-        const editable = canEditTipsNow(store);
-        return res.status(200).json({
-          trackId,
-          trackName: TRACKS[trackId]?.name || trackId,
-          roundStatus: 'OPEN',
-          editable,
-          statusBadge: editable ? 'Editable' : 'Locked',
-          fixture,
-          nextRace: tip?.race || 'R1',
-          startAtMs: null,
-          lockAtMs,
-          countdownToMs: lockAtMs,
-          hasTip: Boolean(tip),
-          tip: tip ? {
-            race: String(tip.race || 'R1'),
-            selection: String(tip.selection || ''),
-            runnerName: String(tip.runnerName || tip.horseName || '')
-          } : null,
-          missingTip: !tip
-        });
-      } catch {
-        return res.status(200).json({ roundStatus: 'ERROR', hasTip: false, allComplete: false, editable: false, statusBadge: 'Syncing' });
-      }
+      return res.status(200).json({
+        roundStatus: 'ERROR',
+        hasTip: false,
+        allComplete: false,
+        editable: false,
+        statusBadge: 'Syncing'
+      });
     }
   });
 
   app.get('/api/punters/next-tip-summary', auth, (req, res) => {
     try {
       const store = readStore();
-
-      // Simple, robust mode: derive next-tip summary from tips only.
-      {
-      const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-      const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
-      const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
-      const baseTips = trackTips.length ? trackTips : usableTips;
-
-      const userKey = String(req.user?.username || '').trim().toLowerCase();
-      const mine = baseTips
-        .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
-        .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
-
-      const raceNums = baseTips
-        .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
-        .filter((n) => Number.isFinite(n) && n > 0);
-      const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
-      const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
-      let raceNumber = null;
-      for (let i = 1; i <= raceCount; i += 1) {
-        const r = `R${i}`;
-        if (!mineSet.has(r)) { raceNumber = r; break; }
-      }
-      const allComplete = !raceNumber;
-      if (!raceNumber) raceNumber = String(mine[0]?.race || 'R1').toUpperCase();
-
-      const raceTips = baseTips.filter((t) => String(t.race || '').toUpperCase() === raceNumber);
-      const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
-      const userTip = raceTips.find((t) => String(t.member || '').trim().toLowerCase() === userKey) || null;
-      const userHasTip = Boolean(userTip);
-      const canEdit = canEditTipsNow(store);
-      const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
-      const fixture = (Array.isArray(store?.fixtures) ? store.fixtures[0] : null) || null;
-
+      const s = buildSimpleNextTipState(req, store);
       return res.json({
-        roundStatus: allComplete ? 'CLOSED' : 'OPEN',
-        trackId: requestedTrackId,
-        trackName: TRACKS[requestedTrackId]?.name || requestedTrackId,
-        venue: String(fixture?.track || ''),
-        raceNumber,
+        roundStatus: s.roundStatus,
+        trackId: s.requestedTrackId,
+        trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
+        venue: String(s.fixture?.track || ''),
+        raceNumber: s.nextRace,
         startTime: null,
-        lockTime: Number(getEffectiveTipEditDeadlineMs(store) || 0) || null,
-        userHasTip,
-        userPick: userTip ? {
-          race: String(userTip.race || raceNumber),
-          selection: String(userTip.selection || ''),
-          runnerName: String(userTip.runnerName || userTip.horseName || '')
+        lockTime: s.lockAtMs,
+        userHasTip: s.userHasTip,
+        userPick: s.tip ? {
+          race: String(s.tip.race || s.nextRace),
+          selection: String(s.tip.selection || ''),
+          runnerName: String(s.tip.runnerName || s.tip.horseName || '')
         } : null,
-        canEdit,
-        othersCount,
+        canEdit: s.editable,
+        othersCount: s.othersCount,
         ladderRank: null,
         ladderRankAvailable: false,
-        state: allComplete ? 'ROUND_COMPLETE' : (userHasTip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
-      });
-      }
-
-      const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-      const trackDataRaw = getTrackData(store, trackId) || {};
-      const trackData = {
-        fixtures: Array.isArray(trackDataRaw.fixtures) ? trackDataRaw.fixtures : [],
-        raceResults: (trackDataRaw.raceResults && typeof trackDataRaw.raceResults === 'object') ? trackDataRaw.raceResults : {}
-      };
-      const round = getCurrentRound(store, { autoCreate: false, trackId });
-      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-      const latestClosed = getLatestClosedRound(store, trackId);
-      const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
-      const now = Date.now();
-
-      const fixture = (trackData.fixtures || [])[0] || null;
-      const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
-      const races = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
-      const raceResults = trackData.raceResults || {};
-      const completed = new Set(Object.entries(raceResults)
-        .filter(([, v]) => (v?.first?.length || v?.second?.length || v?.third?.length))
-        .map(([k]) => String(k).toUpperCase()));
-
-      const raceTimes = {};
-      const addRaceTime = (race, startTime) => {
-        const r = String(race || '').toUpperCase();
-        const t = Date.parse(String(startTime || ''));
-        if (!/^R\d+$/.test(r) || !Number.isFinite(t)) return;
-        raceTimes[r] = t;
-      };
-      if (fixture?.raceTimes && typeof fixture.raceTimes === 'object' && !Array.isArray(fixture.raceTimes)) {
-        Object.entries(fixture.raceTimes).forEach(([race, startTime]) => addRaceTime(race, startTime));
-      }
-      if (Array.isArray(fixture?.raceTimes)) fixture.raceTimes.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
-      if (Array.isArray(fixture?.races)) fixture.races.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
-
-      const upcoming = races.filter((r) => !completed.has(r));
-      const timedUpcoming = upcoming.filter((r) => Number.isFinite(raceTimes[r]) && raceTimes[r] > now).sort((a, b) => raceTimes[a] - raceTimes[b]);
-      const nextRace = timedUpcoming.length
-        ? timedUpcoming[0]
-        : (upcoming.length ? upcoming.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))[0] : null);
-
-      if (roundStatus === 'CLOSED' || !nextRace) {
-        return res.json({
-          roundStatus: 'CLOSED',
-          trackId,
-          trackName: TRACKS[trackId]?.name || trackId,
-          venue: String(fixture?.track || ''),
-          raceNumber: null,
-          startTime: null,
-          lockTime: null,
-          userHasTip: false,
-          userPick: null,
-          canEdit: false,
-          othersCount: 0,
-          ladderRank: null,
-          ladderRankAvailable: false,
-          state: 'ROUND_COMPLETE'
-        });
-      }
-
-      const userKey = String(req.user?.username || '').trim().toLowerCase();
-      const allTips = tipsArr
-        .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
-        .filter((t) => String(t.status || '') !== 'removed')
-        .filter((t) => !round?.id || String(t.roundId || '') === String(round.id));
-
-      const raceTips = allTips.filter((t) => String(t.race || '').toUpperCase() === nextRace);
-      const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
-      const userTip = raceTips.find((t) => String(t.member || '').trim().toLowerCase() === userKey) || null;
-      const userHasTip = Boolean(userTip);
-      const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
-
-      let ladder = [];
-      try {
-        ladder = computeLadder(store, { trackId });
-      } catch {
-        ladder = [];
-      }
-      const userLadder = ladder.find((r) => String(r.member || '').trim().toLowerCase() === userKey) || null;
-      const ladderRank = userLadder ? Number(userLadder.rank || 0) : null;
-      const ladderRankAvailable = Boolean(getLastScoredRace(store, trackId));
-
-      const startTime = Number.isFinite(raceTimes[nextRace]) ? raceTimes[nextRace] : null;
-      const lockTime = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
-      const canEdit = Boolean(round) && canEditTipsNow(store);
-
-      return res.json({
-        roundStatus,
-        trackId,
-        trackName: TRACKS[trackId]?.name || trackId,
-        venue: String(fixture?.track || ''),
-        raceNumber: nextRace,
-        startTime,
-        lockTime,
-        userHasTip,
-        userPick: userTip ? {
-          race: String(userTip.race || nextRace),
-          selection: String(userTip.selection || ''),
-          runnerName: String(userTip.runnerName || userTip.horseName || '')
-        } : null,
-        canEdit,
-        othersCount,
-        ladderRank,
-        ladderRankAvailable,
-        state: userHasTip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP'
+        state: s.allComplete ? 'ROUND_COMPLETE' : (s.userHasTip ? (s.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
       });
     } catch (err) {
       console.error('[next-tip-summary] failed', err?.stack || err);
-      try {
-        const store = readStore();
-        const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-        const fixture = (Array.isArray(store?.puntersClub?.tracks?.[trackId]?.fixtures)
-          ? store.puntersClub.tracks[trackId].fixtures[0]
-          : (Array.isArray(store?.fixtures) ? store.fixtures[0] : null)) || null;
-        const userKey = String(req.user?.username || '').trim().toLowerCase();
-        const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
-        const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
-        const firstRace = `R1`;
-        const mine = tipsArr
-          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
-          .filter((t) => String(t.status || '') !== 'removed')
-          .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
-          .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
-        const tip = mine[0] || null;
-        const raceNumber = tip?.race || firstRace;
-        const raceTipsCount = tipsArr
-          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
-          .filter((t) => String(t.status || '') !== 'removed')
-          .filter((t) => String(t.race || '').toUpperCase() === String(raceNumber).toUpperCase()).length;
-        const canEdit = canEditTipsNow(store);
-        return res.status(200).json({
-          roundStatus: 'OPEN',
-          trackId,
-          trackName: TRACKS[trackId]?.name || trackId,
-          venue: String(fixture?.track || ''),
-          raceNumber,
-          startTime: null,
-          lockTime: Number(getEffectiveTipEditDeadlineMs(store) || 0) || null,
-          userHasTip: Boolean(tip),
-          userPick: tip ? {
-            race: String(tip.race || raceNumber),
-            selection: String(tip.selection || ''),
-            runnerName: String(tip.runnerName || tip.horseName || '')
-          } : null,
-          canEdit,
-          othersCount: Math.max(0, raceTipsCount - (tip ? 1 : 0)),
-          ladderRank: null,
-          ladderRankAvailable: false,
-          state: tip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP'
-        });
-      } catch {
-        return res.status(200).json({
-          roundStatus: 'ERROR',
-          state: 'ERROR',
-          userHasTip: false,
-          canEdit: false,
-          othersCount: 0,
-          ladderRankAvailable: false
-        });
-      }
+      return res.status(200).json({
+        roundStatus: 'ERROR',
+        state: 'ERROR',
+        userHasTip: false,
+        canEdit: false,
+        othersCount: 0,
+        ladderRankAvailable: false
+      });
     }
   });
 
