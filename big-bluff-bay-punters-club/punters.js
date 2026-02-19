@@ -423,13 +423,18 @@ async function refresh(){
     ]);
   } catch (err) {
     const status = $('leaderboard-status');
-    if (status) status.textContent = 'Offline';
+    if (status) status.textContent = 'Syncing';
+    const msg = String(err?.message || 'Request failed');
     const tipMsg = $('tip-msg');
-    if (tipMsg) tipMsg.textContent = `Live data unavailable: ${err.message}`;
+    if (tipMsg) tipMsg.textContent = msg.includes('(404)')
+      ? 'Live round sync in progress — refresh in a moment.'
+      : 'Live data unavailable right now — refresh in a moment.';
     const ladderFallback = $('ladder-fallback');
     if (ladderFallback) {
       ladderFallback.hidden = false;
-      ladderFallback.textContent = 'Leaderboard data unavailable right now. Please refresh in a moment.';
+      ladderFallback.textContent = msg.includes('(404)')
+        ? 'Round data is syncing. Please refresh shortly.'
+        : 'Leaderboard data unavailable right now. Please refresh in a moment.';
     }
     state.tipStateResolved = true;
     renderTipEntryState();
