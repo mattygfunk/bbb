@@ -414,6 +414,24 @@ async function hydrateNextTipCard(trackId){
           ? 'ROUND_COMPLETE'
           : (lg?.hasTip ? (lg?.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
       };
+
+      // Last-resort salvage: if APIs are degraded but user has tips, do NOT show false "No tip entered".
+      if (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber)) {
+        const tipsAll = await req(`/tips?status=all&trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+        const mine = (tipsAll?.tips || [])
+          .filter((t) => String(t.status || '') !== 'removed')
+          .filter((t) => String(t.member || '').trim().toLowerCase() === String(state.user?.username || '').trim().toLowerCase())
+          .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+        if (mine.length) {
+          d.userHasTip = true;
+          d.userPick = mine[0];
+          d.raceNumber = mine[0].race || 'R1';
+          d.state = state.tipsEditableNow ? 'EDITABLE' : 'LOCKED';
+          d.canEdit = Boolean(state.tipsEditableNow);
+          d.trackName = d.trackName || 'Track';
+          d.venue = d.venue || 'Meeting synced';
+        }
+      }
     }
     const now = Date.now();
     const toLock = Number(d?.lockTime || 0) - now;

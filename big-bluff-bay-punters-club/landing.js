@@ -429,6 +429,29 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
             : (lg?.hasTip ? (lg?.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
         };
       }
+
+      // Last-resort salvage from tips endpoint to avoid false "No tip entered".
+      if (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber)) {
+        const tipsRes = await fetch(`/api/tips?status=all&trackId=${encodeURIComponent(trackId)}`, { credentials: 'same-origin' });
+        const meRes = await fetch('/api/me', { credentials: 'same-origin', headers: { Authorization: `Bearer ${token}` } });
+        if (tipsRes.ok && meRes.ok) {
+          const tipsData = await tipsRes.json();
+          const me = await meRes.json();
+          const userKey = String(me?.user?.username || '').trim().toLowerCase();
+          const mine = (tipsData?.tips || [])
+            .filter((t) => String(t.status || '') !== 'removed')
+            .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+            .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+          if (mine.length) {
+            d.userHasTip = true;
+            d.userPick = mine[0];
+            d.raceNumber = mine[0].race || 'R1';
+            d.state = d.canEdit ? 'EDITABLE' : 'LOCKED';
+            d.trackName = d.trackName || 'Track';
+            d.venue = d.venue || 'Meeting synced';
+          }
+        }
+      }
     }
 
     const now = Date.now();
