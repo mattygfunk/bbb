@@ -471,8 +471,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const mm = String(Math.max(0, Math.floor(activeCountdown / 60000))).padStart(2, '0');
     const ss = String(Math.max(0, Math.floor((activeCountdown % 60000) / 1000))).padStart(2, '0');
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
-    countdownEl.style.display = '';
-    countdownEl.textContent = `${mm}:${ss}`;
+    countdownEl.style.display = activeCountdown > 0 ? '' : 'none';
+    countdownEl.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
     const venue = d?.venue || 'Track';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
@@ -509,13 +509,13 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     if (!d?.userHasTip) {
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
-      badgeEl.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
+      badgeEl.textContent = imminent ? 'LOCK IMMINENT' : (canEditEffective ? 'NO TIP ENTERED' : 'LOCKED');
       pickEl.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
       socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
-      primary.textContent = 'Add Tip Now';
-      primary.href = '/punters.html#tip-form';
+      primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
+      primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html';
       secondary.textContent = 'View Full Card';
       secondary.href = '/punters.html';
       return;
