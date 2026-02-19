@@ -1432,7 +1432,7 @@ function createApp() {
     };
     const round = getCurrentRound(store, { autoCreate: false, trackId });
     const latestClosed = getLatestClosedRound(store, trackId);
-    const tipsArr = Array.isArray(store?.tips) ? store.tips : [];
+    const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
     const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
     const now = Date.now();
 
@@ -1535,7 +1535,8 @@ function createApp() {
       } : null,
       missingTip: !tip
     });
-    } catch {
+    } catch (err) {
+      console.error('[next-tip] failed', err?.stack || err);
       return res.status(200).json({ roundStatus: 'ERROR', hasTip: false, allComplete: false, editable: false, statusBadge: 'Syncing' });
     }
   });
@@ -1550,7 +1551,7 @@ function createApp() {
         raceResults: (trackDataRaw.raceResults && typeof trackDataRaw.raceResults === 'object') ? trackDataRaw.raceResults : {}
       };
       const round = getCurrentRound(store, { autoCreate: false, trackId });
-      const tipsArr = Array.isArray(store?.tips) ? store.tips : [];
+      const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
       const latestClosed = getLatestClosedRound(store, trackId);
       const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
       const now = Date.now();
@@ -1647,7 +1648,8 @@ function createApp() {
         ladderRankAvailable,
         state: userHasTip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP'
       });
-    } catch {
+    } catch (err) {
+      console.error('[next-tip-summary] failed', err?.stack || err);
       return res.status(200).json({
         roundStatus: 'ERROR',
         state: 'ERROR',
