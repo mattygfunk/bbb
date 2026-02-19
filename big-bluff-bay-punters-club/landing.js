@@ -346,6 +346,15 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       credentials: 'same-origin',
       headers: { Authorization: `Bearer ${token}` }
     });
+    if (res.status === 401) {
+      card.className = 'card next-tip-card next-tip-card--tease';
+      body.textContent = 'Log in to see your next race tip.';
+      primary.textContent = 'Enter Tips';
+      primary.href = '/';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters-club';
+      return;
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
@@ -391,7 +400,12 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     secondary.textContent = 'View All My Tips';
     secondary.href = '/punters-club';
   } catch {
-    body.textContent = 'Could not load your next tip right now.';
+    card.className = 'card next-tip-card next-tip-card--tease';
+    body.textContent = 'Tip status syncing… refresh in a sec.';
+    primary.textContent = 'Enter Tips';
+    primary.href = '/punters-club';
+    secondary.textContent = 'View All My Tips';
+    secondary.href = '/punters-club';
   }
 }
 
