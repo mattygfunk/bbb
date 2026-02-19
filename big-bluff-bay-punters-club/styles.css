@@ -703,19 +703,37 @@ details p { margin:.55rem 0 0; }
 .password-wrap { display:grid; grid-template-columns:1fr auto; gap:.45rem; align-items:center; }
 .tiny-btn { padding:.5rem .6rem; min-width:68px; }
 #winners-strip .winner-item { min-width: 220px; }
+#winners-strip.winners-wall-grid {
+  gap: .8rem;
+  align-items: stretch;
+}
 #winners-strip .winner-item-premium {
-  background: radial-gradient(800px 220px at 0% -40%, rgba(56,189,248,.12), transparent 45%), linear-gradient(180deg, #0b1524, #0a1320);
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(900px 260px at -10% -40%, rgba(56,189,248,.12), transparent 45%), linear-gradient(180deg, #0b1524, #0a1320);
   border: 1px solid rgba(120,140,180,.35);
   box-shadow: 0 10px 24px rgba(0,0,0,.28);
 }
+#winners-strip .winner-item-premium::after {
+  content: '';
+  position: absolute;
+  inset: auto -20% -55% -20%;
+  height: 70%;
+  background: radial-gradient(circle at 50% 0%, rgba(34,197,94,.12), transparent 70%);
+  pointer-events: none;
+}
+#winners-strip .winner-item-featured {
+  border-color: rgba(250,204,21,.45);
+  box-shadow: 0 14px 30px rgba(0,0,0,.34), 0 0 0 1px rgba(250,204,21,.12) inset;
+}
 #winners-strip .winner-item-premium .winner-name {
-  margin: .2rem 0;
-  font-size: 1.02rem;
+  margin: .25rem 0;
+  font-size: 1.06rem;
   line-height: 1.25;
 }
 #winners-strip .winner-item-premium .winner-prize {
-  margin: .2rem 0 0;
-  font-size: 1.15rem;
+  margin: .22rem 0 0;
+  font-size: 1.18rem;
   font-weight: 800;
   color: #f8fafc;
 }

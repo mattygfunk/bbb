@@ -183,9 +183,9 @@ function renderWinners(items) {
   const wrap = document.getElementById('winners-strip');
   if (!wrap) return;
   wrap.innerHTML = '';
-  (items || []).forEach((w) => {
+  (items || []).forEach((w, idx) => {
     const card = document.createElement('article');
-    card.className = 'card winner-item winner-item-premium';
+    card.className = `card winner-item winner-item-premium ${idx === 0 ? 'winner-item-featured' : ''}`;
     const handleRaw = String(w.handle || '').trim();
     const icon = handleRaw.startsWith('♠') ? '♠' : '🏇';
     const name = handleRaw.replace(/^([♠🏇])\s*/, '') || '—';
