@@ -576,6 +576,31 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.why-join-pro {
+  background:
+    radial-gradient(520px 220px at 12% 0%, #14532d2e, transparent 68%),
+    radial-gradient(520px 220px at 88% 100%, #d4af3720, transparent 68%);
+  border-radius: 1rem;
+  padding: .85rem;
+}
+
+.why-join-grid {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: 1fr;
+}
+
+.why-join-card {
+  border-color: #35506e;
+  background: linear-gradient(180deg, #0b1526 0%, #0a1322 100%);
+}
+
+.why-join-card h3 { margin-top: .1rem; }
+
+@media (min-width: 980px) {
+  .why-join-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 .guide-category-grid {
   display: grid;
   gap: .75rem;
