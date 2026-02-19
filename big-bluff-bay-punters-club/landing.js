@@ -1,5 +1,6 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const LANDING_API_ROOTS = ['/api'];
+const LANDING_API_CACHE = new Map();
 
 window.addEventListener('error', (e) => {
 });
@@ -64,13 +65,16 @@ async function fetchApi(path) {
       try {
         const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
         const d = await r.json().catch(() => ({}));
-        if (r.ok) return d;
+        if (r.ok) {
+          LANDING_API_CACHE.set(path, d);
+          return d;
+        }
       } catch {}
       // brief retry for transient timeouts/network hiccups
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
-  return {};
+  return LANDING_API_CACHE.get(path) || {};
 }
 
 function fmtCountdown(ms) {
@@ -414,22 +418,25 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   }
 
   section.hidden = false;
-  card.className = 'card next-tip-card next-tip-card--tease';
-  card.classList.remove('countdown-pulse');
-  card.dataset.state = 'tease';
-  badgeEl.textContent = 'MEMBER PREVIEW';
-  raceEl.textContent = 'Loading your next race tip…';
-  contextEl.textContent = 'Punters Club • Member card';
-  pickEl.textContent = '#—';
-  setLockline('');
-  socialEl.textContent = 'Syncing your member card…';
-  countdownEl.style.display = 'none';
-  countdownEl.textContent = '';
-  primary.textContent = 'Open Tip Form';
-  primary.href = '/punters.html#tip-form';
-  secondary.hidden = false;
-  secondary.textContent = 'View Full Card';
-  secondary.href = '/punters.html';
+  // Keep last good card visible while refreshing to prevent flicker on transient API failures.
+  if (!card.dataset.state) {
+    card.className = 'card next-tip-card next-tip-card--tease';
+    card.classList.remove('countdown-pulse');
+    card.dataset.state = 'tease';
+    badgeEl.textContent = 'MEMBER PREVIEW';
+    raceEl.textContent = 'Loading your next race tip…';
+    contextEl.textContent = 'Punters Club • Member card';
+    pickEl.textContent = '#—';
+    setLockline('');
+    socialEl.textContent = 'Syncing your member card…';
+    countdownEl.style.display = 'none';
+    countdownEl.textContent = '';
+    primary.textContent = 'Open Tip Form';
+    primary.href = '/punters.html#tip-form';
+    secondary.hidden = false;
+    secondary.textContent = 'View Full Card';
+    secondary.href = '/punters.html';
+  }
 
   try {
     const res = await fetch(`/api/punters/next-tip-summary?trackId=${encodeURIComponent(trackId)}`, {
