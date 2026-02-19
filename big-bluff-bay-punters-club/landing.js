@@ -384,13 +384,15 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
   card.className = 'card next-tip-card next-tip-card--tease';
   card.classList.remove('countdown-pulse');
   card.dataset.state = 'tease';
-  badgeEl.textContent = 'MEMBERS';
-  raceEl.textContent = 'Race —';
-  contextEl.textContent = 'Thoroughbreds • Meeting synced';
+  badgeEl.textContent = 'MEMBER PREVIEW';
+  raceEl.textContent = 'Log in to unlock your next race tip';
+  contextEl.textContent = 'Punters Club • Private member card';
   pickEl.textContent = '#—';
-  locklineEl.textContent = 'Locks in --:-- (Melbourne)';
-  socialEl.textContent = 'You’re first on the card';
-  countdownEl.textContent = '--:--';
+  locklineEl.style.display = 'none';
+  locklineEl.textContent = '';
+  socialEl.textContent = 'Track + lock details appear after login';
+  countdownEl.style.display = 'none';
+  countdownEl.textContent = '';
   primary.textContent = 'Log In';
   primary.href = '/';
   secondary.hidden = false;
@@ -465,6 +467,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const mm = String(Math.max(0, Math.floor(activeCountdown / 60000))).padStart(2, '0');
     const ss = String(Math.max(0, Math.floor((activeCountdown % 60000) / 1000))).padStart(2, '0');
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
+    countdownEl.style.display = '';
     countdownEl.textContent = `${mm}:${ss}`;
 
     const venue = d?.venue || 'Track';
@@ -506,7 +509,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
       badgeEl.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
-      pickEl.textContent = 'Your pick: —';
+      pickEl.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
       socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;

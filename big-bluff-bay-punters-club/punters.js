@@ -377,13 +377,15 @@ async function hydrateNextTipCard(trackId){
   card.hidden = false;
   card.className = 'card next-tip-card next-tip-card--tease';
   card.classList.remove('countdown-pulse');
-  badge.textContent = 'MEMBERS';
-  race.textContent = 'Race —';
-  context.textContent = 'Thoroughbreds • Meeting synced';
+  badge.textContent = 'MEMBER PREVIEW';
+  race.textContent = 'Log in to unlock your next race tip';
+  context.textContent = 'Punters Club • Private member card';
   pick.textContent = '#—';
-  lockline.textContent = 'Locks in --:-- (Melbourne)';
-  social.textContent = 'You’re first on the card';
-  countdown.textContent = '--:--';
+  lockline.style.display = 'none';
+  lockline.textContent = '';
+  social.textContent = 'Track + lock details appear after login';
+  countdown.style.display = 'none';
+  countdown.textContent = '';
   primary.textContent = 'Log In';
   primary.href = '/';
   secondary.hidden = false;
@@ -477,7 +479,7 @@ async function hydrateNextTipCard(trackId){
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
       badge.textContent = imminent ? 'LOCK IMMINENT' : 'NO TIP ENTERED';
-      pick.textContent = 'Your pick: —';
+      pick.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
       social.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
@@ -528,17 +530,16 @@ async function hydrateNextTipCard(trackId){
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
+      countdown.style.display = '';
       countdown.textContent = `${mm}:${ss}`;
       lockline.textContent = ms > 0 ? `Locks in ${mm}:${ss} (Melbourne time)` : '';
       lockline.style.display = ms > 0 ? '' : 'none';
       if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
-        pick.textContent = `Your pick: #${String(lg?.tip?.selection || '—')}`;
-        body.textContent = lg?.editable ? 'Live sync active — edits allowed until lock.' : 'Live sync active — pick confirmed.';
-        social.textContent = 'You’re first on the card.';
-        ladder.textContent = 'Position updates after results.';
-        primary.textContent = lg?.editable ? 'Edit Tip' : 'View Full Card';
+        pick.textContent = `#${String(lg?.tip?.selection || '—')}`;
+        social.textContent = 'You’re first on the card';
+        primary.textContent = lg?.editable ? 'Edit' : 'Full Card';
         primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';
       }
     } catch {}
