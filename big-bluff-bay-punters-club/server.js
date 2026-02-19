@@ -1421,6 +1421,116 @@ function createApp() {
     return res.json({ trackId, tips: sorted.filter((t) => t.status === status) });
   });
 
+  app.get('/api/punters/next-tip', auth, (req, res) => {
+    const store = readStore();
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+    const trackData = getTrackData(store, trackId);
+    const round = getCurrentRound(store, { autoCreate: false, trackId });
+    const latestClosed = getLatestClosedRound(store, trackId);
+    const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
+    const now = Date.now();
+
+    if (roundStatus === 'CLOSED') {
+      return res.json({
+        trackId,
+        roundStatus,
+        message: 'Round finished — view results',
+        editable: false,
+        statusBadge: 'Closed',
+        lastWinner: latestClosed?.snapshot?.winner?.member || latestClosed?.winner?.member || '—'
+      });
+    }
+
+    const fixture = (trackData.fixtures || [])[0] || null;
+    const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
+    const races = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
+    const raceResults = trackData.raceResults || {};
+    const completed = new Set(
+      Object.entries(raceResults)
+        .filter(([, v]) => (v?.first?.length || v?.second?.length || v?.third?.length))
+        .map(([k]) => String(k).toUpperCase())
+    );
+
+    const raceTimes = {};
+    const addRaceTime = (race, startTime) => {
+      const r = String(race || '').toUpperCase();
+      const t = Date.parse(String(startTime || ''));
+      if (!/^R\d+$/.test(r) || !Number.isFinite(t)) return;
+      raceTimes[r] = t;
+    };
+    if (fixture?.raceTimes && typeof fixture.raceTimes === 'object' && !Array.isArray(fixture.raceTimes)) {
+      Object.entries(fixture.raceTimes).forEach(([race, startTime]) => addRaceTime(race, startTime));
+    }
+    if (Array.isArray(fixture?.raceTimes)) {
+      fixture.raceTimes.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
+    }
+    if (Array.isArray(fixture?.races)) {
+      fixture.races.forEach((x) => addRaceTime(x?.race || x?.raceNumber, x?.startTime || x?.time));
+    }
+
+    const upcoming = races.filter((r) => !completed.has(r));
+    let nextRace = null;
+    const timedUpcoming = upcoming
+      .filter((r) => Number.isFinite(raceTimes[r]) && raceTimes[r] > now)
+      .sort((a, b) => raceTimes[a] - raceTimes[b]);
+    if (timedUpcoming.length) {
+      nextRace = timedUpcoming[0];
+    } else if (upcoming.length) {
+      nextRace = upcoming.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))[0];
+    }
+
+    const userKey = String(req.user?.username || '').trim().toLowerCase();
+    const userTips = (store.tips || [])
+      .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+      .filter((t) => String(t.status || '') !== 'removed')
+      .filter((t) => !round?.id || String(t.roundId || '') === String(round.id))
+      .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+      .sort((a, b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
+
+    const byRace = new Map();
+    userTips.forEach((t) => { if (!byRace.has(String(t.race || '').toUpperCase())) byRace.set(String(t.race || '').toUpperCase(), t); });
+
+    const editable = Boolean(round) && canEditTipsNow(store);
+    const statusBadge = roundStatus === 'OPEN' ? (editable ? 'Editable' : 'Locked') : 'Closed';
+
+    if (!nextRace) {
+      return res.json({
+        trackId,
+        roundStatus,
+        editable,
+        statusBadge,
+        message: 'All races complete — results coming',
+        hasTip: false,
+        allComplete: true,
+        fixture
+      });
+    }
+
+    const tip = byRace.get(nextRace) || null;
+    const startAtMs = Number.isFinite(raceTimes[nextRace]) ? raceTimes[nextRace] : null;
+    const lockAtMs = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+
+    return res.json({
+      trackId,
+      trackName: TRACKS[trackId]?.name || trackId,
+      roundStatus,
+      editable,
+      statusBadge,
+      fixture,
+      nextRace,
+      startAtMs,
+      lockAtMs,
+      countdownToMs: startAtMs || lockAtMs,
+      hasTip: Boolean(tip),
+      tip: tip ? {
+        race: String(tip.race || nextRace),
+        selection: String(tip.selection || ''),
+        runnerName: String(tip.runnerName || tip.horseName || '')
+      } : null,
+      missingTip: !tip
+    });
+  });
+
   app.post('/api/tips', auth, (req, res) => {
     const race = String(req.body.race || '').trim().toUpperCase();
     const selection = String(req.body.selection || req.body.horse || '').trim();

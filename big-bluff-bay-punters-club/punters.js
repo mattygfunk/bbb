@@ -361,6 +361,74 @@ function renderTipEntryState() {
   if (editBtn) editBtn.hidden = false;
 }
 
+async function hydrateNextTipCard(trackId){
+  const card = $('next-tip-punters-card');
+  const body = $('next-tip-punters-content');
+  const primary = $('next-tip-punters-primary');
+  const secondary = $('next-tip-punters-secondary');
+  if(!card || !body || !primary || !secondary) return;
+
+  const base = 'card next-tip-card';
+  if(!state.user){
+    card.className = `${base} next-tip-card--tease`;
+    body.textContent = 'Log in to see your next race tip.';
+    primary.textContent = 'Enter Tips';
+    primary.href = '/';
+    secondary.textContent = 'View All My Tips';
+    secondary.href = '/punters.html#community-tips-card';
+    return;
+  }
+
+  try{
+    const d = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+    const now = Date.now();
+    const ms = Math.max(0, Number(d?.countdownToMs || 0) - now);
+    const hh = String(Math.floor(ms/3600000)).padStart(2,'0');
+    const mm = String(Math.floor((ms%3600000)/60000)).padStart(2,'0');
+
+    if(String(d?.roundStatus||'').toUpperCase()==='CLOSED'){
+      card.className = `${base} next-tip-card--closed`;
+      body.textContent = 'Round finished — view results.';
+      primary.textContent = 'View Results';
+      primary.href = '/punters-club';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters.html#community-tips-card';
+      return;
+    }
+
+    if(d?.allComplete){
+      card.className = `${base} next-tip-card--warn`;
+      body.textContent = 'All races complete — results coming. Check results shortly.';
+      primary.textContent = 'View Results';
+      primary.href = '/punters-club';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters.html#community-tips-card';
+      return;
+    }
+
+    if(!d?.hasTip){
+      card.className = `${base} next-tip-card--warn`;
+      body.textContent = `⚠️ No tip entered for ${d?.nextRace || 'next race'} — locks in ${hh}:${mm}.`;
+      primary.textContent = d?.editable ? 'Add tip' : 'View tips';
+      primary.href = '/punters.html#tip-form';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters.html#community-tips-card';
+      return;
+    }
+
+    card.className = `${base} next-tip-card--highlight`;
+    const pick = d?.tip?.runnerName ? `${d.tip.selection} (${d.tip.runnerName})` : `${d?.tip?.selection || '—'}`;
+    body.textContent = `${d?.trackName || 'Track'} • ${d?.fixture?.track || 'Venue TBA'} • ${d?.nextRace || 'R?'} • Pick: ${pick} • ${d?.statusBadge || 'Editable'} • ${hh}:${mm}`;
+    primary.textContent = d?.editable ? 'Edit Tips' : 'View Tips';
+    primary.href = '/punters.html#tip-form';
+    secondary.textContent = 'View All My Tips';
+    secondary.href = '/punters.html#community-tips-card';
+  }catch{
+    card.className = `${base} next-tip-card--tease`;
+    body.textContent = 'Could not load your next tip right now.';
+  }
+}
+
 async function refresh(){
   state.tipStateResolved = false;
   renderTipEntryState();
@@ -506,6 +574,7 @@ async function refresh(){
   }
 
   renderUpgradeButtonState();
+  await hydrateNextTipCard(String(overviewData?.track?.id || 'thoroughbreds'));
 
   state.tipStateResolved = true;
   renderTipEntryState();

@@ -849,6 +849,15 @@ details p { margin:.55rem 0 0; }
 .poker-schedule-card { border-color:#3d5673; }
 .poker-sunday-main { border-color:#eab308; background:linear-gradient(180deg,#1f1807 0%,#111a2b 100%); }
 
+.next-tip-card {
+  border-width: 2px;
+  box-shadow: 0 0 0 1px #2f4a68, 0 10px 24px #00000044;
+}
+.next-tip-card--highlight { border-color:#22c55e; box-shadow: 0 0 0 1px #22c55e66, 0 0 18px #22c55e22; }
+.next-tip-card--warn { border-color:#eab308; box-shadow: 0 0 0 1px #eab30855, 0 0 16px #eab30822; }
+.next-tip-card--closed { border-color:#ef4444; box-shadow: 0 0 0 1px #ef444455, 0 0 14px #ef444422; }
+.next-tip-card--tease { border-color:#35506e; }
+
 
 #tab-greyhounds.active,
 #tab-thoroughbreds.active {

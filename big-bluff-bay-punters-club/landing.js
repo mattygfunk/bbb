@@ -323,6 +323,78 @@ function scheduleIdle(task, timeout = 2500) {
   }
 }
 
+async function hydrateNextTipHome(trackId = 'thoroughbreds') {
+  const card = document.getElementById('next-tip-home-card');
+  const body = document.getElementById('next-tip-home-content');
+  const primary = document.getElementById('next-tip-home-primary');
+  const secondary = document.getElementById('next-tip-home-secondary');
+  if (!card || !body || !primary || !secondary) return;
+
+  card.className = 'card next-tip-card next-tip-card--tease';
+  const token = localStorage.getItem('bbb-token-v3');
+  if (!token) {
+    body.textContent = 'Log in to see your next race tip.';
+    primary.textContent = 'Enter Tips';
+    primary.href = '/';
+    secondary.textContent = 'View All My Tips';
+    secondary.href = '/punters-club';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/punters/next-tip?trackId=${encodeURIComponent(trackId)}`, {
+      credentials: 'same-origin',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (data.roundStatus === 'CLOSED') {
+      card.className = 'card next-tip-card next-tip-card--closed';
+      body.textContent = 'Round finished — view results.';
+      primary.textContent = 'View Results';
+      primary.href = '/punters-club';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters-club';
+      return;
+    }
+
+    if (data.allComplete) {
+      card.className = 'card next-tip-card next-tip-card--warn';
+      body.textContent = 'All races complete — results coming. Check results shortly.';
+      primary.textContent = 'View Results';
+      primary.href = '/punters-club';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters-club';
+      return;
+    }
+
+    const countdown = Number(data.countdownToMs || 0) - Date.now();
+    const h = String(Math.max(0, Math.floor(countdown / 3600000))).padStart(2, '0');
+    const m = String(Math.max(0, Math.floor((countdown % 3600000) / 60000))).padStart(2, '0');
+
+    if (!data.hasTip) {
+      card.className = 'card next-tip-card next-tip-card--warn';
+      body.textContent = `⚠️ No tip entered for ${data.nextRace || 'next race'} — locks in ${h}:${m}.`;
+      primary.textContent = 'Add Tip';
+      primary.href = '/punters-club';
+      secondary.textContent = 'View All My Tips';
+      secondary.href = '/punters-club';
+      return;
+    }
+
+    card.className = 'card next-tip-card next-tip-card--highlight';
+    const runner = data.tip?.runnerName ? `${data.tip.selection} (${data.tip.runnerName})` : `${data.tip?.selection || '—'}`;
+    body.textContent = `${data.trackName || 'Track'} • ${data.fixture?.track || 'Venue TBA'} • ${data.nextRace} • Pick: ${runner} • ${data.statusBadge || 'Editable'} • ${h}:${m}`;
+    primary.textContent = data.editable ? 'Edit Tips' : 'View Tips';
+    primary.href = '/punters-club';
+    secondary.textContent = 'View All My Tips';
+    secondary.href = '/punters-club';
+  } catch {
+    body.textContent = 'Could not load your next tip right now.';
+  }
+}
+
 async function hydrateLandingCritical() {
   renderWinners(MOCK.winners);
   const ticker = document.getElementById('payout-ticker');
@@ -480,6 +552,7 @@ async function hydrateLandingCritical() {
 
     stampUpdated();
     applyTableCards();
+    hydrateNextTipHome(String(overview?.track?.id || 'thoroughbreds'));
     scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
   }
