@@ -1425,9 +1425,14 @@ function createApp() {
     try {
       const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-    const trackData = getTrackData(store, trackId);
+    const trackDataRaw = getTrackData(store, trackId) || {};
+    const trackData = {
+      fixtures: Array.isArray(trackDataRaw.fixtures) ? trackDataRaw.fixtures : [],
+      raceResults: (trackDataRaw.raceResults && typeof trackDataRaw.raceResults === 'object') ? trackDataRaw.raceResults : {}
+    };
     const round = getCurrentRound(store, { autoCreate: false, trackId });
     const latestClosed = getLatestClosedRound(store, trackId);
+    const tipsArr = Array.isArray(store?.tips) ? store.tips : [];
     const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
     const now = Date.now();
 
@@ -1481,7 +1486,7 @@ function createApp() {
     }
 
     const userKey = String(req.user?.username || '').trim().toLowerCase();
-    const userTips = (store.tips || [])
+    const userTips = tipsArr
       .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
       .filter((t) => String(t.status || '') !== 'removed')
       .filter((t) => !round?.id || String(t.roundId || '') === String(round.id))
@@ -1539,8 +1544,13 @@ function createApp() {
     try {
       const store = readStore();
       const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
-      const trackData = getTrackData(store, trackId);
+      const trackDataRaw = getTrackData(store, trackId) || {};
+      const trackData = {
+        fixtures: Array.isArray(trackDataRaw.fixtures) ? trackDataRaw.fixtures : [],
+        raceResults: (trackDataRaw.raceResults && typeof trackDataRaw.raceResults === 'object') ? trackDataRaw.raceResults : {}
+      };
       const round = getCurrentRound(store, { autoCreate: false, trackId });
+      const tipsArr = Array.isArray(store?.tips) ? store.tips : [];
       const latestClosed = getLatestClosedRound(store, trackId);
       const roundStatus = round ? String(round.status || 'open').toUpperCase() : (latestClosed ? 'CLOSED' : 'PREOPEN');
       const now = Date.now();
@@ -1592,7 +1602,7 @@ function createApp() {
       }
 
       const userKey = String(req.user?.username || '').trim().toLowerCase();
-      const allTips = (store.tips || [])
+      const allTips = tipsArr
         .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
         .filter((t) => String(t.status || '') !== 'removed')
         .filter((t) => !round?.id || String(t.roundId || '') === String(round.id));
