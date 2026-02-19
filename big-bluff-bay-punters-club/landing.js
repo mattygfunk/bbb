@@ -400,7 +400,33 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.status === 401) return;
-    const d = await res.json();
+    let d = await res.json();
+    if (String(d?.state || '') === 'ERROR' || (!d?.raceNumber && String(d?.roundStatus || '').toUpperCase() !== 'CLOSED')) {
+      const legacyRes = await fetch(`/api/punters/next-tip?trackId=${encodeURIComponent(trackId)}`, {
+        credentials: 'same-origin',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (legacyRes.ok) {
+        const lg = await legacyRes.json();
+        d = {
+          roundStatus: lg?.roundStatus,
+          trackName: lg?.trackName,
+          venue: lg?.fixture?.track,
+          raceNumber: lg?.nextRace,
+          startTime: lg?.startAtMs || null,
+          lockTime: lg?.lockAtMs || null,
+          userHasTip: Boolean(lg?.hasTip),
+          userPick: lg?.tip || null,
+          canEdit: Boolean(lg?.editable),
+          othersCount: 0,
+          ladderRank: null,
+          ladderRankAvailable: false,
+          state: lg?.allComplete || String(lg?.roundStatus || '').toUpperCase() === 'CLOSED'
+            ? 'ROUND_COMPLETE'
+            : (lg?.hasTip ? (lg?.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
+        };
+      }
+    }
 
     const now = Date.now();
     const toLock = Number(d?.lockTime || 0) - now;

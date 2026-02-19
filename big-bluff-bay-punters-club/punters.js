@@ -394,7 +394,27 @@ async function hydrateNextTipCard(trackId){
   if(!state.user) return;
 
   try{
-    const d = await req(`/punters/next-tip-summary?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+    let d = await req(`/punters/next-tip-summary?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+    if (String(d?.state || '') === 'ERROR' || (!d?.raceNumber && String(d?.roundStatus || '').toUpperCase() !== 'CLOSED')) {
+      const lg = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+      d = {
+        roundStatus: lg?.roundStatus,
+        trackName: lg?.trackName,
+        venue: lg?.fixture?.track,
+        raceNumber: lg?.nextRace,
+        startTime: lg?.startAtMs || null,
+        lockTime: lg?.lockAtMs || null,
+        userHasTip: Boolean(lg?.hasTip),
+        userPick: lg?.tip || null,
+        canEdit: Boolean(lg?.editable),
+        othersCount: 0,
+        ladderRank: null,
+        ladderRankAvailable: false,
+        state: lg?.allComplete || String(lg?.roundStatus || '').toUpperCase() === 'CLOSED'
+          ? 'ROUND_COMPLETE'
+          : (lg?.hasTip ? (lg?.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
+      };
+    }
     const now = Date.now();
     const toLock = Number(d?.lockTime || 0) - now;
     const toStart = Number(d?.startTime || 0) - now;
