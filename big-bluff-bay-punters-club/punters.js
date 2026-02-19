@@ -406,7 +406,7 @@ async function hydrateNextTipCard(trackId){
       d = {
         roundStatus: lg?.roundStatus,
         trackName: lg?.trackName,
-        venue: lg?.fixture?.track,
+        venue: lg?.venue || lg?.fixture?.track || lg?.fixture?.event || '',
         raceNumber: lg?.nextRace,
         startTime: lg?.startAtMs || null,
         lockTime: lg?.lockAtMs || null,

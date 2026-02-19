@@ -1453,7 +1453,8 @@ function createApp() {
     const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
 
     const editable = canEditTipsNow(store);
-    const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+    const round = getCurrentRound(store, { autoCreate: false, trackId: requestedTrackId });
+    const lockAtMs = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
     const fixture = (
       (Array.isArray(store?.puntersClub?.tracks?.[requestedTrackId]?.fixtures) && store.puntersClub.tracks[requestedTrackId].fixtures[0])
       || (Array.isArray(store?.fixtures) && store.fixtures[0])
@@ -1461,6 +1462,7 @@ function createApp() {
     );
     const userHasTip = Boolean(tip);
     const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
+    const venue = String(fixture?.track || fixture?.event || fixture?.venue || '').trim();
 
     return {
       requestedTrackId,
@@ -1469,6 +1471,7 @@ function createApp() {
       editable,
       lockAtMs,
       fixture,
+      venue,
       nextRace,
       tip,
       userHasTip,
@@ -1487,6 +1490,7 @@ function createApp() {
         editable: s.editable,
         statusBadge: s.allComplete ? 'Closed' : (s.editable ? 'Editable' : 'Locked'),
         fixture: s.fixture,
+        venue: s.venue,
         nextRace: s.nextRace,
         startAtMs: null,
         lockAtMs: s.lockAtMs,
@@ -1520,7 +1524,7 @@ function createApp() {
         roundStatus: s.roundStatus,
         trackId: s.requestedTrackId,
         trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
-        venue: String(s.fixture?.track || ''),
+        venue: s.venue,
         raceNumber: s.nextRace,
         startTime: null,
         lockTime: s.lockAtMs,
