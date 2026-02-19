@@ -286,6 +286,32 @@ function setVisible(el, show) {
   el.style.display = show ? '' : 'none';
 }
 
+function fmtHHMMSS(ms) {
+  if (!Number.isFinite(ms)) return '--:--:--';
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = String(Math.floor(total / 3600)).padStart(2, '0');
+  const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+  const s = String(total % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function renderNextTipInlineStatus(overviewData, tipDeadlineRes, fixtures) {
+  const stateEl = $('next-tip-inline-state');
+  const jackpotEl = $('next-tip-inline-jackpot');
+  const meetEl = $('next-tip-inline-meet');
+  const lockEl = $('next-tip-inline-lock');
+  if (!stateEl || !jackpotEl || !meetEl || !lockEl) return;
+
+  const status = String(overviewData?.round?.status || 'OPEN').toUpperCase();
+  stateEl.textContent = status === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
+  jackpotEl.textContent = `💰 Jackpot live: $${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
+  const meet = String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '—');
+  meetEl.textContent = `🏁 Meet: ${meet}`;
+
+  const lockAt = Number(tipDeadlineRes?.effectiveDeadlineMs || tipDeadlineRes?.lockAtMs || 0);
+  lockEl.textContent = `🔒 Lock: ${lockAt > 0 ? fmtHHMMSS(lockAt - Date.now()) : '--:--:--'}`;
+}
+
 
 function wireTierTabs(){
   document.querySelectorAll('.tier-tab').forEach((btn)=>{
@@ -708,6 +734,7 @@ async function refresh(){
       ? `Next meet: ${nextMeet.date} • ${nextMeet.track} (${nextMeet.event})`
       : 'Next meet details coming soon.';
   }
+  renderNextTipInlineStatus(overviewData, tipDeadlineRes, effectiveFixtures);
   const newRaceCount = Number((fx.fixtures||[])[0]?.raceCount || 12);
   const raceCountChanged = newRaceCount !== state.raceCount;
   state.raceCount = newRaceCount;
