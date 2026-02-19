@@ -769,7 +769,10 @@ async function refresh(){
     .filter((r) => !r?.rolledOver)
     .slice(0, 8)
     .reduce((sum, r) => sum + Number(r?.prize ?? 0), 0);
-  if (pcWeeks) pcWeeks.textContent = String((overviewData?.pastRounds || []).length || '—');
+  const archivedRounds = Array.isArray(overviewData?.pastRounds) && overviewData.pastRounds.length
+    ? overviewData.pastRounds.length
+    : payoutHistory.length;
+  if (pcWeeks) pcWeeks.textContent = String(archivedRounds || '—');
   if (pcEntries) pcEntries.textContent = String(byPunter.size || '—');
   if (pcPaid) pcPaid.textContent = `$${recentPayoutTotal.toFixed(2)}`;
   const communityTipsCard = $('community-tips-card');
