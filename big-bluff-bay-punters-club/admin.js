@@ -968,6 +968,26 @@ function parsePokerBulkRows(raw) {
   return rows;
 }
 
+async function submitPokerResultsBatch(results, errors = [], prefix = 'Bulk import successful') {
+  if (!results.length) { setPokerResultMsg('err', errors[0] || 'No valid rows to import.'); return; }
+  try {
+    const out = await req(API.pokerResults, { method: 'POST', body: JSON.stringify({ results }) });
+    let tail = '';
+    try {
+      const lb = await req(`${API.pokerLeaderboard}?range=all`);
+      tail = ` All-time events now: ${Number(lb?.stats?.events || 0)}.`;
+    } catch {}
+    const successCount = Number(out?.added || results.length);
+    const failCount = errors.length;
+    const failedPreview = failCount ? ` Failed lines: ${errors.slice(0, 3).join(' | ')}${failCount > 3 ? ' ...' : ''}` : '';
+    const summary = `${prefix}: ${successCount} added.${failCount ? ` Failed/skipped: ${failCount}.` : ' Failed/skipped: 0.'}${tail}${failedPreview}`;
+    setPokerResultMsg(failCount ? 'warn' : 'ok', summary);
+    refreshPokerPlayerOptions().catch(()=>{});
+  } catch (err) {
+    setPokerResultMsg('err', err.message || 'Request failed.');
+  }
+}
+
 $('poker-bulk-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
@@ -1004,24 +1024,7 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
     });
   });
 
-  if (!results.length) { setPokerResultMsg('err', errors[0] || 'No valid rows to import.'); return; }
-
-  try {
-    const out = await req(API.pokerResults, { method: 'POST', body: JSON.stringify({ results }) });
-    let tail = '';
-    try {
-      const lb = await req(`${API.pokerLeaderboard}?range=all`);
-      tail = ` All-time events now: ${Number(lb?.stats?.events || 0)}.`;
-    } catch {}
-    const successCount = Number(out?.added || results.length);
-    const failCount = errors.length;
-    const failedPreview = failCount ? ` Failed lines: ${errors.slice(0, 3).join(' | ')}${failCount > 3 ? ' ...' : ''}` : '';
-    const summary = `Bulk import successful: ${successCount} added.${failCount ? ` Failed/skipped: ${failCount}.` : ' Failed/skipped: 0.'}${tail}${failedPreview}`;
-    setPokerResultMsg(failCount ? 'warn' : 'ok', summary);
-    refreshPokerPlayerOptions().catch(()=>{});
-  } catch (err) {
-    setPokerResultMsg('err', err.message || 'Request failed.');
-  }
+  await submitPokerResultsBatch(results, errors, 'Bulk import successful');
 });
 
 $('poker-result-clear-btn')?.addEventListener('click', () => {
@@ -1038,6 +1041,57 @@ $('poker-bulk-clear-btn')?.addEventListener('click', () => {
   if (box) box.value = '';
   const msg = $('poker-result-msg');
   if (msg) { msg.textContent = ''; msg.classList.remove('msg-ok','msg-warn','msg-err'); }
+});
+
+$('poker-xlsx-import-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if(!isAdmin()){ setPokerResultMsg('err','Admin login required.'); return; }
+  if (typeof XLSX === 'undefined') { setPokerResultMsg('err', 'XLSX parser not loaded.'); return; }
+
+  const source = String($('poker-xlsx-source')?.value || '').trim();
+  if (!source) { setPokerResultMsg('err', 'Select an XLSX source.'); return; }
+
+  const parentFormData = new FormData($('poker-result-form'));
+  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(parentFormData);
+  const finalTableDefault = parentFormData.get('finalTable') !== null;
+  const cashedDefault = parentFormData.get('cashed') !== null;
+  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name first.'); return; }
+
+  try {
+    const resp = await fetch(source, { cache: 'no-store' });
+    if (!resp.ok) throw new Error(`Could not fetch XLSX (${resp.status})`);
+    const ab = await resp.arrayBuffer();
+    const wb = XLSX.read(ab, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+    const results = [];
+    const errors = [];
+    rows.forEach((row, idx) => {
+      const player = String(row.player || row.Player || row.username || row.Username || row.name || row.Name || '').trim();
+      const pointsRaw = row.points ?? row.Points ?? row.score ?? row.Score ?? row.total ?? row.Total;
+      const points = Number(pointsRaw);
+      const rankRaw = row.rank ?? row.Rank ?? row.eventRank ?? row.Position ?? row.position;
+      const rank = Number(rankRaw);
+      if (!player || !Number.isFinite(points) || points < 0) {
+        errors.push(`Row ${idx + 2} invalid`);
+        return;
+      }
+      results.push({
+        player,
+        points,
+        finalTable: finalTableDefault,
+        cashed: cashedDefault,
+        eventName,
+        createdAt: Date.now(),
+        ...(Number.isFinite(rank) && rank > 0 ? { eventRank: rank } : {})
+      });
+    });
+
+    await submitPokerResultsBatch(results, errors, `XLSX import successful (${source.split('/').pop()})`);
+  } catch (err) {
+    setPokerResultMsg('err', err.message || 'XLSX import failed.');
+  }
 });
 
 $('clear-poker-records-btn')?.addEventListener('click', async () => {

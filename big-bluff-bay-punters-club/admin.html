@@ -297,6 +297,23 @@
             </form>
           </details>
 
+          <details class="card" style="margin-top:.7rem">
+            <summary><strong>Import bundled XLSX</strong> (desktop files copied to /assets)</summary>
+            <form id="poker-xlsx-import-form" class="stack" style="margin-top:.6rem">
+              <p class="muted">Select a bundled spreadsheet and import rows into Poker results. Expected columns include player/name/username and points (rank optional).</p>
+              <label>XLSX source
+                <select id="poker-xlsx-source" name="xlsxSource">
+                  <option value="/assets/3938327-20260118-20260124.xlsx">3938327-20260118-20260124.xlsx</option>
+                  <option value="/assets/3938327-20260104-20260110.xlsx">3938327-20260104-20260110.xlsx</option>
+                  <option value="/assets/Copy%20of%20Stock%2021-22%20cypto%20traded%20Matt%20Goodwin.xlsx">Copy of Stock 21-22 cypto traded Matt Goodwin.xlsx</option>
+                </select>
+              </label>
+              <div class="row-actions">
+                <button class="btn" type="submit">Import XLSX Results</button>
+              </div>
+            </form>
+          </details>
+
           <p id="poker-result-msg" class="muted"></p>
         </section>
         </div>
@@ -339,6 +356,7 @@
       <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script src="admin.js?v=20260217-12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="admin.js?v=20260220-13"></script>
   </body>
 </html>
