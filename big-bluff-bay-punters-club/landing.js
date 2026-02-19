@@ -474,12 +474,13 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     countdownEl.style.display = activeCountdown > 0 ? '' : 'none';
     countdownEl.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
-    const venue = d?.venue || 'Track';
+    const rawVenue = String(d?.venue || '').trim();
+    const venue = rawVenue && !/^venue\s*tba$/i.test(rawVenue) ? rawVenue : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    raceEl.textContent = `${raceLabel} — ${venue}`;
-    contextEl.textContent = `${trackType} • ${venue} meeting`;
+    raceEl.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
+    contextEl.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -490,7 +491,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       contextEl.textContent = `${trackType} • Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
       setLockline('');
     } else {
-      contextEl.textContent = `${trackType} • ${venue} meeting`;
+      contextEl.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
       setLockline('');
     }
 
