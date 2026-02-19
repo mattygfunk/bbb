@@ -11,6 +11,7 @@
   const copy = document.getElementById('track-copy');
   const winner = document.getElementById('winner-banner');
   const roundMeta = document.getElementById('round-meta');
+  const lockMeta = document.getElementById('lock-meta');
   const jackpotMeta = document.getElementById('jackpot-meta');
   const ladderBody = document.getElementById('ladder-body');
   const ladderEmpty = document.getElementById('ladder-empty');
@@ -19,6 +20,7 @@
 
   try {
     const res = await fetch(`/api/punters/overview${q}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     title.textContent = `${data?.track?.name || trackId} Punters Club`;
     copy.textContent = trackId === 'greyhounds'
@@ -28,7 +30,25 @@
     const wb = data?.winnerBanner;
     winner.textContent = wb ? `🏆 ${wb.member} • Pot $${Number(wb.pot || 0).toFixed(2)} • ${wb.oneLiner || ''}` : 'No winner banner yet for this track.';
 
-    roundMeta.textContent = `${data?.round?.label || 'Round'} • ${data?.round?.status || 'OPEN'}`;
+    const status = String(data?.round?.status || 'OPEN').toUpperCase();
+    const lockAt = Number(data?.round?.lockAt || 0);
+    const opensAt = Number(data?.nextRoundOpensAt || 0);
+    roundMeta.textContent = `${data?.round?.label || 'Round'} • ${status}`;
+    if (lockMeta) {
+      if (status === 'OPEN' && lockAt > 0) {
+        const diff = Math.max(0, lockAt - Date.now());
+        const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        lockMeta.textContent = `Lock countdown: ${h}h ${m}m`;
+      } else if (opensAt > 0) {
+        const diff = Math.max(0, opensAt - Date.now());
+        const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        lockMeta.textContent = `Next round opens in: ${h}h ${m}m`;
+      } else {
+        lockMeta.textContent = 'Round timing updates shortly.';
+      }
+    }
     jackpotMeta.textContent = `Entries: ${Number(data?.tiers?.free || 0)} • Jackpot eligible: ${Number(data?.tiers?.jackpotEligible || 0)} • Pot: $${Number(data?.jackpot?.totalPot || 0).toFixed(2)}`;
 
     const rows = data?.ladder || [];
@@ -56,6 +76,7 @@
     copy.textContent = msg;
     winner.textContent = 'No snapshot available yet. Retry shortly.';
     roundMeta.textContent = 'Round status unavailable right now.';
+    if (lockMeta) lockMeta.textContent = 'Round timing unavailable right now.';
     jackpotMeta.textContent = 'Jackpot status unavailable right now.';
     ladderBody.innerHTML = `<tr><td colspan='4' class='muted'>${esc(msg)}</td></tr>`;
     ladderEmpty.hidden = false;
