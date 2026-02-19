@@ -1537,7 +1537,42 @@ function createApp() {
     });
     } catch (err) {
       console.error('[next-tip] failed', err?.stack || err);
-      return res.status(200).json({ roundStatus: 'ERROR', hasTip: false, allComplete: false, editable: false, statusBadge: 'Syncing' });
+      try {
+        const store = readStore();
+        const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+        const fixture = (getTrackData(store, trackId)?.fixtures || [])[0] || null;
+        const userKey = String(req.user?.username || '').trim().toLowerCase();
+        const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
+        const mine = tipsArr
+          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+          .filter((t) => String(t.status || '') !== 'removed')
+          .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+          .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+        const tip = mine[0] || null;
+        const lockAtMs = Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+        const editable = canEditTipsNow(store);
+        return res.status(200).json({
+          trackId,
+          trackName: TRACKS[trackId]?.name || trackId,
+          roundStatus: 'OPEN',
+          editable,
+          statusBadge: editable ? 'Editable' : 'Locked',
+          fixture,
+          nextRace: tip?.race || 'R1',
+          startAtMs: null,
+          lockAtMs,
+          countdownToMs: lockAtMs,
+          hasTip: Boolean(tip),
+          tip: tip ? {
+            race: String(tip.race || 'R1'),
+            selection: String(tip.selection || ''),
+            runnerName: String(tip.runnerName || tip.horseName || '')
+          } : null,
+          missingTip: !tip
+        });
+      } catch {
+        return res.status(200).json({ roundStatus: 'ERROR', hasTip: false, allComplete: false, editable: false, statusBadge: 'Syncing' });
+      }
     }
   });
 
@@ -1650,14 +1685,56 @@ function createApp() {
       });
     } catch (err) {
       console.error('[next-tip-summary] failed', err?.stack || err);
-      return res.status(200).json({
-        roundStatus: 'ERROR',
-        state: 'ERROR',
-        userHasTip: false,
-        canEdit: false,
-        othersCount: 0,
-        ladderRankAvailable: false
-      });
+      try {
+        const store = readStore();
+        const trackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+        const fixture = (getTrackData(store, trackId)?.fixtures || [])[0] || null;
+        const userKey = String(req.user?.username || '').trim().toLowerCase();
+        const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
+        const raceCount = Number(fixture?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
+        const firstRace = `R1`;
+        const mine = tipsArr
+          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+          .filter((t) => String(t.status || '') !== 'removed')
+          .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
+          .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
+        const tip = mine[0] || null;
+        const raceNumber = tip?.race || firstRace;
+        const raceTipsCount = tipsArr
+          .filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === trackId)
+          .filter((t) => String(t.status || '') !== 'removed')
+          .filter((t) => String(t.race || '').toUpperCase() === String(raceNumber).toUpperCase()).length;
+        const canEdit = canEditTipsNow(store);
+        return res.status(200).json({
+          roundStatus: 'OPEN',
+          trackId,
+          trackName: TRACKS[trackId]?.name || trackId,
+          venue: String(fixture?.track || ''),
+          raceNumber,
+          startTime: null,
+          lockTime: Number(getEffectiveTipEditDeadlineMs(store) || 0) || null,
+          userHasTip: Boolean(tip),
+          userPick: tip ? {
+            race: String(tip.race || raceNumber),
+            selection: String(tip.selection || ''),
+            runnerName: String(tip.runnerName || tip.horseName || '')
+          } : null,
+          canEdit,
+          othersCount: Math.max(0, raceTipsCount - (tip ? 1 : 0)),
+          ladderRank: null,
+          ladderRankAvailable: false,
+          state: tip ? (canEdit ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP'
+        });
+      } catch {
+        return res.status(200).json({
+          roundStatus: 'ERROR',
+          state: 'ERROR',
+          userHasTip: false,
+          canEdit: false,
+          othersCount: 0,
+          ladderRankAvailable: false
+        });
+      }
     }
   });
 
