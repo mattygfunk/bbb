@@ -371,6 +371,14 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   color: #e2e8f0;
   border: 1px solid #334155;
 }
+.profile-chip { display: inline-flex; align-items: center; gap: .35rem; }
+.profile-chip-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #334155;
+}
 
 .premium-hero {
   background:
