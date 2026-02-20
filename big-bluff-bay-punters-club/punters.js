@@ -275,8 +275,16 @@ function renderBossesBet(bb){
     const resultRaw = String(leg.result || 'PENDING').toUpperCase();
     const result = resultRaw === 'PLACED' ? 'WON' : (resultRaw === 'MISSED' ? 'LOST' : resultRaw);
     const tr = document.createElement('tr');
+    const raceKey = String(leg.race || '').toUpperCase();
+    const selRaw = String(leg.selection || '').trim();
+    const selNo = selRaw.match(/(\d{1,2})/)?.[1] || '';
+    const raceRows = state.raceRunners?.[raceKey]?.runners || [];
+    const hit = raceRows.find((r)=> String(r?.runnerNumber || '') === String(selNo));
+    const runnerName = String(hit?.horseName || '').trim();
+    const selectionText = runnerName ? `${selRaw || `#${selNo}`} • ${runnerName}` : (selRaw || '—');
+    const oddsText = String(leg.odds || '').trim() || (hit?.prices?.place != null ? String(hit.prices.place) : (hit?.prices?.win != null ? String(hit.prices.win) : '—'));
     const legRace = `Leg ${Number(leg.legNumber || idx + 1)} · ${esc(leg.race || 'Race —')}`;
-    tr.innerHTML = `<td>${legRace}</td><td>${esc(leg.selection || '—')}</td><td>${esc(leg.odds || '—')}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
+    tr.innerHTML = `<td>${legRace}</td><td>${esc(selectionText)}</td><td>${esc(oddsText)}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
     wrap.appendChild(tr);
   });
 }
