@@ -48,6 +48,16 @@
   - Twitter card tags
 - Updated Winners page meta description to emphasize verified outcomes and trust.
 
+## Performance/Lighthouse sweep (follow-up)
+- Reduced avoidable layout shifts in hero/live modules by reserving space for dynamic status and next-tip fields.
+- Added fixed dimensions for footer social logos to avoid icon reflow.
+- Switched below-fold club banner image to `loading="lazy"` + `fetchpriority="low"`.
+- Added stable space reservation for homepage winners/result modules.
+
+### Lighthouse snapshot (localhost, headless)
+- **Mobile:** Performance **91**, Accessibility **95**, Best Practices **100**, SEO **100**
+- **Desktop:** Performance **88**, Accessibility **95**, Best Practices **100**, SEO **100**
+
 ## Notes
 - Existing routes/URLs and core data endpoints were preserved.
 - No backend rewrites, payment systems, or complex realtime features added.

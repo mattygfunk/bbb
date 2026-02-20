@@ -495,12 +495,24 @@ code {
   gap: .5rem;
   min-height: 34px;
 }
+#top-winners-strip { min-height: 36px; }
+#recent-results-body { min-height: 240px; }
+#winners-strip { min-height: 110px; }
 
 #status-lock {
   display: inline-block;
   min-width: 88px;
   font-variant-numeric: tabular-nums;
 }
+#status-jackpot,
+#status-meet,
+#status-last-updated { display: inline-block; min-width: 84px; }
+#next-tip-home-card { min-height: 290px; }
+#next-tip-home-inline-status { min-height: 34px; }
+#next-tip-home-race { min-height: 2.5rem; }
+#next-tip-home-context,
+#next-tip-home-pick,
+#next-tip-home-social { min-height: 1.4rem; }
 
 .hero-layout {
   display: grid;
@@ -539,8 +551,6 @@ code {
 .rail-section {
   border-top: 1px dashed #304860;
   padding-top: 1rem;
-  content-visibility: auto;
-  contain-intrinsic-size: 700px;
 }
 .rail-section:first-of-type { border-top: 0; padding-top: 0; }
 
