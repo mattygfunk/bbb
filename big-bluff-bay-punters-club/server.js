@@ -258,6 +258,209 @@ function issueToken(user) {
   return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
 }
 
+const BOSSES_EXTRACT_SCHEMA = {
+  type: 'object',
+  properties: {
+    track: { type: ['string', 'null'] },
+    meet: { type: ['string', 'null'] },
+    status: { type: ['string', 'null'], enum: ['LIVE', 'WON', 'LOST', 'VOID', null] },
+    stake_aud: { type: ['number', 'null'] },
+    potential_return_aud: { type: ['number', 'null'] },
+    freeroll_prize_aud: { type: ['number', 'null'] },
+    eligibility_note: { type: ['string', 'null'] },
+    legs: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          leg: { type: 'number' },
+          race: { type: ['number', 'null'] },
+          selection: { type: ['string', 'null'] },
+          bet_type: { type: 'string', enum: ['WIN', 'PLACE', 'TOP3', 'TOP2', 'EACHWAY', 'UNKNOWN'] },
+          odds: { type: ['number', 'null'] },
+          result: { type: 'string', enum: ['Pending', 'Won', 'Lost'] }
+        },
+        required: ['leg', 'race', 'selection', 'bet_type', 'odds', 'result'],
+        additionalProperties: false
+      }
+    },
+    raw_text_snippet: { type: ['string', 'null'] }
+  },
+  required: ['track', 'meet', 'status', 'stake_aud', 'potential_return_aud', 'freeroll_prize_aud', 'eligibility_note', 'legs', 'raw_text_snippet'],
+  additionalProperties: false
+};
+
+async function readRawBody(req, maxBytes = 10 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        reject(new Error('Upload too large (max 10MB)'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
+function parseMultipartImage(buffer, contentType = '') {
+  const m = /boundary=(.+)$/i.exec(contentType);
+  if (!m) return null;
+  const boundary = `--${m[1]}`;
+  const raw = buffer.toString('latin1');
+  const parts = raw.split(boundary).slice(1, -1);
+  for (const part of parts) {
+    const idx = part.indexOf('\r\n\r\n');
+    if (idx < 0) continue;
+    const headerText = part.slice(0, idx);
+    const bodyText = part.slice(idx + 4, part.lastIndexOf('\r\n'));
+    const hasFilename = /filename="([^"]+)"/i.exec(headerText);
+    const ct = /content-type:\s*([^\r\n]+)/i.exec(headerText)?.[1]?.trim() || '';
+    if (!hasFilename) continue;
+    if (!/^image\/(png|jpe?g|webp)$/i.test(ct)) continue;
+    return { buffer: Buffer.from(bodyText, 'latin1'), contentType: ct };
+  }
+  return null;
+}
+
+function safeJsonExtract(text = '') {
+  try { return JSON.parse(text); } catch {}
+  const block = String(text || '').match(/\{[\s\S]*\}$/);
+  if (block) {
+    try { return JSON.parse(block[0]); } catch {}
+  }
+  return null;
+}
+
+function normalizeExtractDraft(incoming) {
+  const x = incoming && typeof incoming === 'object' ? incoming : {};
+  const allowedStatus = new Set(['LIVE', 'WON', 'LOST', 'VOID']);
+  const toNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const legs = Array.isArray(x.legs) ? x.legs : [];
+  return {
+    track: x.track == null ? null : String(x.track),
+    meet: x.meet == null ? null : String(x.meet),
+    status: allowedStatus.has(String(x.status || '').toUpperCase()) ? String(x.status).toUpperCase() : null,
+    stake_aud: toNum(x.stake_aud),
+    potential_return_aud: toNum(x.potential_return_aud),
+    freeroll_prize_aud: toNum(x.freeroll_prize_aud),
+    eligibility_note: x.eligibility_note == null ? null : String(x.eligibility_note),
+    legs: legs.map((l, i) => ({
+      leg: Number(l?.leg || i + 1),
+      race: toNum(l?.race),
+      selection: l?.selection == null ? null : String(l.selection),
+      bet_type: ['WIN', 'PLACE', 'TOP3', 'TOP2', 'EACHWAY', 'UNKNOWN'].includes(String(l?.bet_type || '').toUpperCase()) ? String(l.bet_type).toUpperCase() : 'UNKNOWN',
+      odds: toNum(l?.odds),
+      result: ['Pending', 'Won', 'Lost'].includes(String(l?.result || '')) ? String(l.result) : 'Pending'
+    })),
+    raw_text_snippet: x.raw_text_snippet == null ? null : String(x.raw_text_snippet)
+  };
+}
+
+function compareBossesDrafts(a, b) {
+  const diffs = [];
+  const fields = ['track', 'meet', 'status', 'stake_aud', 'potential_return_aud'];
+  for (const f of fields) {
+    const av = a?.[f] ?? null;
+    const bv = b?.[f] ?? null;
+    if (JSON.stringify(av) !== JSON.stringify(bv)) diffs.push({ field: f, pass1: av, pass2: bv });
+  }
+  const maxLegs = Math.max(a?.legs?.length || 0, b?.legs?.length || 0);
+  for (let i = 0; i < maxLegs; i += 1) {
+    const l1 = a?.legs?.[i] || null;
+    const l2 = b?.legs?.[i] || null;
+    if (!l1 || !l2) {
+      diffs.push({ field: `legs[${i}]`, pass1: l1, pass2: l2 });
+      continue;
+    }
+    for (const lf of ['race', 'selection', 'bet_type', 'odds']) {
+      if (JSON.stringify(l1?.[lf] ?? null) !== JSON.stringify(l2?.[lf] ?? null)) {
+        diffs.push({ field: `legs[${i}].${lf}`, pass1: l1?.[lf] ?? null, pass2: l2?.[lf] ?? null });
+      }
+    }
+  }
+  return diffs;
+}
+
+function mergeBossesDrafts(pass1, pass2, diffs) {
+  const conflictFields = new Set((diffs || []).map((d) => d.field));
+  const pick = (field, v1, v2) => (conflictFields.has(field) ? null : (v1 ?? v2 ?? null));
+  const merged = {
+    track: pick('track', pass1.track, pass2.track),
+    meet: pick('meet', pass1.meet, pass2.meet),
+    status: pick('status', pass1.status, pass2.status),
+    stake_aud: pick('stake_aud', pass1.stake_aud, pass2.stake_aud),
+    potential_return_aud: pick('potential_return_aud', pass1.potential_return_aud, pass2.potential_return_aud),
+    freeroll_prize_aud: pass1.freeroll_prize_aud ?? pass2.freeroll_prize_aud ?? null,
+    eligibility_note: pass1.eligibility_note ?? pass2.eligibility_note ?? null,
+    legs: [],
+    raw_text_snippet: [pass1.raw_text_snippet, pass2.raw_text_snippet].filter(Boolean).join('\n---\n') || null
+  };
+  const maxLegs = Math.max(pass1.legs.length, pass2.legs.length);
+  for (let i = 0; i < maxLegs; i += 1) {
+    const l1 = pass1.legs[i] || null;
+    const l2 = pass2.legs[i] || null;
+    merged.legs.push({
+      leg: Number((l1?.leg ?? l2?.leg ?? i + 1)),
+      race: conflictFields.has(`legs[${i}].race`) ? null : (l1?.race ?? l2?.race ?? null),
+      selection: conflictFields.has(`legs[${i}].selection`) ? null : (l1?.selection ?? l2?.selection ?? null),
+      bet_type: conflictFields.has(`legs[${i}].bet_type`) ? 'UNKNOWN' : (l1?.bet_type ?? l2?.bet_type ?? 'UNKNOWN'),
+      odds: conflictFields.has(`legs[${i}].odds`) ? null : (l1?.odds ?? l2?.odds ?? null),
+      result: (l1?.result || l2?.result || 'Pending')
+    });
+  }
+  return merged;
+}
+
+async function openAiExtractBosses(imageDataUrl, pass = 1) {
+  const key = String(process.env.OPENAI_API_KEY || '').trim();
+  if (!key) throw new Error('OPENAI_API_KEY is not configured on server.');
+  const model = process.env.OPENAI_VISION_MODEL || 'gpt-4.1-mini';
+
+  const promptBase = `Extract Bosses Multi betting-slip data into STRICT JSON only.\nIf unknown/unclear use null. Do NOT guess race numbers. Keep runner prefixes like #4.\nSchema: ${JSON.stringify(BOSSES_EXTRACT_SCHEMA)}.`;
+  const prompt = pass === 1
+    ? `${promptBase}\nPass 1: visual-first extraction.`
+    : `${promptBase}\nPass 2: independent verification. Be conservative and mark uncertain fields null.`;
+
+  const body = {
+    model,
+    response_format: { type: 'json_object' },
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: imageDataUrl } }
+        ]
+      }
+    ],
+    temperature: 0
+  };
+
+  const r = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data?.error?.message || 'Vision extraction failed');
+  const raw = data?.choices?.[0]?.message?.content || '{}';
+  const parsed = safeJsonExtract(raw);
+  if (!parsed) throw new Error('Could not parse extraction JSON');
+  return normalizeExtractDraft(parsed);
+}
+
 function applySub(selection, raceResult) {
   const subs = raceResult?.substitutions || [];
   const hit = subs.find((s) => String(s.scratched) === String(selection));
@@ -1242,6 +1445,46 @@ function createApp() {
     const trackId = normalizeTrackId(trackKey);
     const bossesBet = trackKey ? computeBossesBetProgress(store, trackId) : computeBossesBetProgress(store, 'thoroughbreds');
     return res.json({ trackId, bossesBet });
+  });
+
+  app.post('/api/admin/extract-bosses-multi', auth, adminOnly, async (req, res) => {
+    try {
+      const ct = String(req.headers['content-type'] || '');
+      let imageBuf = null;
+      let imageType = 'image/png';
+
+      if (ct.includes('multipart/form-data')) {
+        const raw = await readRawBody(req, 10 * 1024 * 1024);
+        const parsed = parseMultipartImage(raw, ct);
+        if (!parsed?.buffer?.length) return res.status(400).json({ error: 'No image file found in multipart upload.' });
+        imageBuf = parsed.buffer;
+        imageType = parsed.contentType || imageType;
+      } else if (ct.includes('application/json')) {
+        const dataUrl = String(req.body?.imageDataUrl || '');
+        const m = dataUrl.match(/^data:(image\/(?:png|jpe?g|webp));base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'Provide imageDataUrl as data:image/...;base64,...' });
+        imageType = m[1];
+        imageBuf = Buffer.from(m[2], 'base64');
+      } else {
+        return res.status(415).json({ error: 'Unsupported content type. Use multipart/form-data or JSON imageDataUrl.' });
+      }
+
+      if (!imageBuf || !imageBuf.length) return res.status(400).json({ error: 'Image upload is empty.' });
+      if (imageBuf.length > 10 * 1024 * 1024) return res.status(413).json({ error: 'Image too large (max 10MB).' });
+
+      const imageDataUrl = `data:${imageType};base64,${imageBuf.toString('base64')}`;
+      const [pass1, pass2] = await Promise.all([
+        openAiExtractBosses(imageDataUrl, 1),
+        openAiExtractBosses(imageDataUrl, 2)
+      ]);
+      const diffs = compareBossesDrafts(pass1, pass2);
+      const mergedDraft = mergeBossesDrafts(pass1, pass2, diffs);
+      const verified = diffs.length === 0;
+
+      return res.json({ pass1, pass2, mergedDraft, diffs, verified });
+    } catch (err) {
+      return res.status(500).json({ error: err.message || 'Could not extract screenshot.' });
+    }
   });
 
   function getBuyInVotePayload(req) {

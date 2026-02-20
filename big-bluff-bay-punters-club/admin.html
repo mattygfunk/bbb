@@ -188,6 +188,33 @@
         </section>
 
         <section class="card"><h2>Bosses Multi</h2>
+          <div class="card" id="bosses-upload-panel">
+            <h3>Upload Betting Screenshot</h3>
+            <p class="muted">Upload → Extract → Verify → Fill → Save</p>
+            <div class="row-actions">
+              <input id="bosses-screenshot-file" type="file" accept="image/png,image/jpeg,image/webp" />
+              <button class="btn" type="button" id="bosses-extract-btn">Extract selections</button>
+            </div>
+            <p id="bosses-extract-status" class="muted" role="status" aria-live="polite"></p>
+            <section class="card" id="bosses-draft-card" hidden>
+              <div class="section-head"><h3>Parsed Draft</h3><span class="pill" id="bosses-verify-badge">Needs review ⚠️</span></div>
+              <div id="bosses-draft-summary" class="muted"></div>
+              <div class="table-wrap" style="margin-top:.45rem">
+                <table>
+                  <caption>Extracted legs preview</caption>
+                  <thead><tr><th scope="col">Leg</th><th scope="col">Race</th><th scope="col">Selection</th><th scope="col">Type</th><th scope="col">Odds</th><th scope="col">Result</th></tr></thead>
+                  <tbody id="bosses-draft-legs"></tbody>
+                </table>
+              </div>
+              <div id="bosses-diff-list" class="muted" style="margin-top:.45rem"></div>
+              <div class="row-actions" style="margin-top:.55rem">
+                <button class="btn" type="button" id="bosses-fill-form-btn">Fill Form (1-click)</button>
+                <button class="btn btn-ghost" type="button" id="bosses-copy-json-btn">Copy to clipboard (JSON)</button>
+                <button class="btn btn-ghost" type="button" id="bosses-discard-draft-btn">Discard draft</button>
+              </div>
+            </section>
+          </div>
+
           <form id="bosses-form" class="stack">
             <div class="split">
               <label>Title

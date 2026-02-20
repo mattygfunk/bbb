@@ -87,3 +87,26 @@
 - Added stronger status color chips on Punters Bosses module (LIVE/WON/LOST/VOID).
 - Tightened mobile presentation for Bosses summary + leg table scrolling/spacing.
 - Added lightweight admin toast-style feedback animation and tone coloring for Bosses actions (save/autofill/reset/errors).
+
+## Admin screenshot extraction + double verification
+- Added Admin upload workflow for betting screenshots in Bosses Multi panel:
+  - upload image (jpg/png/webp)
+  - run extraction
+  - review parsed draft
+  - one-click fill into Bosses form
+  - explicit save remains manual
+- Added backend endpoint: `POST /api/admin/extract-bosses-multi` (admin-only).
+  - accepts multipart upload (and JSON data URL fallback)
+  - executes two independent OpenAI vision extraction passes
+  - normalizes strict JSON contract
+  - computes pass diffs and merged draft with conflict nulling
+- Added draft review UI in Admin:
+  - parsed summary + legs table
+  - verified/needs-review badge
+  - differences list
+  - actions: Fill Form, Copy JSON, Discard Draft
+- Security/robustness:
+  - requires admin auth
+  - 10MB upload cap
+  - no persistent screenshot storage
+  - helpful errors when extraction/env key unavailable

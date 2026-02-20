@@ -2,7 +2,7 @@ const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -261,8 +261,82 @@ function renderBossesSuggested(popular){
   box.textContent = lines.length ? `Most popular picks → ${lines.join(' • ')}` : 'No tip data yet to auto-calculate Bosses Bet.';
 }
 
+function renderBossesDraft(){
+  const card = $('bosses-draft-card');
+  const summary = $('bosses-draft-summary');
+  const legsBody = $('bosses-draft-legs');
+  const diffList = $('bosses-diff-list');
+  const badge = $('bosses-verify-badge');
+  if(!card || !summary || !legsBody || !diffList || !badge) return;
+
+  const d = state.bossesDraft;
+  if(!d){
+    card.hidden = true;
+    return;
+  }
+  card.hidden = false;
+  const merged = d.mergedDraft || {};
+  const stake = merged.stake_aud == null ? '—' : `$${Number(merged.stake_aud).toFixed(2)}`;
+  const ret = merged.potential_return_aud == null ? '—' : `$${Number(merged.potential_return_aud).toFixed(2)}`;
+  summary.innerHTML = `
+    <p><strong>Track/Meet:</strong> ${esc(merged.track || '—')} / ${esc(merged.meet || '—')}</p>
+    <p><strong>Bet type:</strong> Multi</p>
+    <p><strong>Stake:</strong> ${esc(stake)} · <strong>Potential Return:</strong> ${esc(ret)}</p>
+  `;
+
+  legsBody.innerHTML = '';
+  const legs = Array.isArray(merged.legs) ? merged.legs : [];
+  if(!legs.length){
+    legsBody.innerHTML = "<tr><td colspan='6' class='muted'>No legs detected.</td></tr>";
+  } else {
+    legs.forEach((l)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${Number(l.leg||0)||'—'}</td><td>${l.race==null?'—':`R${Number(l.race)}`}</td><td>${esc(l.selection||'—')}</td><td>${esc(l.bet_type||'UNKNOWN')}</td><td>${l.odds==null?'—':esc(String(l.odds))}</td><td>${esc(l.result||'Pending')}</td>`;
+      legsBody.appendChild(tr);
+    });
+  }
+
+  const diffs = Array.isArray(d.diffs) ? d.diffs : [];
+  if(!diffs.length){
+    badge.textContent = 'Verified ✅';
+    badge.classList.remove('chip-red');
+    diffList.textContent = 'Pass 1 and Pass 2 match closely.';
+  } else {
+    badge.textContent = 'Needs review ⚠️';
+    badge.classList.add('chip-red');
+    diffList.innerHTML = `<strong>Differences detected:</strong> ${diffs.map((x)=>esc(x.field)).join(' • ')}`;
+  }
+}
+
+function fillBossesFormFromDraft(){
+  const d = state.bossesDraft?.mergedDraft;
+  if(!d) return;
+  if($('bosses-meet') && d.meet) $('bosses-meet').value = d.meet;
+  if($('bosses-status')) $('bosses-status').value = String(d.status || 'LIVE').toUpperCase();
+  if($('bosses-stake') && d.stake_aud != null) $('bosses-stake').value = `$${Number(d.stake_aud).toFixed(2)}`;
+  if($('bosses-potential-return') && d.potential_return_aud != null) $('bosses-potential-return').value = `$${Number(d.potential_return_aud).toFixed(2)}`;
+  if($('bosses-title') && !$('bosses-title').value.trim()) $('bosses-title').value = 'Bosses Multi';
+  if($('bosses-week-key') && !$('bosses-week-key').value.trim()) $('bosses-week-key').value = buildDefaultBossesWeekKey();
+  if($('bosses-eligibility-note') && d.eligibility_note) $('bosses-eligibility-note').value = d.eligibility_note;
+
+  const legs = Array.isArray(d.legs) ? d.legs : [];
+  state.bossesBet.legItems = legs.map((l,idx)=>(
+    {
+      legNumber: Number(l.leg || idx + 1),
+      race: l.race == null ? '' : `R${Number(l.race)}`,
+      selection: String(l.selection || ''),
+      betType: String(l.bet_type || 'UNKNOWN').toUpperCase() === 'UNKNOWN' ? 'W/P' : String(l.bet_type || 'W/P').toUpperCase(),
+      odds: l.odds == null ? '' : String(l.odds),
+      result: String(l.result || 'Pending').toUpperCase()
+    }
+  ));
+  renderBossesLegInputs();
+  toastBosses('Draft applied to form. Review then click Save / Update Bosses Multi.','ok');
+}
+
 
 async function refreshClaims(){
+
   const body = $('claims-body');
   if(!body || !isAdmin()) return;
   try {
@@ -357,6 +431,7 @@ async function refresh(){
   }
 
   renderBossesLegInputs();
+  renderBossesDraft();
 
   try {
     const dl = await req(API.tipEditDeadline);
@@ -675,6 +750,52 @@ $('results-form')?.addEventListener('submit', async (e) => {
   } catch (err) {
     $('results-msg').textContent = err.message;
   }
+});
+
+$('bosses-extract-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
+  const fileInput = $('bosses-screenshot-file');
+  const status = $('bosses-extract-status');
+  const f = fileInput?.files?.[0];
+  if(!f){ if(status) status.textContent = 'Choose a screenshot first.'; return; }
+  if(status) status.textContent = 'Reading screenshot…';
+  try {
+    const form = new FormData();
+    form.append('file', f);
+    const headers = state.token ? { Authorization: `Bearer ${state.token}` } : {};
+    const r = await fetch(`/api/admin/extract-bosses-multi?trackId=${encodeURIComponent(state.trackId)}`, { method:'POST', headers, body: form, credentials:'same-origin' });
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error || 'Extraction failed');
+    state.bossesDraft = d;
+    renderBossesDraft();
+    if(status) status.textContent = d.verified ? 'Verified ✅' : 'Needs review ⚠️ Differences detected.';
+  } catch (err) {
+    if(status) status.textContent = err.message || 'Could not extract screenshot.';
+    state.bossesDraft = null;
+    renderBossesDraft();
+  }
+});
+
+$('bosses-fill-form-btn')?.addEventListener('click', () => {
+  fillBossesFormFromDraft();
+});
+
+$('bosses-copy-json-btn')?.addEventListener('click', async () => {
+  const payload = state.bossesDraft?.mergedDraft;
+  if(!payload) return;
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    toastBosses('Draft JSON copied to clipboard.','ok');
+  } catch {
+    toastBosses('Could not copy draft JSON.','err');
+  }
+});
+
+$('bosses-discard-draft-btn')?.addEventListener('click', () => {
+  state.bossesDraft = null;
+  renderBossesDraft();
+  const status = $('bosses-extract-status');
+  if(status) status.textContent = 'Draft discarded.';
 });
 
 $('bosses-form')?.addEventListener('submit', async (e) => {

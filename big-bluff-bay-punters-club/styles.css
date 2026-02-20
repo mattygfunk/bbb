@@ -998,6 +998,10 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 .bosses-status-void { border-color:#475569; color:#e2e8f0; background:#1e293b; }
 .admin-toast-pop { animation: toastPop .22s ease-out; }
 @keyframes toastPop { from { transform: translateY(2px); opacity:.7; } to { transform: translateY(0); opacity:1; } }
+#bosses-upload-panel { border-color: #37506a; }
+#bosses-draft-card { border-color: #2f4b68; }
+#bosses-diff-list { border-top: 1px dashed #2a3a50; padding-top: .5rem; }
+#bosses-extract-status { min-height: 1.3rem; }
 .bosses-leg-chip {
   border: 1px solid rgba(120,140,180,.35);
   border-radius: .78rem;
