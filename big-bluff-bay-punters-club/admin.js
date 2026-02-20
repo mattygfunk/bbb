@@ -3,6 +3,7 @@ const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/ra
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+renderRaceOptions();
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
