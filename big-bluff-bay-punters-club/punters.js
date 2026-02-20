@@ -11,9 +11,21 @@ function readPuntersApiCache(){
 }
 function writePuntersApiCache(path, data){
   try {
+    const p = String(path || '');
+    // Avoid caching large/high-churn payloads that can bloat localStorage and freeze the tab.
+    if (p.startsWith('/tips') || p.startsWith('/punters/overview')) return;
+
+    const payload = JSON.stringify(data);
+    if (payload.length > 120000) return;
+
     const cache = readPuntersApiCache();
-    cache[path] = { ts: Date.now(), data };
-    localStorage.setItem(PUNTERS_API_CACHE_KEY, JSON.stringify(cache));
+    cache[p] = { ts: Date.now(), data };
+
+    const keys = Object.keys(cache).sort((a,b)=>Number(cache[b]?.ts||0)-Number(cache[a]?.ts||0));
+    const trimmed = {};
+    keys.slice(0, 16).forEach((k)=>{ trimmed[k] = cache[k]; });
+
+    localStorage.setItem(PUNTERS_API_CACHE_KEY, JSON.stringify(trimmed));
   } catch {}
 }
 function getPuntersApiCache(path, maxAgeMs=5*60*1000){
@@ -25,6 +37,15 @@ function getPuntersApiCache(path, maxAgeMs=5*60*1000){
     return entry.data || null;
   } catch { return null; }
 }
+
+(function prunePuntersApiCache(){
+  try {
+    const raw = localStorage.getItem(PUNTERS_API_CACHE_KEY) || '';
+    if (raw.length > 700000) {
+      localStorage.removeItem(PUNTERS_API_CACHE_KEY);
+    }
+  } catch {}
+})();
 
 function getRunnerNameByRaceSelection(race='R1', selection='') {
   const raceId = String(race || '').toUpperCase();
