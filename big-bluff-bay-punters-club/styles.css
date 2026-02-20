@@ -992,6 +992,12 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 .bosses-meta-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: .55rem 0; }
 #bosses-progress td { vertical-align: middle; }
 #bosses-eligibility-note { margin-top: .55rem; }
+.bosses-status-live { border-color:#1d4ed8; color:#bfdbfe; background:#0c2344; }
+.bosses-status-won { border-color:#14532d; color:#bbf7d0; background:#052e16; }
+.bosses-status-lost { border-color:#7f1d1d; color:#fecaca; background:#3a1010; }
+.bosses-status-void { border-color:#475569; color:#e2e8f0; background:#1e293b; }
+.admin-toast-pop { animation: toastPop .22s ease-out; }
+@keyframes toastPop { from { transform: translateY(2px); opacity:.7; } to { transform: translateY(0); opacity:1; } }
 .bosses-leg-chip {
   border: 1px solid rgba(120,140,180,.35);
   border-radius: .78rem;
@@ -1006,3 +1012,8 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 
 #next-tip-entry-split { align-items: start; }
 #next-tip-entry-split > .card { height: 100%; }
+@media (max-width: 760px) {
+  .bosses-meta-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: .55rem; }
+  #bosses-progress td, #bosses-progress th { white-space: nowrap; }
+  #bosses-bet-card .table-wrap { border: 1px solid #2a3a50; border-radius: .72rem; }
+}

@@ -6,6 +6,15 @@ const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,f
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+function toastBosses(msg, tone='ok'){
+  const el = $('bosses-msg');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.remove('msg-ok','msg-err','msg-warn','admin-toast-pop');
+  el.classList.add(tone==='err'?'msg-err':tone==='warn'?'msg-warn':'msg-ok');
+  void el.offsetWidth;
+  el.classList.add('admin-toast-pop');
+}
 function isAdmin(){return state.user?.role==='admin';}
 function withTrack(path){
   const join = path.includes('?') ? '&' : '?';
@@ -670,7 +679,7 @@ $('results-form')?.addEventListener('submit', async (e) => {
 
 $('bosses-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
   const f = new FormData(e.target);
 
   const legItems = [];
@@ -715,10 +724,10 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
         selections
       })
     });
-    $('bosses-msg').textContent = 'Bosses Multi saved.';
+    toastBosses('Bosses Multi saved.','ok');
     await refresh();
   } catch (err) {
-    $('bosses-msg').textContent = err.message;
+    toastBosses(err.message || 'Could not save Bosses Multi.','err');
   }
 });
 
@@ -731,13 +740,13 @@ $('bosses-add-leg-btn')?.addEventListener('click', () => {
 $('bosses-mark-won-btn')?.addEventListener('click', () => {
   const status = $('bosses-status');
   if (status) status.value = 'WON';
-  $('bosses-msg').textContent = 'Status set to WON. Click Save / Update Bosses Multi.';
+  toastBosses('Status set to WON. Click Save / Update Bosses Multi.','warn');
 });
 
 $('bosses-mark-lost-btn')?.addEventListener('click', () => {
   const status = $('bosses-status');
   if (status) status.value = 'LOST';
-  $('bosses-msg').textContent = 'Status set to LOST. Click Save / Update Bosses Multi.';
+  toastBosses('Status set to LOST. Click Save / Update Bosses Multi.','warn');
 });
 
 $('clear-results-btn')?.addEventListener('click', async () => {
@@ -764,7 +773,7 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
     state.popularByRace = computePopularByRace(state.tipsAll);
     renderBossesSuggested(state.popularByRace);
   } catch (err) {
-    $('bosses-msg').textContent = `Could not load latest tips: ${err.message}`;
+    toastBosses(`Could not load latest tips: ${err.message}`,'err');
     return;
   }
 
@@ -781,35 +790,38 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
   renderBossesLegInputs();
 
   const filled = state.bossesBet.legItems.length;
-  $('bosses-msg').textContent = filled
-    ? `Auto-filled ${filled} race${filled===1?'':'s'} from most popular tips. Click Save / Update Bosses Multi to apply.`
-    : 'No popular tips found to auto-fill yet.';
+  toastBosses(
+    filled
+      ? `Auto-filled ${filled} race${filled===1?'':'s'} from most popular tips. Click Save / Update Bosses Multi to apply.`
+      : 'No popular tips found to auto-fill yet.',
+    filled ? 'ok' : 'warn'
+  );
 });
 
 $('reset-bosses-btn')?.addEventListener('click', async () => {
-  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
   if(!confirm('Reset Bosses Bet for all races?')) return;
   try {
     await req(withTrack(API.bossesBet), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
-    $('bosses-msg').textContent = 'Bosses bet reset.';
+    toastBosses('Bosses Multi reset.','ok');
     await refresh();
   } catch (err) {
-    $('bosses-msg').textContent = err.message;
+    toastBosses(err.message || 'Could not reset Bosses Multi.','err');
   }
 });
 
 $('reset-bosses-results-btn')?.addEventListener('click', async () => {
-  if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
   if(!confirm('Reset ALL Bosses Multi results and clear selections for this meet?')) return;
   try {
     // Primary reset endpoint
     await req(withTrack(API.bossesBetResults), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
     // Defensive follow-up to avoid stale selections from older deployments/caches
     await req(withTrack(API.bossesBet), { method: 'DELETE', body: JSON.stringify({ trackId: state.trackId }) });
-    $('bosses-msg').textContent = 'Bosses multi results and selections reset.';
+    toastBosses('Bosses multi results and selections reset.','ok');
     await refresh();
   } catch (err) {
-    $('bosses-msg').textContent = err.message;
+    toastBosses(err.message || 'Could not reset Bosses Multi results.','err');
   }
 });
 

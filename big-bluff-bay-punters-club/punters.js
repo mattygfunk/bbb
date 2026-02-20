@@ -198,7 +198,11 @@ function renderBossesBet(bb){
   const data = bb || {};
   const status = String(data.status || data.overall || 'live').toUpperCase();
   overall.textContent = status;
-  overall.classList.toggle('chip-red', status === 'LOST');
+  overall.classList.remove('chip-red','bosses-status-live','bosses-status-won','bosses-status-lost','bosses-status-void');
+  if (status === 'LOST') overall.classList.add('chip-red','bosses-status-lost');
+  else if (status === 'WON') overall.classList.add('bosses-status-won');
+  else if (status === 'VOID') overall.classList.add('bosses-status-void');
+  else overall.classList.add('bosses-status-live');
 
   const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const freerollPrize = Number(data.freerollPrize || 0);

@@ -82,3 +82,8 @@
 ## Notes
 - Existing routes/URLs and core data endpoints were preserved.
 - No backend rewrites, payment systems, or complex realtime features added.
+
+## Bosses Multi v2.1 polish
+- Added stronger status color chips on Punters Bosses module (LIVE/WON/LOST/VOID).
+- Tightened mobile presentation for Bosses summary + leg table scrolling/spacing.
+- Added lightweight admin toast-style feedback animation and tone coloring for Bosses actions (save/autofill/reset/errors).
