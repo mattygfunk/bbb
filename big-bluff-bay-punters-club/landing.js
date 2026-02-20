@@ -396,8 +396,8 @@ async function hydrateNextTipHomeFallback(trackId, token, section, card, body, r
     card.className = 'card next-tip-card next-tip-card--highlight';
     raceEl.textContent = nextRace;
     pickEl.textContent = userTip.runnerName
-      ? `Your Selection: #${userTip.selection || '—'} • ${userTip.runnerName}`
-      : `Your Selection: #${String(userTip.selection || '—')}`;
+      ? `YOUR SELECTION • #${userTip.selection || '—'} • ${userTip.runnerName}`
+      : `YOUR SELECTION • #${String(userTip.selection || '—')}`;
     body.textContent = 'Live sync mode • Your next-race tip is locked and ready.';
     primary.textContent = 'Edit This Tip';
     primary.href = '/punters.html#tip-form';
@@ -530,9 +530,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const venue = rawVenue && !/^venue\s*tba$/i.test(rawVenue) ? rawVenue : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
-    const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
     raceEl.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
-    contextEl.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
+    contextEl.textContent = venue ? `${venue} meeting` : `Meeting live`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -544,13 +543,13 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const statusLockText = String(document.getElementById('status-lock')?.textContent || '').trim();
     if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : (statusLockText || '--:--:--')}`;
     if (lockRef > 0 && !hardLocked) {
-      contextEl.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
+      contextEl.textContent = `Locks in ${mm}:${ss} (Melbourne)`;
       setLockline('');
     } else if (lockRef > 0 && hardLocked) {
-      contextEl.textContent = `${trackType} • Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`;
+      contextEl.textContent = `Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne)`;
       setLockline('');
     } else {
-      contextEl.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
+      contextEl.textContent = venue ? `${venue} meeting` : `Meeting live`;
       setLockline('');
     }
 
@@ -582,7 +581,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     }
 
     const pickNo = String(d?.userPick?.selection || '—');
-    pickEl.textContent = `Your Selection: #${pickNo}`;
+    pickEl.textContent = `YOUR SELECTION • #${pickNo}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
     socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;

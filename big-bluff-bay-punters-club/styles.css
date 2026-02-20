@@ -935,6 +935,16 @@ details p { margin:.55rem 0 0; }
 .next-tip-countdown { margin:0; font-weight:800; color:#f8fafc; }
 .next-tip-lockline { margin:0; font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight:900; color:#f8fafc; }
 .next-tip-pick { margin:0; font-size: clamp(1.1rem, 2.8vw, 1.5rem); font-weight:800; color:#f8fafc; }
+.next-tip-runner,
+#next-tip-home-pick,
+#next-tip-punters-pick {
+  margin:.2rem 0;
+  font-size: clamp(1.55rem, 4.4vw, 2.4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color:#fef08a;
+  text-shadow: 0 2px 14px rgba(250,204,21,.22);
+}
 #next-tip-home-race, #next-tip-punters-race { margin:0; font-size: clamp(1.3rem, 3.4vw, 1.85rem); }
 .next-tip-card--highlight { border-color:#22c55e; box-shadow: 0 0 0 1px #22c55e66, 0 0 18px #22c55e22; background:linear-gradient(180deg,#112418 0%,#0f172a 100%); }
 .next-tip-card--warn { border-color:#eab308; box-shadow: 0 0 0 1px #eab30855, 0 0 16px #eab30822; }
