@@ -401,7 +401,7 @@ async function hydrateNextTipHomeFallback(trackId, token, section, card, body, r
     body.textContent = 'Live sync mode • Your next-race tip is locked and ready.';
     primary.textContent = 'Edit This Tip';
     primary.href = '/punters.html#tip-form';
-    secondary.textContent = 'View Full Card';
+    secondary.textContent = 'Log In First';
     secondary.href = '/punters.html';
   } catch {}
 }
@@ -452,7 +452,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     primary.textContent = 'Open Tip Form';
     primary.href = '/punters.html#tip-form';
     secondary.hidden = false;
-    secondary.textContent = 'View Full Card';
+    secondary.textContent = 'Log In First';
     secondary.href = '/punters.html';
   }
 
@@ -561,7 +561,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       socialEl.textContent = 'Next round opens soon.';
       primary.textContent = 'View Results';
       primary.href = '/punters.html#leaderboard';
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;
     }
@@ -576,7 +576,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html';
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;
     }
@@ -594,7 +594,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
       secondary.hidden = false;
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;
     }
@@ -605,7 +605,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
       secondary.hidden = false;
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;
     }

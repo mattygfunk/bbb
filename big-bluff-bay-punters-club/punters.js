@@ -555,7 +555,7 @@ async function hydrateNextTipCard(trackId){
   primary.textContent = 'Open Tip Form';
   primary.href = '/punters.html#tip-form';
   secondary.hidden = false;
-  secondary.textContent = 'View Full Card';
+  secondary.textContent = 'Log In First';
   secondary.href = '/punters.html#leaderboard';
 
   // Signed-in users should never see a login CTA.
@@ -670,7 +670,7 @@ async function hydrateNextTipCard(trackId){
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
       secondary.hidden = false;
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       return;
     }
 
@@ -680,7 +680,7 @@ async function hydrateNextTipCard(trackId){
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
       secondary.hidden = false;
-      secondary.textContent = 'View Full Card';
+      secondary.textContent = 'Log In First';
       return;
     }
 
