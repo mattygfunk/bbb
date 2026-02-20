@@ -1,6 +1,10 @@
 const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const LANDING_API_ROOTS = ['/api'];
 const LANDING_API_CACHE = new Map();
+const LANDING_CACHE_KEY='bbb-landing-api-cache-v1';
+function readLandingCache(){ try { return JSON.parse(localStorage.getItem(LANDING_CACHE_KEY)||'{}'); } catch { return {}; } }
+function writeLandingCache(path, data){ try { const c=readLandingCache(); c[path]={ts:Date.now(), data}; localStorage.setItem(LANDING_CACHE_KEY, JSON.stringify(c)); } catch {} }
+function getLandingCache(path, maxAgeMs=5*60*1000){ try { const e=readLandingCache()[path]; if(!e) return null; if((Date.now()-Number(e.ts||0))>maxAgeMs) return null; return e.data||null; } catch { return null; } }
 
 window.addEventListener('error', (e) => {
 });
@@ -63,10 +67,11 @@ async function fetchApi(path) {
     const url = `${root}${path}`;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const r = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+        const r = await fetch(url, { credentials: 'same-origin' });
         const d = await r.json().catch(() => ({}));
         if (r.ok) {
           LANDING_API_CACHE.set(path, d);
+          writeLandingCache(path, d);
           return d;
         }
       } catch {}
@@ -74,7 +79,7 @@ async function fetchApi(path) {
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
-  return LANDING_API_CACHE.get(path) || {};
+  return LANDING_API_CACHE.get(path) || getLandingCache(path) || {};
 }
 
 function fmtCountdown(ms) {

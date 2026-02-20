@@ -4,6 +4,27 @@ const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
+const PUNTERS_API_CACHE_KEY='bbb-punters-api-cache-v1';
+
+function readPuntersApiCache(){
+  try { return JSON.parse(localStorage.getItem(PUNTERS_API_CACHE_KEY) || '{}'); } catch { return {}; }
+}
+function writePuntersApiCache(path, data){
+  try {
+    const cache = readPuntersApiCache();
+    cache[path] = { ts: Date.now(), data };
+    localStorage.setItem(PUNTERS_API_CACHE_KEY, JSON.stringify(cache));
+  } catch {}
+}
+function getPuntersApiCache(path, maxAgeMs=5*60*1000){
+  try {
+    const cache = readPuntersApiCache();
+    const entry = cache[path];
+    if (!entry || typeof entry !== 'object') return null;
+    if ((Date.now() - Number(entry.ts || 0)) > maxAgeMs) return null;
+    return entry.data || null;
+  } catch { return null; }
+}
 
 function getRunnerNameByRaceSelection(race='R1', selection='') {
   const raceId = String(race || '').toUpperCase();
@@ -23,13 +44,18 @@ function formatSelectionText(race='R1', selection='—', runnerName='') {
 async function req(path,opt={}){
   const h={'Content-Type':'application/json',...(opt.headers||{})};
   if(state.token)h.Authorization=`Bearer ${state.token}`;
+  const method = String(opt.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
   let lastErr='';
   for(const root of API_ROOTS){
     for(let attempt=0;attempt<2;attempt+=1){
       try{
         const r=await fetch(`${root}${path}`,{...opt,headers:h,credentials:'same-origin'});
         const d=await r.json().catch(()=>({}));
-        if(r.ok)return d;
+        if(r.ok){
+          if (isGet) writePuntersApiCache(path, d);
+          return d;
+        }
         lastErr=d.error||`Request failed (${r.status})`;
         if(r.status>=500 && attempt===0){
           await new Promise((resolve)=>setTimeout(resolve,200));
@@ -39,6 +65,10 @@ async function req(path,opt={}){
         lastErr='Network error. Please retry.';
       }
     }
+  }
+  if (isGet) {
+    const cached = getPuntersApiCache(path);
+    if (cached) return cached;
   }
   throw new Error(lastErr||'Request failed');
 }

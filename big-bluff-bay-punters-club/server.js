@@ -1379,11 +1379,32 @@ function createApp() {
     return next();
   });
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use('/api', (_req, res, next) => {
+  app.use('/api', (req, res, next) => {
+    const isGet = String(req.method || '').toUpperCase() === 'GET';
+    const hasAuth = Boolean(req.headers.authorization);
+    const path = String(req.path || '');
+    const cacheablePublicGet = isGet && !hasAuth && (
+      path.startsWith('/punters/overview') ||
+      path.startsWith('/fixtures') ||
+      path.startsWith('/ladder') ||
+      path.startsWith('/milestones') ||
+      path.startsWith('/jackpot') ||
+      path.startsWith('/poker/dashboard') ||
+      path.startsWith('/poker/results') ||
+      path.startsWith('/social-feed')
+    );
+
+    if (cacheablePublicGet) {
+      res.setHeader('Cache-Control', 'public, max-age=20, stale-while-revalidate=60, stale-if-error=300');
+      res.setHeader('Vary', 'Accept-Encoding');
+      return next();
+    }
+
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    next();
+    res.setHeader('Vary', 'Authorization, Accept-Encoding');
+    return next();
   });
   app.use(express.json({ limit: '350kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
