@@ -111,6 +111,10 @@
 - Updated defaults + display format per admin workflow:
   - new Bosses legs default to **PLACE** bet type before/after extraction flows
   - merged public tracker columns from separate `Leg #` + `Race` into one `Leg / Race` column (e.g., `Leg 1 · R1`)
+- Bosses Multi overhaul assumptions now enforced in app logic:
+  - all Bosses Multi legs are stored/rendered as **PLACE** bets
+  - Bosses meet/track is auto-synced to the current tipping track fixture (admin meet field is read-only)
+  - public tracker simplified to Leg/Race + Selection + Odds + Result for faster scan
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

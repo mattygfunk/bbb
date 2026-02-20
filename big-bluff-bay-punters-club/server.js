@@ -502,7 +502,7 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     legNumber: Number(item?.legNumber || idx + 1),
     race: String(item?.race || `R${idx + 1}`),
     selection: String(item?.selection || ''),
-    betType: String(item?.betType || 'W/P'),
+    betType: 'PLACE',
     odds: item?.odds == null ? '' : String(item.odds),
     result: String(item?.result || 'PENDING').toUpperCase()
   }));
@@ -1591,7 +1591,7 @@ function createApp() {
         legNumber: Number(item?.legNumber || idx + 1),
         race: String(item?.race || '').toUpperCase(),
         selection: String(item?.selection || '').trim(),
-        betType: String(item?.betType || 'W/P').trim() || 'W/P',
+        betType: 'PLACE',
         odds: item?.odds == null ? '' : String(item.odds).trim(),
         result: String(item?.result || 'PENDING').trim().toUpperCase()
       }))
@@ -1600,7 +1600,7 @@ function createApp() {
     trackData.bossesBet = {
       title: String(req.body?.title || 'Bosses Multi').trim() || 'Bosses Multi',
       weekKey: String(req.body?.weekKey || '').trim(),
-      meet: String(req.body?.meet || trackData?.fixtures?.[0]?.track || '').trim(),
+      meet: String(trackData?.fixtures?.[0]?.track || '').trim(),
       status,
       freerollPrize: Math.max(0, Number(req.body?.freerollPrize || 0) || 0),
       eligibilityNote: String(req.body?.eligibilityNote || 'Eligible = all players who entered tips this week before lock.').trim() || 'Eligible = all players who entered tips this week before lock.',

@@ -216,7 +216,8 @@ function renderBossesBet(bb){
   if (summary) {
     summary.innerHTML = `
       <article class='card'><h3>${esc(String(data.weekKey || 'Current round'))}</h3><p class='muted'>${esc(String(data.title || 'Bosses Multi'))}</p></article>
-      <article class='card'><h3>${esc(String(data.meet || 'Track TBA'))}</h3><p class='muted'>Meet / Track</p></article>
+      <article class='card'><h3>${esc(String(data.meet || 'Track TBA'))}</h3><p class='muted'>Current tipping track</p></article>
+      <article class='card'><h3>PLACE</h3><p class='muted'>Bet type (all legs)</p></article>
       <article class='card'><h3>${esc(String(data.stake || '—'))}</h3><p class='muted'>Stake</p></article>
       <article class='card'><h3>${esc(String(data.potentialReturn || '—'))}</h3><p class='muted'>Potential return</p></article>
       <article class='card'><h3>${esc(freerollText)}</h3><p class='muted'>Freeroll Prize</p></article>
@@ -233,7 +234,7 @@ function renderBossesBet(bb){
 
   wrap.innerHTML = '';
   if (!rows.length) {
-    wrap.innerHTML = "<tr><td colspan='5' class='muted'>No Bosses Multi legs configured yet.</td></tr>";
+    wrap.innerHTML = "<tr><td colspan='4' class='muted'>No Bosses Multi legs configured yet.</td></tr>";
     return;
   }
 
@@ -242,7 +243,7 @@ function renderBossesBet(bb){
     const result = resultRaw === 'PLACED' ? 'WON' : (resultRaw === 'MISSED' ? 'LOST' : resultRaw);
     const tr = document.createElement('tr');
     const legRace = `Leg ${Number(leg.legNumber || idx + 1)} · ${esc(leg.race || 'Race —')}`;
-    tr.innerHTML = `<td>${legRace}</td><td>${esc(leg.selection || '—')}</td><td>${esc(leg.betType || '—')}</td><td>${esc(leg.odds || '—')}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
+    tr.innerHTML = `<td>${legRace}</td><td>${esc(leg.selection || '—')}</td><td>${esc(leg.odds || '—')}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
     wrap.appendChild(tr);
   });
 }
