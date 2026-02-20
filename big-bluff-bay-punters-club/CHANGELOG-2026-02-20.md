@@ -120,13 +120,15 @@
 
 ## Punters promo overhaul (below-the-fold)
 - Replaced the flat/terminal-like lower section with a premium promo composition:
-  - new layered promo band with felt-style gradient + tasteful glow
-  - punchy headline, scannable bullets, and primary conversion buttons
-  - 4-card promo grid for lock rules, live ladder/jackpot, Bosses Multi, and Winners Wall
+  - new structured `punters-promo` wrapper with felt gradient and card surfaces
+  - section header + 2x2 feature card grid with badge-style icon chips
+  - upgraded FREE vs Jackpot Eligible block to comparison-offer layout with Recommended badge
+  - CTA row restored inside promo wrapper: Enter Punters Club / See Winners
+- Added PCH-inspired conversion modules:
+  - **Take a Tour** strip: Tip Once → Lock Hits → Ladder Updates → Jackpot/Winners
+  - **Stats Preview** teaser card wired from existing milestones/winners data
+  - **Banter Wall** comms teaser with lightweight “Share your tip” action
 - Upgraded Bosses Multi area into spotlight-style presentation while keeping live data wiring intact.
-- Added social-proof polish and a dedicated end-of-section CTA band:
-  - “Enter Punters Club” + “See Winners”
-  - urgency microcopy around lock/edit window
 - Preserved accessibility and performance posture:
   - semantic headings/lists
   - mobile-first stacking and tap targets

@@ -1041,8 +1041,27 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
   box-shadow: 0 10px 22px rgba(0,0,0,.24);
 }
 .punters-promo__card h3 { margin: .45rem 0 .3rem; color: #eaf0f5; }
+.punters-promo__tour,
+.punters-promo__upgrade { margin-top: .9rem; }
+.punters-promo__tour {
+  border-color: rgba(120,140,180,.34);
+  background: linear-gradient(180deg,#0f1a2c,#0b1524);
+}
+.punters-promo__tour-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin: .45rem 0;
+}
+.punters-promo__teasers {
+  margin-top: .8rem;
+  display: grid;
+  gap: .7rem;
+  grid-template-columns: 1fr;
+}
+.punters-promo__stats,
+.punters-promo__social { background: #0b1220; border-color: #2f4158; }
 .punters-promo__upgrade {
-  margin-top: .9rem;
   border-color: rgba(234,179,8,.42);
   background: radial-gradient(700px 240px at 90% -55%, rgba(234,179,8,.14), transparent 62%), linear-gradient(180deg,#171407,#0c1424);
 }
@@ -1085,8 +1104,9 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 @media (min-width: 760px) {
   .punters-promo__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .punters-promo__upgrade-cols { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .punters-promo__teasers { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .promo-band, .bosses-spotlight, .promo-tile { transition: none !important; }
+  .punters-promo__card, .bosses-spotlight { transition: none !important; }
 }

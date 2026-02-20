@@ -166,6 +166,14 @@ function renderMilestones(data){
   if (statPaid) statPaid.textContent = money.format(paidTotal);
   if (statRoll) statRoll.textContent = `${rolloverCount}`;
 
+  const promoRounds = $('promo-stat-rounds');
+  const promoPaid = $('promo-stat-paid');
+  const promoStreak = $('promo-top-streak');
+  const topStreak = (data?.streakLeaderboard || [])[0];
+  if (promoRounds) promoRounds.textContent = `${historyRows.length}`;
+  if (promoPaid) promoPaid.textContent = money.format(paidTotal);
+  if (promoStreak) promoStreak.textContent = topStreak ? `${topStreak.member} (${Number(topStreak.currentStreak || 0)} week streak)` : 'No streak data yet';
+
   winnerHistory.innerHTML='';
   historyRows.slice(0,8).forEach((row)=>{
     const tr=document.createElement('tr');
