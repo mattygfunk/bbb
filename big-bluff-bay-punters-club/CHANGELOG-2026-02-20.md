@@ -178,6 +178,22 @@
   - `poker-faq.html`
   - `how-punters-works.html`
 - Result: stronger “what’s next” UX, consistent premium footer/legal/social block, and live countdown context across key evergreen pages.
+
+## Poker join conversion flow
+- Updated `/poker-schedule.html` primary join CTA to route to new `/join.html` conversion page.
+- Added dynamic trust/urgency chips on schedule page:
+  - invites open/paused
+  - setup time estimate
+  - next game countdown
+- Added new `/join.html` with:
+  - live invite status row + next-event countdown widget
+  - 4-step join checklist cards
+  - copy utilities (club ID, join message, support intro)
+  - localStorage progress checklist + reset
+  - friction-reduction FAQ + CTA footer band
+- Added shared config/helpers module: `bbb-shared.js`.
+  - Edit invite + join settings in `JOIN_CONFIG` (invitesOpen, approvalTimeMinutes, setupEstimateMinutes, clubId, joinMessageTemplate)
+  - Edit event schedule/settings in `SCHEDULE_CONFIG`.
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

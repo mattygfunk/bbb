@@ -871,3 +871,12 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 @media (prefers-reduced-motion: reduce) {
   .punters-promo__card, .bosses-spotlight { transition: none !important; }
 }
+
+/* Join flow */
+.join-status { border-color: rgba(34,197,94,.38); background: radial-gradient(700px 260px at 12% -32%, rgba(34,197,94,.14), transparent 60%), linear-gradient(180deg,#102016,#0b1422); }
+.join-status__chip { font-weight: 700; }
+.join-steps .join-step { border-color: rgba(120,140,180,.35); background: linear-gradient(180deg,#101b2f,#0c1525); }
+.join-tools, .join-checklist, .join-faq { border-color: rgba(120,140,180,.32); }
+.join-checklist label { display:flex; gap:.5rem; align-items:center; }
+.join-checklist input[type='checkbox'] { width:auto; }
+.join-faq details { margin-top: .5rem; }

@@ -40,8 +40,13 @@
       <h1 id="poker-lobby-heading">Tonight at Big Bluff Bay</h1>
       <p class="muted">Structured nightly games + a Sunday flagship. Clear pathways. Real momentum.</p>
       <div class="row-actions">
-        <a class="btn chip-btn" href="/poker.html#join">Join Big Bluff Bay</a>
+        <a class="btn chip-btn" id="schedule-join-cta" href="/join.html">Join Big Bluff Bay</a>
         <a class="btn btn-ghost" href="/how-poker-works.html">How it Works</a>
+      </div>
+      <div class="row-actions join-status" aria-label="Invite and urgency status">
+        <span class="pill join-status__chip" id="invite-open-chip">✅ Invites Open</span>
+        <span class="pill join-status__chip" id="setup-chip">🕒 Setup ~3 mins</span>
+        <span class="pill join-status__chip" id="next-game-chip">⏱ Next game starts in --:--:--</span>
       </div>
     </section>
 
@@ -132,6 +137,7 @@
     <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
     <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
   </footer>
-  <script defer src="poker-schedule.js?v=20260221-1"></script>
+  <script defer src="bbb-shared.js?v=20260221-2"></script>
+  <script defer src="poker-schedule.js?v=20260221-2"></script>
 </body>
 </html>
