@@ -24,12 +24,29 @@
       </a>
       <div class="menu-links"><a class="menu-link" href="/">🏠 Home</a><a class="menu-link" href="/punters.html">🏇 Punters Club</a><a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a><a class="menu-link" href="/poker">📊 Poker Analytics</a></div>
     </nav>
+
   </header>
 
   <main class="wrap premium-main">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="/">Home</a><span>›</span><a href="/poker.html">Poker</a><span>›</span><span aria-current="page">Poker Rules</span>
     </nav>
+
+    <section class="card poker-next-event" aria-labelledby="dynamic-next-heading">
+      <div class="section-head">
+        <h2 id="dynamic-next-heading">What’s Next at Big Bluff Bay</h2>
+        <span class="pill" id="dynamic-next-status">Starts in</span>
+      </div>
+      <h3 id="dynamic-next-title">Loading next event…</h3>
+      <p class="muted" id="dynamic-next-when">Melbourne: — • Local: —</p>
+      <p class="muted" id="dynamic-next-value">Structured nightly games + Sunday flagship.</p>
+      <p class="next-race-callout" id="dynamic-next-countdown">--:--:--</p>
+      <div class="row-actions">
+        <a class="btn chip-btn" href="/poker.html#join">Join Big Bluff Bay</a>
+        <a class="btn btn-ghost" href="/poker-schedule.html">Full Schedule</a>
+      </div>
+    </section>
+
 
     <section class="card">
       <h1>Poker Rules (Universal Standards + House Rules)</h1>
@@ -127,7 +144,30 @@
     </section>
   </main>
 
-  <footer class="wrap footer muted"><p>© 2026 Big Bluff Bay</p>  <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
-    </footer>
+  
+  <footer class="wrap footer enhanced-footer muted">
+    <div class="footer-grid">
+      <div>
+        <strong>Big Bluff Bay Poker Club</strong>
+        <p class="muted">Structured events, consistent schedules, and clear tournament pathways.</p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Navigate</h3>
+        <p><a class="menu-link" href="/">Home</a> <a class="menu-link" href="/poker.html">Poker</a> <a class="menu-link" href="/poker-guides.html">Poker Guides</a> <a class="menu-link" href="/poker-faq.html">Poker FAQ</a></p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Legal</h3>
+        <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Social</h3>
+        <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a></p>
+      </div>
+    </div>
+    <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
+    <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
+  </footer>
+
+  <script defer src="poker-dynamic-strip.js?v=20260221-1"></script>
 </body>
 </html>

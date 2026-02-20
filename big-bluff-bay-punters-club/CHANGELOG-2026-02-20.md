@@ -162,6 +162,22 @@
   - timezone mode toggle (Melbourne/local)
   - lightweight session recommendation logic
 - Added poker lobby styling in `styles.css` with mobile-first card/grid behavior and accessible focus-preserving controls.
+
+## 5-star uplift batch: how-poker-works + 10 low-scoring pages
+- Upgraded `how-poker-works.html` with dynamic “What’s Next at Big Bluff Bay” lobby strip (live status + countdown + Melbourne/local time) and corrected enhanced footer.
+- Added shared dynamic strip script: `poker-dynamic-strip.js` (frontend-only, no backend dependency).
+- Applied the same premium dynamic strip + footer standardization to 10 additional low-scoring pages:
+  - `melbourne-poker-options.html`
+  - `sydney-poker-options.html`
+  - `brisbane-poker-options.html`
+  - `perth-poker-options.html`
+  - `adelaide-poker-options.html`
+  - `australia-poker-options.html`
+  - `poker-rules.html`
+  - `poker-guides.html`
+  - `poker-faq.html`
+  - `how-punters-works.html`
+- Result: stronger “what’s next” UX, consistent premium footer/legal/social block, and live countdown context across key evergreen pages.
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap
