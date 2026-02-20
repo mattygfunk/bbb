@@ -1017,31 +1017,50 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 #next-tip-entry-split { align-items: start; }
 #next-tip-entry-split > .card { height: 100%; }
 
-.promo-band {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(234,179,8,.35);
-  background: radial-gradient(900px 320px at 12% -35%, rgba(34,197,94,.20), transparent 60%), linear-gradient(180deg,#0f1c18,#0a1322);
-  box-shadow: 0 16px 36px rgba(0,0,0,.32);
+.punters-promo__wrap {
+  background: radial-gradient(1000px 380px at 15% -35%, rgba(34,197,94,.16), transparent 62%), linear-gradient(180deg, #12221b 0%, #0b1626 100%);
+  border: 1px solid rgba(120,140,180,.34);
+  box-shadow: 0 16px 38px rgba(0,0,0,.30);
 }
-.promo-band-glow {
-  position: absolute;
-  inset: auto -15% -58% -15%;
-  height: 70%;
-  background: radial-gradient(circle at center, rgba(234,179,8,.18), transparent 72%);
-  pointer-events: none;
-}
-.promo-bullets { margin: .45rem 0 0; padding-left: 1rem; }
-.promo-bullets li { margin: .4rem 0; color: #e5e7eb; }
-.promo-grid {
+.punters-promo__header h2 { margin: .4rem 0 .35rem; color: #eaf0f5; }
+.punters-promo__header p { max-width: 70ch; }
+.punters-promo__grid {
+  margin-top: .8rem;
   display: grid;
-  gap: .75rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: .8rem;
+  grid-template-columns: 1fr;
 }
-.promo-tile {
-  border-color: rgba(120,140,180,.38);
-  background: linear-gradient(180deg,#101b2f,#0c1423);
+.punters-promo__card {
+  border-color: rgba(120,140,180,.36);
+  background: linear-gradient(180deg,#101b2f,#0d1627);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
+.punters-promo__card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(234,179,8,.45);
+  box-shadow: 0 10px 22px rgba(0,0,0,.24);
+}
+.punters-promo__card h3 { margin: .45rem 0 .3rem; color: #eaf0f5; }
+.punters-promo__upgrade {
+  margin-top: .9rem;
+  border-color: rgba(234,179,8,.42);
+  background: radial-gradient(700px 240px at 90% -55%, rgba(234,179,8,.14), transparent 62%), linear-gradient(180deg,#171407,#0c1424);
+}
+.punters-promo__upgrade-cols {
+  display: grid;
+  gap: .7rem;
+  grid-template-columns: 1fr;
+  margin-top: .55rem;
+}
+.punters-promo__upgrade-cols .card { background: #0b1220; border-color: #2f4158; }
+.punters-promo__cta {
+  margin-top: .9rem;
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+.punters-promo__cta .btn { min-width: 180px; }
+
 .promo-split > .card { border-color: rgba(120,140,180,.3); }
 .bosses-spotlight {
   border-color: rgba(234,179,8,.42);
@@ -1061,7 +1080,11 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
   #bosses-progress td, #bosses-progress th { white-space: nowrap; }
   #bosses-bet-card .table-wrap { border: 1px solid #2a3a50; border-radius: .72rem; }
   .promo-cta-band .btn,
-  .promo-band .btn { width: 100%; }
+  .punters-promo__cta .btn { width: 100%; }
+}
+@media (min-width: 760px) {
+  .punters-promo__grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .punters-promo__upgrade-cols { grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

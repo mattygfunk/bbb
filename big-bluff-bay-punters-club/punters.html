@@ -128,34 +128,61 @@
         <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th></tr></thead><tbody id="round-recap-top3"><tr><td colspan="3" class="muted">No recap yet.</td></tr></tbody></table></div>
       </section>
 
-      <section class="card promo-band" id="punters-promo-band" aria-labelledby="promo-band-heading">
-        <div class="promo-band-glow" aria-hidden="true"></div>
-        <p class="pill">🏇 Big Bluff Bay • Premium Punters Lounge</p>
-        <h2 id="promo-band-heading">Punters Club that turns discipline into poker nights.</h2>
-        <p class="muted">No noise. One clean entry flow, transparent lock rules, and live pressure every round.</p>
-        <ul class="promo-bullets">
-          <li>🔒 One clean tip entry — edits allowed until lock.</li>
-          <li>📊 Live ladder, points, and jackpots — transparent updates.</li>
-          <li>🔥 Bosses Multi: land it → next-day Poker Freeroll worth <strong id="promo-freeroll-value">TBA</strong>.</li>
-        </ul>
-        <div class="row-actions" style="margin-top:.55rem">
-          <a class="btn chip-btn" href="/punters.html#tip-form">Enter Punters Club</a>
-          <a class="btn btn-ghost" href="/winners.html">See Winners</a>
-        </div>
-      </section>
+      <section class="punters-promo" aria-labelledby="punters-promo-heading">
+        <div class="punters-promo__wrap card">
+          <div class="punters-promo__header">
+            <p class="pill">🏇 Big Bluff Bay • Premium Punters Lounge</p>
+            <h2 id="punters-promo-heading">Punters Club that turns discipline into poker nights.</h2>
+            <p class="muted">High-pressure rounds, clean rules, and verified outcomes. Tip sharp. Lock in. Let the board talk.</p>
+          </div>
 
-      <section class="promo-grid" aria-label="Punters Club highlights">
-        <article class="card promo-tile"><h3>🔒 1 Tip Entry. Locked Rules.</h3><p class="muted">One clear entry path. Same lock clock for everyone. No late edits after cutoff.</p></article>
-        <article class="card promo-tile"><h3>🏆 Live Ladder + Jackpot</h3><p class="muted">Watch points and rankings update openly. Pure scoreboard pressure, no hidden logic.</p></article>
-        <article class="card promo-tile"><h3>🔥 Bosses Multi → Poker Freeroll</h3><p class="muted">Every round features a live PLACE multi. If it lands, eligible punters hit next-day poker value.</p></article>
-        <article class="card promo-tile"><h3>✅ Winners Wall</h3><p class="muted">Verified outcomes, payout history, and streaks — built for trust, not hype claims.</p></article>
-      </section>
+          <div class="punters-promo__grid" aria-label="Punters Club feature cards">
+            <article class="punters-promo__card card">
+              <span class="pill">🔒 Locked at cutoff</span>
+              <h3>1 Tip Entry. Locked Rules.</h3>
+              <p class="muted">One clean tip flow. Same lock clock for everyone. No edits after cutoff.</p>
+            </article>
+            <article class="punters-promo__card card">
+              <span class="pill">🏆 Live updates</span>
+              <h3>Live Ladder + Jackpot</h3>
+              <p class="muted">Watch points and rankings update openly. Pure scoreboard pressure, no hidden logic.</p>
+            </article>
+            <article class="punters-promo__card card">
+              <span class="pill">🔥 Place multi</span>
+              <h3>Bosses Multi → Poker Freeroll</h3>
+              <p class="muted">Every round features a live PLACE multi. If it lands, eligible punters hit next-day poker value.</p>
+            </article>
+            <article class="punters-promo__card card">
+              <span class="pill">✅ Verified payouts</span>
+              <h3>Winners Wall</h3>
+              <p class="muted">Verified outcomes, payout history, and streaks — built for trust, not hype claims.</p>
+            </article>
+          </div>
 
-      <section class="card" id="pricing-explainer-section">
-        <h2>FREE vs Jackpot Eligible ($20)</h2>
-        <p class="muted">Everyone can tip for FREE. Upgrade to <strong>Jackpot Eligible</strong> for $20 to unlock full ladder visibility and jackpot payout eligibility.</p>
-        <div class="row-actions" style="margin-top:.45rem">
-          <button class="btn" id="upgrade-tier-btn" type="button">Upgrade to Jackpot Eligible</button>
+          <article class="punters-promo__upgrade card" id="pricing-explainer-section">
+            <div>
+              <h3>FREE vs Jackpot Eligible ($20)</h3>
+              <p class="muted">Everyone can tip for FREE. Upgrade to <strong>Jackpot Eligible</strong> for $20 to unlock full ladder visibility and jackpot payout eligibility.</p>
+            </div>
+            <div class="punters-promo__upgrade-cols">
+              <div class="card">
+                <p class="pill">FREE</p>
+                <p class="muted">Tip entry + basic view.</p>
+              </div>
+              <div class="card">
+                <p class="pill">Recommended</p>
+                <p class="muted"><strong>Jackpot Eligible:</strong> full ladder visibility + jackpot eligibility.</p>
+              </div>
+            </div>
+            <div class="row-actions" style="margin-top:.45rem">
+              <button class="btn" id="upgrade-tier-btn" type="button">Upgrade to Jackpot Eligible</button>
+            </div>
+          </article>
+
+          <div class="punters-promo__cta">
+            <a class="btn chip-btn" href="/punters.html#tip-form">Enter Punters Club</a>
+            <a class="btn btn-ghost" href="/winners.html">See Winners</a>
+          </div>
         </div>
       </section>
       <div class="split promo-split">
