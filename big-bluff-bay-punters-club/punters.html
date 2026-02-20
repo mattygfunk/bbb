@@ -76,6 +76,25 @@
         <span>›</span>
         <span aria-current="page">🏇 Punters Club</span>
       </nav>
+
+      <section class="card" id="punters-login-gate" aria-labelledby="punters-login-heading" hidden>
+        <h2 id="punters-login-heading">Log in to continue</h2>
+        <p class="muted">Log in first to enter tips, view your full card, and track your weekly position.</p>
+        <form id="login-form" class="stack" style="max-width:460px">
+          <label>Username
+            <input name="member" type="text" autocomplete="username" required />
+          </label>
+          <label>Password / PIN
+            <input name="pin" type="password" autocomplete="current-password" required />
+          </label>
+          <div class="row-actions">
+            <button class="btn" type="submit" data-mode="login">Log In</button>
+            <button class="btn btn-ghost" type="submit" data-mode="register">Register + Log In</button>
+          </div>
+          <p id="login-msg" class="muted" aria-live="polite"></p>
+        </form>
+      </section>
+
       <div class="split" id="next-tip-entry-split">
         <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading">
           <h2 id="next-tip-punters-heading">Your Next Race Tip</h2>
@@ -95,7 +114,7 @@
           <p class="muted" id="next-tip-punters-social">You’re first on the card</p>
           <div class="row-actions">
             <a class="btn chip-btn" id="next-tip-punters-primary" href="/">Log In</a>
-            <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#auth-controls">Log In First</a>
+            <a class="btn btn-ghost" id="next-tip-punters-secondary" href="/punters.html#punters-login-gate">Log In First</a>
           </div>
         </section>
 
@@ -204,7 +223,7 @@
           </article>
 
           <div class="punters-promo__cta">
-            <a class="btn chip-btn" href="/punters.html#auth-controls">Log In to Continue</a>
+            <a class="btn chip-btn" href="/punters.html#punters-login-gate">Log In to Continue</a>
           </div>
         </div>
       </section>
