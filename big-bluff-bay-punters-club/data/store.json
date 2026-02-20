@@ -8,6 +8,7 @@
       "createdAt": 1770982280179,
       "profile": {
         "bio": "",
+        "email": "",
         "profilePic": "",
         "settings": {
           "emailNotifications": false,
@@ -24,6 +25,7 @@
       "createdAt": 1770984683400,
       "profile": {
         "bio": "",
+        "email": "",
         "profilePic": "",
         "settings": {
           "emailNotifications": false,
@@ -40,6 +42,7 @@
       "createdAt": 1771216324060,
       "profile": {
         "bio": "",
+        "email": "",
         "profilePic": "",
         "settings": {
           "emailNotifications": false,
@@ -56,6 +59,7 @@
       "createdAt": 1771235620298,
       "profile": {
         "bio": "",
+        "email": "",
         "profilePic": "",
         "settings": {
           "emailNotifications": false,
@@ -249,5 +253,893 @@
       "createdAt": 1771153200000,
       "createdBy": "ocr-import"
     }
-  ]
+  ],
+  "pokerPlayers": [],
+  "pokerV2": {
+    "players": [
+      {
+        "id": "fa6c40c5-3d42-4724-a288-ff09d7935662",
+        "displayName": "Cptred",
+        "canonicalName": "cptred",
+        "deletedAt": null,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      },
+      {
+        "id": "b7801968-46db-4140-9ea1-c8f24739029d",
+        "displayName": "FloppinQuads8888",
+        "canonicalName": "floppinquads8888",
+        "deletedAt": null,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      },
+      {
+        "id": "9092cca3-140d-4677-99a9-17a6919043b4",
+        "displayName": "rumpig3",
+        "canonicalName": "rumpig3",
+        "deletedAt": null,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      }
+    ],
+    "playerAliases": [
+      {
+        "id": "c4c24f7b-8ec7-46bc-a360-1f69c396c626",
+        "playerId": "fa6c40c5-3d42-4724-a288-ff09d7935662",
+        "alias": "Cptred",
+        "source": "legacy-result",
+        "createdAt": 1771470419161
+      },
+      {
+        "id": "33d3d16a-6f02-47b4-bab0-0688219a7fa3",
+        "playerId": "b7801968-46db-4140-9ea1-c8f24739029d",
+        "alias": "FloppinQuads8888",
+        "source": "legacy-result",
+        "createdAt": 1771470419161
+      },
+      {
+        "id": "e9f0b953-e116-49dd-ad15-98112064072a",
+        "playerId": "9092cca3-140d-4677-99a9-17a6919043b4",
+        "alias": "rumpig3",
+        "source": "legacy-result",
+        "createdAt": 1771470419161
+      }
+    ],
+    "events": [
+      {
+        "id": "1edce9a5-b62e-4608-b139-371329f4dd67",
+        "name": "Nightly 500gtd",
+        "type": "nightly",
+        "startAt": 1771470419161,
+        "buyIn": null,
+        "gtd": 500,
+        "isActive": true,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      },
+      {
+        "id": "4d805681-1aab-4568-bc98-6b86da97bab9",
+        "name": "Nightly 700gtd",
+        "type": "nightly",
+        "startAt": 1771470419161,
+        "buyIn": null,
+        "gtd": 700,
+        "isActive": true,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      },
+      {
+        "id": "419833be-2690-4aea-b84f-e135d674d8e7",
+        "name": "Sunday 1300gtd",
+        "type": "special",
+        "startAt": 1771470419161,
+        "buyIn": null,
+        "gtd": 1300,
+        "isActive": true,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      }
+    ],
+    "seasons": [
+      {
+        "id": "1a3ba45d-1a14-43c6-8a06-632bf3c2d45c",
+        "name": "Season 1",
+        "startAt": 1763694419161,
+        "endAt": null,
+        "isActive": true,
+        "createdAt": 1771470419161,
+        "updatedAt": 1771470419161
+      }
+    ],
+    "results": [
+      {
+        "id": "92601026-61b4-4dd0-b8b5-88bb0d34d6cb",
+        "legacyId": "0d6a8031-5e75-45c1-8375-6806c4bdec01",
+        "playerId": "fa6c40c5-3d42-4724-a288-ff09d7935662",
+        "eventId": "4d805681-1aab-4568-bc98-6b86da97bab9",
+        "seasonId": "1a3ba45d-1a14-43c6-8a06-632bf3c2d45c",
+        "date": 1771153200000,
+        "points": "450.5",
+        "finish": 1,
+        "finalTable": true,
+        "cashed": true,
+        "notes": "",
+        "screenshotRef": "",
+        "createdBy": "ocr-import",
+        "createdAt": 1771153200000,
+        "official": true
+      },
+      {
+        "id": "29636b2b-8c1f-432f-9d32-3aebde784b43",
+        "legacyId": "94de55ec-4bc5-428d-be9d-fa5227912d19",
+        "playerId": "b7801968-46db-4140-9ea1-c8f24739029d",
+        "eventId": "4d805681-1aab-4568-bc98-6b86da97bab9",
+        "seasonId": "1a3ba45d-1a14-43c6-8a06-632bf3c2d45c",
+        "date": 1771153200000,
+        "points": "270.3",
+        "finish": 2,
+        "finalTable": true,
+        "cashed": true,
+        "notes": "",
+        "screenshotRef": "",
+        "createdBy": "ocr-import",
+        "createdAt": 1771153200000,
+        "official": true
+      },
+      {
+        "id": "e4e4e355-3cb4-4bb4-b3a3-5c866d9e8b14",
+        "legacyId": "e5617e49-ef8e-4819-8791-539549b6e9e7",
+        "playerId": "9092cca3-140d-4677-99a9-17a6919043b4",
+        "eventId": "4d805681-1aab-4568-bc98-6b86da97bab9",
+        "seasonId": "1a3ba45d-1a14-43c6-8a06-632bf3c2d45c",
+        "date": 1771153200000,
+        "points": "180.2",
+        "finish": 3,
+        "finalTable": true,
+        "cashed": true,
+        "notes": "",
+        "screenshotRef": "",
+        "createdBy": "ocr-import",
+        "createdAt": 1771153200000,
+        "official": true
+      }
+    ],
+    "auditLogs": []
+  },
+  "puntersClub": {
+    "rounds": [
+      {
+        "id": "e4bc8e51-c683-4d6a-b6f7-4100c72e5dfe",
+        "trackId": "thoroughbreds",
+        "label": "Thoroughbreds Round 1",
+        "status": "open",
+        "createdAt": 1771546757565,
+        "entryFee": 20,
+        "payments": [
+          {
+            "id": "f67381b3-a546-4da3-953a-06418abe8a84",
+            "member": "farmilut",
+            "amount": 20,
+            "verified": true,
+            "method": "legacy-paid-flag",
+            "reference": "",
+            "verifiedAt": 1771546757565,
+            "verifiedBy": "system"
+          }
+        ],
+        "entries": [
+          {
+            "member": "farmilut",
+            "tips": 9,
+            "tier": "JACKPOT",
+            "paid": true
+          }
+        ],
+        "payouts": []
+      }
+    ],
+    "claims": [],
+    "payoutAudit": [],
+    "paymentAudit": [],
+    "leaderboardCache": {},
+    "settings": {
+      "nextRoundOpensAt": null
+    },
+    "tracks": {
+      "greyhounds": {
+        "fixtures": [
+          {
+            "id": "pc-greyhounds-f1",
+            "date": "",
+            "event": "Greyhounds Meet",
+            "track": "Sandown Park",
+            "raceCount": 10
+          }
+        ],
+        "raceResults": {},
+        "bossesBet": {
+          "legs": [],
+          "selections": {},
+          "updatedAt": null,
+          "updatedBy": null,
+          "legItems": [],
+          "title": "Bosses Multi",
+          "status": "live",
+          "eligibilityNote": "Eligible = all players who entered tips this week before lock.",
+          "freerollPrize": 0
+        },
+        "raceRunners": {}
+      },
+      "thoroughbreds": {
+        "fixtures": [
+          {
+            "id": "f1",
+            "date": "Sat 21 Feb, 11:30AM",
+            "event": "Next Meet",
+            "track": "Caulfeild",
+            "raceCount": 10
+          }
+        ],
+        "raceResults": {
+          "R1": {
+            "first": [
+              "5"
+            ],
+            "second": [
+              "2"
+            ],
+            "third": [
+              "4"
+            ],
+            "substitutions": [],
+            "updatedAt": 1770990617884,
+            "updatedBy": "farmilut"
+          }
+        },
+        "bossesBet": {
+          "legs": [
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "R5",
+            "R6",
+            "R7",
+            "R8",
+            "R9"
+          ],
+          "selections": {
+            "R1": "5",
+            "R2": "6",
+            "R3": "10",
+            "R4": "4",
+            "R5": "5",
+            "R6": "6",
+            "R7": "9",
+            "R8": "3",
+            "R9": "12"
+          },
+          "updatedAt": 1771043213732,
+          "updatedBy": "farmilut",
+          "legItems": [],
+          "title": "Bosses Multi",
+          "status": "live",
+          "eligibilityNote": "Eligible = all players who entered tips this week before lock.",
+          "freerollPrize": 0
+        },
+        "raceRunners": {
+          "R1": {
+            "importedAt": "2026-02-20T16:12:12.406Z",
+            "importedBy": "openclaw-manual",
+            "source": "manual-paste",
+            "notes": "Imported from provided sample block",
+            "runners": [
+              {
+                "raceNumber": 1,
+                "runnerNumber": 1,
+                "horseName": "HARRY'S YACHT",
+                "barrier": 1,
+                "jockeyRaw": "JB Allen",
+                "trainerRaw": "TL & T Corstens & W Larkin",
+                "participantsRaw": "JB AllenTL & T Corstens & W Larkin",
+                "form": "23143",
+                "weightKg": 23143,
+                "rating": 60.5,
+                "prices": {
+                  "win": 7.5,
+                  "place": 2.3,
+                  "alt1": 8.6,
+                  "alt2": 1.4
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "HARRY'S YACHT (1)\nJB AllenTL & T Corstens & W Larkin\n23143 60.5 91\n7.50 2.30 8.60 1.40"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 2,
+                "horseName": "BLACK STORM",
+                "barrier": 8,
+                "jockeyRaw": "JH Coffey",
+                "trainerRaw": "TT Fitzsimmons",
+                "participantsRaw": "JH CoffeyTT Fitzsimmons",
+                "form": "7x192",
+                "weightKg": 7192,
+                "rating": 58.5,
+                "prices": {
+                  "win": 23,
+                  "place": 5,
+                  "alt1": 46.8,
+                  "alt2": 4.9
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "BLACK STORM (8)\nJH CoffeyTT Fitzsimmons\n7x192 58.5 84\n23.00 5.00 46.80 4.90"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 3,
+                "horseName": "KINGS VALLEY",
+                "barrier": 5,
+                "jockeyRaw": "JJ Allen",
+                "trainerRaw": "TC Maher",
+                "participantsRaw": "JJ AllenTC Maher",
+                "form": "4235x",
+                "weightKg": 4235,
+                "rating": 58.5,
+                "prices": {
+                  "win": 16,
+                  "place": 3.8,
+                  "alt1": 27.1,
+                  "alt2": 2.6
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "KINGS VALLEY (5)\nJJ AllenTC Maher\n4235x 58.5 75\n16.00 3.80 27.10 2.60"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 4,
+                "horseName": "NARBOLD",
+                "barrier": 2,
+                "jockeyRaw": "JB Melham",
+                "trainerRaw": "TC Waller",
+                "participantsRaw": "JB MelhamTC Waller",
+                "form": "32x01",
+                "weightKg": 3201,
+                "rating": 58,
+                "prices": {
+                  "win": 11,
+                  "place": 2.9,
+                  "alt1": 33.1,
+                  "alt2": 3.5
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "NARBOLD (2)\nJB MelhamTC Waller\n32x01 58 85\n11.00 2.90 33.10 3.50"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 5,
+                "horseName": "PLACE OF GOLD",
+                "barrier": 3,
+                "jockeyRaw": "JE Brown",
+                "trainerRaw": "TC Brown",
+                "participantsRaw": "JE BrownTC Brown",
+                "form": "7x0x7",
+                "weightKg": 707,
+                "rating": 57.5,
+                "prices": {
+                  "win": 71,
+                  "place": 12,
+                  "alt1": 48.4,
+                  "alt2": 3.4
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "PLACE OF GOLD (3)\nJE BrownTC Brown\n7x0x7 57.5 75\n71.00 12.00 48.40 3.40"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 6,
+                "horseName": "PORTER",
+                "barrier": 7,
+                "jockeyRaw": "JL Ba",
+                "trainerRaw": "tesa(2)TD O'Brien",
+                "participantsRaw": "JL Batesa(2)TD O'Brien",
+                "form": "20214",
+                "weightKg": 20214,
+                "rating": 57.5,
+                "prices": {
+                  "win": 6,
+                  "place": 2,
+                  "alt1": 16,
+                  "alt2": 2.4
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "PORTER (7)\nJL Batesa(2)TD O'Brien\n20214 57.5 100\n6.00 2.00 16.00 2.40"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 7,
+                "horseName": "RED GALAXY",
+                "barrier": 4,
+                "jockeyRaw": "JD Lane",
+                "trainerRaw": "TG Eurell",
+                "participantsRaw": "JD LaneTG Eurell",
+                "form": "00x38",
+                "weightKg": 38,
+                "rating": 57.5,
+                "prices": {
+                  "win": 16,
+                  "place": 3.8,
+                  "alt1": 20.3,
+                  "alt2": 3.4
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "RED GALAXY (4)\nJD LaneTG Eurell\n00x38 57.5 91\n16.00 3.80 20.30 3.40"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 8,
+                "horseName": "ANGRY SKIES",
+                "barrier": 8,
+                "jockeyRaw": "JD S",
+                "trainerRaw": "tackhouseTB, W & J Hayes",
+                "participantsRaw": "JD StackhouseTB, W & J Hayes",
+                "form": "508x0",
+                "weightKg": 5080,
+                "rating": 57,
+                "prices": {
+                  "win": null,
+                  "place": null,
+                  "alt1": null,
+                  "alt2": null
+                },
+                "isScratched": true,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "ANGRY SKIES (8)\nJD StackhouseTB, W & J Hayes\n508x0 57 76\nSCR SCR SCR SCR"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 9,
+                "horseName": "AUTUMN MYSTERY",
+                "barrier": 6,
+                "jockeyRaw": "JM Dee",
+                "trainerRaw": "TR Hunter",
+                "participantsRaw": "JM DeeTR Hunter",
+                "form": "2118x",
+                "weightKg": 2118,
+                "rating": 57,
+                "prices": {
+                  "win": 26,
+                  "place": 5,
+                  "alt1": 46.6,
+                  "alt2": 11.1
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "AUTUMN MYSTERY (6)\nJM DeeTR Hunter\n2118x 57 61\n26.00 5.00 46.60 11.10"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 10,
+                "horseName": "PRANCING SPIRIT",
+                "barrier": 10,
+                "jockeyRaw": "JL Neindorf",
+                "trainerRaw": "TP Stokes",
+                "participantsRaw": "JL NeindorfTP Stokes",
+                "form": "x0636",
+                "weightKg": 636,
+                "rating": 56.5,
+                "prices": {
+                  "win": 34,
+                  "place": 7,
+                  "alt1": 45.4,
+                  "alt2": 5.6
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "PRANCING SPIRIT (10)\nJL NeindorfTP Stokes\nx0636 56.5 91\n34.00 7.00 45.40 5.60"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 11,
+                "horseName": "RHINOCEROS",
+                "barrier": 13,
+                "jockeyRaw": "JNot No",
+                "trainerRaw": "tifiedTEmma-lee & D Browne",
+                "participantsRaw": "JNot NotifiedTEmma-lee & D Browne",
+                "form": "67463",
+                "weightKg": 67463,
+                "rating": 56,
+                "prices": {
+                  "win": null,
+                  "place": null,
+                  "alt1": null,
+                  "alt2": null
+                },
+                "isScratched": true,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "RHINOCEROS (13)\nJNot NotifiedTEmma-lee & D Browne\n67463 56 79\nSCR SCR SCR SCR"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 12,
+                "horseName": "STEALTH OF NIGHT",
+                "barrier": 11,
+                "jockeyRaw": "JC Williams",
+                "trainerRaw": "TB, W & J Hayes",
+                "participantsRaw": "JC WilliamsTB, W & J Hayes",
+                "form": "x2112",
+                "weightKg": 2112,
+                "rating": 55.5,
+                "prices": {
+                  "win": 2.5,
+                  "place": 1.35,
+                  "alt1": 1.3,
+                  "alt2": 2.7
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "STEALTH OF NIGHT (11)\nJC WilliamsTB, W & J Hayes\nx2112 55.5 91\n2.50 1.35 1.30 2.70"
+              },
+              {
+                "raceNumber": 1,
+                "runnerNumber": 13,
+                "horseName": "TWO WOLVES",
+                "barrier": 9,
+                "jockeyRaw": "JL Currie",
+                "trainerRaw": "TAnthony & S Freedman",
+                "participantsRaw": "JL CurrieTAnthony & S Freedman",
+                "form": "5x711",
+                "weightKg": 5711,
+                "rating": 54.5,
+                "prices": {
+                  "win": 5,
+                  "place": 1.8,
+                  "alt1": 13.8,
+                  "alt2": 3
+                },
+                "isScratched": false,
+                "warnings": [],
+                "confidence": "high",
+                "rawBlock": "TWO WOLVES (9)\nJL CurrieTAnthony & S Freedman\n5x711 54.5 95\n5.00 1.80 13.80 3.00"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "schedule": {
+      "greyhounds": {
+        "raceDay": 3,
+        "openHour": 9,
+        "openMinute": 0,
+        "lockHour": 18,
+        "lockMinute": 0
+      },
+      "thoroughbreds": {
+        "raceDay": 6,
+        "openHour": 9,
+        "openMinute": 0,
+        "lockHour": 15,
+        "lockMinute": 0
+      }
+    },
+    "jackpotCarryByTrack": {
+      "greyhounds": 0,
+      "thoroughbreds": 80
+    }
+  },
+  "raceRunners": {
+    "R1": {
+      "importedAt": "2026-02-20T16:12:12.406Z",
+      "importedBy": "openclaw-manual",
+      "source": "manual-paste",
+      "notes": "Imported from provided sample block",
+      "runners": [
+        {
+          "raceNumber": 1,
+          "runnerNumber": 1,
+          "horseName": "HARRY'S YACHT",
+          "barrier": 1,
+          "jockeyRaw": "JB Allen",
+          "trainerRaw": "TL & T Corstens & W Larkin",
+          "participantsRaw": "JB AllenTL & T Corstens & W Larkin",
+          "form": "23143",
+          "weightKg": 23143,
+          "rating": 60.5,
+          "prices": {
+            "win": 7.5,
+            "place": 2.3,
+            "alt1": 8.6,
+            "alt2": 1.4
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "HARRY'S YACHT (1)\nJB AllenTL & T Corstens & W Larkin\n23143 60.5 91\n7.50 2.30 8.60 1.40"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 2,
+          "horseName": "BLACK STORM",
+          "barrier": 8,
+          "jockeyRaw": "JH Coffey",
+          "trainerRaw": "TT Fitzsimmons",
+          "participantsRaw": "JH CoffeyTT Fitzsimmons",
+          "form": "7x192",
+          "weightKg": 7192,
+          "rating": 58.5,
+          "prices": {
+            "win": 23,
+            "place": 5,
+            "alt1": 46.8,
+            "alt2": 4.9
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "BLACK STORM (8)\nJH CoffeyTT Fitzsimmons\n7x192 58.5 84\n23.00 5.00 46.80 4.90"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 3,
+          "horseName": "KINGS VALLEY",
+          "barrier": 5,
+          "jockeyRaw": "JJ Allen",
+          "trainerRaw": "TC Maher",
+          "participantsRaw": "JJ AllenTC Maher",
+          "form": "4235x",
+          "weightKg": 4235,
+          "rating": 58.5,
+          "prices": {
+            "win": 16,
+            "place": 3.8,
+            "alt1": 27.1,
+            "alt2": 2.6
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "KINGS VALLEY (5)\nJJ AllenTC Maher\n4235x 58.5 75\n16.00 3.80 27.10 2.60"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 4,
+          "horseName": "NARBOLD",
+          "barrier": 2,
+          "jockeyRaw": "JB Melham",
+          "trainerRaw": "TC Waller",
+          "participantsRaw": "JB MelhamTC Waller",
+          "form": "32x01",
+          "weightKg": 3201,
+          "rating": 58,
+          "prices": {
+            "win": 11,
+            "place": 2.9,
+            "alt1": 33.1,
+            "alt2": 3.5
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "NARBOLD (2)\nJB MelhamTC Waller\n32x01 58 85\n11.00 2.90 33.10 3.50"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 5,
+          "horseName": "PLACE OF GOLD",
+          "barrier": 3,
+          "jockeyRaw": "JE Brown",
+          "trainerRaw": "TC Brown",
+          "participantsRaw": "JE BrownTC Brown",
+          "form": "7x0x7",
+          "weightKg": 707,
+          "rating": 57.5,
+          "prices": {
+            "win": 71,
+            "place": 12,
+            "alt1": 48.4,
+            "alt2": 3.4
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "PLACE OF GOLD (3)\nJE BrownTC Brown\n7x0x7 57.5 75\n71.00 12.00 48.40 3.40"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 6,
+          "horseName": "PORTER",
+          "barrier": 7,
+          "jockeyRaw": "JL Ba",
+          "trainerRaw": "tesa(2)TD O'Brien",
+          "participantsRaw": "JL Batesa(2)TD O'Brien",
+          "form": "20214",
+          "weightKg": 20214,
+          "rating": 57.5,
+          "prices": {
+            "win": 6,
+            "place": 2,
+            "alt1": 16,
+            "alt2": 2.4
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "PORTER (7)\nJL Batesa(2)TD O'Brien\n20214 57.5 100\n6.00 2.00 16.00 2.40"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 7,
+          "horseName": "RED GALAXY",
+          "barrier": 4,
+          "jockeyRaw": "JD Lane",
+          "trainerRaw": "TG Eurell",
+          "participantsRaw": "JD LaneTG Eurell",
+          "form": "00x38",
+          "weightKg": 38,
+          "rating": 57.5,
+          "prices": {
+            "win": 16,
+            "place": 3.8,
+            "alt1": 20.3,
+            "alt2": 3.4
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "RED GALAXY (4)\nJD LaneTG Eurell\n00x38 57.5 91\n16.00 3.80 20.30 3.40"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 8,
+          "horseName": "ANGRY SKIES",
+          "barrier": 8,
+          "jockeyRaw": "JD S",
+          "trainerRaw": "tackhouseTB, W & J Hayes",
+          "participantsRaw": "JD StackhouseTB, W & J Hayes",
+          "form": "508x0",
+          "weightKg": 5080,
+          "rating": 57,
+          "prices": {
+            "win": null,
+            "place": null,
+            "alt1": null,
+            "alt2": null
+          },
+          "isScratched": true,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "ANGRY SKIES (8)\nJD StackhouseTB, W & J Hayes\n508x0 57 76\nSCR SCR SCR SCR"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 9,
+          "horseName": "AUTUMN MYSTERY",
+          "barrier": 6,
+          "jockeyRaw": "JM Dee",
+          "trainerRaw": "TR Hunter",
+          "participantsRaw": "JM DeeTR Hunter",
+          "form": "2118x",
+          "weightKg": 2118,
+          "rating": 57,
+          "prices": {
+            "win": 26,
+            "place": 5,
+            "alt1": 46.6,
+            "alt2": 11.1
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "AUTUMN MYSTERY (6)\nJM DeeTR Hunter\n2118x 57 61\n26.00 5.00 46.60 11.10"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 10,
+          "horseName": "PRANCING SPIRIT",
+          "barrier": 10,
+          "jockeyRaw": "JL Neindorf",
+          "trainerRaw": "TP Stokes",
+          "participantsRaw": "JL NeindorfTP Stokes",
+          "form": "x0636",
+          "weightKg": 636,
+          "rating": 56.5,
+          "prices": {
+            "win": 34,
+            "place": 7,
+            "alt1": 45.4,
+            "alt2": 5.6
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "PRANCING SPIRIT (10)\nJL NeindorfTP Stokes\nx0636 56.5 91\n34.00 7.00 45.40 5.60"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 11,
+          "horseName": "RHINOCEROS",
+          "barrier": 13,
+          "jockeyRaw": "JNot No",
+          "trainerRaw": "tifiedTEmma-lee & D Browne",
+          "participantsRaw": "JNot NotifiedTEmma-lee & D Browne",
+          "form": "67463",
+          "weightKg": 67463,
+          "rating": 56,
+          "prices": {
+            "win": null,
+            "place": null,
+            "alt1": null,
+            "alt2": null
+          },
+          "isScratched": true,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "RHINOCEROS (13)\nJNot NotifiedTEmma-lee & D Browne\n67463 56 79\nSCR SCR SCR SCR"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 12,
+          "horseName": "STEALTH OF NIGHT",
+          "barrier": 11,
+          "jockeyRaw": "JC Williams",
+          "trainerRaw": "TB, W & J Hayes",
+          "participantsRaw": "JC WilliamsTB, W & J Hayes",
+          "form": "x2112",
+          "weightKg": 2112,
+          "rating": 55.5,
+          "prices": {
+            "win": 2.5,
+            "place": 1.35,
+            "alt1": 1.3,
+            "alt2": 2.7
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "STEALTH OF NIGHT (11)\nJC WilliamsTB, W & J Hayes\nx2112 55.5 91\n2.50 1.35 1.30 2.70"
+        },
+        {
+          "raceNumber": 1,
+          "runnerNumber": 13,
+          "horseName": "TWO WOLVES",
+          "barrier": 9,
+          "jockeyRaw": "JL Currie",
+          "trainerRaw": "TAnthony & S Freedman",
+          "participantsRaw": "JL CurrieTAnthony & S Freedman",
+          "form": "5x711",
+          "weightKg": 5711,
+          "rating": 54.5,
+          "prices": {
+            "win": 5,
+            "place": 1.8,
+            "alt1": 13.8,
+            "alt2": 3
+          },
+          "isScratched": false,
+          "warnings": [],
+          "confidence": "high",
+          "rawBlock": "TWO WOLVES (9)\nJL CurrieTAnthony & S Freedman\n5x711 54.5 95\n5.00 1.80 13.80 3.00"
+        }
+      ]
+    }
+  }
 }

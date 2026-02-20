@@ -2,7 +2,7 @@ const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -331,8 +331,56 @@ function renderRaceInputs(count){
     }
 
     row.innerHTML=`<label for='${selectId}'><strong>${race}</strong><span class='muted' style='position:absolute;left:-9999px'> selection</span></label><select id='${selectId}' name='${race}' aria-label='${race} selection'>${opts.join('')}</select>`;
+    const selEl = row.querySelector('select');
+    selEl?.addEventListener('change', () => { state.nextTipRace = race; renderRaceMarket(race); });
     wrap.appendChild(row);
   }
+}
+
+function getRaceFavoriteText(race='R1') {
+  const rows = state.raceRunners?.[String(race).toUpperCase()]?.runners || [];
+  const fav = rows.filter((r)=>!r?.isScratched && Number.isFinite(Number(r?.prices?.win))).sort((a,b)=>Number(a.prices.win)-Number(b.prices.win))[0];
+  return fav ? `Fav: ${fav.horseName} (${fav.prices.win})` : '';
+}
+
+function renderRaceMarket(race = state.nextTipRace || 'R1') {
+  const raceId = String(race || 'R1').toUpperCase();
+  const raceTag = $('race-market-race');
+  const top = $('race-market-top');
+  const body = $('race-market-body');
+  const sort = $('race-market-sort')?.value || 'order';
+  if (!raceTag || !top || !body) return;
+
+  raceTag.textContent = raceId;
+  const imported = state.raceRunners?.[raceId]?.runners || [];
+  if (!imported.length) {
+    top.textContent = 'Top of market: —';
+    body.innerHTML = "<tr><td colspan='5' class='muted'>No imported runners for this race yet.</td></tr>";
+    return;
+  }
+
+  const rows = [...imported];
+  if (sort === 'odds') rows.sort((a,b)=>((a?.isScratched?9999:Number(a?.prices?.win||9999)) - (b?.isScratched?9999:Number(b?.prices?.win||9999))));
+  else if (sort === 'barrier') rows.sort((a,b)=>(Number(a?.barrier||999)-Number(b?.barrier||999)));
+  else if (sort === 'name') rows.sort((a,b)=>String(a?.horseName||'').localeCompare(String(b?.horseName||'')));
+
+  const favs = imported
+    .filter((r)=>!r?.isScratched && Number.isFinite(Number(r?.prices?.win)))
+    .sort((a,b)=>Number(a.prices.win)-Number(b.prices.win))
+    .slice(0,3);
+  top.textContent = favs.length
+    ? `Top of market: ${favs.map((r,i)=>`${i+1}) ${r.horseName} (${r.prices.win})`).join(' • ')}`
+    : 'Top of market: no active odds available';
+
+  body.innerHTML = '';
+  rows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    const scr = Boolean(r?.isScratched);
+    const isFav = favs.some((f)=>f.horseName===r.horseName);
+    tr.className = `${scr?'scr-row':''} ${isFav?'fav-row':''}`.trim();
+    tr.innerHTML = `<td>${esc(`${r?.runnerNumber || idx+1}. ${r?.horseName || '—'}`)}</td><td>${r?.barrier ?? '—'}</td><td>${r?.prices?.win ?? '—'}</td><td>${r?.prices?.place ?? '—'}</td><td><span class='pill ${scr?'chip-red':''}'>${scr?'SCR':'Active'}</span></td>`;
+    body.appendChild(tr);
+  });
 }
 
 function markTipInteraction(){ state.lastTipInteractionAt = Date.now(); }
@@ -645,6 +693,10 @@ async function hydrateNextTipCard(trackId){
   const pick = $('next-tip-punters-pick');
   const social = $('next-tip-punters-social');
   if(!card || !primary || !badge || !countdown || !race || !context || !pick || !social) return;
+  const setSocial = (text='') => {
+    const fav = getRaceFavoriteText(state.nextTipRace || 'R1');
+    social.textContent = fav ? `${text} • ${fav}` : text;
+  };
   const setLockline = (text = '') => {
     if (!lockline) return;
     lockline.textContent = text;
@@ -664,7 +716,7 @@ async function hydrateNextTipCard(trackId){
   context.textContent = 'Punters Club • Member card';
   pick.textContent = '#—';
   setLockline('');
-  social.textContent = 'Syncing your member card…';
+  setSocial('Syncing your member card…');
   countdown.style.display = 'none';
   countdown.textContent = '';
   primary.textContent = 'Open Tip Form';
@@ -672,7 +724,7 @@ async function hydrateNextTipCard(trackId){
   secondary.hidden = true;
 
   // Signed-in users should never see a login CTA.
-  social.textContent = 'Syncing your member card…';
+  setSocial('Syncing your member card…');
   primary.textContent = 'Open Tip Form';
   primary.href = '/punters.html#tip-form';
 
@@ -728,6 +780,8 @@ async function hydrateNextTipCard(trackId){
 
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
+    state.nextTipRace = Number.isFinite(raceNum) && raceNum > 0 ? `R${raceNum}` : state.nextTipRace;
+    renderRaceMarket(state.nextTipRace);
     const apiVenue = String(d?.venue || '').trim();
     const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
     const venue = (apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (fallbackVenue || 'Track');
@@ -752,7 +806,7 @@ async function hydrateNextTipCard(trackId){
       card.className = 'card next-tip-card next-tip-card--closed';
       badge.textContent = 'ROUND COMPLETE';
       pick.textContent = '#—';
-      social.textContent = 'Next round opens soon.';
+      setSocial('Next round opens soon.');
       primary.textContent = 'View Results';
       primary.href = '/punters.html#leaderboard';
       return;
@@ -765,7 +819,7 @@ async function hydrateNextTipCard(trackId){
       pick.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
-      social.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
+      setSocial(others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`);
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html#leaderboard';
       return;
@@ -897,6 +951,7 @@ async function refresh(){
   state.raceCount = newRaceCount;
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   else renderRaceInputs(state.raceCount);
+  renderRaceMarket(state.nextTipRace || 'R1');
   const ladderFallback = $('ladder-fallback');
   const ladderRows = (overview || state.lastOverview)?.ladder || [];
   renderLeaderboard(ladderRows);
@@ -1105,6 +1160,7 @@ if (forgotForm) {
 // Buy-in vote submission removed: fixed $20 entry is live now.
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(state.roundStatus!=='OPEN'){$('tip-msg').textContent='Round finished ✅. Tips reopen next round.';return;}if(!state.tipsEditableNow){$('tip-msg').textContent=`Tips are locked for this round 🔒 • ${getCurrentRoundPoolText()}`;return;}if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
+$('race-market-sort')?.addEventListener('change', ()=>renderRaceMarket(state.nextTipRace || 'R1'));
 
 const tipForm = $('tip-form');
 if (tipForm) {

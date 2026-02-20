@@ -668,6 +668,10 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 }
 .punters-promo__cta .btn { min-width: 180px; }
 
+#race-market-card { border-color: rgba(120,140,180,.34); background: linear-gradient(180deg,#101b2f,#0c1524); }
+#race-market-top { margin:.3rem 0 .45rem; }
+#race-market-body .scr-row { opacity:.68; }
+#race-market-body .fav-row td:first-child { color:#fde68a; font-weight:700; }
 .member-cockpit {
   border: 1px solid rgba(120,140,180,.34);
   background: radial-gradient(700px 220px at 12% -30%, rgba(34,197,94,.12), transparent 62%), linear-gradient(180deg,#0f1a2c,#0b1422);

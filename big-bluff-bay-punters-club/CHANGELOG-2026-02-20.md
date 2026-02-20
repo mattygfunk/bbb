@@ -212,7 +212,10 @@
   - uses `overview.raceRunners` when present to build race selection options
   - displays imported runner names/barriers/place odds in dropdown labels
   - SCR runners are flagged and disabled in selection options
+  - adds Race Market Board with top-of-market favorites + sort controls
+  - next-tip social line now includes favorite context when race market is available
   - falls back to numeric 1–24 list when no import exists
+- Applied provided sample import block into **Thoroughbreds R1** (13 runners, 2 SCR) via centralized race runner store.
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

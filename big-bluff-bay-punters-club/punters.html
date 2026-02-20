@@ -154,6 +154,26 @@
         </section>
       </div>
 
+      <section class="card" id="race-market-card" aria-labelledby="race-market-heading">
+        <div class="section-head"><h2 id="race-market-heading">Race Market Board</h2><span class="pill" id="race-market-race">Race —</span></div>
+        <p class="muted" id="race-market-top">Top of market: —</p>
+        <div class="row-actions">
+          <label for="race-market-sort" class="muted">Sort by</label>
+          <select id="race-market-sort" aria-label="Sort race runners">
+            <option value="order">Imported order</option>
+            <option value="odds">Win odds</option>
+            <option value="barrier">Barrier</option>
+            <option value="name">Horse name</option>
+          </select>
+        </div>
+        <div class="table-wrap table-cards" style="margin-top:.45rem">
+          <table>
+            <thead><tr><th>Runner</th><th>Barrier</th><th>Win</th><th>Place</th><th>Status</th></tr></thead>
+            <tbody id="race-market-body"><tr><td colspan="5" class="muted">No imported runners for this race yet.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="card member-cockpit" id="member-cockpit" hidden aria-labelledby="member-cockpit-heading">
         <h2 id="member-cockpit-heading">Your Round Snapshot</h2>
         <p class="muted" id="member-round-meta">Loading your round…</p>
