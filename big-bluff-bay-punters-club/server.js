@@ -68,7 +68,7 @@ function ensureStore() {
       users: [{ id: crypto.randomUUID(), username: 'admin', passwordHash: adminHash, role: 'admin', createdAt: Date.now(), profile: normalizeUserProfile({}) }],
       fixtures: DEFAULT_FIXTURES,
       raceResults: {},
-      bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null },
+      bossesBet: { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, legItems: [], legs: [], selections: {}, updatedAt: null, updatedBy: null },
       buyInVotes: {},
       archiveRounds: [],
       tipEditDeadlineMs: null,
@@ -115,7 +115,7 @@ function ensureStore() {
     changed = true;
   }
   if (!store.bossesBet || typeof store.bossesBet !== 'object') {
-    store.bossesBet = { legs: [], selections: {}, updatedAt: null, updatedBy: null };
+    store.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: [], selections: {}, updatedAt: null, updatedBy: null };
     changed = true;
   }
   if (!store.buyInVotes || typeof store.buyInVotes !== 'object') {
@@ -271,6 +271,7 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
   const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[tId].defaultRaceCount || 12);
   const allRaces = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`);
   const activeLegs = new Set(Array.isArray(bb.legs) && bb.legs.length ? bb.legs : allRaces);
+  const legItems = Array.isArray(bb.legItems) ? bb.legItems : [];
 
   const result = allRaces.map((race) => {
     const inMulti = activeLegs.has(race);
@@ -288,9 +289,38 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
   const anyMiss = active.some((l) => l.status === 'missed');
   const allPlaced = active.length > 0 && active.every((l) => l.status === 'placed');
   const allResolved = active.every((l) => l.status === 'placed' || l.status === 'missed');
-  const overall = anyMiss ? 'lost' : allPlaced && allResolved ? 'landed' : 'live';
+  const computedOverall = anyMiss ? 'lost' : allPlaced && allResolved ? 'won' : 'live';
 
-  return { ...bb, trackId: tId, legs: [...activeLegs], progress: result, overall };
+  const statusRaw = String(bb.status || '').toLowerCase();
+  const allowed = new Set(['live','won','lost','void']);
+  const status = allowed.has(statusRaw) ? statusRaw : computedOverall;
+
+  const normalizedLegItems = legItems.map((item, idx) => ({
+    legNumber: Number(item?.legNumber || idx + 1),
+    race: String(item?.race || `R${idx + 1}`),
+    selection: String(item?.selection || ''),
+    betType: String(item?.betType || 'W/P'),
+    odds: item?.odds == null ? '' : String(item.odds),
+    result: String(item?.result || 'PENDING').toUpperCase()
+  }));
+
+  return {
+    ...bb,
+    trackId: tId,
+    title: String(bb.title || 'Bosses Multi'),
+    weekKey: String(bb.weekKey || ''),
+    meet: String(bb.meet || trackData?.fixtures?.[0]?.track || ''),
+    freerollPrize: Number(bb.freerollPrize || 0),
+    eligibilityNote: String(bb.eligibilityNote || 'Eligible = all players who entered tips this week before lock.'),
+    status,
+    lockTime: Number(bb.lockTime || 0) || null,
+    updatedAt: Number(bb.updatedAt || 0) || null,
+    updatedBy: String(bb.updatedBy || ''),
+    legs: [...activeLegs],
+    progress: result,
+    legItems: normalizedLegItems,
+    overall: status
+  };
 }
 
 
@@ -299,7 +329,7 @@ function defaultTrackData(trackId) {
   return {
     fixtures: [{ id: `pc-${trackId}-f1`, date: '', event: `${t.name} Meet`, track: t.defaultTrackLabel, raceCount: t.defaultRaceCount }],
     raceResults: {},
-    bossesBet: { legs: [], selections: {}, updatedAt: null, updatedBy: null }
+    bossesBet: { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, legItems: [], legs: [], selections: {}, updatedAt: null, updatedBy: null }
   };
 }
 
@@ -355,6 +385,11 @@ function ensurePuntersClubStore(store) {
     if (!Array.isArray(td.fixtures) || !td.fixtures.length) { td.fixtures = defaultTrackData(trackId).fixtures; changed = true; }
     if (!td.raceResults || typeof td.raceResults !== 'object') { td.raceResults = {}; changed = true; }
     if (!td.bossesBet || typeof td.bossesBet !== 'object') { td.bossesBet = defaultTrackData(trackId).bossesBet; changed = true; }
+    if (!Array.isArray(td.bossesBet.legItems)) { td.bossesBet.legItems = []; changed = true; }
+    if (typeof td.bossesBet.title !== 'string') { td.bossesBet.title = 'Bosses Multi'; changed = true; }
+    if (typeof td.bossesBet.status !== 'string') { td.bossesBet.status = 'live'; changed = true; }
+    if (typeof td.bossesBet.eligibilityNote !== 'string') { td.bossesBet.eligibilityNote = 'Eligible = all players who entered tips this week before lock.'; changed = true; }
+    if (typeof td.bossesBet.freerollPrize !== 'number') { td.bossesBet.freerollPrize = Number(td.bossesBet.freerollPrize || 0); changed = true; }
 
     if (trackId === 'thoroughbreds') {
       if (Array.isArray(store.fixtures) && store.fixtures.length) {
@@ -1290,7 +1325,33 @@ function createApp() {
     const inSel = req.body.selections && typeof req.body.selections === 'object' ? req.body.selections : {};
     legs.forEach((race) => { selections[race] = String(inSel[race] || '').trim(); });
 
+    const allowedStatus = new Set(['live', 'won', 'lost', 'void']);
+    const statusRaw = String(req.body?.status || '').trim().toLowerCase();
+    const status = allowedStatus.has(statusRaw) ? statusRaw : 'live';
+
+    const legItemsIn = Array.isArray(req.body?.legItems) ? req.body.legItems : [];
+    const legItems = legItemsIn
+      .map((item, idx) => ({
+        legNumber: Number(item?.legNumber || idx + 1),
+        race: String(item?.race || '').toUpperCase(),
+        selection: String(item?.selection || '').trim(),
+        betType: String(item?.betType || 'W/P').trim() || 'W/P',
+        odds: item?.odds == null ? '' : String(item.odds).trim(),
+        result: String(item?.result || 'PENDING').trim().toUpperCase()
+      }))
+      .filter((item) => item.race && validRaces.has(item.race));
+
     trackData.bossesBet = {
+      title: String(req.body?.title || 'Bosses Multi').trim() || 'Bosses Multi',
+      weekKey: String(req.body?.weekKey || '').trim(),
+      meet: String(req.body?.meet || trackData?.fixtures?.[0]?.track || '').trim(),
+      status,
+      freerollPrize: Math.max(0, Number(req.body?.freerollPrize || 0) || 0),
+      eligibilityNote: String(req.body?.eligibilityNote || 'Eligible = all players who entered tips this week before lock.').trim() || 'Eligible = all players who entered tips this week before lock.',
+      lockTime: Number(req.body?.lockTime || 0) || null,
+      stake: String(req.body?.stake || '').trim(),
+      potentialReturn: String(req.body?.potentialReturn || '').trim(),
+      legItems,
       legs,
       selections,
       updatedAt: Date.now(),
@@ -1309,7 +1370,7 @@ function createApp() {
     const store = readStore();
     const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
     const trackData = getTrackData(store, trackId);
-    trackData.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    trackData.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
     if (trackId === 'thoroughbreds') {
       store.bossesBet = trackData.bossesBet;
     }
@@ -1326,7 +1387,7 @@ function createApp() {
 
     // Hard reset selected meet results + bosses selections to avoid stale "missed" states.
     trackData.raceResults = {};
-    trackData.bossesBet = { legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    trackData.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
 
     if (trackId === 'thoroughbreds') {
       store.raceResults = {};
@@ -2236,7 +2297,7 @@ function createApp() {
       fixture,
       tips,
       raceResults: trackData.raceResults || {},
-      bossesBet: trackData.bossesBet || { legs: [], selections: {} },
+      bossesBet: trackData.bossesBet || { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, legItems: [], legs: [], selections: {} },
       ladder,
       jackpot: {
         entryFee,
@@ -2260,7 +2321,7 @@ function createApp() {
 
     store.tips = (store.tips || []).filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') !== trackId);
     trackData.raceResults = {};
-    trackData.bossesBet = { legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
+    trackData.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
     if (trackId === 'thoroughbreds') {
       store.raceResults = {};
       store.bossesBet = trackData.bossesBet;

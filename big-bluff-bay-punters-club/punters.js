@@ -190,39 +190,55 @@ function renderBossesBet(bb){
   const wrap = $('bosses-progress');
   const overall = $('bosses-overall');
   const summary = $('bosses-summary');
+  const descVal = $('bosses-freeroll-value');
+  const rulesVal = $('rules-bosses-freeroll');
+  const eligibility = $('bosses-eligibility-note');
   if(!wrap || !overall) return;
-  const data = bb || { progress:[], overall:'live' };
-  overall.textContent = String(data.overall || 'live').toUpperCase();
 
-  const active = (data.progress || []).filter((l)=>l?.inMulti);
-  const placed = active.filter((l)=>String(l.status)==='placed').length;
-  const missed = active.filter((l)=>String(l.status)==='missed').length;
-  const pending = active.filter((l)=>String(l.status)==='pending').length;
+  const data = bb || {};
+  const status = String(data.status || data.overall || 'live').toUpperCase();
+  overall.textContent = status;
+  overall.classList.toggle('chip-red', status === 'LOST');
 
+  const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const freerollPrize = Number(data.freerollPrize || 0);
+  const freerollText = freerollPrize > 0 ? money.format(freerollPrize) : 'TBA';
+  if (descVal) descVal.textContent = freerollText;
+  if (rulesVal) rulesVal.textContent = freerollText;
+  if (eligibility) eligibility.textContent = String(data.eligibilityNote || 'Eligible = all players who entered tips this week before lock.');
+
+  const updatedAt = Number(data.updatedAt || 0);
+  const lockTime = Number(data.lockTime || 0);
   if (summary) {
     summary.innerHTML = `
-      <span class='pill'>Legs: <strong>${active.length}</strong></span>
-      <span class='pill'>✅ Placed: <strong>${placed}</strong></span>
-      <span class='pill ${missed ? 'chip-red' : ''}'>❌ Missed: <strong>${missed}</strong></span>
-      <span class='pill'>⏳ Pending: <strong>${pending}</strong></span>
+      <article class='card'><h3>${esc(String(data.weekKey || 'Current round'))}</h3><p class='muted'>${esc(String(data.title || 'Bosses Multi'))}</p></article>
+      <article class='card'><h3>${esc(String(data.meet || 'Track TBA'))}</h3><p class='muted'>Meet / Track</p></article>
+      <article class='card'><h3>${esc(String(data.stake || '—'))}</h3><p class='muted'>Stake</p></article>
+      <article class='card'><h3>${esc(String(data.potentialReturn || '—'))}</h3><p class='muted'>Potential return</p></article>
+      <article class='card'><h3>${esc(freerollText)}</h3><p class='muted'>Freeroll Prize</p></article>
+      <article class='card'><h3>${lockTime>0?esc(new Date(lockTime).toLocaleString('en-AU',{timeZone:'Australia/Melbourne', dateStyle:'medium', timeStyle:'short'})):'—'}</h3><p class='muted'>Lock (Melbourne)</p></article>
+      <article class='card'><h3>${updatedAt>0?esc(new Date(updatedAt).toLocaleTimeString('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit'})):'—'}</h3><p class='muted'>Last updated (Melbourne)</p></article>
     `;
   }
 
+  const legItems = Array.isArray(data.legItems) ? data.legItems : [];
+  const fallbackFromProgress = (data.progress || []).filter((l)=>l?.inMulti).map((l, idx)=>(
+    { legNumber: idx+1, race: l.race, selection: l.selection || '', betType: 'W/P', odds: '', result: String(l.status || 'PENDING').toUpperCase() }
+  ));
+  const rows = legItems.length ? legItems : fallbackFromProgress;
+
   wrap.innerHTML = '';
-  if (!active.length) {
-    wrap.innerHTML = "<p class='muted'>No Bosses Bet legs configured yet.</p>";
+  if (!rows.length) {
+    wrap.innerHTML = "<tr><td colspan='6' class='muted'>No Bosses Multi legs configured yet.</td></tr>";
     return;
   }
 
-  active.forEach((leg)=>{
-    const item = document.createElement('article');
-    item.className = `bosses-leg-chip status-${esc(leg.status || 'pending')}`;
-    item.innerHTML = `
-      <div><strong>${esc(leg.race || 'R?')}</strong></div>
-      <div class='muted'>#${esc(leg.selection || '—')}</div>
-      <div><span class='pill'>${esc(String(leg.status || 'pending').toUpperCase())}</span></div>
-    `;
-    wrap.appendChild(item);
+  rows.forEach((leg, idx)=>{
+    const resultRaw = String(leg.result || 'PENDING').toUpperCase();
+    const result = resultRaw === 'PLACED' ? 'WON' : (resultRaw === 'MISSED' ? 'LOST' : resultRaw);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${Number(leg.legNumber || idx + 1)}</td><td>${esc(leg.race || '—')}</td><td>${esc(leg.selection || '—')}</td><td>${esc(leg.betType || '—')}</td><td>${esc(leg.odds || '—')}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
+    wrap.appendChild(tr);
   });
 }
 

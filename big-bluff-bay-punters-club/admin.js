@@ -2,7 +2,7 @@ const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{}},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -182,21 +182,47 @@ function renderRaceOptions(){
   fillResultsForm(select.value);
 }
 
-function renderBossesLegInputs(){
-  const wrap = $('bosses-legs');
-  if(!wrap) return;
-  wrap.innerHTML = '';
-  const selectedLegs = new Set((state.bossesBet?.legs || []).map(String));
-  const selections = state.bossesBet?.selections || {};
+function buildDefaultBossesWeekKey(){
+  const now = new Date();
+  return `Week of ${now.toLocaleDateString('en-AU', { day:'2-digit', month:'short', year:'numeric' })}`;
+}
 
-  for(let i=1;i<=state.raceCount;i+=1){
-    const race = `R${i}`;
+function renderBossesLegInputs(){
+  const wrap = $('bosses-legs-v2');
+  if(!wrap) return;
+  const items = Array.isArray(state.bossesBet?.legItems) ? state.bossesBet.legItems : [];
+  wrap.innerHTML = '';
+  items.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'row';
-    const checked = selectedLegs.size ? selectedLegs.has(race) : true;
-    row.innerHTML = `<label style="display:flex;align-items:center;gap:.45rem"><input type='checkbox' name='leg-${race}' ${checked ? 'checked' : ''}/> ${race}</label><input name='sel-${race}' type='text' placeholder='selection' value='${esc(selections[race] || '')}' style='max-width:140px' />`;
+    row.innerHTML = `
+      <span class='pill'>Leg ${idx + 1}</span>
+      <input type='text' name='leg-race-${idx}' placeholder='Race (e.g. R3)' value='${esc(item.race || '')}' style='max-width:96px' />
+      <input type='text' name='leg-selection-${idx}' placeholder='Selection' value='${esc(item.selection || '')}' style='max-width:170px' />
+      <select name='leg-type-${idx}' style='max-width:110px'>
+        <option value='W' ${String(item.betType||'').toUpperCase()==='W'?'selected':''}>W</option>
+        <option value='P' ${String(item.betType||'').toUpperCase()==='P'?'selected':''}>P</option>
+        <option value='TOP3' ${String(item.betType||'').toUpperCase()==='TOP3'?'selected':''}>Top3</option>
+        <option value='W/P' ${String(item.betType||'').toUpperCase()==='W/P'?'selected':''}>W/P</option>
+      </select>
+      <input type='text' name='leg-odds-${idx}' placeholder='Odds' value='${esc(item.odds || '')}' style='max-width:90px' />
+      <select name='leg-result-${idx}' style='max-width:118px'>
+        <option value='PENDING' ${String(item.result||'PENDING').toUpperCase()==='PENDING'?'selected':''}>Pending</option>
+        <option value='WON' ${String(item.result||'').toUpperCase()==='WON'?'selected':''}>Won</option>
+        <option value='LOST' ${String(item.result||'').toUpperCase()==='LOST'?'selected':''}>Lost</option>
+      </select>
+      <button class='btn btn-ghost' type='button' data-remove-leg='${idx}'>Remove</button>
+    `;
     wrap.appendChild(row);
-  }
+  });
+
+  wrap.querySelectorAll('[data-remove-leg]').forEach((btn)=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.getAttribute('data-remove-leg'));
+      state.bossesBet.legItems = (state.bossesBet.legItems || []).filter((_, i) => i !== idx);
+      renderBossesLegInputs();
+    });
+  });
 }
 
 function computePopularByRace(tips){
@@ -291,10 +317,36 @@ async function refresh(){
 
   try {
     const bb = await req(withTrack(API.bossesBet));
-    state.bossesBet = bb.bossesBet || { legs:[], selections:{} };
+    state.bossesBet = bb.bossesBet || { legs:[], selections:{}, legItems:[] };
   } catch {
-    state.bossesBet = { legs:[], selections:{} };
+    state.bossesBet = { legs:[], selections:{}, legItems:[] };
   }
+
+  if (!Array.isArray(state.bossesBet.legItems) || !state.bossesBet.legItems.length) {
+    const races = Array.isArray(state.bossesBet.legs) ? state.bossesBet.legs : [];
+    state.bossesBet.legItems = races.map((race, idx) => ({
+      legNumber: idx + 1,
+      race,
+      selection: String(state.bossesBet.selections?.[race] || ''),
+      betType: 'W/P',
+      odds: '',
+      result: 'PENDING'
+    }));
+  }
+
+  if ($('bosses-title')) $('bosses-title').value = String(state.bossesBet.title || 'Bosses Multi');
+  if ($('bosses-week-key')) $('bosses-week-key').value = String(state.bossesBet.weekKey || buildDefaultBossesWeekKey());
+  if ($('bosses-meet')) $('bosses-meet').value = String(state.bossesBet.meet || '');
+  if ($('bosses-status')) $('bosses-status').value = String(state.bossesBet.status || 'live').toUpperCase();
+  if ($('bosses-freeroll-prize')) $('bosses-freeroll-prize').value = Number(state.bossesBet.freerollPrize || 0);
+  if ($('bosses-eligibility-note')) $('bosses-eligibility-note').value = String(state.bossesBet.eligibilityNote || 'Eligible = all players who entered tips this week before lock.');
+  if ($('bosses-stake')) $('bosses-stake').value = String(state.bossesBet.stake || '');
+  if ($('bosses-potential-return')) $('bosses-potential-return').value = String(state.bossesBet.potentialReturn || '');
+  if ($('bosses-lock-time')) {
+    const lockMs = Number(state.bossesBet.lockTime || 0);
+    $('bosses-lock-time').value = lockMs > 0 ? new Date(lockMs).toISOString().slice(0,16) : '';
+  }
+
   renderBossesLegInputs();
 
   try {
@@ -620,26 +672,72 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   if(!isAdmin()){ $('bosses-msg').textContent='Admin login required.'; return; }
   const f = new FormData(e.target);
-  const legs = [];
+
+  const legItems = [];
+  const rows = document.querySelectorAll('#bosses-legs-v2 .row');
+  rows.forEach((_, idx) => {
+    const race = String(f.get(`leg-race-${idx}`) || '').trim().toUpperCase();
+    const selection = String(f.get(`leg-selection-${idx}`) || '').trim();
+    if (!race) return;
+    legItems.push({
+      legNumber: idx + 1,
+      race,
+      selection,
+      betType: String(f.get(`leg-type-${idx}`) || 'W/P').trim().toUpperCase(),
+      odds: String(f.get(`leg-odds-${idx}`) || '').trim(),
+      result: String(f.get(`leg-result-${idx}`) || 'PENDING').trim().toUpperCase()
+    });
+  });
+
+  const legs = legItems.map((l) => l.race);
   const selections = {};
-  for(let i=1;i<=state.raceCount;i+=1){
-    const race = `R${i}`;
-    const enabled = f.get(`leg-${race}`) !== null;
-    const sel = String(f.get(`sel-${race}`) || '').trim();
-    if(enabled) legs.push(race);
-    selections[race] = sel;
-  }
+  legItems.forEach((l) => { selections[l.race] = l.selection; });
+
+  const lockRaw = String(f.get('lockTime') || '').trim();
+  const lockMs = lockRaw ? new Date(lockRaw).getTime() : null;
 
   try {
     await req(withTrack(API.bossesBet), {
       method: 'PUT',
-      body: JSON.stringify({ legs, selections, trackId: state.trackId })
+      body: JSON.stringify({
+        trackId: state.trackId,
+        title: String(f.get('title') || 'Bosses Multi').trim(),
+        weekKey: String(f.get('weekKey') || '').trim(),
+        meet: String(f.get('meet') || '').trim(),
+        status: String(f.get('status') || 'LIVE').trim().toLowerCase(),
+        freerollPrize: Number(f.get('freerollPrize') || 0),
+        eligibilityNote: String(f.get('eligibilityNote') || '').trim(),
+        stake: String(f.get('stake') || '').trim(),
+        potentialReturn: String(f.get('potentialReturn') || '').trim(),
+        lockTime: Number.isFinite(lockMs) ? lockMs : null,
+        legItems,
+        legs,
+        selections
+      })
     });
-    $('bosses-msg').textContent = 'Bosses bet saved.';
+    $('bosses-msg').textContent = 'Bosses Multi saved.';
     await refresh();
   } catch (err) {
     $('bosses-msg').textContent = err.message;
   }
+});
+
+$('bosses-add-leg-btn')?.addEventListener('click', () => {
+  const nextIdx = (state.bossesBet.legItems || []).length + 1;
+  state.bossesBet.legItems = [...(state.bossesBet.legItems || []), { legNumber: nextIdx, race: '', selection: '', betType: 'W/P', odds: '', result: 'PENDING' }];
+  renderBossesLegInputs();
+});
+
+$('bosses-mark-won-btn')?.addEventListener('click', () => {
+  const status = $('bosses-status');
+  if (status) status.value = 'WON';
+  $('bosses-msg').textContent = 'Status set to WON. Click Save / Update Bosses Multi.';
+});
+
+$('bosses-mark-lost-btn')?.addEventListener('click', () => {
+  const status = $('bosses-status');
+  if (status) status.value = 'LOST';
+  $('bosses-msg').textContent = 'Status set to LOST. Click Save / Update Bosses Multi.';
 });
 
 $('clear-results-btn')?.addEventListener('click', async () => {
@@ -671,21 +769,20 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
   }
 
   const popular = state.popularByRace || {};
-  let filled = 0;
-  for(let i=1;i<=state.raceCount;i+=1){
-    const race = `R${i}`;
-    const box = document.querySelector(`#bosses-legs input[name='leg-${race}']`);
-    const sel = document.querySelector(`#bosses-legs input[name='sel-${race}']`);
-    if(!sel || !box) continue;
-    if(popular[race]?.selection){
-      box.checked = true;
-      sel.value = popular[race].selection;
-      filled += 1;
-    }
-  }
+  const races = Object.keys(popular).sort((a,b)=>Number(String(a).replace('R',''))-Number(String(b).replace('R','')));
+  state.bossesBet.legItems = races.map((race, idx) => ({
+    legNumber: idx + 1,
+    race,
+    selection: String(popular[race]?.selection || ''),
+    betType: 'W/P',
+    odds: '',
+    result: 'PENDING'
+  }));
+  renderBossesLegInputs();
 
+  const filled = state.bossesBet.legItems.length;
   $('bosses-msg').textContent = filled
-    ? `Auto-filled ${filled} race${filled===1?'':'s'} from most popular tips. Click Save Bosses Bet to apply.`
+    ? `Auto-filled ${filled} race${filled===1?'':'s'} from most popular tips. Click Save / Update Bosses Multi to apply.`
     : 'No popular tips found to auto-fill yet.';
 });
 

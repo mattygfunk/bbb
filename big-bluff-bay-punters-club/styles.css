@@ -985,6 +985,13 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: .5rem;
 }
+.bosses-v2-card {
+  background: radial-gradient(700px 260px at 12% -20%, rgba(34,197,94,.14), transparent 60%), linear-gradient(180deg,#0c1627,#0a1322);
+  border: 1px solid rgba(120,140,180,.35);
+}
+.bosses-meta-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: .55rem 0; }
+#bosses-progress td { vertical-align: middle; }
+#bosses-eligibility-note { margin-top: .55rem; }
 .bosses-leg-chip {
   border: 1px solid rgba(120,140,180,.35);
   border-radius: .78rem;

@@ -161,15 +161,38 @@
             <p class="muted">Simple setup, bigger pools, cleaner payouts — no voting required. Full details in <a href="/punters-rules.html">Punters Rules</a> and <a href="/promo-terms.html">Promo Terms</a>.</p>
             <p class="muted">• 1st = <strong>3 pts</strong>, 2nd = <strong>2 pts</strong>, 3rd = <strong>1 pt</strong>.</p>
             <p class="muted">• Winner must be <strong>outright</strong>; tie = <strong>jackpot rolls over</strong>.</p>
-            <p class="muted">• If the <strong>Bosses Multi lands</strong>, all eligible players this week get a <strong>next-day Poker freeroll</strong> for the full amount.</p>
+            <p class="muted">• If the <strong>Bosses Multi lands</strong>, eligible players score a <strong>next-day Poker Freeroll</strong> worth <strong id="rules-bosses-freeroll">TBA</strong>.</p>
             <p class="muted">• If your runner is scratched and a substitute is declared, your tip automatically moves to that substitute.</p>
           </div>
         </section>
       </div>
-      <section class="card" id="bosses-bet-card">
-        <h2>Bosses Bet Tracker <span class="pill" id="bosses-overall">Live</span></h2>
-        <div id="bosses-summary" class="row-actions" style="margin:.35rem 0 .25rem"></div>
-        <div id="bosses-progress" class="bosses-compact-grid"></div>
+      <section class="card bosses-v2-card" id="bosses-bet-card" aria-labelledby="bosses-v2-heading">
+        <div class="section-head" style="margin-bottom:.4rem">
+          <h2 id="bosses-v2-heading">Bosses Multi Tracker</h2>
+          <span class="pill" id="bosses-overall">LIVE</span>
+        </div>
+        <p class="muted" id="bosses-description">Bosses Multi: one featured multi each round. If it lands, eligible punters score a next-day Poker Freeroll worth <strong id="bosses-freeroll-value">TBA</strong>.</p>
+
+        <div class="stats-grid bosses-meta-grid" id="bosses-summary" role="group" aria-label="Bosses Multi summary"></div>
+
+        <div class="table-wrap" aria-label="Bosses Multi legs table">
+          <table>
+            <caption>Bosses Multi legs</caption>
+            <thead>
+              <tr>
+                <th scope="col">Leg #</th>
+                <th scope="col">Race</th>
+                <th scope="col">Selection</th>
+                <th scope="col">Type</th>
+                <th scope="col">Odds</th>
+                <th scope="col">Result</th>
+              </tr>
+            </thead>
+            <tbody id="bosses-progress"></tbody>
+          </table>
+        </div>
+
+        <p class="muted" id="bosses-eligibility-note">Eligible = all players who entered tips this week before lock.</p>
       </section>
 
 

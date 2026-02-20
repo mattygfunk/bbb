@@ -187,19 +187,66 @@
           <p id="results-msg" class="muted"></p>
         </section>
 
-        <section class="card"><h2>Bosses Bet (Place Multi)</h2>
+        <section class="card"><h2>Bosses Multi</h2>
           <form id="bosses-form" class="stack">
-            <p class="muted">Defaults to all races at the meet. Untick any legs you don’t want in this week’s multi.</p>
-            <div id="bosses-legs" class="stack"></div>
+            <div class="split">
+              <label>Title
+                <input name="title" id="bosses-title" type="text" placeholder="Bosses Multi" required />
+              </label>
+              <label>Week / round key
+                <input name="weekKey" id="bosses-week-key" type="text" placeholder="Week of Feb 20, 2026" />
+              </label>
+            </div>
+            <div class="split">
+              <label>Track / Meet
+                <input name="meet" id="bosses-meet" type="text" placeholder="Pinjarra" required />
+              </label>
+              <label>Status
+                <select name="status" id="bosses-status">
+                  <option value="LIVE">LIVE</option>
+                  <option value="WON">WON</option>
+                  <option value="LOST">LOST</option>
+                  <option value="VOID">VOID</option>
+                </select>
+              </label>
+            </div>
+            <div class="split">
+              <label>Freeroll Prize Amount (AUD)
+                <input name="freerollPrize" id="bosses-freeroll-prize" type="number" min="0" step="0.01" required />
+              </label>
+              <label>Lock time (optional)
+                <input name="lockTime" id="bosses-lock-time" type="datetime-local" />
+              </label>
+            </div>
+            <div class="split">
+              <label>Stake (optional)
+                <input name="stake" id="bosses-stake" type="text" placeholder="$25" />
+              </label>
+              <label>Potential Return (optional)
+                <input name="potentialReturn" id="bosses-potential-return" type="text" placeholder="$330" />
+              </label>
+            </div>
+            <label>Eligibility note
+              <input name="eligibilityNote" id="bosses-eligibility-note" type="text" value="Eligible = all players who entered tips this week before lock." />
+            </label>
+
+            <h3 style="margin:.4rem 0 .1rem">Legs</h3>
+            <div id="bosses-legs-v2" class="stack"></div>
             <div class="row-actions">
-              <button class="btn" type="submit">Save Bosses Bet</button>
+              <button class="btn btn-ghost" type="button" id="bosses-add-leg-btn">Add leg</button>
               <button class="btn btn-ghost" type="button" id="autofill-bosses-btn">Auto-fill from most popular tips</button>
-              <button class="btn btn-ghost" type="button" id="reset-bosses-btn">Reset Bosses Bet</button>
+            </div>
+
+            <div class="row-actions">
+              <button class="btn" type="submit">Save / Update Bosses Multi</button>
+              <button class="btn btn-ghost" type="button" id="bosses-mark-won-btn">Mark as Won</button>
+              <button class="btn btn-ghost" type="button" id="bosses-mark-lost-btn">Mark as Lost</button>
+              <button class="btn btn-ghost" type="button" id="reset-bosses-btn">Reset Bosses Multi</button>
               <button class="btn btn-ghost" type="button" id="reset-bosses-results-btn">Reset Bosses Multi Results</button>
             </div>
           </form>
           <div id="bosses-suggested" class="muted"></div>
-          <p id="bosses-msg" class="muted"></p>
+          <p id="bosses-msg" class="muted" role="status" aria-live="polite"></p>
         </section>
 
         

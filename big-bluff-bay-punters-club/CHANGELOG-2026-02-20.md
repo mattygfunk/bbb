@@ -58,6 +58,27 @@
 - **Mobile:** Performance **91**, Accessibility **95**, Best Practices **100**, SEO **100**
 - **Desktop:** Performance **88**, Accessibility **95**, Best Practices **100**, SEO **100**
 
+## Bosses Multi v2 (Punters + Admin)
+- Rebuilt Punters page Bosses Bet block into a premium **Bosses Multi Tracker v2** module:
+  - clear concept copy tied to Poker Freeroll
+  - status badge (LIVE/WON/LOST/VOID)
+  - metadata cards: week/round, meet, stake, potential return, freeroll amount, lock, last updated (Melbourne time)
+  - leg-by-leg table (Leg #, Race, Selection, Type, Odds, Result)
+  - editable eligibility note rendering
+- Updated Punters rules copy to dynamic amount:
+  - “If the Bosses Multi lands, eligible players score a next-day Poker Freeroll worth **$X**.”
+  - uses admin-set freeroll prize; falls back to TBA.
+
+- Added Admin **Bosses Multi** editor section:
+  - fields: title, week/round key, meet, status, freeroll prize amount, eligibility note, optional stake/return/lock time
+  - repeater legs editor with add/remove rows and fields for race/selection/type/odds/result
+  - quick actions: Mark as Won / Mark as Lost
+  - save/update persists and reflects on punters view.
+
+- Extended Bosses Multi data model + endpoint plumbing (no new dependencies):
+  - `trackData.bossesBet` now supports metadata fields (`title`, `weekKey`, `meet`, `status`, `freerollPrize`, `eligibilityNote`, `lockTime`, `stake`, `potentialReturn`, `legItems`)
+  - backward-compatible read/render path still supports existing `legs + selections` structures.
+
 ## Notes
 - Existing routes/URLs and core data endpoints were preserved.
 - No backend rewrites, payment systems, or complex realtime features added.
