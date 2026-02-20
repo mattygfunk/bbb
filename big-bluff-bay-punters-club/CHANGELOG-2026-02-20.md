@@ -105,6 +105,9 @@
   - verified/needs-review badge
   - differences list
   - actions: Fill Form, Copy JSON, Discard Draft
+- Auto-track leg status on Punters Bosses tracker:
+  - when race results are entered, each Bosses leg now resolves to Pending/Won/Lost automatically by race + selection
+  - preserves extracted odds from admin-uploaded bet slip and displays them in the public tracker
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

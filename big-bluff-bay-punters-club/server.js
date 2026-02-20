@@ -507,6 +507,14 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     result: String(item?.result || 'PENDING').toUpperCase()
   }));
 
+  const progressByRace = new Map(result.map((r) => [String(r.race || '').toUpperCase(), String(r.status || 'pending').toLowerCase()]));
+  const resolvedLegItems = normalizedLegItems.map((item) => {
+    const raceKey = String(item.race || '').toUpperCase();
+    const raceStatus = progressByRace.get(raceKey);
+    const derivedResult = raceStatus === 'placed' ? 'WON' : raceStatus === 'missed' ? 'LOST' : raceStatus === 'pending' ? 'PENDING' : String(item.result || 'PENDING').toUpperCase();
+    return { ...item, result: derivedResult };
+  });
+
   return {
     ...bb,
     trackId: tId,
@@ -521,7 +529,7 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     updatedBy: String(bb.updatedBy || ''),
     legs: [...activeLegs],
     progress: result,
-    legItems: normalizedLegItems,
+    legItems: resolvedLegItems,
     overall: status
   };
 }
