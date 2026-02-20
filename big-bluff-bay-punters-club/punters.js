@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
+const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',puntersBanter:'/punters/banter',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
@@ -937,6 +937,36 @@ async function hydrateNextTipCard(trackId){
   }
 }
 
+function renderBanterWall(items=[]){
+  const list = $('banter-list');
+  const status = $('banter-wall-status');
+  const submitBtn = $('banter-submit-btn');
+  if (!list) return;
+  const locked = !state.tipsEditableNow || state.roundStatus === 'CLOSED';
+  if (status) {
+    status.textContent = locked
+      ? 'Lock is in — drop your recap + brag rights below.'
+      : 'Wall opens after lock. Get your tip in first.';
+  }
+  if (submitBtn) submitBtn.disabled = !locked || !state.user;
+
+  const rows = Array.isArray(items) ? items.slice(0, 12) : [];
+  if (!rows.length) {
+    list.innerHTML = `<p class='muted'>${locked ? 'No banter posted yet. Be first.' : 'No banter yet. Wall opens after lock.'}</p>`;
+    return;
+  }
+  list.innerHTML = rows.map((row) => {
+    const who = esc(row?.member || 'Punter');
+    const tip = esc(row?.tip || '');
+    const brag = esc(row?.brag || '');
+    const when = Number(row?.createdAt || 0);
+    const ts = Number.isFinite(when) && when > 0
+      ? new Date(when).toLocaleString('en-AU', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+      : '';
+    return `<article class='banter-item'><p><strong>${who}</strong> <span class='muted'>${esc(ts)}</span></p>${tip ? `<p class='meta'>Tip: ${tip}</p>` : ''}${brag ? `<p>${brag}</p>` : ''}</article>`;
+  }).join('');
+}
+
 async function refresh(){
   if (state.refreshInFlight) return;
   state.refreshInFlight = true;
@@ -1023,6 +1053,7 @@ async function refresh(){
   if (status) status.textContent = state.roundStatus === 'CLOSED' ? 'Round finished ✅' : ((overview || state.lastOverview)?.round?.label || 'Live');
   renderBossesBet((bossesRes && bossesRes.bossesBet) || overview?.bossesBet || {});
   renderMilestones(milestonesRes || {});
+  renderBanterWall(overviewData.banterWall || []);
   if (state.selectedBreakdownMember) {
     loadMemberBreakdown(state.selectedBreakdownMember, false).catch(()=>{});
   }
@@ -1217,6 +1248,25 @@ if (forgotForm) {
 }
 
 // Buy-in vote submission removed: fixed $20 entry is live now.
+
+$('banter-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('banter-form-msg');
+  if(!state.user){ if(msg) msg.textContent = 'Log in first.'; return; }
+  if(state.tipsEditableNow && state.roundStatus !== 'CLOSED'){ if(msg) msg.textContent = 'Banter opens after lock.'; return; }
+  const f = new FormData(e.target);
+  const tip = String(f.get('tip') || '').trim();
+  const brag = String(f.get('brag') || '').trim();
+  if(!tip && !brag){ if(msg) msg.textContent = 'Add a tip or brag line.'; return; }
+  try {
+    await req(`${API.puntersBanter}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`, { method:'POST', body: JSON.stringify({ tip, brag, trackId: state.trackId }) });
+    e.target.reset();
+    if (msg) msg.textContent = 'Posted to Banter Wall ✅';
+    await refresh();
+  } catch (err) {
+    if (msg) msg.textContent = err.message || 'Could not post banter.';
+  }
+});
 
 $('tip-form').addEventListener('submit',async(e)=>{e.preventDefault();markTipInteraction();if(state.roundStatus!=='OPEN'){$('tip-msg').textContent='Round finished ✅. Tips reopen next round.';return;}if(!state.tipsEditableNow){$('tip-msg').textContent=`Tips are locked for this round 🔒 • ${getCurrentRoundPoolText()}`;return;}if(!state.user){$('tip-msg').textContent='Log in first.';return;}const f=new FormData(e.target);const picks=[];for(let i=1;i<=state.raceCount;i+=1){const race=`R${i}`;const selection=String(f.get(race)||'').trim();if(!selection) continue;const existing=state.existingByRace.get(race)||'';if(selection!==existing) picks.push({race,selection});}if(!picks.length){$('tip-msg').textContent='No changes to save.';return;}try{let updated=0;for(const pick of picks){const r=await req(API.tips,{method:'POST',body:JSON.stringify(pick)});if(r.updated) updated+=1;}$('tip-msg').textContent=`Saved ${picks.length} change${picks.length===1?'':'s'}${updated?` (${updated} updated)`:''}.`;await refresh();}catch(err){$('tip-msg').textContent=err.message;}});
 $('race-market-sort')?.addEventListener('change', ()=>renderRaceMarket(state.nextTipRace || 'R1'));

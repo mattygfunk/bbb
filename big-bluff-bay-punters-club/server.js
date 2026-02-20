@@ -669,7 +669,7 @@ function setTrackJackpotCarry(store, trackId = 'thoroughbreds', amount = 0) {
 
 function ensurePuntersClubStore(store) {
   if (!store.puntersClub || typeof store.puntersClub !== 'object') {
-    store.puntersClub = { rounds: [], claims: [], payoutAudit: [], paymentAudit: [], leaderboardCache: {}, settings: { nextRoundOpensAt: null }, tracks: {}, schedule: {} };
+    store.puntersClub = { rounds: [], claims: [], payoutAudit: [], paymentAudit: [], leaderboardCache: {}, settings: { nextRoundOpensAt: null }, tracks: {}, schedule: {}, banterByTrack: {} };
   }
   let changed = false;
   if (!Array.isArray(store.puntersClub.rounds)) { store.puntersClub.rounds = []; changed = true; }
@@ -681,6 +681,7 @@ function ensurePuntersClubStore(store) {
   if (!store.puntersClub.tracks || typeof store.puntersClub.tracks !== 'object') { store.puntersClub.tracks = {}; changed = true; }
   if (!store.puntersClub.schedule || typeof store.puntersClub.schedule !== 'object') { store.puntersClub.schedule = {}; changed = true; }
   if (!store.puntersClub.jackpotCarryByTrack || typeof store.puntersClub.jackpotCarryByTrack !== 'object') { store.puntersClub.jackpotCarryByTrack = {}; changed = true; }
+  if (!store.puntersClub.banterByTrack || typeof store.puntersClub.banterByTrack !== 'object') { store.puntersClub.banterByTrack = {}; changed = true; }
 
   Object.keys(TRACKS).forEach((trackId) => {
     if (!store.puntersClub.tracks[trackId] || typeof store.puntersClub.tracks[trackId] !== 'object') {
@@ -735,6 +736,10 @@ function ensurePuntersClubStore(store) {
     if (typeof store.puntersClub.jackpotCarryByTrack[trackId] !== 'number' || !Number.isFinite(store.puntersClub.jackpotCarryByTrack[trackId]) || store.puntersClub.jackpotCarryByTrack[trackId] < 0) {
       const fallback = trackId === 'thoroughbreds' ? Number(store.jackpotCarry || 0) : 0;
       store.puntersClub.jackpotCarryByTrack[trackId] = Number.isFinite(fallback) && fallback >= 0 ? fallback : 0;
+      changed = true;
+    }
+    if (!Array.isArray(store.puntersClub.banterByTrack[trackId])) {
+      store.puntersClub.banterByTrack[trackId] = [];
       changed = true;
     }
   });
@@ -2326,6 +2331,16 @@ function createApp() {
         winner: r?.snapshot?.winner?.member || r?.winner?.member || '—'
       }));
 
+    const banterWall = (store.puntersClub?.banterByTrack?.[trackId] || [])
+      .slice(0, 40)
+      .map((row) => ({
+        id: row.id,
+        member: String(row.member || 'Punter'),
+        tip: String(row.tip || ''),
+        brag: String(row.brag || ''),
+        createdAt: Number(row.createdAt || Date.now())
+      }));
+
     return res.json({
       track: { id: trackId, name: TRACKS[trackId]?.name || trackId, accent: TRACKS[trackId]?.accent || '#999' },
       tracks: Object.values(TRACKS),
@@ -2343,8 +2358,35 @@ function createApp() {
       nextRoundOpensAt,
       nextRoundTeaser: !openRound ? { title: 'Next Punters Club opens Friday afternoon', venue: 'Venue TBA' } : null,
       pastRounds,
+      banterWall,
       generatedAt: Date.now()
     });
+  });
+
+  app.post('/api/punters/banter', auth, (req, res) => {
+    const store = readStore();
+    ensurePuntersClubStore(store);
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const tip = String(req.body?.tip || '').trim().slice(0, 140);
+    const brag = String(req.body?.brag || '').trim().slice(0, 280);
+    if (!tip && !brag) return res.status(400).json({ error: 'Add a tip or brag line.' });
+
+    const openRound = getCurrentRound(store, { autoCreate: false, trackId });
+    const locked = !canEditTipsNow(store) || String(openRound?.status || '').toLowerCase() === 'closed';
+    if (!locked) return res.status(400).json({ error: 'Banter opens after lock.' });
+
+    const item = {
+      id: crypto.randomUUID(),
+      member: String(req.user?.username || 'Punter').slice(0, 64),
+      tip,
+      brag,
+      createdAt: Date.now()
+    };
+    const wall = Array.isArray(store.puntersClub.banterByTrack?.[trackId]) ? store.puntersClub.banterByTrack[trackId] : [];
+    wall.unshift(item);
+    store.puntersClub.banterByTrack[trackId] = wall.slice(0, 120);
+    writeStore(store);
+    return res.status(201).json({ ok: true, item });
   });
 
   app.get('/api/punters/rounds', auth, adminOnly, (req, res) => {

@@ -255,10 +255,20 @@
               <p class="muted">Top streak: <strong id="promo-top-streak">Loading…</strong></p>
               <p class="muted">Rounds archived: <strong id="promo-stat-rounds">—</strong> • Recent payouts: <strong id="promo-stat-paid">$0.00</strong></p>
             </article>
-            <article class="punters-promo__social card">
+            <article class="punters-promo__social card" id="banter-wall">
               <h3>Banter Wall</h3>
-              <p class="muted">Coming soon — share your tips and brag rights after lock.</p>
-              <a class="btn btn-ghost" href="/punters.html#tip-form">Share your tip</a>
+              <p class="muted" id="banter-wall-status">Share your tip and brag rights after lock.</p>
+              <form id="banter-form" class="stack" style="margin-top:.4rem">
+                <input type="text" name="tip" maxlength="140" placeholder="Your tip recap (optional)" />
+                <textarea name="brag" rows="2" maxlength="280" placeholder="Brag rights line (optional)"></textarea>
+                <div class="row-actions" style="margin-top:.2rem">
+                  <button class="btn btn-ghost" type="submit" id="banter-submit-btn">Post to Banter Wall</button>
+                </div>
+                <p class="muted" id="banter-form-msg"></p>
+              </form>
+              <div class="banter-wall-list" id="banter-list" aria-live="polite">
+                <p class="muted">No banter yet. Wall opens after lock.</p>
+              </div>
             </article>
           </div>
 

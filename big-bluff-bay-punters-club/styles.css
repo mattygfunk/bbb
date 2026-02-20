@@ -657,6 +657,22 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 }
 .punters-promo__stats,
 .punters-promo__social { background: #0b1220; border-color: #2f4158; }
+.banter-wall-list {
+  margin-top: .5rem;
+  display: grid;
+  gap: .45rem;
+  max-height: 270px;
+  overflow: auto;
+  padding-right: .2rem;
+}
+.banter-item {
+  border: 1px solid #2f4158;
+  border-radius: .65rem;
+  padding: .45rem .55rem;
+  background: #0d1626;
+}
+.banter-item p { margin: 0 0 .2rem; }
+.banter-item p:last-child { margin-bottom: 0; }
 .punters-promo__upgrade {
   border-color: rgba(234,179,8,.42);
   background: radial-gradient(700px 240px at 90% -55%, rgba(234,179,8,.14), transparent 62%), linear-gradient(180deg,#171407,#0c1424);
