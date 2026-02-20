@@ -79,12 +79,32 @@
           <label>Password / PIN
             <input name="pin" type="password" autocomplete="current-password" required />
           </label>
+          <label>Recovery code (set on registration)
+            <input name="recoveryCode" type="text" autocomplete="off" placeholder="Required for password recovery" />
+          </label>
           <div class="row-actions">
             <button class="btn" type="submit" data-mode="login">Log In</button>
             <button class="btn btn-ghost" type="submit" data-mode="register">Register + Log In</button>
           </div>
           <p id="login-msg" class="muted" aria-live="polite"></p>
         </form>
+
+        <details class="card" style="margin-top:.6rem;max-width:460px">
+          <summary>Forgot password?</summary>
+          <form id="forgot-form" class="stack" style="margin-top:.6rem">
+            <label>Username
+              <input name="username" type="text" required />
+            </label>
+            <label>Recovery code
+              <input name="recoveryCode" type="text" required />
+            </label>
+            <label>New password
+              <input name="newPassword" type="password" minlength="6" required />
+            </label>
+            <button class="btn" type="submit">Reset password</button>
+            <p id="forgot-msg" class="muted" aria-live="polite"></p>
+          </form>
+        </details>
       </section>
 
       <h1>Punters Club Leaderboard & Tips</h1>

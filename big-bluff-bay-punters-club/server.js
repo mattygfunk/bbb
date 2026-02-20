@@ -1322,6 +1322,7 @@ function createApp() {
     const username = String(req.body.username || '').trim();
     const password = String(req.body.password || '');
     const email = String(req.body.email || '').trim().toLowerCase();
+    const recoveryCode = String(req.body.recoveryCode || '').trim();
 
     if (!/^[a-zA-Z0-9_-]{3,24}$/.test(username)) {
       return res.status(400).json({ error: 'Username must be 3-24 chars using letters, numbers, _ or -' });
@@ -1331,6 +1332,9 @@ function createApp() {
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Enter a valid email address' });
+    }
+    if (recoveryCode && recoveryCode.length < 4) {
+      return res.status(400).json({ error: 'Recovery code must be at least 4 characters' });
     }
 
     const store = readStore();
@@ -1342,6 +1346,7 @@ function createApp() {
       id: crypto.randomUUID(),
       username,
       passwordHash: bcrypt.hashSync(password, 10),
+      recoveryCodeHash: recoveryCode ? bcrypt.hashSync(recoveryCode, 10) : null,
       role: 'member',
       createdAt: Date.now(),
       profile: normalizeUserProfile({ email })
@@ -1364,6 +1369,40 @@ function createApp() {
 
     const safeUser = { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) };
     return res.json({ ok: true, token: issueToken(safeUser), user: safeUser });
+  });
+
+  app.post('/api/password-recovery/reset', (req, res) => {
+    const username = String(req.body?.username || '').trim();
+    const recoveryCode = String(req.body?.recoveryCode || '').trim();
+    const newPassword = String(req.body?.newPassword || '');
+
+    if (!username || !recoveryCode || !newPassword) {
+      return res.status(400).json({ error: 'Username, recovery code, and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u.username || '').toLowerCase() === username.toLowerCase());
+    if (!user || !user.recoveryCodeHash || !bcrypt.compareSync(recoveryCode, user.recoveryCodeHash)) {
+      return res.status(401).json({ error: 'Recovery details are invalid' });
+    }
+
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+    writeStore(store);
+    return res.json({ ok: true, message: 'Password reset. You can log in now.' });
+  });
+
+  app.post('/api/password-recovery/set', auth, (req, res) => {
+    const recoveryCode = String(req.body?.recoveryCode || '').trim();
+    if (recoveryCode.length < 4) return res.status(400).json({ error: 'Recovery code must be at least 4 characters' });
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u.id || '') === String(req.user.sub || ''));
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    user.recoveryCodeHash = bcrypt.hashSync(recoveryCode, 10);
+    writeStore(store);
+    return res.json({ ok: true });
   });
 
   app.post('/api/logout', auth, (_req, res) => res.json({ ok: true }));

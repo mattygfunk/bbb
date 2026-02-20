@@ -129,6 +129,10 @@
   - **Stats Preview** teaser card wired from existing milestones/winners data
   - **Banter Wall** comms teaser with lightweight “Share your tip” action
 - Upgraded Bosses Multi area into spotlight-style presentation while keeping live data wiring intact.
+- Added password recovery flow on Punters login gate:
+  - registration supports optional recovery code
+  - forgot-password form resets via username + recovery code + new password
+  - backend endpoints added for reset and authenticated recovery-code set (`/api/password-recovery/reset`, `/api/password-recovery/set`)
 - Preserved accessibility and performance posture:
   - semantic headings/lists
   - mobile-first stacking and tap targets

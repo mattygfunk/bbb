@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile'};
+const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
@@ -919,9 +919,10 @@ if (loginForm) {
     const f = new FormData(e.target);
     const username = String(f.get('member') || '').trim();
     const password = String(f.get('pin') || '').trim();
+    const recoveryCode = String(f.get('recoveryCode') || '').trim();
     const mode = e.submitter?.dataset.mode || 'login';
     try {
-      if (mode === 'register') await req(API.register, { method: 'POST', body: JSON.stringify({ username, password }) });
+      if (mode === 'register') await req(API.register, { method: 'POST', body: JSON.stringify({ username, password, recoveryCode }) });
       const r = await req(API.login, { method: 'POST', body: JSON.stringify({ username, password }) });
       state.token = r.token;
       state.user = r.user;
@@ -932,6 +933,25 @@ if (loginForm) {
     } catch (err) {
       const loginMsg = $('login-msg');
       if (loginMsg) loginMsg.textContent = err.message;
+    }
+  });
+}
+
+const forgotForm = $('forgot-form');
+if (forgotForm) {
+  forgotForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const username = String(f.get('username') || '').trim();
+    const recoveryCode = String(f.get('recoveryCode') || '').trim();
+    const newPassword = String(f.get('newPassword') || '');
+    const msg = $('forgot-msg');
+    try {
+      await req(API.passwordReset, { method: 'POST', body: JSON.stringify({ username, recoveryCode, newPassword }) });
+      if (msg) msg.textContent = 'Password reset successful. You can log in now.';
+      forgotForm.reset();
+    } catch (err) {
+      if (msg) msg.textContent = err.message || 'Could not reset password.';
     }
   });
 }
