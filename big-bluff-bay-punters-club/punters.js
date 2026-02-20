@@ -618,7 +618,7 @@ function renderTipEntryState() {
 async function hydrateNextTipCard(trackId){
   const card = $('next-tip-punters-card');
   const primary = $('next-tip-punters-primary');
-  const secondary = $('next-tip-punters-secondary');
+  const secondary = $('next-tip-punters-secondary') || { hidden: true, textContent: '', href: '' };
   const badge = $('next-tip-punters-badge');
   const countdown = $('next-tip-punters-countdown');
   const race = $('next-tip-punters-race');
@@ -626,7 +626,7 @@ async function hydrateNextTipCard(trackId){
   const lockline = $('next-tip-punters-lockline');
   const pick = $('next-tip-punters-pick');
   const social = $('next-tip-punters-social');
-  if(!card || !primary || !secondary || !badge || !countdown || !race || !context || !pick || !social) return;
+  if(!card || !primary || !badge || !countdown || !race || !context || !pick || !social) return;
   const setLockline = (text = '') => {
     if (!lockline) return;
     lockline.textContent = text;
@@ -651,9 +651,7 @@ async function hydrateNextTipCard(trackId){
   countdown.textContent = '';
   primary.textContent = 'Open Tip Form';
   primary.href = '/punters.html#tip-form';
-  secondary.hidden = false;
-  secondary.textContent = 'Log In First';
-  secondary.href = '/punters.html#leaderboard';
+  secondary.hidden = true;
 
   // Signed-in users should never see a login CTA.
   social.textContent = 'Syncing your member card…';
@@ -766,9 +764,8 @@ async function hydrateNextTipCard(trackId){
       badge.textContent = 'LOCK IMMINENT';
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
-      secondary.hidden = false;
-      secondary.textContent = 'Log In First';
-      return;
+      secondary.hidden = true;
+            return;
     }
 
     if(canEditEffective){
@@ -776,9 +773,8 @@ async function hydrateNextTipCard(trackId){
       badge.textContent = 'EDITABLE';
       primary.textContent = 'Edit';
       primary.href = '/punters.html#tip-form';
-      secondary.hidden = false;
-      secondary.textContent = 'Log In First';
-      return;
+      secondary.hidden = true;
+            return;
     }
 
     card.className = 'card next-tip-card next-tip-card--highlight';
