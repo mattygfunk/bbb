@@ -528,7 +528,7 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     ...bb,
     trackId: tId,
     title: String(bb.title || 'Bosses Multi'),
-    weekKey: String(bb.weekKey || ''),
+    weekKey: String(trackData?.fixtures?.[0]?.date || bb.weekKey || ''),
     meet: String(trackData?.fixtures?.[0]?.track || bb.meet || ''),
     freerollPrize: Number(bb.freerollPrize || 0),
     eligibilityNote: String(bb.eligibilityNote || 'Eligible = all players who entered tips this week before lock.'),
