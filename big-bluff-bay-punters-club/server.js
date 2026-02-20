@@ -520,16 +520,21 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     };
   });
 
+  const manual = Number(store?.tipEditDeadlineMs || 0);
+  const fallback = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
+  const effectiveLock = manual > 0 ? manual : (Number.isFinite(fallback) ? fallback : null);
+
   return {
     ...bb,
     trackId: tId,
     title: String(bb.title || 'Bosses Multi'),
     weekKey: String(bb.weekKey || ''),
-    meet: String(bb.meet || trackData?.fixtures?.[0]?.track || ''),
+    meet: String(trackData?.fixtures?.[0]?.track || bb.meet || ''),
     freerollPrize: Number(bb.freerollPrize || 0),
     eligibilityNote: String(bb.eligibilityNote || 'Eligible = all players who entered tips this week before lock.'),
     status,
-    lockTime: Number(bb.lockTime || 0) || null,
+    lockTime: Number(bb.lockTime || 0) || effectiveLock || null,
+    stake: '$25',
     updatedAt: Number(bb.updatedAt || 0) || null,
     updatedBy: String(bb.updatedBy || ''),
     legs: [...activeLegs],
@@ -1605,7 +1610,7 @@ function createApp() {
       freerollPrize: Math.max(0, Number(req.body?.freerollPrize || 0) || 0),
       eligibilityNote: String(req.body?.eligibilityNote || 'Eligible = all players who entered tips this week before lock.').trim() || 'Eligible = all players who entered tips this week before lock.',
       lockTime: Number(req.body?.lockTime || 0) || null,
-      stake: String(req.body?.stake || '').trim(),
+      stake: '$25',
       potentialReturn: String(req.body?.potentialReturn || '').trim(),
       legItems,
       legs,

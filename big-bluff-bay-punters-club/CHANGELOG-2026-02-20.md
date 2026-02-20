@@ -115,6 +115,8 @@
   - all Bosses Multi legs are stored/rendered as **PLACE** bets
   - Bosses meet/track is auto-synced to the current tipping track fixture (admin meet field is read-only)
   - public tracker simplified to Leg/Race + Selection + Odds + Result for faster scan
+  - lock time now auto-falls back to the known global tip edit lock deadline when not manually set
+  - stake is fixed at **$25** across admin + public tracker
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

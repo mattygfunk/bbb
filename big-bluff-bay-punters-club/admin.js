@@ -314,7 +314,7 @@ function fillBossesFormFromDraft(){
   if(!d) return;
   if($('bosses-meet') && d.meet) $('bosses-meet').value = d.meet;
   if($('bosses-status')) $('bosses-status').value = String(d.status || 'LIVE').toUpperCase();
-  if($('bosses-stake') && d.stake_aud != null) $('bosses-stake').value = `$${Number(d.stake_aud).toFixed(2)}`;
+  if($('bosses-stake')) $('bosses-stake').value = '$25';
   if($('bosses-potential-return') && d.potential_return_aud != null) $('bosses-potential-return').value = `$${Number(d.potential_return_aud).toFixed(2)}`;
   if($('bosses-title') && !$('bosses-title').value.trim()) $('bosses-title').value = 'Bosses Multi';
   if($('bosses-week-key') && !$('bosses-week-key').value.trim()) $('bosses-week-key').value = buildDefaultBossesWeekKey();
@@ -424,7 +424,7 @@ async function refresh(){
   if ($('bosses-status')) $('bosses-status').value = String(state.bossesBet.status || 'live').toUpperCase();
   if ($('bosses-freeroll-prize')) $('bosses-freeroll-prize').value = Number(state.bossesBet.freerollPrize || 0);
   if ($('bosses-eligibility-note')) $('bosses-eligibility-note').value = String(state.bossesBet.eligibilityNote || 'Eligible = all players who entered tips this week before lock.');
-  if ($('bosses-stake')) $('bosses-stake').value = String(state.bossesBet.stake || '');
+  if ($('bosses-stake')) $('bosses-stake').value = '$25';
   if ($('bosses-potential-return')) $('bosses-potential-return').value = String(state.bossesBet.potentialReturn || '');
   if ($('bosses-lock-time')) {
     const lockMs = Number(state.bossesBet.lockTime || 0);
