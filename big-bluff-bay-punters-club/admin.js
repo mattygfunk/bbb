@@ -209,10 +209,11 @@ function renderBossesLegInputs(){
       <input type='text' name='leg-race-${idx}' placeholder='Race (e.g. R3)' value='${esc(item.race || '')}' style='max-width:96px' />
       <input type='text' name='leg-selection-${idx}' placeholder='Selection' value='${esc(item.selection || '')}' style='max-width:170px' />
       <select name='leg-type-${idx}' style='max-width:110px'>
-        <option value='W' ${String(item.betType||'').toUpperCase()==='W'?'selected':''}>W</option>
-        <option value='P' ${String(item.betType||'').toUpperCase()==='P'?'selected':''}>P</option>
+        <option value='PLACE' ${String(item.betType||'').toUpperCase()==='PLACE' || String(item.betType||'').toUpperCase()==='P'?'selected':''}>Place</option>
+        <option value='WIN' ${String(item.betType||'').toUpperCase()==='WIN' || String(item.betType||'').toUpperCase()==='W'?'selected':''}>Win</option>
         <option value='TOP3' ${String(item.betType||'').toUpperCase()==='TOP3'?'selected':''}>Top3</option>
-        <option value='W/P' ${String(item.betType||'').toUpperCase()==='W/P'?'selected':''}>W/P</option>
+        <option value='TOP2' ${String(item.betType||'').toUpperCase()==='TOP2'?'selected':''}>Top2</option>
+        <option value='EACHWAY' ${String(item.betType||'').toUpperCase()==='EACHWAY'?'selected':''}>Each Way</option>
       </select>
       <input type='text' name='leg-odds-${idx}' placeholder='Odds' value='${esc(item.odds || '')}' style='max-width:90px' />
       <select name='leg-result-${idx}' style='max-width:118px'>
@@ -325,7 +326,7 @@ function fillBossesFormFromDraft(){
       legNumber: Number(l.leg || idx + 1),
       race: l.race == null ? '' : `R${Number(l.race)}`,
       selection: String(l.selection || ''),
-      betType: String(l.bet_type || 'UNKNOWN').toUpperCase() === 'UNKNOWN' ? 'W/P' : String(l.bet_type || 'W/P').toUpperCase(),
+      betType: String(l.bet_type || 'UNKNOWN').toUpperCase() === 'UNKNOWN' ? 'PLACE' : String(l.bet_type || 'PLACE').toUpperCase(),
       odds: l.odds == null ? '' : String(l.odds),
       result: String(l.result || 'Pending').toUpperCase()
     }
@@ -411,7 +412,7 @@ async function refresh(){
       legNumber: idx + 1,
       race,
       selection: String(state.bossesBet.selections?.[race] || ''),
-      betType: 'W/P',
+      betType: 'PLACE',
       odds: '',
       result: 'PENDING'
     }));
@@ -854,7 +855,7 @@ $('bosses-form')?.addEventListener('submit', async (e) => {
 
 $('bosses-add-leg-btn')?.addEventListener('click', () => {
   const nextIdx = (state.bossesBet.legItems || []).length + 1;
-  state.bossesBet.legItems = [...(state.bossesBet.legItems || []), { legNumber: nextIdx, race: '', selection: '', betType: 'W/P', odds: '', result: 'PENDING' }];
+  state.bossesBet.legItems = [...(state.bossesBet.legItems || []), { legNumber: nextIdx, race: '', selection: '', betType: 'PLACE', odds: '', result: 'PENDING' }];
   renderBossesLegInputs();
 });
 
@@ -904,7 +905,7 @@ $('autofill-bosses-btn')?.addEventListener('click', async () => {
     legNumber: idx + 1,
     race,
     selection: String(popular[race]?.selection || ''),
-    betType: 'W/P',
+    betType: 'PLACE',
     odds: '',
     result: 'PENDING'
   }));

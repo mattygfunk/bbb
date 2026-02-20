@@ -108,6 +108,9 @@
 - Auto-track leg status on Punters Bosses tracker:
   - when race results are entered, each Bosses leg now resolves to Pending/Won/Lost automatically by race + selection
   - preserves extracted odds from admin-uploaded bet slip and displays them in the public tracker
+- Updated defaults + display format per admin workflow:
+  - new Bosses legs default to **PLACE** bet type before/after extraction flows
+  - merged public tracker columns from separate `Leg #` + `Race` into one `Leg / Race` column (e.g., `Leg 1 · R1`)
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap
