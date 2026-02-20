@@ -143,6 +143,15 @@ function renderFixtures(fixtures, overview, jackpot, lockText = 'Updating…') {
   if (fallback) fallback.hidden = true;
 }
 
+let homeRaceRunners = {};
+
+function lookupRunnerName(race = '', selection = '') {
+  const rows = homeRaceRunners?.[String(race || '').toUpperCase()]?.runners || [];
+  const sel = String(selection || '').trim();
+  const hit = rows.find((r) => String(r?.runnerNumber || '') === sel);
+  return String(hit?.horseName || '').trim();
+}
+
 function renderTipsByPlayer(tips, currentUser = '') {
   const list = document.getElementById('tips-preview-list');
   const more = document.getElementById('tips-more-count');
@@ -158,14 +167,17 @@ function renderTipsByPlayer(tips, currentUser = '') {
   tips.forEach((t) => {
     const member = String(t.member || 'Unknown');
     if (!byMember.has(member)) byMember.set(member, []);
-    byMember.get(member).push({ race: String(t.race || ''), selection: String(t.selection || '') });
+    byMember.get(member).push({ race: String(t.race || ''), selection: String(t.selection || ''), horse: String(t.runnerName || t.horse || '') });
   });
 
   const raceNum = (r) => Number(String(r || '').replace('R', '')) || 999;
   const entries = Array.from(byMember.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   entries.slice(0, 4).forEach(([member, picks]) => {
     const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
-    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)}: #${esc(p.selection)}${p.horse ? ` • ${esc(p.horse)}` : ''}`).join(' • ');
+    const lines = ordered.slice(0, 4).map((p) => {
+      const horse = String(p.horse || lookupRunnerName(p.race, p.selection) || '');
+      return `${esc(p.race)}: #${esc(p.selection)}${horse ? ` • ${esc(horse)}` : ''}`;
+    }).join(' • ');
     const card = document.createElement('article');
     const mine = currentUser && String(member).toLowerCase() === String(currentUser).toLowerCase();
     card.className = `tip${mine ? ' tip-own' : ''}`;
@@ -395,8 +407,9 @@ async function hydrateNextTipHomeFallback(trackId, token, section, card, body, r
     section.hidden = false;
     card.className = 'card next-tip-card next-tip-card--highlight';
     raceEl.textContent = nextRace;
-    pickEl.textContent = userTip.runnerName
-      ? `YOUR SELECTION • #${userTip.selection || '—'} • ${userTip.runnerName}`
+    const heroHorse = String(userTip.runnerName || lookupRunnerName(nextRace, userTip.selection) || '');
+    pickEl.textContent = heroHorse
+      ? `YOUR SELECTION • #${userTip.selection || '—'} • ${heroHorse}`
       : `YOUR SELECTION • #${String(userTip.selection || '—')}`;
     body.textContent = 'Live sync mode • Your next-race tip is locked and ready.';
     primary.textContent = 'Edit This Tip';
@@ -584,7 +597,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     }
 
     const pickNo = String(d?.userPick?.selection || '—');
-    const pickHorse = String(d?.userPick?.runnerName || d?.userPick?.horse || '').trim();
+    const raceKey = Number.isFinite(raceNum) && raceNum > 0 ? `R${raceNum}` : '';
+    const pickHorse = String(d?.userPick?.runnerName || d?.userPick?.horse || lookupRunnerName(raceKey, pickNo) || '').trim();
     pickEl.textContent = pickHorse ? `YOUR SELECTION • #${pickNo} • ${pickHorse}` : `YOUR SELECTION • #${pickNo}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
@@ -651,6 +665,8 @@ async function hydrateLandingCritical() {
     document.getElementById('jackpot-last-winner').textContent = lastWinner;
     const livePot = document.getElementById('live-week-pot');
     if (livePot) livePot.textContent = potText;
+
+    homeRaceRunners = overview?.raceRunners || {};
 
     const effectiveFixtures = (Array.isArray(overview?.fixtures) && overview.fixtures.length)
       ? overview.fixtures
