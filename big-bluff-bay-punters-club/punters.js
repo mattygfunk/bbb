@@ -452,6 +452,97 @@ function getCurrentRoundPoolText() {
   return `Current round prize pool (incl. jackpot): $${Math.round(pot)}`;
 }
 
+function generateWinningScenarios({ userRank, userPoints, leaderPoints, gapToFirst, remainingRaces, nextUserPick, ladderRows }) {
+  const lines = [];
+  const safeGap = Number.isFinite(gapToFirst) ? gapToFirst : null;
+  const safeRemaining = Number.isFinite(remainingRaces) ? remainingRaces : null;
+  const clustered = Array.isArray(ladderRows) && Number.isFinite(userPoints)
+    ? ladderRows.filter((r) => Math.abs(Number(r?.points || 0) - userPoints) <= 2).length >= 4
+    : false;
+
+  if (safeGap != null && safeGap <= 0) {
+    lines.push('You’re leading. A clean finish keeps pressure on the chasers.');
+  } else if (safeGap != null && safeGap <= 1) {
+    lines.push('You’re within striking distance of 1st — one result could swing the lead.');
+  } else if (safeGap != null && safeGap <= 3) {
+    lines.push(`You’re ${safeGap} pts off top. One strong race likely pulls you right back in.`);
+  } else if (safeGap != null) {
+    lines.push(`You’re ${safeGap} pts behind 1st. You’ll need a sharp final run to challenge.`);
+  }
+
+  if (safeRemaining != null && safeRemaining <= 2) {
+    lines.push('Final stretch: with 2 or fewer races left, every place result is critical.');
+  }
+
+  if (clustered) {
+    lines.push('Tight ladder: multiple punters are clustered within 1–2 points.');
+  }
+
+  if (nextUserPick) {
+    lines.push(`Your next pick (${nextUserPick}) is a key swing spot for your ladder position.`);
+  }
+
+  if (!lines.length) lines.push('You’re still live. Watch the next race and ladder movement for opportunities.');
+  return lines.slice(0, 4);
+}
+
+function renderMemberCockpit(data = {}) {
+  const wrap = $('member-cockpit');
+  const scen = $('member-scenarios');
+  if (!wrap || !scen) return;
+  if (!state.user) {
+    wrap.hidden = true;
+    scen.hidden = true;
+    return;
+  }
+
+  wrap.hidden = false;
+  scen.hidden = false;
+
+  const setText = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+  const rank = Number(data.userRank || 0);
+  const points = Number(data.userPoints || 0);
+  const gap = Number(data.gapToFirst);
+
+  setText('mc-rank', rank > 0 ? `#${rank}` : '—');
+  setText('mc-points', Number.isFinite(points) ? `${points} pts` : '—');
+  setText('mc-gap', !Number.isFinite(gap) ? '—' : gap <= 0 ? (rank === 1 ? 'Leading' : 'Tied for 1st') : `-${gap} pts`);
+  setText('mc-remaining', Number.isFinite(data.remainingRaces) ? `${Math.max(0, data.remainingRaces)} left` : '—');
+
+  const jackpotChip = $('mc-jackpot-chip');
+  if (jackpotChip) {
+    const jackpotText = data.isJackpotEligible ? 'Jackpot Eligible ✅' : 'FREE / Upgrade Available';
+    jackpotChip.textContent = jackpotText;
+    jackpotChip.classList.toggle('chip-red', !data.isJackpotEligible);
+  }
+
+  const bossesChip = $('mc-bosses-chip');
+  if (bossesChip) {
+    bossesChip.textContent = data.bossesStatus || '—';
+    bossesChip.classList.toggle('chip-red', String(data.bossesStatus || '').toLowerCase().includes('not'));
+  }
+
+  const meta = $('member-round-meta');
+  if (meta) {
+    const bits = [];
+    if (data.submittedAtText) bits.push(`Submitted: ${data.submittedAtText}`);
+    if (data.roundLabel) bits.push(`Round: ${data.roundLabel}`);
+    meta.textContent = bits.length ? bits.join(' • ') : 'Your live position this round.';
+  }
+
+  const list = $('member-scenarios-list');
+  if (list) {
+    const scenarios = generateWinningScenarios(data);
+    list.innerHTML = '';
+    scenarios.forEach((line) => {
+      const li = document.createElement('li');
+      li.className = 'member-cockpit__scenario';
+      li.textContent = line;
+      list.appendChild(li);
+    });
+  }
+}
+
 function renderTipEntryState() {
   const entryCard = $('quick-tips-entry-card');
   const form = $('tip-form');
@@ -872,9 +963,11 @@ async function refresh(){
   state.existingByRace = new Map();
   state.isJackpotEligible = false;
   let myTipCount = 0;
+  let myTips = [];
   if(state.user){
     const currentUser = String(state.user.username || '').toLowerCase();
     const mine=(allTipsRes.tips||[]).filter(t=>String(t.member||'').toLowerCase()===currentUser && t.status!=='removed');
+    myTips = mine;
     state.isJackpotEligible = mine.some((t)=>Boolean(t.paid));
     const latestByRace=new Map();
     for(const t of mine){
@@ -896,6 +989,37 @@ async function refresh(){
       ? 'You tipped this week — tonight’s poker seat is live.'
       : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
   }
+
+  const userKey = String(state.user?.username || '').toLowerCase();
+  const userRow = (ladderRows || []).find((r) => String(r?.member || '').toLowerCase() === userKey) || null;
+  const leaderPoints = Number((ladderRows || [])[0]?.points || 0);
+  const userPoints = Number(userRow?.points || 0);
+  const userRank = Number(userRow?.rank || 0);
+  const gapToFirst = Number.isFinite(leaderPoints) && Number.isFinite(userPoints) ? (leaderPoints - userPoints) : NaN;
+  const settledCount = Object.keys(overviewData?.raceResults || {}).length;
+  const remainingRacesRaw = Number(overviewData?.round?.remainingRaces);
+  const remainingRaces = Number.isFinite(remainingRacesRaw)
+    ? remainingRacesRaw
+    : (Number.isFinite(state.raceCount) ? Math.max(0, state.raceCount - settledCount) : NaN);
+  const latestTipTs = myTips.reduce((mx, t) => Math.max(mx, Number(t?.updatedAt || t?.createdAt || t?.submittedAt || 0)), 0);
+  const submittedAtText = latestTipTs > 0
+    ? new Date(latestTipTs).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: '2-digit', minute: '2-digit' })
+    : '';
+  const nextUserPick = Array.from(state.existingByRace.entries()).sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))[0]?.[1] || '';
+  const bossesStatus = myTipCount > 0 ? 'Eligible ✅' : (state.tipsEditableNow ? 'Not entered' : 'Not eligible');
+  renderMemberCockpit({
+    userRank,
+    userPoints,
+    leaderPoints,
+    gapToFirst,
+    remainingRaces,
+    isJackpotEligible: state.isJackpotEligible,
+    bossesStatus,
+    nextUserPick: nextUserPick ? `#${nextUserPick}` : '',
+    ladderRows,
+    submittedAtText,
+    roundLabel: String(nextMeet?.track || overviewData?.round?.label || '')
+  });
 
   renderUpgradeButtonState();
   await hydrateNextTipCard(String(overviewData?.track?.id || 'thoroughbreds'));

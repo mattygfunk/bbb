@@ -155,6 +155,27 @@
         </section>
       </div>
 
+      <section class="card member-cockpit" id="member-cockpit" hidden aria-labelledby="member-cockpit-heading">
+        <h2 id="member-cockpit-heading">Your Round Snapshot</h2>
+        <p class="muted" id="member-round-meta">Loading your round…</p>
+        <div class="member-cockpit__stats" id="member-cockpit-stats">
+          <article class="member-cockpit__stat"><p class="muted">Your Rank</p><h3 id="mc-rank">—</h3></article>
+          <article class="member-cockpit__stat"><p class="muted">Your Points</p><h3 id="mc-points">—</h3></article>
+          <article class="member-cockpit__stat"><p class="muted">Gap to 1st</p><h3 id="mc-gap">—</h3></article>
+          <article class="member-cockpit__stat"><p class="muted">Remaining Races</p><h3 id="mc-remaining">—</h3></article>
+          <article class="member-cockpit__stat"><p class="muted">Jackpot Status</p><p id="mc-jackpot-chip" class="pill member-cockpit__chip">—</p></article>
+          <article class="member-cockpit__stat"><p class="muted">Bosses Multi</p><p id="mc-bosses-chip" class="pill member-cockpit__chip">—</p></article>
+        </div>
+      </section>
+
+      <section class="card member-cockpit member-cockpit__scenarios" id="member-scenarios" hidden aria-labelledby="member-scenarios-heading">
+        <h2 id="member-scenarios-heading">What You Need to Win</h2>
+        <p class="muted">Live scenario guide based on current ladder and races remaining.</p>
+        <ul id="member-scenarios-list" class="member-cockpit__scenario-list">
+          <li class="member-cockpit__scenario">Loading your scenario…</li>
+        </ul>
+      </section>
+
       <section class="card" id="winner-banner" hidden>
         <h2>🏆 Round Winner: <span id="winner-banner-name">tofu</span></h2>
         <p class="muted" id="winner-banner-range">Round date range</p>

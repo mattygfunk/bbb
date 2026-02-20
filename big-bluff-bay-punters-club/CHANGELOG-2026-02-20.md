@@ -137,6 +137,18 @@
   - semantic headings/lists
   - mobile-first stacking and tap targets
   - subtle effects with reduced-motion fallback
+
+## Logged-in cockpit UX on Punters page
+- Added **Your Round Snapshot** card under “Your Next Race Tip” (logged-in only):
+  - rank, points, gap to 1st, remaining races
+  - jackpot status chip + bosses multi eligibility chip
+  - submitted-at and round/meeting meta line when available
+- Added **What You Need to Win** scenario panel (logged-in only):
+  - rule-based scenario generator from ladder position, gap, remaining races, next pick, and ladder clustering
+  - short, probability-safe guidance lines (no deterministic win claims)
+- Data/fallback behavior:
+  - reuses existing overview/ladder/tips data already loaded on page
+  - missing fields render as `—` and generic scenario fallback instead of hiding/crashing
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap
