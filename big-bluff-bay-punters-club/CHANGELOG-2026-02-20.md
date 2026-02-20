@@ -149,6 +149,19 @@
 - Data/fallback behavior:
   - reuses existing overview/ladder/tips data already loaded on page
   - missing fields render as `—` and generic scenario fallback instead of hiding/crashing
+
+## Poker Schedule lobby overhaul
+- Rebuilt `poker-schedule.html` into a premium lobby layout with:
+  - hero + Next Event widget + live countdown status
+  - dynamic event cards (Sunday Main / Nightly Prime / Late Night GTD)
+  - cards/week toggle generated from one centralized config object
+  - pathway block + session picker + results/promo proof section
+- Added client-side `poker-schedule.js` dynamic features:
+  - Melbourne-time next-event calculation
+  - per-event .ics download + Google Calendar links
+  - timezone mode toggle (Melbourne/local)
+  - lightweight session recommendation logic
+- Added poker lobby styling in `styles.css` with mobile-first card/grid behavior and accessible focus-preserving controls.
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap
