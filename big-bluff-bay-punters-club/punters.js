@@ -5,6 +5,21 @@ const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new 
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
 
+function getRunnerNameByRaceSelection(race='R1', selection='') {
+  const raceId = String(race || '').toUpperCase();
+  const sel = String(selection || '').trim();
+  if (!raceId || !sel) return '';
+  const rows = state.raceRunners?.[raceId]?.runners || [];
+  const hit = rows.find((r) => String(r?.runnerNumber || '') === sel || String(r?.rawBlock || '').startsWith(`${sel} `));
+  return String(hit?.horseName || '').trim();
+}
+
+function formatSelectionText(race='R1', selection='—', runnerName='') {
+  const sel = String(selection || '—');
+  const name = String(runnerName || getRunnerNameByRaceSelection(race, sel) || '').trim();
+  return name ? `#${sel} • ${name}` : `#${sel}`;
+}
+
 async function req(path,opt={}){
   const h={'Content-Type':'application/json',...(opt.headers||{})};
   if(state.token)h.Authorization=`Bearer ${state.token}`;
@@ -672,7 +687,7 @@ function renderTipEntryState() {
 
   const lines = Array.from(state.existingByRace.entries())
     .sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))
-    .map(([race,sel])=>`${race}: ${sel}`)
+    .map(([race,sel])=>`${race}: ${formatSelectionText(race, sel)}`)
     .join(' • ');
 
   summaryText.textContent = lines || 'All races entered.';
@@ -825,7 +840,7 @@ async function hydrateNextTipCard(trackId){
       return;
     }
 
-    pick.textContent = `Your Selection: #${String(d?.userPick?.selection || '—')}`;
+    pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(d?.userPick?.selection || '—'), String(d?.userPick?.runnerName || d?.userPick?.horse || ''))}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
     social.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
@@ -874,7 +889,7 @@ async function hydrateNextTipCard(trackId){
       if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
-        pick.textContent = `Your Selection: #${String(lg?.tip?.selection || '—')}`;
+        pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '—'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
         social.textContent = 'You’re first on the card';
         primary.textContent = lg?.editable ? 'Edit' : 'Full Card';
         primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';
@@ -981,7 +996,7 @@ async function refresh(){
     const member = String(t.member || 'Unknown');
     if (!byPunter.has(member)) byPunter.set(member, { picks: new Map(), unpaid: false });
     const row = byPunter.get(member);
-    row.picks.set(String(t.race || ''), String(t.selection || t.horse || ''));
+    row.picks.set(String(t.race || ''), { selection: String(t.selection || ''), horse: String(t.horse || t.runnerName || '') });
     if (!t.paid) row.unpaid = true;
   });
   const raceOrder = Array.from({length:state.raceCount}, (_,i)=>`R${i+1}`);
@@ -991,7 +1006,12 @@ async function refresh(){
       const picks = data.picks;
       const lines = raceOrder
         .filter((r) => picks.get(r))
-        .map((r) => `<span>${esc(r)}: <strong>${esc(picks.get(r))}</strong></span>`)
+        .map((r) => {
+          const p = picks.get(r);
+          const sel = typeof p === 'string' ? p : p.selection;
+          const horse = typeof p === 'string' ? '' : p.horse;
+          return `<span>${esc(r)}: <strong>${esc(formatSelectionText(r, sel, horse))}</strong></span>`;
+        })
         .join(' • ');
       const e=document.createElement('article');
       const mine = currentUserLower && String(member).toLowerCase() === currentUserLower;

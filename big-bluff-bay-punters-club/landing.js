@@ -165,7 +165,7 @@ function renderTipsByPlayer(tips, currentUser = '') {
   const entries = Array.from(byMember.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   entries.slice(0, 4).forEach(([member, picks]) => {
     const ordered = picks.sort((a, b) => raceNum(a.race) - raceNum(b.race));
-    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)}: ${esc(p.selection)}`).join(' • ');
+    const lines = ordered.slice(0, 4).map((p) => `${esc(p.race)}: #${esc(p.selection)}${p.horse ? ` • ${esc(p.horse)}` : ''}`).join(' • ');
     const card = document.createElement('article');
     const mine = currentUser && String(member).toLowerCase() === String(currentUser).toLowerCase();
     card.className = `tip${mine ? ' tip-own' : ''}`;
@@ -584,7 +584,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     }
 
     const pickNo = String(d?.userPick?.selection || '—');
-    pickEl.textContent = `YOUR SELECTION • #${pickNo}`;
+    const pickHorse = String(d?.userPick?.runnerName || d?.userPick?.horse || '').trim();
+    pickEl.textContent = pickHorse ? `YOUR SELECTION • #${pickNo} • ${pickHorse}` : `YOUR SELECTION • #${pickNo}`;
     const others = Number(d?.othersCount || 0);
     const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
     socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
