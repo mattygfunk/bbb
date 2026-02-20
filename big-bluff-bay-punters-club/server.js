@@ -512,7 +512,12 @@ function computeBossesBetProgress(store, trackId = 'thoroughbreds') {
     const raceKey = String(item.race || '').toUpperCase();
     const raceStatus = progressByRace.get(raceKey);
     const derivedResult = raceStatus === 'placed' ? 'WON' : raceStatus === 'missed' ? 'LOST' : raceStatus === 'pending' ? 'PENDING' : String(item.result || 'PENDING').toUpperCase();
-    return { ...item, result: derivedResult };
+    const fallbackSelection = String(bb?.selections?.[raceKey] || '').trim();
+    return {
+      ...item,
+      selection: String(item.selection || '').trim() || fallbackSelection || '',
+      result: derivedResult || 'PENDING'
+    };
   });
 
   return {
