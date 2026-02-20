@@ -117,6 +117,20 @@
   - public tracker simplified to Leg/Race + Selection + Odds + Result for faster scan
   - lock time now auto-falls back to the known global tip edit lock deadline when not manually set
   - stake is fixed at **$25** across admin + public tracker
+
+## Punters promo overhaul (below-the-fold)
+- Replaced the flat/terminal-like lower section with a premium promo composition:
+  - new layered promo band with felt-style gradient + tasteful glow
+  - punchy headline, scannable bullets, and primary conversion buttons
+  - 4-card promo grid for lock rules, live ladder/jackpot, Bosses Multi, and Winners Wall
+- Upgraded Bosses Multi area into spotlight-style presentation while keeping live data wiring intact.
+- Added social-proof polish and a dedicated end-of-section CTA band:
+  - “Enter Punters Club” + “See Winners”
+  - urgency microcopy around lock/edit window
+- Preserved accessibility and performance posture:
+  - semantic headings/lists
+  - mobile-first stacking and tap targets
+  - subtle effects with reduced-motion fallback
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

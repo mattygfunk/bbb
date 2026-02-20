@@ -191,6 +191,7 @@ function renderBossesBet(bb){
   const overall = $('bosses-overall');
   const summary = $('bosses-summary');
   const descVal = $('bosses-freeroll-value');
+  const promoVal = $('promo-freeroll-value');
   const rulesVal = $('rules-bosses-freeroll');
   const eligibility = $('bosses-eligibility-note');
   if(!wrap || !overall) return;
@@ -208,6 +209,7 @@ function renderBossesBet(bb){
   const freerollPrize = Number(data.freerollPrize || 0);
   const freerollText = freerollPrize > 0 ? money.format(freerollPrize) : 'TBA';
   if (descVal) descVal.textContent = freerollText;
+  if (promoVal) promoVal.textContent = freerollText;
   if (rulesVal) rulesVal.textContent = freerollText;
   if (eligibility) eligibility.textContent = String(data.eligibilityNote || 'Eligible = all players who entered tips this week before lock.');
 
