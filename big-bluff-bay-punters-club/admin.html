@@ -187,6 +187,38 @@
           <p id="results-msg" class="muted"></p>
         </section>
 
+        <section class="card"><h2>Paste Runners Import</h2>
+          <form id="runners-import-form" class="stack">
+            <div class="split">
+              <label>Import into Race #
+                <select id="runners-import-race" name="race"></select>
+              </label>
+              <label>Source
+                <input id="runners-import-source" name="source" type="text" value="manual-paste" />
+              </label>
+            </div>
+            <label>Notes
+              <input id="runners-import-notes" name="notes" type="text" placeholder="Optional import notes" />
+            </label>
+            <label>Paste runners
+              <textarea id="runners-import-text" name="text" rows="10" placeholder="Paste raw runner block here"></textarea>
+            </label>
+            <div class="row-actions">
+              <button class="btn" type="button" id="runners-parse-btn">Parse</button>
+              <button class="btn" type="button" id="runners-save-btn">Save to Race</button>
+              <button class="btn btn-ghost" type="button" id="runners-clear-btn">Clear</button>
+            </div>
+          </form>
+          <p id="runners-import-msg" class="muted" aria-live="polite"></p>
+          <div class="table-wrap table-cards" style="margin-top:.55rem">
+            <table>
+              <caption>Parsed runners preview</caption>
+              <thead><tr><th>Horse</th><th>Barrier</th><th>Form</th><th>Wt</th><th>Rating</th><th>Win</th><th>Place</th><th>Status</th><th>Warnings</th><th>Confidence</th></tr></thead>
+              <tbody id="runners-preview-body"><tr><td colspan="10" class="muted">No parsed runners yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
         <section class="card"><h2>Bosses Multi</h2>
           <div class="card" id="bosses-upload-panel">
             <h3>Upload Betting Screenshot</h3>

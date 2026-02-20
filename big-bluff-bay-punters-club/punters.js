@@ -2,7 +2,7 @@ const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
 
 async function req(path,opt={}){
@@ -301,7 +301,6 @@ async function loadMemberBreakdown(member, scrollToSection = true){
 // Buy-in vote removed: fixed $20 entry is live now.
 
 function renderRaceInputs(count){
-
   const wrap = $('quick-race-list');
   if(!wrap) return;
   wrap.innerHTML='';
@@ -310,8 +309,27 @@ function renderRaceInputs(count){
     const selectId=`tip-${race.toLowerCase()}`;
     const row=document.createElement('div');
     row.className='row';
+
+    const imported = state.raceRunners?.[race]?.runners || [];
     const opts=['<option value="">—</option>'];
-    for(let n=1;n<=24;n+=1) opts.push(`<option>${n}</option>`);
+    if (imported.length) {
+      imported.forEach((r) => {
+        const num = String(r?.runnerNumber || '').trim();
+        const horse = String(r?.horseName || '').trim();
+        const barrier = r?.barrier == null ? '' : ` (B${r.barrier})`;
+        const place = r?.prices?.place == null ? '' : ` • Plc ${r.prices.place}`;
+        const labelCore = `${num || '?'} ${horse}`.trim();
+        const label = `${labelCore}${barrier}${place}`.trim();
+        const value = num || String(labelCore.match(/#?(\d{1,2})/)?.[1] || '');
+        const disabled = r?.isScratched ? 'disabled' : '';
+        const scr = r?.isScratched ? ' [SCR]' : '';
+        if (value) opts.push(`<option value="${esc(value)}" ${disabled}>${esc(label + scr)}</option>`);
+      });
+    }
+    if (opts.length === 1) {
+      for(let n=1;n<=24;n+=1) opts.push(`<option>${n}</option>`);
+    }
+
     row.innerHTML=`<label for='${selectId}'><strong>${race}</strong><span class='muted' style='position:absolute;left:-9999px'> selection</span></label><select id='${selectId}' name='${race}' aria-label='${race} selection'>${opts.join('')}</select>`;
     wrap.appendChild(row);
   }
@@ -821,6 +839,7 @@ async function refresh(){
   let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
   const overview = await req(`${API.puntersOverview(state.tierView)}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null);
   state.lastOverview = overview || state.lastOverview;
+  state.raceRunners = (overview || state.lastOverview)?.raceRunners || state.raceRunners || {};
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
   const rulesJackpot = $('rules-jackpot-value');
   if (rulesJackpot && (overview || state.lastOverview)) rulesJackpot.textContent = `$${Number((overview||state.lastOverview)?.jackpot?.totalPot || 0).toFixed(0)}`;
@@ -877,6 +896,7 @@ async function refresh(){
   const raceCountChanged = newRaceCount !== state.raceCount;
   state.raceCount = newRaceCount;
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
+  else renderRaceInputs(state.raceCount);
   const ladderFallback = $('ladder-fallback');
   const ladderRows = (overview || state.lastOverview)?.ladder || [];
   renderLeaderboard(ladderRows);

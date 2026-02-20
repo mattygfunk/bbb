@@ -194,6 +194,25 @@
 - Added shared config/helpers module: `bbb-shared.js`.
   - Edit invite + join settings in `JOIN_CONFIG` (invitesOpen, approvalTimeMinutes, setupEstimateMinutes, clubId, joinMessageTemplate)
   - Edit event schedule/settings in `SCHEDULE_CONFIG`.
+
+## Admin Paste Runners Importer + Punters race runner integration
+- Added Admin **Paste Runners Import** section (`admin.html` + `admin.js`):
+  - race selector (`Import into Race #`), source/notes, paste textarea
+  - Parse / Save to Race / Clear actions
+  - parsed preview table with SCR + warnings + confidence
+  - overwrite protection prompt when selected race already has imported runners
+- Added tolerant parser backend (`server.js`):
+  - `POST /api/race-runners/parse` (regex + fallback block parsing)
+  - `PUT /api/race-runners/:race` save endpoint with overwrite flag
+  - `GET /api/race-runners` admin retrieval
+- Storage model:
+  - centralized under `trackData.raceRunners` (and mirrored `store.raceRunners` for thoroughbreds compatibility)
+  - shape: `raceRunners.RX = { importedAt, importedBy, source, notes, runners[] }`
+- Punters page integration (`punters.js`):
+  - uses `overview.raceRunners` when present to build race selection options
+  - displays imported runner names/barriers/place odds in dropdown labels
+  - SCR runners are flagged and disabled in selection options
+  - falls back to numeric 1–24 list when no import exists
 - Security/robustness:
   - requires admin auth
   - 10MB upload cap

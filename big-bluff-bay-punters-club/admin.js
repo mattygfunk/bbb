@@ -1,8 +1,8 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -177,18 +177,22 @@ function fillResultsForm(race){
 }
 
 function renderRaceOptions(){
-  const select = $('results-race');
-  if(!select) return;
-  const prev = select.value;
-  select.innerHTML = '';
-  for(let i=1;i<=state.raceCount;i+=1){
-    const opt = document.createElement('option');
-    opt.value = `R${i}`;
-    opt.textContent = `R${i}`;
-    select.appendChild(opt);
-  }
-  select.value = prev || 'R1';
-  fillResultsForm(select.value);
+  const fillSelect = (select, fallback='R1') => {
+    if(!select) return;
+    const prev = select.value;
+    select.innerHTML = '';
+    for(let i=1;i<=state.raceCount;i+=1){
+      const opt = document.createElement('option');
+      opt.value = `R${i}`;
+      opt.textContent = `R${i}`;
+      select.appendChild(opt);
+    }
+    select.value = prev || fallback;
+  };
+
+  fillSelect($('results-race'));
+  fillSelect($('runners-import-race'));
+  fillResultsForm($('results-race')?.value || 'R1');
 }
 
 function buildDefaultBossesWeekKey(){
@@ -260,6 +264,23 @@ function renderBossesSuggested(popular){
   const races = Array.from({length:state.raceCount},(_,i)=>`R${i+1}`);
   const lines = races.filter(r=>popular[r]).map((r)=>`${r}: ${popular[r].selection} (${popular[r].votes} votes)`);
   box.textContent = lines.length ? `Most popular picks → ${lines.join(' • ')}` : 'No tip data yet to auto-calculate Bosses Bet.';
+}
+
+function renderRunnersPreview(){
+  const body = $('runners-preview-body');
+  if(!body) return;
+  const rows = Array.isArray(state.parsedRunners) ? state.parsedRunners : [];
+  body.innerHTML = '';
+  if(!rows.length){
+    body.innerHTML = "<tr><td colspan='10' class='muted'>No parsed runners yet.</td></tr>";
+    return;
+  }
+  rows.forEach((r)=>{
+    const tr=document.createElement('tr');
+    const status = r.isScratched ? 'SCR' : 'Active';
+    tr.innerHTML = `<td>${esc(r.horseName || '—')}</td><td>${r.barrier ?? '—'}</td><td>${esc(r.form || '—')}</td><td>${r.weightKg ?? '—'}</td><td>${r.rating ?? '—'}</td><td>${r.prices?.win ?? '—'}</td><td>${r.prices?.place ?? '—'}</td><td><span class='pill ${r.isScratched?'chip-red':''}'>${status}</span></td><td>${esc((r.warnings||[]).join('; ') || '—')}</td><td>${esc(r.confidence || '—')}</td>`;
+    body.appendChild(tr);
+  });
 }
 
 function renderBossesDraft(){
@@ -396,8 +417,15 @@ async function refresh(){
   try {
     const rr = await req(withTrack(API.results));
     state.raceResults = rr.raceResults || {};
-    renderRaceOptions();
-  } catch {}
+  } catch { state.raceResults = {}; }
+
+  try {
+    const rs = await req(withTrack(API.raceRunners));
+    state.raceRunners = rs.raceRunners || {};
+  } catch { state.raceRunners = {}; }
+
+  renderRaceOptions();
+  renderRunnersPreview();
 
   try {
     const bb = await req(withTrack(API.bossesBet));
@@ -869,6 +897,59 @@ $('bosses-mark-lost-btn')?.addEventListener('click', () => {
   const status = $('bosses-status');
   if (status) status.value = 'LOST';
   toastBosses('Status set to LOST. Click Save / Update Bosses Multi.','warn');
+});
+
+$('runners-parse-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
+  const race = $('runners-import-race')?.value || 'R1';
+  const raceNumber = Number(String(race).replace('R','')) || 1;
+  const text = String($('runners-import-text')?.value || '');
+  const msg = $('runners-import-msg');
+  if(!text.trim()){ if(msg) msg.textContent = 'Paste runner text first.'; return; }
+  try {
+    const r = await req(withTrack(API.raceRunnersParse), { method:'POST', body: JSON.stringify({ raceNumber, text, trackId: state.trackId }) });
+    state.parsedRunners = r.runners || [];
+    renderRunnersPreview();
+    if (msg) msg.textContent = `Parsed ${state.parsedRunners.length} runner(s) with ${Number(r.warningsCount || 0)} warning(s).`;
+  } catch (err) {
+    if (msg) msg.textContent = err.message || 'Parse failed.';
+  }
+});
+
+$('runners-save-btn')?.addEventListener('click', async () => {
+  if(!isAdmin()){ toastBosses('Admin login required.','warn'); return; }
+  const race = $('runners-import-race')?.value || 'R1';
+  const source = String($('runners-import-source')?.value || 'manual-paste').trim() || 'manual-paste';
+  const notes = String($('runners-import-notes')?.value || '').trim();
+  const msg = $('runners-import-msg');
+  if(!state.parsedRunners.length){ if(msg) msg.textContent = 'Parse runners before saving.'; return; }
+
+  try {
+    await req(withTrack(API.saveRaceRunners(race)), { method:'PUT', body: JSON.stringify({ trackId: state.trackId, source, notes, runners: state.parsedRunners, overwrite: false }) });
+    if (msg) msg.textContent = `Saved ${state.parsedRunners.length} runner(s) into ${race}.`;
+    const rs = await req(withTrack(API.raceRunners));
+    state.raceRunners = rs.raceRunners || {};
+  } catch (err) {
+    if (String(err.message || '').toLowerCase().includes('already has imported runners')) {
+      const yes = confirm(`${race} already has imported runners. Overwrite?`);
+      if (!yes) return;
+      try {
+        await req(withTrack(API.saveRaceRunners(race)), { method:'PUT', body: JSON.stringify({ trackId: state.trackId, source, notes, runners: state.parsedRunners, overwrite: true }) });
+        if (msg) msg.textContent = `Overwrote ${race} runners successfully.`;
+      } catch (e2) { if (msg) msg.textContent = e2.message || 'Save failed.'; }
+    } else {
+      if (msg) msg.textContent = err.message || 'Save failed.';
+    }
+  }
+});
+
+$('runners-clear-btn')?.addEventListener('click', () => {
+  state.parsedRunners = [];
+  if ($('runners-import-text')) $('runners-import-text').value = '';
+  if ($('runners-import-notes')) $('runners-import-notes').value = '';
+  renderRunnersPreview();
+  const msg = $('runners-import-msg');
+  if (msg) msg.textContent = 'Importer cleared.';
 });
 
 $('clear-results-btn')?.addEventListener('click', async () => {

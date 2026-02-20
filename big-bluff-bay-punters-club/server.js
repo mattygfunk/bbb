@@ -114,6 +114,10 @@ function ensureStore() {
     store.raceResults = {};
     changed = true;
   }
+  if (!store.raceRunners || typeof store.raceRunners !== 'object') {
+    store.raceRunners = {};
+    changed = true;
+  }
   if (!store.bossesBet || typeof store.bossesBet !== 'object') {
     store.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: [], selections: {}, updatedAt: null, updatedBy: null };
     changed = true;
@@ -252,6 +256,86 @@ function parseSubs(value) {
       return { scratched, substitute };
     })
     .filter((x) => x.scratched && x.substitute);
+}
+
+function parseImportedRunners({ text = '', raceNumber = 1 }) {
+  const input = String(text || '').replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '').trim();
+  if (!input) return [];
+  const lines = input.split('\n').map((l) => l.trim()).filter(Boolean);
+  const headerRe = /^[A-Z0-9' .&-]+\s*\((\d{1,2})\)$/;
+
+  const blocks = [];
+  let current = [];
+  const push = () => { if (current.length) blocks.push(current), current = []; };
+  for (const line of lines) {
+    if (headerRe.test(line) && current.length) push();
+    current.push(line);
+  }
+  push();
+
+  const toNum = (v) => {
+    const n = Number(String(v || '').replace(/[^0-9.\-]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  return blocks.map((block, idx) => {
+    const warnings = [];
+    const rawBlock = block.join('\n');
+    const first = String(block[0] || '');
+    const hm = first.match(/^(.*)\((\d{1,2})\)$/);
+    const horseName = hm ? String(hm[1] || '').trim() : null;
+    const barrier = hm ? Number(hm[2]) : null;
+    if (!horseName) warnings.push('Missing horse name');
+    if (!barrier) warnings.push('Missing barrier');
+
+    const participantsRaw = String(block[1] || '').trim() || null;
+    let jockeyRaw = null;
+    let trainerRaw = null;
+    const split = participantsRaw ? participantsRaw.match(/^(.+?)(T[A-Z].*)$/i) : null;
+    if (split) {
+      jockeyRaw = String(split[1] || '').trim() || null;
+      trainerRaw = String(split[2] || '').trim() || null;
+    }
+
+    const formLine = String(block[2] || '');
+    const formTokens = formLine.split(/\s+/).filter(Boolean);
+    const form = formTokens[0] && /[0-9xX-]/.test(formTokens[0]) ? formTokens[0] : null;
+    const nums = formTokens.map(toNum).filter((n) => n != null);
+    const weightKg = nums[0] ?? null;
+    const rating = nums[1] ?? null;
+    if (!form) warnings.push('Missing form');
+
+    const tail = block.slice(3).join(' ');
+    const scrCount = (tail.match(/\bSCR\b/gi) || []).length;
+    const allNums = (tail.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter((n) => Number.isFinite(n));
+    const isScratched = scrCount >= 2;
+    const prices = isScratched
+      ? { win: null, place: null, alt1: null, alt2: null }
+      : { win: allNums[0] ?? null, place: allNums[1] ?? null, alt1: allNums[2] ?? null, alt2: allNums[3] ?? null };
+    if (!isScratched && prices.win == null && prices.place == null) warnings.push('No prices detected');
+
+    const confidence = (!horseName || !barrier)
+      ? 'low'
+      : ((form && (isScratched || prices.place != null)) ? 'high' : 'medium');
+
+    return {
+      raceNumber: Number(raceNumber || 1),
+      runnerNumber: idx + 1,
+      horseName,
+      barrier,
+      jockeyRaw,
+      trainerRaw,
+      participantsRaw,
+      form,
+      weightKg,
+      rating,
+      prices,
+      isScratched,
+      warnings,
+      confidence,
+      rawBlock
+    };
+  });
 }
 
 function issueToken(user) {
@@ -550,6 +634,7 @@ function defaultTrackData(trackId) {
   return {
     fixtures: [{ id: `pc-${trackId}-f1`, date: '', event: `${t.name} Meet`, track: t.defaultTrackLabel, raceCount: t.defaultRaceCount }],
     raceResults: {},
+    raceRunners: {},
     bossesBet: { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, legItems: [], legs: [], selections: {}, updatedAt: null, updatedBy: null }
   };
 }
@@ -605,6 +690,7 @@ function ensurePuntersClubStore(store) {
     const td = store.puntersClub.tracks[trackId];
     if (!Array.isArray(td.fixtures) || !td.fixtures.length) { td.fixtures = defaultTrackData(trackId).fixtures; changed = true; }
     if (!td.raceResults || typeof td.raceResults !== 'object') { td.raceResults = {}; changed = true; }
+    if (!td.raceRunners || typeof td.raceRunners !== 'object') { td.raceRunners = {}; changed = true; }
     if (!td.bossesBet || typeof td.bossesBet !== 'object') { td.bossesBet = defaultTrackData(trackId).bossesBet; changed = true; }
     if (!Array.isArray(td.bossesBet.legItems)) { td.bossesBet.legItems = []; changed = true; }
     if (typeof td.bossesBet.title !== 'string') { td.bossesBet.title = 'Bosses Multi'; changed = true; }
@@ -619,6 +705,10 @@ function ensurePuntersClubStore(store) {
       }
       if (store.raceResults && typeof store.raceResults === 'object' && Object.keys(store.raceResults).length && (!td.raceResults || !Object.keys(td.raceResults).length)) {
         td.raceResults = JSON.parse(JSON.stringify(store.raceResults));
+        changed = true;
+      }
+      if (store.raceRunners && typeof store.raceRunners === 'object' && Object.keys(store.raceRunners).length && (!td.raceRunners || !Object.keys(td.raceRunners).length)) {
+        td.raceRunners = JSON.parse(JSON.stringify(store.raceRunners));
         changed = true;
       }
       if (store.bossesBet && typeof store.bossesBet === 'object') {
@@ -1496,6 +1586,14 @@ function createApp() {
     return res.json({ trackId, raceResults });
   });
 
+  app.get('/api/race-runners', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const trackKey = req.query.track || req.query.trackId;
+    const trackId = normalizeTrackId(trackKey);
+    const raceRunners = trackKey ? (getTrackData(store, trackId).raceRunners || {}) : (store.raceRunners || {});
+    return res.json({ trackId, raceRunners });
+  });
+
   app.get('/api/bosses-bet', (req, res) => {
     const store = readStore();
     const trackKey = req.query.track || req.query.trackId;
@@ -1687,10 +1785,12 @@ function createApp() {
 
     // Hard reset selected meet results + bosses selections to avoid stale "missed" states.
     trackData.raceResults = {};
+    trackData.raceRunners = {};
     trackData.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: allRaces, selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
 
     if (trackId === 'thoroughbreds') {
       store.raceResults = {};
+      store.raceRunners = {};
       store.bossesBet = trackData.bossesBet;
     }
 
@@ -1746,6 +1846,50 @@ function createApp() {
     }
     writeStore(store);
     return res.json({ ok: true, trackId, race, removed: true });
+  });
+
+  app.post('/api/race-runners/parse', auth, adminOnly, (req, res) => {
+    const raceNumber = Number(req.body?.raceNumber || 1);
+    const text = String(req.body?.text || '');
+    if (!text.trim()) return res.status(400).json({ error: 'Paste text is required' });
+    const runners = parseImportedRunners({ text, raceNumber });
+    return res.json({ ok: true, raceNumber, runners, warningsCount: runners.reduce((n, r) => n + (r.warnings || []).length, 0) });
+  });
+
+  app.put('/api/race-runners/:race', auth, adminOnly, (req, res) => {
+    const race = String(req.params.race || '').toUpperCase();
+    const overwrite = Boolean(req.body?.overwrite);
+    const source = String(req.body?.source || 'manual-paste').trim() || 'manual-paste';
+    const notes = String(req.body?.notes || '').trim();
+    const runners = Array.isArray(req.body?.runners) ? req.body.runners : [];
+
+    const store = readStore();
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId].defaultRaceCount || 12);
+    const validRaces = new Set(Array.from({ length: raceCount }, (_, i) => `R${i + 1}`));
+    if (!validRaces.has(race)) return res.status(400).json({ error: `Race must be between R1 and R${raceCount}` });
+    if (!runners.length) return res.status(400).json({ error: 'No parsed runners to save' });
+
+    if (!trackData.raceRunners || typeof trackData.raceRunners !== 'object') trackData.raceRunners = {};
+    if (trackData.raceRunners[race] && !overwrite) {
+      return res.status(409).json({ error: `${race} already has imported runners`, needsOverwrite: true });
+    }
+
+    trackData.raceRunners[race] = {
+      importedAt: new Date().toISOString(),
+      importedBy: req.user.username,
+      source,
+      notes,
+      runners
+    };
+
+    if (trackId === 'thoroughbreds') {
+      store.raceRunners = trackData.raceRunners;
+    }
+
+    writeStore(store);
+    return res.json({ ok: true, trackId, race, raceRunners: trackData.raceRunners[race] });
   });
 
   app.put('/api/fixtures/:id', auth, adminOnly, (req, res) => {
@@ -2087,6 +2231,7 @@ function createApp() {
     let ladder = [];
     let tipsFeed = [];
     let fixtures = Array.isArray(trackData.fixtures) ? trackData.fixtures : [];
+    let raceRunners = trackData.raceRunners || {};
     let recap = null;
     let winnerBanner = null;
     let frozen = false;
@@ -2113,6 +2258,7 @@ function createApp() {
       ladder = Array.isArray(snap.finalTop10) ? snap.finalTop10 : [];
       tipsFeed = Array.isArray(snap.finalTipsFeed) ? snap.finalTipsFeed : [];
       fixtures = Array.isArray(snap.finalFixtures) ? snap.finalFixtures : [];
+      raceRunners = (snap.finalRaceRunners || snap.raceRunners || raceRunners || {});
       const winner = snap.winner || { member: 'tofu', payout: totalPot, notes: pickLarrikinLine() };
       winnerBanner = {
         member: winner.member || 'tofu',
@@ -2167,6 +2313,7 @@ function createApp() {
       jackpot: { currentRoundPot, rollover, totalPot, tieRule: 'Top-point ties roll over to next round.' },
       ladder: ladderView,
       fixtures,
+      raceRunners,
       tipsFeed,
       frozen,
       finalLabel: frozen ? 'Final results (Round closed)' : '',
@@ -2597,6 +2744,8 @@ function createApp() {
       fixture,
       tips,
       raceResults: trackData.raceResults || {},
+      raceRunners: trackData.raceRunners || {},
+      finalRaceRunners: trackData.raceRunners || {},
       bossesBet: trackData.bossesBet || { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, legItems: [], legs: [], selections: {} },
       ladder,
       jackpot: {
@@ -2621,9 +2770,11 @@ function createApp() {
 
     store.tips = (store.tips || []).filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') !== trackId);
     trackData.raceResults = {};
+    trackData.raceRunners = {};
     trackData.bossesBet = { title: 'Bosses Multi', weekKey: '', meet: '', status: 'live', freerollPrize: 0, eligibilityNote: 'Eligible = all players who entered tips this week before lock.', lockTime: null, stake: '', potentialReturn: '', legItems: [], legs: [], selections: {}, updatedAt: Date.now(), updatedBy: req.user.username };
     if (trackId === 'thoroughbreds') {
       store.raceResults = {};
+      store.raceRunners = {};
       store.bossesBet = trackData.bossesBet;
     }
     store.buyInVotes = {};
