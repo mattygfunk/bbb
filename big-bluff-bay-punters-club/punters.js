@@ -92,6 +92,14 @@ function renderMilestones(data){
   const historyRows = (data?.winnerHistory || []).slice(0, 12);
 
   const formatRoundLabel = (row) => {
+    const raceDateRaw = String(row?.raceDate || '').trim();
+    if (raceDateRaw) {
+      const parsed = new Date(raceDateRaw);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-AU', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+      }
+      return raceDateRaw;
+    }
     const ts = Number(row?.archivedAt || 0);
     if (Number.isFinite(ts) && ts > 0) {
       return new Date(ts).toLocaleDateString('en-AU', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
