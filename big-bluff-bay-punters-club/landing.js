@@ -536,7 +536,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
 
-    if (inlineState) inlineState.textContent = String(d?.roundStatus || '').toUpperCase() === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
+    if (inlineState) {
+      const roundComplete = String(d?.state || '').toUpperCase() === 'ROUND_COMPLETE';
+      inlineState.textContent = (!hardLocked && !roundComplete) ? '🟢 Open now' : '🔴 Closed';
+    }
     if (inlineJackpot) inlineJackpot.textContent = `💰 Jackpot live: ${document.getElementById('status-jackpot')?.textContent || '$0'}`;
     const meetFallback = String(document.getElementById('status-meet')?.textContent || '').trim();
     if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${venue || meetFallback || '—'}`;
