@@ -705,6 +705,26 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   list-style: none;
 }
 
+.tips-summary-grid {
+  display: grid;
+  gap: .45rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: .25rem;
+}
+.tips-summary-pill {
+  display: flex;
+  gap: .4rem;
+  align-items: baseline;
+  border: 1px solid rgba(120,140,180,.34);
+  border-radius: .72rem;
+  padding: .4rem .55rem;
+  background: linear-gradient(180deg,#0f1a2d,#0b1422);
+}
+.tips-summary-pill strong {
+  color: #fde68a;
+  min-width: 1.9rem;
+}
+
 .promo-split > .card { border-color: rgba(120,140,180,.3); }
 .bosses-spotlight {
   border-color: rgba(234,179,8,.42);

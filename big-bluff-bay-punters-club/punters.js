@@ -685,12 +685,13 @@ function renderTipEntryState() {
     return;
   }
 
-  const lines = Array.from(state.existingByRace.entries())
+  const picks = Array.from(state.existingByRace.entries())
     .sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))
-    .map(([race,sel])=>`${race}: ${formatSelectionText(race, sel)}`)
-    .join(' • ');
+    .map(([race,sel])=>({ race, text: formatSelectionText(race, sel) }));
 
-  summaryText.textContent = lines || 'All races entered.';
+  summaryText.innerHTML = picks.length
+    ? `<span class='tips-summary-grid'>${picks.map((p)=>`<span class='tips-summary-pill'><strong>${esc(p.race)}</strong><span>${esc(p.text)}</span></span>`).join('')}</span>`
+    : 'All races entered.';
   setVisible(summaryCard, true);
   setVisible(form, false);
   if (editBtn) editBtn.hidden = false;
