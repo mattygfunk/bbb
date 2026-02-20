@@ -258,9 +258,9 @@ function renderRecentResultsTable(items) {
   }
   rows.forEach((row) => {
     const tr = document.createElement('tr');
-    const track = row.type === 'poker' ? 'Poker' : 'Punters Club';
+    const track = row.type === 'poker' ? '♠ Poker' : '🏇 Punters Club';
     const winner = row.rolledOver ? 'Rollover' : String(row.winner || '—');
-    tr.innerHTML = `<td>${esc(track)}</td><td>${esc(winner)}</td><td>${esc(row.label || '—')}</td><td>${esc(new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0}).format(Number(row.prize || 0)))}</td>`;
+    tr.innerHTML = `<td class='recent-result-track'>${esc(track)}</td><td class='recent-result-winner'>${esc(winner)}</td><td>${esc(row.label || '—')}</td><td>${esc(new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0}).format(Number(row.prize || 0)))}</td>`;
     body.appendChild(tr);
   });
 }
@@ -531,7 +531,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
     raceEl.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
-    contextEl.textContent = venue ? `${venue} meeting` : `Meeting live`;
+    contextEl.textContent = venue ? `${venue} meeting` : `Round open`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
@@ -549,7 +549,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       contextEl.textContent = `Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne)`;
       setLockline('');
     } else {
-      contextEl.textContent = venue ? `${venue} meeting` : `Meeting live`;
+      contextEl.textContent = venue ? `${venue} meeting` : `Round open`;
       setLockline('');
     }
 

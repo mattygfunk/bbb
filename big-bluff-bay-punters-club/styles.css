@@ -280,6 +280,28 @@ table { width: 100%; border-collapse: collapse; min-width: 460px; }
     color: var(--muted);
     font-weight: 600;
   }
+
+  .winners-preview-table-wrap.table-cards tr {
+    border-color: rgba(120,140,180,.35);
+    background: linear-gradient(180deg,#111d31,#0b1424);
+    box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    padding: .45rem .65rem;
+  }
+  .winners-preview-table-wrap.table-cards td {
+    text-align: left;
+    border-bottom: 1px dashed #2b3b52;
+    padding: .45rem .1rem;
+  }
+  .winners-preview-table-wrap.table-cards td::before {
+    float: none;
+    display: block;
+    margin-bottom: .12rem;
+    font-size: .72rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #9fb3ce;
+  }
+  #recent-results-body { min-height: 0; }
 }
 caption {
   text-align: left;
@@ -599,7 +621,9 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 .how-it-works-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-.winners-preview-table-wrap { margin-bottom: .35rem; }
+.winners-preview-table-wrap { margin-bottom: .35rem; border: 1px solid rgba(120,140,180,.26); border-radius: .82rem; padding: .4rem; background: linear-gradient(180deg,#0d1828,#0a1422); }
+.recent-result-track { font-weight: 700; }
+.recent-result-winner { font-weight: 700; color: #f8fafc; }
 
 .why-join-pro {
   background:
