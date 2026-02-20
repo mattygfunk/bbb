@@ -247,6 +247,24 @@ function renderTopWinners(items) {
   }
 }
 
+function renderRecentResultsTable(items) {
+  const body = document.getElementById('recent-results-body');
+  if (!body) return;
+  const rows = (items || []).slice(0, 6);
+  body.innerHTML = '';
+  if (!rows.length) {
+    body.innerHTML = "<tr><td colspan='4' class='muted'>No recent verified results yet.</td></tr>";
+    return;
+  }
+  rows.forEach((row) => {
+    const tr = document.createElement('tr');
+    const track = row.type === 'poker' ? 'Poker' : 'Punters Club';
+    const winner = row.rolledOver ? 'Rollover' : String(row.winner || '—');
+    tr.innerHTML = `<td>${esc(track)}</td><td>${esc(winner)}</td><td>${esc(row.label || '—')}</td><td>${esc(new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',maximumFractionDigits:0}).format(Number(row.prize || 0)))}</td>`;
+    body.appendChild(tr);
+  });
+}
+
 function toMs(v) {
   if (v == null || v === '') return 0;
   const n = Number(v);
@@ -709,6 +727,7 @@ async function hydrateLandingCritical() {
     }
 
     renderTopWinners(combined);
+    renderRecentResultsTable(combined);
     const winnersWallRows = combined.slice(0, 8);
     renderWinners(
       winnersWallRows.map((w) => ({

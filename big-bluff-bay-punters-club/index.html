@@ -53,19 +53,19 @@
           <span><strong>Big Bluff Bay</strong><small>Punters Club</small></span>
         </a>
         <div class="menu-links">
-          <a class="menu-link active" href="/">🏠 Home</a>
-          <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
-          <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a><a class="menu-link" href="/poker">📊 Poker Analytics</a>
-          <a class="menu-link" href="/winners.html">🏆 Winners</a>
+          <a class="menu-link active" href="/" aria-label="Home">🏠 Home</a>
+          <a class="menu-link" href="/punters.html" aria-label="Punters Club">🏇 Punters Club</a>
+          <a class="menu-link" href="/poker-schedule.html" aria-label="Poker Tournaments">♠️ Poker Tournaments</a><a class="menu-link" href="/poker" aria-label="Poker Analytics">📊 Poker Analytics</a>
+          <a class="menu-link" href="/winners.html" aria-label="Winners Wall">🏆 Winners</a>
           <a class="menu-link" id="admin-nav-link" href="/admin.html" style="display:none">🛠️ Admin</a>
         </div>
       </nav>
 
       <div class="wrap hero-content hero-layout">
         <section class="hero-copy" aria-label="Hero introduction">
-          <p class="hero-kicker">🏇 Big Bluff Bay — Punters Club → Poker Nights</p>
-          <h1>Tip fast. Lock in. Win real.</h1>
-          <p class="muted">Australia’s sharpest punters-to-poker ladder — one account, verified results, transparent payouts.</p>
+          <p class="hero-kicker">Premium punters-to-poker ladder</p>
+          <h1>Big Bluff Bay — Punters Club → Poker Nights</h1>
+          <p class="muted">Tip fast. Lock in. Win real. Verified results. Transparent payouts.</p>
 
           <div class="hero-actions major-actions" role="group" aria-label="Primary actions">
             <a class="btn chip-btn major-btn" href="/punters.html" data-cta="enter-racing-tips" data-sem="primary">Enter Punters Club</a>
@@ -202,7 +202,8 @@
               </div>
             </div>
             <table>
-              <thead><tr><th>#</th><th>Handle</th><th>Pts</th><th>Winners</th></tr></thead>
+              <caption>Live Punters Club top 10 ladder</caption>
+              <thead><tr><th scope="col">#</th><th scope="col">Handle</th><th scope="col">Pts</th><th scope="col">Winners</th></tr></thead>
               <tbody id="ladder-preview"></tbody>
             </table>
             <p class="muted ticker">Last week payouts: <span id="payout-ticker">Payout board refreshes after weekly settlement.</span></p>
@@ -265,12 +266,13 @@
 
       <section class="rail-section" id="how-it-works" aria-labelledby="how-heading">
         <div class="section-head">
-          <h2 id="how-heading">How It Works</h2>
+          <h2 id="how-heading">How it works</h2>
         </div>
-        <div class="steps-grid">
-          <article class="card step-tile"><h3>🔒 Lock Picks</h3><p class="muted">Public countdown • No late edits • Same lock for everyone</p></article>
-          <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st • 2 = 2nd • 1 = 3rd • Live ladder updates</p></article>
-          <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Highest total wins • Ties roll over • Separate Dogs/Galls jackpots</p></article>
+        <div class="steps-grid how-it-works-grid">
+          <article class="card step-tile"><h3>📝 Tip</h3><p class="muted">One account, one clean entry flow. Fast picks, no fluff.</p></article>
+          <article class="card step-tile"><h3>🔒 Lock</h3><p class="muted">Edits stay open until lock. After lock, all picks are frozen.</p></article>
+          <article class="card step-tile"><h3>📊 Ladder</h3><p class="muted">Transparent scoring updates with weekly jackpot and rollover rules.</p></article>
+          <article class="card step-tile"><h3>♠️ Poker</h3><p class="muted">Top discipline carries into poker nights and Bosses Multi freeroll chances.</p></article>
         </div>
       </section>
 
@@ -325,13 +327,29 @@
 
         <article class="card" style="margin:.55rem 0 .65rem">
           <h3>How to read this wall like a sharp</h3>
-          <p class="muted">Don’t just chase one winner post. Look at repeat appearances, payout consistency, and how often rounds roll over. The edge lives in sustained execution — not one hot card.</p>
+          <p class="muted">Don’t chase one hot week. Track repeat winners, payout consistency, and rollover frequency.</p>
           <div class="row-actions">
             <span class="pill">Consistency &gt; lucky spike</span>
             <span class="pill">Rollover = bigger next-round pressure</span>
             <span class="pill">Snapshots lock accountability</span>
           </div>
         </article>
+
+        <div class="table-wrap winners-preview-table-wrap">
+          <table>
+            <caption>Recent verified results (Punters Club + Poker)</caption>
+            <thead>
+              <tr><th scope="col">Track</th><th scope="col">Winner</th><th scope="col">Round/Event</th><th scope="col">Payout</th></tr>
+            </thead>
+            <tbody id="recent-results-body">
+              <tr><td colspan="4" class="muted">Loading recent results…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="row-actions" style="margin-top:.55rem">
+          <a class="btn btn-ghost" href="/winners.html">Payout history</a>
+          <a class="btn btn-ghost" href="/winners.html#streak-body">Streaks</a>
+        </div>
 
         <div class="winners-strip winners-wall-grid" id="winners-strip"></div>
       </section>
@@ -348,12 +366,11 @@
       </section>
 
       <section class="rail-section" id="rules-faq" aria-labelledby="faq-heading">
-        <div class="section-head"><h2 id="faq-heading">Rules + FAQ</h2></div>
-        <details class="card"><summary>When do picks lock?</summary><p class="muted">At the published lock timer in the status strip.</p></details>
-        <details class="card"><summary>How is scoring calculated?</summary><p class="muted">3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
-        <details class="card"><summary>Can I edit tips after submitting?</summary><p class="muted">Yes, until lock time. After lock, tips are frozen.</p></details>
-        <details class="card"><summary>How does paid status affect jackpot?</summary><p class="muted">Current pot is calculated from paid players for that week.</p></details>
-        <details class="card"><summary>What is the Bosses Multi freeroll bonus?</summary><p class="muted">If Bosses Multi lands, that week’s Punters Club players get a next-day Poker freeroll for the full amount.</p></details>
+        <div class="section-head"><h2 id="faq-heading">Rules at a glance</h2></div>
+        <details class="card"><summary>Tip edits + lock rules</summary><p class="muted">Edits are allowed until lock. Once lock hits, all tips are frozen.</p></details>
+        <details class="card"><summary>One entry flow</summary><p class="muted">One account, one clear entry flow each round. No duplicate entry path.</p></details>
+        <details class="card"><summary>Transparent scoring updates</summary><p class="muted">Ladder updates follow visible rules: 3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
+        <details class="card"><summary>Bosses Multi freeroll eligibility</summary><p class="muted">If Bosses Multi lands, that week’s eligible Punters Club players get a next-day Poker freeroll for the full amount.</p></details>
 
         <div class="final-cta">
           <a class="btn chip-btn major-btn" href="/punters.html">Submit This Week’s Tips</a>

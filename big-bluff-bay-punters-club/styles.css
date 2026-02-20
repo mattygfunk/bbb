@@ -8,6 +8,10 @@
   --brand: #22c55e;
   --brand-2: #16a34a;
   --danger: #ef4444;
+  --radius-sm: .58rem;
+  --radius-md: .75rem;
+  --radius-lg: 1rem;
+  --shadow-soft: 0 10px 30px rgba(0,0,0,.22);
   --space-1: .4rem;
   --space-2: .7rem;
   --space-3: 1rem;
@@ -107,13 +111,16 @@ section[id], [id="tip-form"], [id="leaderboard"], [id="rules-faq"], [id="lobby"]
   color: #052e16;
   text-decoration: none;
   cursor: pointer;
+  transition: background .18s ease, border-color .18s ease, transform .12s ease;
 }
 .btn:hover { background: var(--brand-2); }
+.btn:active { transform: translateY(1px); }
 .btn-ghost {
   background: transparent;
   color: var(--text);
   border-color: #334155;
 }
+.btn-ghost:hover { background: #14243b; border-color: #b7c8de; }
 
 .leaderboard-filter.active {
   border-color: #86efac;
@@ -273,6 +280,12 @@ table { width: 100%; border-collapse: collapse; min-width: 460px; }
     color: var(--muted);
     font-weight: 600;
   }
+}
+caption {
+  text-align: left;
+  color: #cbd5e1;
+  font-size: .84rem;
+  margin-bottom: .45rem;
 }
 th, td {
   padding: .6rem;
@@ -575,6 +588,8 @@ code {
   gap: .75rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
+.how-it-works-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.winners-preview-table-wrap { margin-bottom: .35rem; }
 
 .why-join-pro {
   background:

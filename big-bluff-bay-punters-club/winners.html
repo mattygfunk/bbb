@@ -4,14 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Winners Hub: Weekly Winners, Streaks, and Milestones • Big Bluff Bay</title>
-  <meta name="description" content="Track Big Bluff Bay poker results first, biggest wins, leaderboard movers, plus punters weekly winners and streak milestones." />
+  <meta name="description" content="Verified Big Bluff Bay results: Punters Club winners, poker highlights, payout history, and streak milestones." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Big Bluff Bay" />
+  <meta property="og:locale" content="en_AU" />
+  <meta property="og:title" content="Winners Wall • Big Bluff Bay" />
+  <meta property="og:description" content="Verified results, payout history, and streak milestones across Punters Club and Poker." />
+  <meta property="og:url" content="https://bigbluffbay.au/winners.html" />
+  <meta property="og:image" content="https://bigbluffbay.au/assets/theme-banner.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Winners Wall • Big Bluff Bay" />
+  <meta name="twitter:description" content="Verified results, payout history, and streak milestones across Punters Club and Poker." />
+  <meta name="twitter:image" content="https://bigbluffbay.au/assets/theme-banner.jpg" />
   <link rel="canonical" href="https://bigbluffbay.au/winners.html" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="/poker-v2.css?v=20260217-tight" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Big Bluff Bay Winners Hub","url":"https://bigbluffbay.au/winners.html"}</script>
 </head>
 <body class="winners-page">
-  <header class="hero premium-hero"><div class="overlay"></div><nav class="nav wrap"><a class="brand" href="/"><span class="badge">BBB</span><span><strong>Big Bluff Bay</strong><small>Winners Hub</small></span></a><div class="menu-links"><a class="menu-link" href="/">🏠 Home</a><a class="menu-link" href="/punters.html">🏇 Punters Club</a><a class="menu-link" href="/poker">♠️ Poker Analytics</a><a class="menu-link active" href="/winners.html">🏆 Winners</a></div></nav></header>
+  <header class="hero premium-hero"><div class="overlay"></div><nav class="nav wrap"><a class="brand" href="/" aria-label="Big Bluff Bay home"><span class="badge">BBB</span><span><strong>Big Bluff Bay</strong><small>Winners Hub</small></span></a><div class="menu-links"><a class="menu-link" href="/" aria-label="Home">🏠 Home</a><a class="menu-link" href="/punters.html" aria-label="Punters Club">🏇 Punters Club</a><a class="menu-link" href="/poker" aria-label="Poker Analytics">♠️ Poker Analytics</a><a class="menu-link active" href="/winners.html" aria-label="Winners Wall">🏆 Winners</a></div></nav></header>
 
   <main class="wrap premium-main">
     <nav class="breadcrumbs"><a href="/">Home</a><span>›</span><span aria-current="page">Winners Hub</span></nav>
@@ -32,13 +44,13 @@
     <section class="card">
       <h2>Poker Analytics Snapshot (V2)</h2>
       <p class="muted" id="poker-highlights-summary">Loading poker highlights…</p>
-      <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Player</th><th>Winnings (A$)</th><th>Events</th><th>Avg</th><th>FT%</th><th>Cash%</th></tr></thead><tbody id="poker-highlights-body"></tbody></table></div>
+      <div class="table-wrap"><table><caption>Poker analytics snapshot</caption><thead><tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col">Winnings (A$)</th><th scope="col">Events</th><th scope="col">Avg</th><th scope="col">FT%</th><th scope="col">Cash%</th></tr></thead><tbody id="poker-highlights-body"></tbody></table></div>
     </section>
 
     <section class="card">
       <h2>Recent Official Poker Results</h2>
       <p class="muted">Latest logged poker performances (official entries), newest to oldest.</p>
-      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Game</th><th>Top Player</th><th>Top Winnings (A$)</th><th>Entries</th><th>Logged By</th></tr></thead><tbody id="poker-results-body"></tbody></table></div>
+      <div class="table-wrap"><table><caption>Recent official poker results</caption><thead><tr><th scope="col">Date</th><th scope="col">Game</th><th scope="col">Top Player</th><th scope="col">Top Winnings (A$)</th><th scope="col">Entries</th><th scope="col">Logged By</th></tr></thead><tbody id="poker-results-body"></tbody></table></div>
     </section>
 
     <section class="card">
@@ -49,12 +61,12 @@
 
     <section class="card">
       <h2>Punters Weekly Winner History</h2>
-      <div class="table-wrap"><table><thead><tr><th>Week</th><th>Winner</th><th>Prize (A$)</th><th>Winning Picks</th></tr></thead><tbody id="winner-history-body"></tbody></table></div>
+      <div class="table-wrap"><table><caption>Punters weekly winner history</caption><thead><tr><th scope="col">Week</th><th scope="col">Winner</th><th scope="col">Prize (A$)</th><th scope="col">Winning Picks</th></tr></thead><tbody id="winner-history-body"></tbody></table></div>
     </section>
 
     <section class="card">
       <h2>Punters Consecutive Weeks + Milestones</h2>
-      <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Member</th><th>Current</th><th>Best</th><th>Total Wins</th><th>Badges</th></tr></thead><tbody id="streak-body"></tbody></table></div>
+      <div class="table-wrap"><table><caption>Consecutive week streak leaderboard</caption><thead><tr><th scope="col">Rank</th><th scope="col">Member</th><th scope="col">Current</th><th scope="col">Best</th><th scope="col">Total Wins</th><th scope="col">Badges</th></tr></thead><tbody id="streak-body"></tbody></table></div>
     </section>
   </main>
 
