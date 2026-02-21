@@ -2,6 +2,7 @@ const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',puntersBanter:'/punters/banter',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
+const PREFILL = (typeof window !== 'undefined' && window.__PUNTERS_PREFILL__) ? window.__PUNTERS_PREFILL__ : null;
 const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
 const PUNTERS_API_CACHE_KEY='bbb-punters-api-cache-v1';
@@ -984,7 +985,7 @@ async function refresh(){
   try {
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
-  const overview = await req(`${API.puntersOverview(state.tierView)}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null);
+  const overview = await req(`${API.puntersOverview(state.tierView)}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => (PREFILL?.overview || null));
   const paidOverview = state.user
     ? await req(`${API.puntersOverview('paid')}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null)
     : null;
@@ -1007,23 +1008,34 @@ async function refresh(){
       req(`${API.tipEditDeadline}?trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`)
     ]);
   } catch (err) {
-    const status = $('leaderboard-status');
-    if (status) status.textContent = 'Syncing';
-    const msg = String(err?.message || 'Request failed');
-    const tipMsg = $('tip-msg');
-    if (tipMsg) tipMsg.textContent = msg.includes('(404)')
-      ? 'Live round sync in progress — refresh in a moment.'
-      : 'Live data unavailable right now — refresh in a moment.';
-    const ladderFallback = $('ladder-fallback');
-    if (ladderFallback) {
-      ladderFallback.hidden = false;
-      ladderFallback.textContent = msg.includes('(404)')
-        ? 'Round data is syncing. Please refresh shortly.'
-        : 'Leaderboard data unavailable right now. Please refresh in a moment.';
+    if (PREFILL) {
+      fx = PREFILL.fixtures || { fixtures: overview?.fixtures || [] };
+      tp = PREFILL.tips || { tips: overview?.tipsFeed || [] };
+      allTipsRes = PREFILL.tips || tp;
+      bossesRes = PREFILL.bossesBet || { bossesBet: {} };
+      milestonesRes = PREFILL.milestones || {};
+      tipDeadlineRes = PREFILL.tipEditDeadline || { editableNow: true };
+      const tipMsg = $('tip-msg');
+      if (tipMsg) tipMsg.textContent = 'Using preloaded data (live sync unavailable on this device).';
+    } else {
+      const status = $('leaderboard-status');
+      if (status) status.textContent = 'Syncing';
+      const msg = String(err?.message || 'Request failed');
+      const tipMsg = $('tip-msg');
+      if (tipMsg) tipMsg.textContent = msg.includes('(404)')
+        ? 'Live round sync in progress — refresh in a moment.'
+        : 'Live data unavailable right now — refresh in a moment.';
+      const ladderFallback = $('ladder-fallback');
+      if (ladderFallback) {
+        ladderFallback.hidden = false;
+        ladderFallback.textContent = msg.includes('(404)')
+          ? 'Round data is syncing. Please refresh shortly.'
+          : 'Leaderboard data unavailable right now. Please refresh in a moment.';
+      }
+      state.tipStateResolved = true;
+      renderTipEntryState();
+      return;
     }
-    state.tipStateResolved = true;
-    renderTipEntryState();
-    return;
   }
   state.tipsEditableNow = Boolean(tipDeadlineRes?.editableNow ?? true);
   const overviewData = overview || state.lastOverview || {};

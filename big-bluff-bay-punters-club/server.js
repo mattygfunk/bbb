@@ -1416,6 +1416,62 @@ function createApp() {
   });
   app.use(express.json({ limit: '350kb' }));
   app.use(rateLimit({ windowMs: 60_000, max: 200, standardHeaders: true, legacyHeaders: false }));
+
+  app.get('/punters.html', (req, res, next) => {
+    try {
+      const store = readStore();
+      ensurePuntersClubStore(store);
+      const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+      const trackData = getTrackData(store, trackId);
+      const openRound = getCurrentRound(store, { autoCreate: false, trackId }) || getCurrentRound(store, { autoCreate: true, trackId });
+      const live = computeJackpotTierData(store, { autoCreate: false, trackId });
+      const tier = 'free';
+      const ladder = computeLadderCached(store, openRound?.id, trackId);
+      const ladderView = (ladder || []).map((row, idx) => {
+        const isEligible = !!(openRound?.entries || []).find((e) => String(e.member || '').toLowerCase() === String(row.member || '').toLowerCase() && e.tier === 'JACKPOT');
+        const maskedName = idx < 3 ? row.member : `${String(row.member || '').slice(0, 1)}***`;
+        return tier === 'paid'
+          ? { ...row, tier: isEligible ? 'JACKPOT' : 'FREE' }
+          : { ...row, member: maskedName, masked: true, tier: isEligible ? 'JACKPOT' : 'FREE', points: isEligible ? row.points : null, winners: isEligible ? row.winners : null };
+      });
+
+      const manual = Number(store.tipEditDeadlineMs || 0);
+      const fallback = new Date(TIP_EDIT_DEADLINE_ISO).getTime();
+      const effectiveDeadlineMs = manual > 0 ? manual : (Number.isFinite(fallback) ? fallback : null);
+
+      const prefill = {
+        trackId,
+        overview: {
+          track: { id: trackId, name: TRACKS[trackId]?.name || trackId, accent: TRACKS[trackId]?.accent || '#999' },
+          round: { id: openRound?.id, trackId, label: openRound?.label || `${TRACKS[trackId]?.name || 'Punters'} Round`, status: String(openRound?.status || 'open').toUpperCase() },
+          tiers: { free: live.freeMembers, jackpotEligible: live.paidMembers, entryFee: live.entryFee },
+          jackpot: { currentRoundPot: live.currentRoundPot, rollover: getTrackJackpotCarry(store, trackId), totalPot: live.totalPot },
+          ladder: ladderView,
+          fixtures: Array.isArray(trackData.fixtures) ? trackData.fixtures : [],
+          raceRunners: trackData.raceRunners || {},
+          raceResults: trackData.raceResults || {},
+          tipsFeed: getTipsForTrack(store, trackId),
+          banterWall: (store.puntersClub?.banterByTrack?.[trackId] || []).slice(0, 20),
+          generatedAt: Date.now()
+        },
+        fixtures: { trackId, fixtures: Array.isArray(trackData.fixtures) ? trackData.fixtures : [] },
+        tips: { trackId, tips: getTipsForTrack(store, trackId) },
+        bossesBet: { trackId, bossesBet: computeBossesBetProgress(store, { trackId }) },
+        milestones: computeMilestonesData(store),
+        tipEditDeadline: { effectiveDeadlineMs, editableNow: canEditTipsNow(store) }
+      };
+
+      const htmlPath = path.join(__dirname, 'punters.html');
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      const payload = JSON.stringify(prefill).replace(/<\//g, '<\\/');
+      const injected = html.replace('</head>', `<script>window.__PUNTERS_PREFILL__=${payload};</script></head>`);
+      res.setHeader('Cache-Control', 'public, max-age=120, must-revalidate');
+      return res.type('html').send(injected);
+    } catch {
+      return next();
+    }
+  });
+
   app.use(express.static(__dirname, {
     etag: true,
     setHeaders: (res, filePath) => {
