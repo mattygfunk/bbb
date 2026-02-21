@@ -539,7 +539,8 @@ function renderRoundMeta(overview){
   const quickTipsCard = $('quick-tips-entry-card');
   const bossesCard = $('bosses-bet-card');
   if (quickTipsCard) quickTipsCard.style.display = lockWholeEntry ? 'none' : '';
-  if (bossesCard) bossesCard.style.display = lockWholeEntry ? 'none' : '';
+  // Keep Bosses Multi tracker visible at all times (pre-lock + post-lock).
+  if (bossesCard) bossesCard.style.display = '';
 
   const finalLabel = $('final-results-label');
   if(finalLabel){
