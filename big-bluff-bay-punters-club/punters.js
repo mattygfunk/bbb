@@ -902,7 +902,7 @@ async function hydrateNextTipCard(trackId){
       pick.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
-      setSocial(others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`);
+      setSocial(others <= 0 ? `No tips locked yet${ladderSuffix}` : `${others} punter${others===1?'':'s'} locked${ladderSuffix}`);
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html#leaderboard';
       return;
@@ -958,7 +958,8 @@ async function hydrateNextTipCard(trackId){
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
         pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '—'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
-        social.textContent = 'You’re first on the card';
+        const others = Number(lg?.othersCount || 0);
+        social.textContent = others <= 0 ? 'You’re first on the card' : `You + ${others} others locked`;
         primary.textContent = lg?.editable ? 'Edit' : 'Full Card';
         primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';
       }

@@ -511,7 +511,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
           userHasTip: Boolean(lg?.hasTip),
           userPick: lg?.tip || null,
           canEdit: Boolean(lg?.editable),
-          othersCount: 0,
+          othersCount: Number(lg?.othersCount || 0),
           ladderRank: null,
           ladderRankAvailable: false,
           state: lg?.allComplete || String(lg?.roundStatus || '').toUpperCase() === 'CLOSED'
@@ -610,7 +610,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       pickEl.textContent = '#—';
       const others = Number(d?.othersCount || 0);
       const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
-      socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
+      socialEl.textContent = others <= 0 ? `No tips locked yet${ladderSuffix}` : `${others} punter${others===1?'':'s'} locked${ladderSuffix}`;
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html';
       secondary.textContent = 'Log In First';

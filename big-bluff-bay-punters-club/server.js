@@ -2032,6 +2032,7 @@ function createApp() {
         lockAtMs: s.lockAtMs,
         countdownToMs: s.lockAtMs,
         hasTip: s.userHasTip,
+        othersCount: Number(s.othersCount || 0),
         tip: s.tip ? {
           race: String(s.tip.race || s.nextRace),
           selection: String(s.tip.selection || ''),
