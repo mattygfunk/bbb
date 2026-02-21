@@ -1,4 +1,5 @@
 const $ = (id) => document.getElementById(id);
+const matrixState = { races: [], rows: [], sortKey: 'rank', dir: 'asc' };
 
 function esc(s){return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
@@ -11,19 +12,40 @@ function raceCellHtml(cell = {}) {
   return `#${esc(sel)} <span class='pill ${cls}'>${pts}pt</span>`;
 }
 
-async function renderMatrix(data, trackId) {
+function sortRows(rows, races, sortKey, dir) {
+  const sign = dir === 'desc' ? -1 : 1;
+  return [...rows].sort((a, b) => {
+    let av; let bv;
+    if (sortKey === 'member') { av = String(a.member || '').toLowerCase(); bv = String(b.member || '').toLowerCase(); }
+    else if (sortKey === 'jackpotEligible') { av = a.jackpotEligible ? 1 : 0; bv = b.jackpotEligible ? 1 : 0; }
+    else if (sortKey === 'rank') { av = Number(a.rank || 99999); bv = Number(b.rank || 99999); }
+    else if (sortKey === 'totalPoints') { av = Number(a.totalPoints || 0); bv = Number(b.totalPoints || 0); }
+    else if (String(sortKey).startsWith('race:')) {
+      const race = String(sortKey).slice(5);
+      av = Number(a.races?.[race]?.points || 0);
+      bv = Number(b.races?.[race]?.points || 0);
+    } else { av = 0; bv = 0; }
+
+    if (av < bv) return -1 * sign;
+    if (av > bv) return 1 * sign;
+    return String(a.member || '').localeCompare(String(b.member || ''));
+  });
+}
+
+function renderTable(trackId) {
   const head = $('matrix-head');
   const body = $('matrix-body');
-  const meta = $('matrix-meta');
-  const races = Array.isArray(data.races) ? data.races : [];
-  const rows = Array.isArray(data.rows) ? data.rows : [];
+  const sortMeta = $('matrix-sort-meta');
+  const races = matrixState.races;
+  const rows = sortRows(matrixState.rows, races, matrixState.sortKey, matrixState.dir);
 
+  const arrow = (k) => matrixState.sortKey === k ? (matrixState.dir === 'asc' ? ' ↑' : ' ↓') : '';
   head.innerHTML = `<tr>
-    <th>Entrant</th>
-    <th>Jackpot</th>
-    <th>Rank</th>
-    <th>Total</th>
-    ${races.map((r)=>`<th>${esc(r)}</th>`).join('')}
+    <th><button class='btn btn-ghost tiny-btn' data-sort='member'>Entrant${arrow('member')}</button></th>
+    <th><button class='btn btn-ghost tiny-btn' data-sort='jackpotEligible'>Jackpot${arrow('jackpotEligible')}</button></th>
+    <th><button class='btn btn-ghost tiny-btn' data-sort='rank'>Rank${arrow('rank')}</button></th>
+    <th><button class='btn btn-ghost tiny-btn' data-sort='totalPoints'>Total${arrow('totalPoints')}</button></th>
+    ${races.map((r)=>`<th><button class='btn btn-ghost tiny-btn' data-sort='race:${esc(r)}'>${esc(r)}${arrow(`race:${r}`)}</button></th>`).join('')}
   </tr>`;
 
   if (!rows.length) {
@@ -40,8 +62,25 @@ async function renderMatrix(data, trackId) {
     `).join('');
   }
 
+  head.querySelectorAll('[data-sort]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = String(btn.getAttribute('data-sort') || 'rank');
+      if (matrixState.sortKey === key) matrixState.dir = matrixState.dir === 'asc' ? 'desc' : 'asc';
+      else { matrixState.sortKey = key; matrixState.dir = (key === 'member') ? 'asc' : 'desc'; }
+      renderTable(trackId);
+    });
+  });
+
+  if (sortMeta) sortMeta.textContent = `Sorted by ${matrixState.sortKey} (${matrixState.dir})`;
+}
+
+async function renderMatrix(data, trackId) {
+  const meta = $('matrix-meta');
+  matrixState.races = Array.isArray(data.races) ? data.races : [];
+  matrixState.rows = Array.isArray(data.rows) ? data.rows : [];
+  renderTable(trackId);
   const ts = Number(data.generatedAt || Date.now());
-  meta.textContent = `Track: ${trackId} • Entrants: ${rows.length}${ts ? ` • Updated: ${new Date(ts).toLocaleTimeString('en-AU')}` : ''}`;
+  meta.textContent = `Track: ${trackId} • Entrants: ${matrixState.rows.length}${ts ? ` • Updated: ${new Date(ts).toLocaleTimeString('en-AU')}` : ''}`;
 }
 
 async function loadFallback(trackId) {
