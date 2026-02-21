@@ -2407,6 +2407,87 @@ function createApp() {
     return res.status(201).json({ ok: true, item });
   });
 
+  app.get('/api/punters/entrant-matrix', (req, res) => {
+    const store = readStore();
+    ensurePuntersClubStore(store);
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    const trackData = getTrackData(store, trackId);
+    const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[trackId]?.defaultRaceCount || 12);
+    const races = Array.from({ length: Math.max(1, raceCount) }, (_, i) => `R${i + 1}`);
+
+    const tips = (getTipsForTrack(store, trackId) || [])
+      .filter((t) => String(t.status || '') !== 'removed')
+      .sort((a, b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
+
+    const round = getCurrentRound(store, { autoCreate: false, trackId });
+    const ladder = round ? computeLadderCached(store, round.id, trackId) : [];
+    const rankByMember = new Map((ladder || []).map((row) => [String(row.member || '').trim().toLowerCase(), Number(row.rank || 0)]));
+    const paidByMember = new Set(
+      ((round?.entries || [])
+        .filter((e) => String(e.tier || '').toUpperCase() === 'JACKPOT')
+        .map((e) => String(e.member || '').trim().toLowerCase()))
+    );
+
+    const byMember = new Map();
+    for (const tip of tips) {
+      const member = String(tip.member || '').trim();
+      if (!member) continue;
+      const key = member.toLowerCase();
+      if (!byMember.has(key)) byMember.set(key, { member, selections: new Map() });
+      const row = byMember.get(key);
+      const race = String(tip.race || '').toUpperCase();
+      if (!/^R\d+$/.test(race)) continue;
+      if (!row.selections.has(race)) row.selections.set(race, String(tip.selection || '').trim());
+    }
+
+    const rows = Array.from(byMember.values()).map((entry) => {
+      let totalPoints = 0;
+      let totalWinners = 0;
+      const raceCells = {};
+      for (const race of races) {
+        const selection = String(entry.selections.get(race) || '');
+        const rr = trackData?.raceResults?.[race];
+        if (!selection) {
+          raceCells[race] = { selection: '', points: 0, outcome: 'none' };
+          continue;
+        }
+        if (!rr) {
+          raceCells[race] = { selection, points: 0, outcome: 'pending' };
+          continue;
+        }
+
+        const eff = applySub(selection, rr);
+        const first = (rr.first || []).map(String);
+        const second = (rr.second || []).map(String);
+        const third = (rr.third || []).map(String);
+        let points = 0;
+        let outcome = 'missed';
+        if (first.includes(eff)) { points = 3; outcome = 'winner'; totalWinners += 1; }
+        else if (second.includes(eff)) { points = 2; outcome = 'second'; }
+        else if (third.includes(eff)) { points = 1; outcome = 'third'; }
+
+        totalPoints += points;
+        raceCells[race] = { selection, effectiveSelection: eff, points, outcome };
+      }
+
+      const key = String(entry.member || '').trim().toLowerCase();
+      return {
+        member: entry.member,
+        jackpotEligible: paidByMember.has(key),
+        rank: Number(rankByMember.get(key) || 0) || null,
+        totalPoints,
+        totalWinners,
+        races: raceCells
+      };
+    }).sort((a, b) => {
+      const ar = Number.isFinite(Number(a.rank)) ? Number(a.rank) : 999999;
+      const br = Number.isFinite(Number(b.rank)) ? Number(b.rank) : 999999;
+      return ar - br || String(a.member || '').localeCompare(String(b.member || ''));
+    });
+
+    return res.json({ trackId, races, rows, generatedAt: Date.now() });
+  });
+
   app.get('/api/punters/rounds', auth, adminOnly, (req, res) => {
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);
