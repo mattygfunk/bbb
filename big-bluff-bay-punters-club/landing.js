@@ -484,6 +484,16 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     if (res.ok) {
       d = await res.json();
     }
+
+    const overviewRes = await fetch(`/api/punters/overview?tier=free&trackId=${encodeURIComponent(trackId)}`, { credentials: 'same-origin' });
+    const overview = overviewRes.ok ? await overviewRes.json() : null;
+    const settled = new Set(Object.keys(overview?.raceResults || {}).map((r) => String(r || '').toUpperCase()));
+    const raceCount = Number((overview?.fixtures || [])[0]?.raceCount || 12);
+    let firstUnsettled = null;
+    for (let i = 1; i <= raceCount; i += 1) {
+      const race = `R${i}`;
+      if (!settled.has(race)) { firstUnsettled = race; break; }
+    }
     if (String(d?.state || '') === 'ERROR' || (!d?.raceNumber && String(d?.roundStatus || '').toUpperCase() !== 'CLOSED')) {
       const legacyRes = await fetch(`/api/punters/next-tip?trackId=${encodeURIComponent(trackId)}`, {
         credentials: 'same-origin',
@@ -523,15 +533,22 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
             .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
             .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
           if (mine.length) {
-            d.userHasTip = true;
-            d.userPick = mine[0];
-            d.raceNumber = mine[0].race || 'R1';
+            const targetRace = firstUnsettled || String(mine[0].race || 'R1').toUpperCase();
+            const targetPick = mine.find((t) => String(t.race || '').toUpperCase() === targetRace) || mine[0];
+            d.userHasTip = Boolean(targetPick);
+            d.userPick = targetPick;
+            d.raceNumber = targetRace;
             d.state = d.canEdit ? 'EDITABLE' : 'LOCKED';
             d.trackName = d.trackName || 'Track';
             d.venue = d.venue || 'Venue TBA';
           }
         }
       }
+    }
+
+    if (d && firstUnsettled && String(d?.state || '').toUpperCase() !== 'ROUND_COMPLETE') {
+      const currentRace = String(d.raceNumber || '').toUpperCase();
+      if (!currentRace || settled.has(currentRace)) d.raceNumber = firstUnsettled;
     }
 
     const now = Date.now();
