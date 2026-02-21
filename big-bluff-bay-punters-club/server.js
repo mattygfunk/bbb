@@ -1378,7 +1378,10 @@ function createApp() {
     const canonicalHost = hostNoPort.startsWith('www.') ? hostNoPort.slice(4) : hostNoPort;
     const isLocalHost = canonicalHost === 'localhost' || canonicalHost === '127.0.0.1';
 
-    if (!isLocalHost && (!isSecure || hostNoPort !== canonicalHost)) {
+    const isApiRequest = String(req.path || '').startsWith('/api');
+    // Important: don't cross-origin redirect API calls (e.g. www -> apex),
+    // because mobile browsers can fail fetch/auth on redirected API requests.
+    if (!isApiRequest && !isLocalHost && (!isSecure || hostNoPort !== canonicalHost)) {
       return res.redirect(301, `https://${canonicalHost}${req.originalUrl}`);
     }
     return next();
