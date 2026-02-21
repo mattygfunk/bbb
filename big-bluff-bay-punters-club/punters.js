@@ -997,6 +997,9 @@ async function refresh(){
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
   const overview = await req(`${API.puntersOverview(state.tierView)}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null);
+  const paidOverview = state.user
+    ? await req(`${API.puntersOverview('paid')}&trackId=${encodeURIComponent(state.trackId || 'thoroughbreds')}`).catch(() => null)
+    : null;
   state.lastOverview = overview || state.lastOverview;
   state.raceRunners = (overview || state.lastOverview)?.raceRunners || state.raceRunners || {};
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
@@ -1173,8 +1176,9 @@ async function refresh(){
   }
 
   const userKey = String(state.user?.username || '').toLowerCase();
-  const userRow = (ladderRows || []).find((r) => String(r?.member || '').toLowerCase() === userKey) || null;
-  const leaderPoints = Number((ladderRows || [])[0]?.points || 0);
+  const personalLadderRows = Array.isArray(paidOverview?.ladder) ? paidOverview.ladder : (ladderRows || []);
+  const userRow = (personalLadderRows || []).find((r) => String(r?.member || '').toLowerCase() === userKey) || null;
+  const leaderPoints = Number((personalLadderRows || [])[0]?.points || (ladderRows || [])[0]?.points || 0);
   const userPoints = Number(userRow?.points || 0);
   const userRank = Number(userRow?.rank || 0);
   const gapToFirst = Number.isFinite(leaderPoints) && Number.isFinite(userPoints) ? (leaderPoints - userPoints) : NaN;
@@ -1204,7 +1208,7 @@ async function refresh(){
     isJackpotEligible: state.isJackpotEligible,
     bossesStatus,
     nextUserPick: nextUserPick ? `${focusRace || 'Next'} #${nextUserPick}` : '',
-    ladderRows,
+    ladderRows: personalLadderRows,
     submittedAtText,
     roundLabel: String(nextMeet?.track || overviewData?.round?.label || '')
   });
