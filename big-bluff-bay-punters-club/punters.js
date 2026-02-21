@@ -1187,7 +1187,13 @@ async function refresh(){
   const submittedAtText = latestTipTs > 0
     ? new Date(latestTipTs).toLocaleTimeString('en-AU', { timeZone: 'Australia/Melbourne', hour: '2-digit', minute: '2-digit' })
     : '';
-  const nextUserPick = Array.from(state.existingByRace.entries()).sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))[0]?.[1] || '';
+  const settledRaces = new Set(Object.keys(overviewData?.raceResults || {}).map((r)=>String(r||'').toUpperCase()));
+  let focusRace = null;
+  for (let i = 1; i <= state.raceCount; i += 1) {
+    const race = `R${i}`;
+    if (!settledRaces.has(race)) { focusRace = race; break; }
+  }
+  const nextUserPick = focusRace ? (state.existingByRace.get(focusRace) || '') : '';
   const bossesStatus = myTipCount > 0 ? 'Eligible ✅' : (state.tipsEditableNow ? 'Not entered' : 'Not eligible');
   renderMemberCockpit({
     userRank,
@@ -1197,7 +1203,7 @@ async function refresh(){
     remainingRaces,
     isJackpotEligible: state.isJackpotEligible,
     bossesStatus,
-    nextUserPick: nextUserPick ? `#${nextUserPick}` : '',
+    nextUserPick: nextUserPick ? `${focusRace || 'Next'} #${nextUserPick}` : '',
     ladderRows,
     submittedAtText,
     roundLabel: String(nextMeet?.track || overviewData?.round?.label || '')

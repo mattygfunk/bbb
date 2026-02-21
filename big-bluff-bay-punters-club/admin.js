@@ -775,7 +775,19 @@ $('results-form')?.addEventListener('submit', async (e) => {
     });
     $('results-msg').textContent = 'Results saved.';
     await refresh();
-    fillResultsForm(race);
+
+    const raceSelect = $('results-race');
+    if (raceSelect) {
+      let next = '';
+      for (let i = 1; i <= state.raceCount; i += 1) {
+        const rKey = `R${i}`;
+        if (!state.raceResults?.[rKey]) { next = rKey; break; }
+      }
+      raceSelect.value = next || race;
+      fillResultsForm(raceSelect.value || race);
+    } else {
+      fillResultsForm(race);
+    }
   } catch (err) {
     $('results-msg').textContent = err.message;
   }
