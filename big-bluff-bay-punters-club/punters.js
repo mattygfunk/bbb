@@ -1095,7 +1095,18 @@ async function refresh(){
     }
   }
   const status = $('leaderboard-status');
-  if (status) status.textContent = state.roundStatus === 'CLOSED' ? 'Round finished ✅' : ((overview || state.lastOverview)?.round?.label || 'Live');
+  if (status) {
+    if (state.roundStatus === 'CLOSED') {
+      status.textContent = 'Round finished ✅';
+    } else {
+      const settled = new Set(Object.keys(overviewData?.raceResults || {}).map((r)=>String(r||'').toUpperCase()));
+      let nextRaceNo = null;
+      for (let i = 1; i <= state.raceCount; i += 1) {
+        if (!settled.has(`R${i}`)) { nextRaceNo = i; break; }
+      }
+      status.textContent = nextRaceNo ? `Race ${nextRaceNo}` : ((overview || state.lastOverview)?.round?.label || 'Live');
+    }
+  }
   renderBossesBet((bossesRes && bossesRes.bossesBet) || overview?.bossesBet || {});
   renderMilestones(milestonesRes || {});
   renderBanterWall(overviewData.banterWall || []);
