@@ -901,8 +901,10 @@ async function hydrateNextTipCard(trackId){
       badge.textContent = imminent ? 'LOCK IMMINENT' : (canEditEffective ? 'NO TIP ENTERED' : 'LOCKED');
       pick.textContent = '#—';
       const others = Number(d?.othersCount || 0);
-      const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
-      setSocial(others <= 0 ? `No tips locked yet${ladderSuffix}` : `${others} punter${others===1?'':'s'} locked${ladderSuffix}`);
+      const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
+        ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+        : '';
+      setSocial(positionText || (others <= 0 ? `No tips locked yet` : `${others} punter${others===1?'':'s'} locked`));
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html#leaderboard';
       return;
@@ -910,8 +912,10 @@ async function hydrateNextTipCard(trackId){
 
     pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(d?.userPick?.selection || '—'), String(d?.userPick?.runnerName || d?.userPick?.horse || ''))}`;
     const others = Number(d?.othersCount || 0);
-    const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
-    social.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
+    const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
+      ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+      : '';
+    social.textContent = positionText || (others <= 0 ? `You’re first on the card` : `You + ${others} others locked`);
 
     if(imminent && canEditEffective){
       card.className = 'card next-tip-card next-tip-card--imminent';

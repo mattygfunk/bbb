@@ -609,8 +609,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       badgeEl.textContent = imminent ? 'LOCK IMMINENT' : (canEditEffective ? 'NO TIP ENTERED' : 'LOCKED');
       pickEl.textContent = '#—';
       const others = Number(d?.othersCount || 0);
-      const ladderSuffix = d?.ladderRankAvailable && d?.ladderRank ? ` • Position: #${d.ladderRank}` : '';
-      socialEl.textContent = others <= 0 ? `No tips locked yet${ladderSuffix}` : `${others} punter${others===1?'':'s'} locked${ladderSuffix}`;
+      const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
+        ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+        : '';
+      socialEl.textContent = positionText || (others <= 0 ? `No tips locked yet` : `${others} punter${others===1?'':'s'} locked`);
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
       primary.href = canEditEffective ? '/punters.html#tip-form' : '/punters.html';
       secondary.textContent = 'Log In First';
@@ -623,8 +625,10 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     const pickHorse = String(d?.userPick?.runnerName || d?.userPick?.horse || lookupRunnerName(raceKey, pickNo) || '').trim();
     pickEl.textContent = pickHorse ? `YOUR SELECTION • #${pickNo} • ${pickHorse}` : `YOUR SELECTION • #${pickNo}`;
     const others = Number(d?.othersCount || 0);
-    const ladderSuffix = d?.ladderRankAvailable ? ` • Position: #${d?.ladderRank || '—'}` : '';
-    socialEl.textContent = others <= 0 ? `You’re first on the card${ladderSuffix}` : `You + ${others} others locked${ladderSuffix}`;
+    const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
+      ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+      : '';
+    socialEl.textContent = positionText || (others <= 0 ? `You’re first on the card` : `You + ${others} others locked`);
 
     if (imminent && canEditEffective) {
       card.className = 'card next-tip-card next-tip-card--imminent';

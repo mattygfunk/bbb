@@ -1991,6 +1991,10 @@ function createApp() {
     const editable = canEditTipsNow(store);
     const round = getCurrentRound(store, { autoCreate: false, trackId: requestedTrackId });
     const lockAtMs = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
+    const ladderRows = round ? computeLadderCached(store, round.id, requestedTrackId) : [];
+    const myRankIdx = ladderRows.findIndex((row) => String(row?.member || '').trim().toLowerCase() === userKey);
+    const ladderRank = myRankIdx >= 0 ? (myRankIdx + 1) : null;
+    const ladderSize = Array.isArray(ladderRows) ? ladderRows.length : 0;
     const fixture = (
       (Array.isArray(store?.puntersClub?.tracks?.[requestedTrackId]?.fixtures) && store.puntersClub.tracks[requestedTrackId].fixtures[0])
       || (Array.isArray(store?.fixtures) && store.fixtures[0])
@@ -2011,7 +2015,10 @@ function createApp() {
       nextRace,
       tip,
       userHasTip,
-      othersCount
+      othersCount,
+      ladderRank,
+      ladderSize,
+      ladderRankAvailable: Number.isFinite(ladderRank) && ladderRank > 0 && ladderSize > 0
     };
   }
 
@@ -2025,6 +2032,9 @@ function createApp() {
         roundStatus: s.roundStatus,
         editable: s.editable,
         statusBadge: s.allComplete ? 'Closed' : (s.editable ? 'Editable' : 'Locked'),
+        ladderRank: s.ladderRank,
+        ladderSize: s.ladderSize,
+        ladderRankAvailable: Boolean(s.ladderRankAvailable),
         fixture: s.fixture,
         venue: s.venue,
         nextRace: s.nextRace,
@@ -2073,8 +2083,9 @@ function createApp() {
         } : null,
         canEdit: s.editable,
         othersCount: s.othersCount,
-        ladderRank: null,
-        ladderRankAvailable: false,
+        ladderRank: s.ladderRank,
+        ladderSize: s.ladderSize,
+        ladderRankAvailable: Boolean(s.ladderRankAvailable),
         state: s.allComplete ? 'ROUND_COMPLETE' : (s.userHasTip ? (s.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
       });
     } catch (err) {
