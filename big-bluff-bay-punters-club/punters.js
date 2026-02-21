@@ -833,9 +833,17 @@ async function hydrateNextTipCard(trackId){
           .filter((t) => String(t.member || '').trim().toLowerCase() === String(state.user?.username || '').trim().toLowerCase())
           .sort((a,b)=>Number(String(a.race||'R999').replace('R',''))-Number(String(b.race||'R999').replace('R','')));
         if (mine.length) {
-          d.userHasTip = true;
-          d.userPick = mine[0];
-          d.raceNumber = mine[0].race || 'R1';
+          const settled = new Set(Object.keys(state?.lastOverview?.raceResults || {}).map((r)=>String(r||'').toUpperCase()));
+          let nextRace = null;
+          for (let i = 1; i <= state.raceCount; i += 1) {
+            const race = `R${i}`;
+            if (!settled.has(race)) { nextRace = race; break; }
+          }
+          const chosenRace = nextRace || String(mine[0].race || 'R1').toUpperCase();
+          const chosenTip = mine.find((t) => String(t.race || '').toUpperCase() === chosenRace) || mine[0];
+          d.userHasTip = Boolean(chosenTip);
+          d.userPick = chosenTip;
+          d.raceNumber = chosenRace;
           d.state = state.tipsEditableNow ? 'EDITABLE' : 'LOCKED';
           d.canEdit = Boolean(state.tipsEditableNow);
           d.trackName = d.trackName || 'Track';
@@ -1059,6 +1067,14 @@ async function refresh(){
   state.raceCount = newRaceCount;
   if (raceCountChanged || !document.querySelector('#quick-race-list select')) renderRaceInputs(state.raceCount);
   else renderRaceInputs(state.raceCount);
+
+  const settledRacesForMarket = new Set(Object.keys(overviewData?.raceResults || {}).map((r)=>String(r||'').toUpperCase()));
+  let marketRace = null;
+  for (let i = 1; i <= state.raceCount; i += 1) {
+    const race = `R${i}`;
+    if (!settledRacesForMarket.has(race)) { marketRace = race; break; }
+  }
+  state.nextTipRace = marketRace || `R${Math.max(1, state.raceCount)}`;
   renderRaceMarket(state.nextTipRace || 'R1');
   const ladderFallback = $('ladder-fallback');
   const ladderRows = (overview || state.lastOverview)?.ladder || [];
