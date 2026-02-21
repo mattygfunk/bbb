@@ -1964,20 +1964,25 @@ function createApp() {
       .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
       .sort((a, b) => Number(String(a.race || 'R999').replace('R', '')) - Number(String(b.race || 'R999').replace('R', '')));
 
-    const raceNums = baseTips
-      .map((t) => Number(String(t.race || '').toUpperCase().replace('R', '')))
-      .filter((n) => Number.isFinite(n) && n > 0);
-    const raceCount = Math.max(10, raceNums.length ? Math.max(...raceNums) : 10);
+    const trackData = getTrackData(store, requestedTrackId);
+    const fixtureRaceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[requestedTrackId]?.defaultRaceCount || 12);
+    const raceCount = Number.isFinite(fixtureRaceCount) && fixtureRaceCount > 0 ? fixtureRaceCount : 12;
 
     const mineSet = new Set(mine.map((t) => String(t.race || '').toUpperCase()));
+    const settledSet = new Set(
+      Object.keys(trackData?.raceResults || {})
+        .map((race) => String(race || '').toUpperCase())
+        .filter((race) => /^R\d+$/.test(race))
+    );
+
     let nextRace = null;
     for (let i = 1; i <= raceCount; i += 1) {
       const race = `R${i}`;
-      if (!mineSet.has(race)) { nextRace = race; break; }
+      if (!settledSet.has(race)) { nextRace = race; break; }
     }
 
     const allComplete = !nextRace;
-    if (!nextRace) nextRace = String(mine[0]?.race || 'R1').toUpperCase();
+    if (!nextRace) nextRace = `R${raceCount}`;
 
     const tip = mine.find((t) => String(t.race || '').toUpperCase() === nextRace) || null;
     const raceTips = baseTips.filter((t) => String(t.race || '').toUpperCase() === nextRace);
