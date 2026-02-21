@@ -682,8 +682,15 @@ function renderTipEntryState() {
   }
 
   if (!state.tipsEditableNow) {
+    const picks = Array.from(state.existingByRace.entries())
+      .sort((a,b)=>Number(String(a[0]).replace('R',''))-Number(String(b[0]).replace('R','')))
+      .map(([race,sel])=>({ race, text: formatSelectionText(race, sel) }));
+    const picksHtml = picks.length
+      ? `<span class='tips-summary-grid'>${picks.map((p)=>`<span class='tips-summary-pill'><strong>${esc(p.race)}</strong><span>${esc(p.text)}</span></span>`).join('')}</span>`
+      : '<span class="muted">No saved tips found.</span>';
+
     setVisible(summaryCard, true);
-    summaryText.textContent = `Tips are locked for this round 🔒 • ${getCurrentRoundPoolText()}`;
+    summaryText.innerHTML = `Tips are locked for this round 🔒 • ${esc(getCurrentRoundPoolText())}<div style='margin-top:.4rem'>${picksHtml}</div>`;
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
     return;
