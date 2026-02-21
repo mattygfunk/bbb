@@ -2355,6 +2355,7 @@ function createApp() {
       ladder: ladderView,
       fixtures,
       raceRunners,
+      raceResults: (trackData?.raceResults || {}),
       tipsFeed,
       frozen,
       finalLabel: frozen ? 'Final results (Round closed)' : '',
