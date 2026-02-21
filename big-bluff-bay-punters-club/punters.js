@@ -6,45 +6,12 @@ const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace
 const $=id=>document.getElementById(id);
 const PUNTERS_API_CACHE_KEY='bbb-punters-api-cache-v1';
 
-function readPuntersApiCache(){
-  try { return JSON.parse(localStorage.getItem(PUNTERS_API_CACHE_KEY) || '{}'); } catch { return {}; }
-}
-function writePuntersApiCache(path, data){
-  try {
-    const p = String(path || '');
-    // Avoid caching large/high-churn payloads that can bloat localStorage and freeze the tab.
-    if (p.startsWith('/tips') || p.startsWith('/punters/overview')) return;
-
-    const payload = JSON.stringify(data);
-    if (payload.length > 120000) return;
-
-    const cache = readPuntersApiCache();
-    cache[p] = { ts: Date.now(), data };
-
-    const keys = Object.keys(cache).sort((a,b)=>Number(cache[b]?.ts||0)-Number(cache[a]?.ts||0));
-    const trimmed = {};
-    keys.slice(0, 16).forEach((k)=>{ trimmed[k] = cache[k]; });
-
-    localStorage.setItem(PUNTERS_API_CACHE_KEY, JSON.stringify(trimmed));
-  } catch {}
-}
-function getPuntersApiCache(path, maxAgeMs=5*60*1000){
-  try {
-    const cache = readPuntersApiCache();
-    const entry = cache[path];
-    if (!entry || typeof entry !== 'object') return null;
-    if ((Date.now() - Number(entry.ts || 0)) > maxAgeMs) return null;
-    return entry.data || null;
-  } catch { return null; }
-}
+function readPuntersApiCache(){ return {}; }
+function writePuntersApiCache(_path, _data){ /* disabled to prevent tab freeze risk */ }
+function getPuntersApiCache(_path, _maxAgeMs=5*60*1000){ return null; }
 
 (function prunePuntersApiCache(){
-  try {
-    const raw = localStorage.getItem(PUNTERS_API_CACHE_KEY) || '';
-    if (raw.length > 700000) {
-      localStorage.removeItem(PUNTERS_API_CACHE_KEY);
-    }
-  } catch {}
+  try { localStorage.removeItem(PUNTERS_API_CACHE_KEY); } catch {}
 })();
 
 function getRunnerNameByRaceSelection(race='R1', selection='') {
