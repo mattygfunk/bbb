@@ -486,6 +486,39 @@ async function refresh(){
     if (current) current.textContent = `Current rollover: $${rollover}`;
   } catch {}
 
+  try {
+    const out = await req(withTrack(API.puntersRounds));
+    const rounds = out.rounds || [];
+    const openRound = rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || null;
+    const latestClosed = rounds.filter((r)=>String(r.status||'').toLowerCase()==='closed').sort((a,b)=>Number(b.closedAt||0)-Number(a.closedAt||0))[0] || null;
+    const target = openRound || latestClosed;
+
+    const form = $('round-winner-form');
+    if (form && target) {
+      const winner = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim();
+      const payout = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+      const notes = String(target?.winner?.notes || target?.snapshot?.winner?.notes || '').trim();
+      if (form.winner) form.winner.value = winner || '';
+      if (form.payout) form.payout.value = Number.isFinite(payout) ? String(payout) : '';
+      if (form.notes) form.notes.value = notes || '';
+    }
+
+    const nextOpenMs = Number(target?.nextRoundOpensAt || 0);
+    const nextOpenInput = $('next-round-opens-at');
+    if (nextOpenInput && nextOpenMs > 0) nextOpenInput.value = toDateTimeLocalValue(nextOpenMs);
+
+    const msg = $('archive-round-msg');
+    if (msg && target) {
+      const isOpen = String(target.status || '').toLowerCase() === 'open';
+      const winner = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim() || 'TBD';
+      const payout = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+      const closedAt = Number(target?.closedAt || 0);
+      msg.textContent = isOpen
+        ? `Live round: ${target.label || target.id}. Winner auto-finalises after final race result.`
+        : `Round closed: ${target.label || target.id}. Winner ${winner}${Number.isFinite(payout) ? ` • payout $${payout}` : ''}${closedAt ? ` • closed ${formatMelbourne(closedAt)}` : ''}.`;
+    }
+  } catch {}
+
   await applyRolloverFromQueryIfRequested();
 
   const p=await req(`${API.tips}?status=all&track=${encodeURIComponent(state.trackId)}`);
@@ -595,10 +628,27 @@ async function refresh(){
 }
 
 
+function toDateTimeLocalValue(ms){
+  const d = new Date(Number(ms || 0));
+  if (!Number.isFinite(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatMelbourne(ms){
+  const n = Number(ms || 0);
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  return new Date(n).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
+}
+
 async function getCurrentPuntersRound(){
   const out = await req(withTrack(API.puntersRounds));
   const rounds = out.rounds || [];
-  return rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || rounds[0] || null;
+  const open = rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || null;
+  const latestClosed = rounds
+    .filter((r)=>String(r.status||'').toLowerCase()==='closed')
+    .sort((a,b)=>Number(b.closedAt||0)-Number(a.closedAt||0))[0] || null;
+  return open || latestClosed || rounds[0] || null;
 }
 
 function getRoundWinnerPayload(){
@@ -618,10 +668,10 @@ $('publish-winner-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   try {
     const round = await getCurrentPuntersRound();
-    if(!round){ $('archive-round-msg').textContent='No active round found.'; return; }
+    if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
     const payload = getRoundWinnerPayload();
     await req(withTrack(API.publishWinner(round.id)), { method:'POST', body: JSON.stringify(payload) });
-    $('archive-round-msg').textContent = 'Winner published for this round.';
+    $('archive-round-msg').textContent = `Winner published for ${round.label || 'selected round'}.`;
     await refresh();
   } catch (err) { $('archive-round-msg').textContent = err.message; }
 });
@@ -631,6 +681,10 @@ $('close-round-btn')?.addEventListener('click', async () => {
   try {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
+    if (String(round.status || '').toLowerCase() === 'closed') {
+      $('archive-round-msg').textContent = 'Round is already closed. Use Recompute & Freeze Snapshot if needed.';
+      return;
+    }
     const payload = getRoundWinnerPayload();
     await req(withTrack(API.closeRound(round.id)), { method:'POST', body: JSON.stringify(payload) });
     $('archive-round-msg').textContent = 'Round closed and snapshot frozen.';
