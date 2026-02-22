@@ -605,7 +605,11 @@ function renderMemberCockpit(data = {}) {
   const wrap = $('member-cockpit');
   const scen = $('member-scenarios');
   if (!wrap || !scen) return;
-  if (!state.user) {
+
+  const betweenRounds = state.roundPhase === 'BETWEEN_ROUNDS';
+  const roundClosed = state.roundStatus !== 'OPEN';
+
+  if (!state.user || betweenRounds || roundClosed) {
     wrap.hidden = true;
     scen.hidden = true;
     return;
