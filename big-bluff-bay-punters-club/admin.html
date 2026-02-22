@@ -468,15 +468,17 @@
         <section class="card" id="admin-racing-users"><h2>Users Who Have Tipped</h2><div id="admin-list" class="stack"></div></section>
 
         <section class="card" id="admin-user-management">
-          <h2>User Access Management</h2>
-          <p class="muted">View all usernames and promote/demote admin access.</p>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr></thead>
-              <tbody id="admin-users-body"><tr><td colspan="4" class="muted">Loading users…</td></tr></tbody>
-            </table>
-          </div>
-          <p id="admin-users-msg" class="muted"></p>
+          <details>
+            <summary><strong>User Access Management</strong> <span class="muted">(expand)</span></summary>
+            <p class="muted" style="margin-top:.6rem">View all usernames and promote/demote admin access.</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr></thead>
+                <tbody id="admin-users-body"><tr><td colspan="4" class="muted">Loading users…</td></tr></tbody>
+              </table>
+            </div>
+            <p id="admin-users-msg" class="muted"></p>
+          </details>
         </section>
       </div>
     </main>
@@ -504,6 +506,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260222-24"></script>
+    <script src="admin.js?v=20260222-25"></script>
   </body>
 </html>
