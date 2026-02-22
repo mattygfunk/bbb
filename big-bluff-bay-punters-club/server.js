@@ -2498,13 +2498,18 @@ function createApp() {
         pot: Number(winner.payout || totalPot || 0),
         oneLiner: String(winner.notes || pickLarrikinLine())
       };
+      const nextMeet = getNextScheduledMeet(store);
+      const fallbackTotalEntries = Array.isArray(snap.finalLeaderboard) ? snap.finalLeaderboard.length : 0;
+      const roundEntries = Array.isArray(closedRound?.entries) ? closedRound.entries : [];
+      const roundPaidEntries = roundEntries.filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT').length;
+
       recap = {
         winner: winner.member || 'tofu',
         top3: Array.isArray(snap.finalTop3) ? snap.finalTop3 : [],
-        totalEntries: Number(snap.finalCounts?.entries || 0),
-        paidEntries: Number(snap.finalCounts?.paidEntries || 0),
+        totalEntries: Number(snap.finalCounts?.entries || roundEntries.length || fallbackTotalEntries || 0),
+        paidEntries: Number(snap.finalCounts?.paidEntries || roundPaidEntries || 0),
         finalPot: Number(snap.finalPotAmount || 0),
-        statusText: 'Next round opens Friday afternoon'
+        statusText: `Next round: ${nextMeet.trackName} • ${nextMeet.dateLabel}`
       };
     } else {
       // Keep site in closed/idle mode until admin explicitly opens next round.
