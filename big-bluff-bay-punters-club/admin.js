@@ -507,6 +507,8 @@ async function refresh(){
     const nextOpenInput = $('next-round-opens-at');
     if (nextOpenInput && nextOpenMs > 0) nextOpenInput.value = toDateTimeLocalValue(nextOpenMs);
 
+    renderRoundStatusCard(target);
+
     const msg = $('archive-round-msg');
     if (msg && target) {
       const isOpen = String(target.status || '').toLowerCase() === 'open';
@@ -641,6 +643,57 @@ function formatMelbourne(ms){
   return new Date(n).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
 }
 
+function setRoundWinnerFormDisabled(disabled){
+  const form = $('round-winner-form');
+  if (!form) return;
+  ['winner','payout','notes','nextRoundOpensAt'].forEach((name)=>{
+    const el = form[name];
+    if (el) el.disabled = Boolean(disabled);
+  });
+  const pill = $('winner-override-pill');
+  if (pill) pill.textContent = disabled ? 'Override OFF' : 'Override ON';
+  const btn = $('winner-override-btn');
+  if (btn) btn.textContent = disabled ? 'Enable Override' : 'Disable Override';
+}
+
+function renderRoundStatusCard(target){
+  const pill = $('round-status-pill');
+  const label = $('round-status-label');
+  const winner = $('round-status-winner');
+  const payout = $('round-status-payout');
+  const closed = $('round-status-closed');
+  const nextOpen = $('round-status-next-open');
+  const hint = $('round-status-hint');
+  if (!pill || !label || !winner || !payout || !closed || !nextOpen || !hint) return;
+
+  if (!target) {
+    pill.textContent = 'No round';
+    label.textContent = '—';
+    winner.textContent = '—';
+    payout.textContent = '—';
+    closed.textContent = '—';
+    nextOpen.textContent = '—';
+    hint.textContent = 'No round found yet.';
+    return;
+  }
+
+  const isOpen = String(target.status || '').toLowerCase() === 'open';
+  const winnerName = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim() || 'TBD';
+  const payoutNum = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+  const closedAt = Number(target?.closedAt || 0);
+  const nextOpenMs = Number(target?.nextRoundOpensAt || 0);
+
+  pill.textContent = isOpen ? 'LIVE' : 'CLOSED';
+  label.textContent = String(target.label || target.id || '—');
+  winner.textContent = winnerName;
+  payout.textContent = Number.isFinite(payoutNum) ? `$${payoutNum}` : '—';
+  closed.textContent = isOpen ? 'Not closed yet' : formatMelbourne(closedAt);
+  nextOpen.textContent = nextOpenMs > 0 ? formatMelbourne(nextOpenMs) : '—';
+  hint.textContent = isOpen
+    ? 'Round is live. Winner auto-finalises after final race result.'
+    : 'Round is closed. Use Override only if you need to correct winner metadata.';
+}
+
 async function getCurrentPuntersRound(){
   const out = await req(withTrack(API.puntersRounds));
   const rounds = out.rounds || [];
@@ -663,6 +716,13 @@ function getRoundWinnerPayload(){
     nextRoundOpensAt: Number.isFinite(openAt) ? openAt : undefined
   };
 }
+
+$('winner-override-btn')?.addEventListener('click', () => {
+  const form = $('round-winner-form');
+  if (!form) return;
+  const disabled = Boolean(form.winner?.disabled);
+  setRoundWinnerFormDisabled(!disabled);
+});
 
 $('publish-winner-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
@@ -1111,6 +1171,7 @@ if (trackSelect) {
   });
 }
 
+setRoundWinnerFormDisabled(true);
 (async()=>{await bootstrap();await refresh();refreshPokerPlayerOptions().catch(()=>{});})();
 
 setInterval(() => {

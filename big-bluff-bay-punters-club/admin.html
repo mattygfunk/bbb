@@ -89,6 +89,26 @@
             </select>
           </label>
           <p class="muted">Round/jackpot actions below apply to: <strong id="archive-active-track">Thoroughbreds (thoroughbreds)</strong></p>
+
+          <article class="card" id="round-status-card" style="margin:.6rem 0">
+            <div class="section-head">
+              <h3 style="margin:0">Round Status</h3>
+              <span class="pill" id="round-status-pill">Loading…</span>
+            </div>
+            <div class="table-wrap" style="margin-top:.45rem">
+              <table>
+                <tbody>
+                  <tr><th scope="row">Round</th><td id="round-status-label">—</td></tr>
+                  <tr><th scope="row">Winner</th><td id="round-status-winner">—</td></tr>
+                  <tr><th scope="row">Payout</th><td id="round-status-payout">—</td></tr>
+                  <tr><th scope="row">Closed</th><td id="round-status-closed">—</td></tr>
+                  <tr><th scope="row">Next opens</th><td id="round-status-next-open">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="muted" id="round-status-hint">Use Override to unlock editable winner fields.</p>
+          </article>
+
           <div class="row-actions">
             <button class="btn btn-ghost" type="button" id="archive-round-btn">Archive Current Round</button>
             <button class="btn btn-ghost" type="button" id="unlock-sat-noon-btn">Unlock tips until Sat 12:00 PM</button>
@@ -98,6 +118,10 @@
             <button class="btn" type="button" id="open-next-round-btn">Open Next Round</button>
           </div>
           <form id="round-winner-form" class="stack" style="margin-top:.6rem">
+            <div class="row-actions">
+              <button class="btn btn-ghost" type="button" id="winner-override-btn">Enable Override</button>
+              <span class="pill" id="winner-override-pill">Override OFF</span>
+            </div>
             <label>Winner
               <input name="winner" type="text" value="tofu" />
             </label>
@@ -463,6 +487,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260222-16"></script>
+    <script src="admin.js?v=20260222-17"></script>
   </body>
 </html>
