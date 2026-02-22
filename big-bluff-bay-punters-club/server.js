@@ -967,7 +967,8 @@ function computeLadderCached(store, roundId = 'live', trackId = 'thoroughbreds')
 
 function computeJackpotTierData(store, opts = {}) {
   const trackId = normalizeTrackId(opts.trackId);
-  const round = syncCurrentRoundEntries(store, { ...opts, trackId });
+  const autoCreate = opts.autoCreate === true;
+  const round = syncCurrentRoundEntries(store, { ...opts, autoCreate, trackId });
   const paidMembers = new Set((round?.entries || []).filter((e) => e.tier === 'JACKPOT').map((e) => String(e.member || '').toLowerCase())).size;
   const freeMembers = new Set((round?.entries || []).map((e) => String(e.member || '').toLowerCase())).size;
   const entryFee = Number(round?.entryFee || store.entryFee || 20);
