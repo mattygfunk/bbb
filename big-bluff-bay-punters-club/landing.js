@@ -683,11 +683,13 @@ async function hydrateLandingCritical() {
     ]);
 
     const money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
-    const potValue = Number(jackpot?.totalPot || 0);
-    const roundValue = Number(jackpot?.currentRoundPot || 0);
-    const rolloverValue = Number(jackpot?.rollover || 0);
+    const effectiveJackpot = overview?.jackpot || jackpot || {};
+    const potValue = Number(effectiveJackpot?.totalPot || 0);
+    const roundValue = Number(effectiveJackpot?.currentRoundPot || 0);
+    const rolloverValue = Number(effectiveJackpot?.rollover || 0);
     const potText = money.format(potValue);
-    const lastWinner = jackpot?.lastWinner ? `@${jackpot.lastWinner}` : 'No winner yet';
+    const lastWinnerRaw = String(overview?.winnerBanner?.member || jackpot?.lastWinner || '').trim();
+    const lastWinner = lastWinnerRaw ? `@${lastWinnerRaw.replace(/^@/, '')}` : 'No winner yet';
 
     document.getElementById('status-jackpot').textContent = potText;
     document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
