@@ -1,5 +1,5 @@
 const tokenKey = 'bbb_token';
-const API = { me:'/api/me', profile:'/api/profile' };
+const API = { me:'/api/me', profile:'/api/profile', sendEmailVerify:'/api/alerts/email/verify/send', confirmEmailVerify:'/api/alerts/email/verify/confirm' };
 const DEFAULTS = {
   alerts:{ scheduleDrop:true, startingSoon:true, lateReg:true, overlayWatch:false, seatFill:false, satellites:true, goldenTicket:true, winnerPosts:true, finalTable:false, jackpotWinners:true, depositOffers:false, finalChance:false, breakingNews:true },
   methods:{ email:{enabled:true, verified:false, format:'HTML', mode:'Digest'}, sms:{enabled:false, verified:false, highOnlyQuiet:true}, telegram:{enabled:false, linked:false, mode:'channel', emojis:true} },
@@ -53,7 +53,14 @@ function bindEvents(){
   document.getElementById('logout-btn')?.addEventListener('click',()=>{ localStorage.removeItem(tokenKey); location.reload(); });
   app.querySelectorAll('[data-b]').forEach(el=>{ const p=el.dataset.b; const cb=()=>setByPath(p, el.type==='checkbox'?el.checked:(el.type==='number'?Number(el.value):el.value)); el.addEventListener('change',cb); if(el.tagName==='INPUT'&&el.type!=='checkbox') el.addEventListener('input',cb); });
   app.querySelectorAll('[data-seg]').forEach(el=>el.addEventListener('change',()=>{ const s=el.dataset.seg; state.prefs.segments = el.checked ? [...new Set([...state.prefs.segments,s])] : state.prefs.segments.filter(x=>x!==s); render(); }));
-  app.querySelector('[data-action="verify-email"]')?.addEventListener('click',()=>{ state.prefs.methods.email.verified=true; alert('Verification link sent (stub)'); render(); });
+  app.querySelector('[data-action="verify-email"]')?.addEventListener('click', async ()=>{
+    if(!state.user){ alert('Log in first.'); return; }
+    try{
+      const email = String(state.prefs.contact.email || '').trim();
+      const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email }) });
+      alert(`Verification email sent to ${out.sentTo}`);
+    }catch(e){ alert(e.message); }
+  });
   app.querySelector('[data-action="send-sms-code"]')?.addEventListener('click',()=>alert('SMS code sent (stub)'));
   app.querySelector('[data-action="tg-channel"]')?.addEventListener('click',()=>alert('Channel link placeholder'));
   app.querySelector('[data-action="tg-bot"]')?.addEventListener('click',()=>{ state.prefs.methods.telegram.linked=true; alert('Telegram bot linked (stub)'); render(); });
@@ -80,6 +87,20 @@ async function savePrefs(){
     const me = await req(API.me); state.user = me.user;
     const profile = await req(API.profile);
     state.prefs = mergeDefaults(profile?.profile?.settings?.alertsPreferences || DEFAULTS);
+
+    const token = new URLSearchParams(window.location.search).get('verify');
+    if (token) {
+      try {
+        const out = await req(API.confirmEmailVerify, { method:'POST', body: JSON.stringify({ token }) });
+        state.prefs.contact.email = String(out.email || state.prefs.contact.email || '');
+        state.prefs.methods.email.verified = true;
+        alert(`Email verified: ${out.email}`);
+        const u = new URL(window.location.href); u.searchParams.delete('verify'); window.history.replaceState({}, '', u.toString());
+      } catch (err) {
+        alert(err.message || 'Email verification failed');
+      }
+    }
+
     render();
   }catch{}
 })();

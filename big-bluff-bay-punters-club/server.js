@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
+const nodemailer = require('nodemailer');
 const { registerPokerRoutes, ensurePokerV2Store } = require('./poker-system');
 
 const PORT = Number(process.env.PORT || 3000);
@@ -16,6 +17,13 @@ const META_PAGE_ID = process.env.META_PAGE_ID || '';
 const META_INSTAGRAM_USER_ID = process.env.META_INSTAGRAM_USER_ID || '';
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
 const SOCIAL_CACHE_TTL_MS = Number(process.env.SOCIAL_CACHE_TTL_MS || 15 * 60 * 1000);
+const SMTP_HOST = process.env.SMTP_HOST || '';
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
+const SMTP_SECURE = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
+const SMTP_USER = process.env.SMTP_USER || '';
+const SMTP_PASS = process.env.SMTP_PASS || '';
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER || 'no-reply@bigbluffbay.au';
+const ALERTS_BASE_URL = process.env.ALERTS_BASE_URL || `http://localhost:${PORT}`;
 
 const DEFAULT_FIXTURES = [
   { id: 'f1', date: 'Sat 14 Feb, 3:19 PM', event: 'Next Meet', track: 'Pinjarra', raceCount: 12 }
@@ -213,6 +221,9 @@ function normalizeUserProfile(profile = {}) {
   const settings = profile && typeof profile.settings === 'object' ? profile.settings : {};
   const theme = ['system', 'light', 'dark'].includes(String(settings.theme || '')) ? String(settings.theme) : 'system';
   const email = String(profile.email || '').trim().slice(0, 254).toLowerCase();
+  const alertsPreferences = settings.alertsPreferences && typeof settings.alertsPreferences === 'object'
+    ? settings.alertsPreferences
+    : undefined;
   return {
     bio: String(profile.bio || '').slice(0, 280),
     email,
@@ -220,7 +231,8 @@ function normalizeUserProfile(profile = {}) {
     settings: {
       emailNotifications: Boolean(settings.emailNotifications),
       publicProfile: Boolean(settings.publicProfile),
-      theme
+      theme,
+      ...(alertsPreferences ? { alertsPreferences } : {})
     }
   };
 }
@@ -235,6 +247,19 @@ function ensureUserProfile(user) {
     return true;
   }
   return false;
+}
+
+let smtpTransport = null;
+function getSmtpTransport() {
+  if (smtpTransport) return smtpTransport;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+  smtpTransport = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
+  });
+  return smtpTransport;
 }
 
 function parseRunnerList(value) {
@@ -1744,6 +1769,67 @@ function createApp() {
     user.profile = next;
     writeStore(store);
     return res.json({ ok: true, profile: next });
+  });
+
+  app.post('/api/alerts/email/verify/send', auth, async (req, res) => {
+    const store = readStore();
+    const user = store.users.find((u) => u.id === req.user.sub);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const email = String(req.body?.email || user?.profile?.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = Date.now() + (30 * 60 * 1000);
+    const verifyUrl = `${ALERTS_BASE_URL.replace(/\/$/, '')}/alerts?verify=${encodeURIComponent(token)}`;
+
+    const profile = normalizeUserProfile(user.profile);
+    const settings = { ...(profile.settings || {}) };
+    settings.alertsEmailVerify = { token, email, expiresAt, sentAt: Date.now() };
+    settings.alertsPreferences = settings.alertsPreferences || {};
+    settings.alertsPreferences.contact = { ...(settings.alertsPreferences.contact || {}), email };
+    user.profile = normalizeUserProfile({ ...profile, email, settings });
+
+    await tx.sendMail({
+      from: SMTP_FROM,
+      to: email,
+      subject: 'Big Bluff Bay Alerts • Verify your email',
+      text: `Hey ${user.username},\n\nVerify your BBB Alerts email:\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
+      html: `<p>Hey <strong>${user.username}</strong>,</p><p>Verify your BBB Alerts email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 30 minutes.</p>`
+    });
+
+    writeStore(store);
+    return res.json({ ok: true, sentTo: email });
+  });
+
+  app.post('/api/alerts/email/verify/confirm', auth, (req, res) => {
+    const store = readStore();
+    const user = store.users.find((u) => u.id === req.user.sub);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const token = String(req.body?.token || '').trim();
+    if (!token) return res.status(400).json({ error: 'Verification token is required' });
+
+    const profile = normalizeUserProfile(user.profile);
+    const settings = { ...(profile.settings || {}) };
+    const verify = settings.alertsEmailVerify || null;
+    if (!verify || String(verify.token || '') !== token) return res.status(400).json({ error: 'Invalid verification token' });
+    if (Number(verify.expiresAt || 0) < Date.now()) return res.status(400).json({ error: 'Verification token expired' });
+
+    settings.alertsPreferences = settings.alertsPreferences || {};
+    settings.alertsPreferences.contact = { ...(settings.alertsPreferences.contact || {}), email: verify.email };
+    settings.alertsPreferences.methods = settings.alertsPreferences.methods || {};
+    settings.alertsPreferences.methods.email = { ...(settings.alertsPreferences.methods.email || {}), enabled: true, verified: true };
+    delete settings.alertsEmailVerify;
+
+    user.profile = normalizeUserProfile({ ...profile, email: verify.email, settings });
+    writeStore(store);
+    return res.json({ ok: true, email: verify.email });
   });
 
   app.get('/api/fixtures', (req, res) => {
