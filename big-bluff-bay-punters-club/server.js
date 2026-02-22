@@ -2648,8 +2648,7 @@ function createApp() {
   app.get('/api/punters/rounds', auth, adminOnly, (req, res) => {
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);
-    syncCurrentRoundEntries(store, { trackId });
-    writeStore(store);
+    syncCurrentRoundEntries(store, { autoCreate: false, trackId });
     const rounds = (store.puntersClub.rounds || []).filter((r) => normalizeTrackId(r.trackId) === trackId);
     return res.json({ trackId, rounds });
   });
@@ -2831,7 +2830,8 @@ function createApp() {
   app.post('/api/punters/payments/verify', auth, adminOnly, (req, res) => {
     const store = readStore();
     const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
-    const round = syncCurrentRoundEntries(store, { trackId });
+    const round = syncCurrentRoundEntries(store, { autoCreate: false, trackId });
+    if (!round) return res.status(403).json({ error: 'No OPEN round for this track. Open next round before verifying payments.' });
     const member = String(req.body?.member || '').trim();
     if (!member) return res.status(400).json({ error: 'member is required' });
     const amount = Number(req.body?.amount || round.entryFee || store.entryFee || 20);
