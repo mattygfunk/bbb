@@ -856,7 +856,10 @@ async function hydrateNextTipCard(trackId){
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
-    if (lockRef > 0 && !hardLocked) {
+    if (isBetweenRounds) {
+      context.textContent = `${trackType} • Between rounds`;
+      setLockline('');
+    } else if (lockRef > 0 && !hardLocked) {
       context.textContent = `${trackType} • Locks in ${mm}:${ss} (Melbourne)`;
       setLockline('');
     } else if (lockRef > 0 && hardLocked) {
@@ -869,11 +872,24 @@ async function hydrateNextTipCard(trackId){
 
     if(String(d?.state||'')==='ROUND_COMPLETE'){
       card.className = 'card next-tip-card next-tip-card--closed';
-      badge.textContent = isBetweenRounds ? 'BETWEEN ROUNDS' : 'ROUND COMPLETE';
-      pick.textContent = '#—';
-      setSocial(isBetweenRounds ? 'No meet announced yet. Waiting for next round setup.' : 'Next round opens soon.');
-      primary.textContent = 'View Results';
-      primary.href = '/punters.html#leaderboard';
+      if (isBetweenRounds) {
+        badge.textContent = 'BETWEEN ROUNDS';
+        race.textContent = `${trackType} • Next meet pending`;
+        pick.textContent = '✅ Last round settled • Waiting for admin to publish next meet';
+        setSocial('What you can do now: check final leaderboard, review archive snapshots, and confirm your $20 jackpot eligibility for next round.');
+        primary.textContent = 'View Last Results';
+        primary.href = '/punters.html#leaderboard';
+        secondary.hidden = false;
+        secondary.textContent = 'Browse Archive';
+        secondary.href = '/punters.html#proof-archive';
+      } else {
+        badge.textContent = 'ROUND COMPLETE';
+        pick.textContent = '#—';
+        setSocial('Next round opens soon.');
+        primary.textContent = 'View Results';
+        primary.href = '/punters.html#leaderboard';
+        secondary.hidden = true;
+      }
       return;
     }
 
@@ -926,21 +942,32 @@ async function hydrateNextTipCard(trackId){
   }catch{
     try {
       const lg = await req(`/punters/next-tip?trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
+      const isBetweenRounds = String(lg?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
       const raceNum = Number(String(lg?.nextRace || '').replace('R',''));
-      const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
+      const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next meet pending' : 'Race');
       const trackType = String(lg?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
       const apiVenue = String(lg?.venue || lg?.fixture?.track || lg?.fixture?.event || '').trim();
       const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
-      const venue = (apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (fallbackVenue || '');
+      const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? '' : (fallbackVenue || ''));
       race.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
-      context.textContent = venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
+      context.textContent = isBetweenRounds ? `${trackType} • Between rounds` : (venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`);
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
       const ss = String(Math.floor((ms%60000)/1000)).padStart(2,'0');
       countdown.style.display = '';
       countdown.textContent = `${mm}:${ss}`;
       setLockline(ms > 0 ? `Locks in ${mm}:${ss} (Melbourne time)` : '');
-      if (lg?.hasTip) {
+      if (isBetweenRounds) {
+        card.className = 'card next-tip-card next-tip-card--closed';
+        badge.textContent = 'BETWEEN ROUNDS';
+        pick.textContent = '✅ Last round settled • Waiting for admin to publish next meet';
+        social.textContent = 'Check leaderboard + archive while next meeting is being set.';
+        primary.textContent = 'View Last Results';
+        primary.href = '/punters.html#leaderboard';
+        secondary.hidden = false;
+        secondary.textContent = 'Browse Archive';
+        secondary.href = '/punters.html#proof-archive';
+      } else if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
         pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '—'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
