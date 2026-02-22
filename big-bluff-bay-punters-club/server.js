@@ -225,6 +225,14 @@ function normalizeUserProfile(profile = {}) {
   const alertsPreferences = settings.alertsPreferences && typeof settings.alertsPreferences === 'object'
     ? settings.alertsPreferences
     : undefined;
+  const alertsEmailVerify = settings.alertsEmailVerify && typeof settings.alertsEmailVerify === 'object'
+    ? {
+        token: String(settings.alertsEmailVerify.token || '').trim(),
+        email: String(settings.alertsEmailVerify.email || '').trim().toLowerCase(),
+        expiresAt: Number(settings.alertsEmailVerify.expiresAt || 0),
+        sentAt: Number(settings.alertsEmailVerify.sentAt || 0)
+      }
+    : undefined;
   return {
     bio: String(profile.bio || '').slice(0, 280),
     email,
@@ -233,7 +241,8 @@ function normalizeUserProfile(profile = {}) {
       emailNotifications: Boolean(settings.emailNotifications),
       publicProfile: Boolean(settings.publicProfile),
       theme,
-      ...(alertsPreferences ? { alertsPreferences } : {})
+      ...(alertsPreferences ? { alertsPreferences } : {}),
+      ...(alertsEmailVerify && alertsEmailVerify.token ? { alertsEmailVerify } : {})
     }
   };
 }
