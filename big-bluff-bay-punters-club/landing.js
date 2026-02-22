@@ -218,13 +218,18 @@ function renderWinners(items) {
     card.className = `card winner-item winner-item-premium ${idx === 0 ? 'winner-item-featured' : ''}`;
     const handleRaw = String(w.handle || '').trim();
     const icon = handleRaw.startsWith('♠') ? '♠' : '🏇';
-    const name = handleRaw.replace(/^([♠🏇])\s*/, '') || '—';
+    const cleanName = handleRaw
+      .replace(/^([♠🏇])\s*/, '')
+      .replace(/[\uFFFD]/g, '')
+      .replace(/^@+/, '')
+      .trim() || '—';
+    const typeLabel = icon === '♠' ? 'Poker Result' : 'Racing Result';
     card.innerHTML = `
-      <div class='row-actions' style='justify-content:space-between;align-items:center'>
-        <span class='pill'>${esc(icon === '♠' ? 'Poker Result' : 'Racing Result')}</span>
+      <div class='winner-item-head'>
+        <span class='pill'>${esc(typeLabel)}</span>
         <span class='pill'>${esc(w.week || '—')}</span>
       </div>
-      <h3 class='winner-name'>${esc(`${icon} ${name}`)}</h3>
+      <h3 class='winner-name'>${esc(`${icon} @${cleanName}`)}</h3>
       <p class='winner-prize'>${esc(w.prize || '$0.00')}</p>
     `;
     wrap.appendChild(card);
