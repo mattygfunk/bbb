@@ -1778,6 +1778,26 @@ function createApp() {
     return res.json({ ok: true, profile: next });
   });
 
+  app.get('/api/alerts/email/health', auth, adminOnly, (_req, res) => {
+    const missing = [];
+    if (!SMTP_HOST) missing.push('SMTP_HOST');
+    if (!SMTP_USER) missing.push('SMTP_USER');
+    if (!SMTP_PASS) missing.push('SMTP_PASS');
+    const tx = getSmtpTransport();
+    return res.json({
+      ok: missing.length === 0,
+      configured: missing.length === 0,
+      secure: SMTP_SECURE,
+      port: SMTP_PORT,
+      from: SMTP_FROM,
+      hostSet: Boolean(SMTP_HOST),
+      userSet: Boolean(SMTP_USER),
+      passSet: Boolean(SMTP_PASS),
+      transportReady: Boolean(tx),
+      missing
+    });
+  });
+
   app.post('/api/alerts/email/verify/send', auth, async (req, res) => {
     const store = readStore();
     const user = store.users.find((u) => u.id === req.user.sub);
