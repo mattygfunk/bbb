@@ -203,10 +203,28 @@ function renderMilestones(data){
   const promoRounds = $('promo-stat-rounds');
   const promoPaid = $('promo-stat-paid');
   const promoStreak = $('promo-top-streak');
+  const promoBiggest = $('promo-biggest-payout');
+  const promoRolloverRate = $('promo-rollover-rate');
+  const promoUniqueWinners = $('promo-unique-winners');
+  const promoLatestWinner = $('promo-latest-winner');
   const topStreak = (data?.streakLeaderboard || [])[0];
+  const paidRows = historyRows.filter((r) => !Boolean(r?.rolledOver));
+  const biggestPayout = paidRows.reduce((max, r) => Math.max(max, Number(r?.prize ?? 0)), 0);
+  const uniqueWinners = new Set(paidRows.map((r) => String(r?.member || '').trim().toLowerCase()).filter(Boolean));
+  const rolloverRate = historyRows.length ? Math.round((rolloverCount / historyRows.length) * 100) : 0;
+  const latestWinnerRow = paidRows[0] || historyRows[0] || null;
+
   if (promoRounds) promoRounds.textContent = `${historyRows.length}`;
   if (promoPaid) promoPaid.textContent = money.format(paidTotal);
   if (promoStreak) promoStreak.textContent = topStreak ? `${topStreak.member} (${Number(topStreak.currentStreak || 0)} week streak)` : 'No streak data yet';
+  if (promoBiggest) promoBiggest.textContent = money.format(biggestPayout);
+  if (promoRolloverRate) promoRolloverRate.textContent = `${rolloverRate}%`;
+  if (promoUniqueWinners) promoUniqueWinners.textContent = `${uniqueWinners.size}`;
+  if (promoLatestWinner) {
+    const latestName = String(latestWinnerRow?.member || '').trim() || '—';
+    const latestPrize = Number(latestWinnerRow?.prize ?? 0);
+    promoLatestWinner.textContent = latestName === '—' ? '—' : `${latestName} (${money.format(latestPrize)})`;
+  }
 
   winnerHistory.innerHTML='';
   historyRows.slice(0,8).forEach((row)=>{
