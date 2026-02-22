@@ -862,6 +862,59 @@ function buildRoundSnapshot(store, round) {
   return snapshot;
 }
 
+function autoFinalizeRoundIfComplete(store, trackId = 'thoroughbreds', closedBy = 'system') {
+  const tId = normalizeTrackId(trackId);
+  const openRound = getCurrentRound(store, { autoCreate: false, trackId: tId });
+  if (!openRound || String(openRound.status || '').toLowerCase() !== 'open') return null;
+
+  const trackData = getTrackData(store, tId);
+  const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[tId].defaultRaceCount || 12);
+  const isResolvedRace = (rr) => Array.isArray(rr?.first) && rr.first.length > 0;
+  const allResolved = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`)
+    .every((race) => isResolvedRace(trackData?.raceResults?.[race]));
+  if (!allResolved) return null;
+
+  syncCurrentRoundEntries(store, { autoCreate: false, trackId: tId });
+  const ladder = computeLadder(store, { trackId: tId });
+  const { totalPot, currentRoundPot, rollover } = computeJackpotTierData(store, { autoCreate: false, trackId: tId });
+
+  const winner = ladder[0] || null;
+  const hasWinner = Boolean(winner?.member);
+  const payout = hasWinner ? Number(totalPot || 0) : 0;
+
+  openRound.winner = {
+    member: hasWinner ? String(winner.member) : '',
+    payout,
+    notes: hasWinner ? pickLarrikinLine() : 'Round complete. No outright winner recorded.',
+    publishedAt: Date.now(),
+    publishedBy: closedBy
+  };
+
+  openRound.status = 'closed';
+  openRound.closedAt = Date.now();
+  openRound.nextRoundOpensAt = getDefaultNextRoundOpenAtMs(tId, store);
+  openRound.snapshot = buildRoundSnapshot(store, openRound);
+
+  if (!store.puntersClub.settings[tId] || typeof store.puntersClub.settings[tId] !== 'object') {
+    store.puntersClub.settings[tId] = {};
+  }
+  store.puntersClub.settings[tId].nextRoundOpensAt = openRound.nextRoundOpensAt;
+
+  if (hasWinner) {
+    setTrackJackpotCarry(store, tId, 0);
+    store.lastJackpotWinner = String(winner.member || '');
+  } else {
+    setTrackJackpotCarry(store, tId, Number(currentRoundPot || 0) + Number(rollover || 0));
+  }
+
+  return {
+    roundId: openRound.id,
+    winner: hasWinner ? String(winner.member || '') : null,
+    payout,
+    closedAt: openRound.closedAt
+  };
+}
+
 function syncCurrentRoundEntries(store, opts = {}) {
   const trackId = normalizeTrackId(opts.trackId);
   const round = getCurrentRound(store, { ...opts, trackId });
@@ -1911,8 +1964,10 @@ function createApp() {
       store.raceResults = trackData.raceResults;
     }
 
+    const autoFinalized = autoFinalizeRoundIfComplete(store, trackId, req.user?.username || 'admin');
+
     writeStore(store);
-    return res.json({ ok: true, trackId, race, result: trackData.raceResults[race] });
+    return res.json({ ok: true, trackId, race, result: trackData.raceResults[race], autoFinalized });
   });
 
   app.delete('/api/results/:race', auth, adminOnly, (req, res) => {
