@@ -1730,6 +1730,11 @@ function createApp() {
         const contactEmail = String(contact?.email || '').trim().toLowerCase();
         const profileEmail = String(profile?.email || '').trim().toLowerCase();
         const methods = profile?.settings?.alertsPreferences?.methods || {};
+        const hasPendingEmailVerify = Boolean(String(profile?.settings?.alertsEmailVerify?.token || '').trim());
+        const inferredEmailVerified = Boolean(
+          (contactEmail && profileEmail && contactEmail === profileEmail && !hasPendingEmailVerify)
+          || (profileEmail && !hasPendingEmailVerify && Boolean(profile?.settings?.emailNotifications))
+        );
         return {
           id: u.id,
           username: u.username,
@@ -1740,7 +1745,7 @@ function createApp() {
           whatsapp: String(contact?.whatsapp || '').trim(),
           telegram: String(contact?.telegramUser || '').trim(),
           verified: {
-            email: Boolean(methods?.email?.verified),
+            email: Boolean(methods?.email?.verified) || inferredEmailVerified,
             phone: Boolean(methods?.sms?.verified),
             whatsapp: Boolean(methods?.whatsapp?.verified),
             telegram: Boolean(methods?.telegram?.verified || methods?.telegram?.linked)
