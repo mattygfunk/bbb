@@ -2644,6 +2644,22 @@ function createApp() {
     return res.json({ ok: true, round });
   });
 
+  app.delete('/api/punters/rounds/:id', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    ensurePuntersClubStore(store);
+    const id = String(req.params.id || '').trim();
+    if (!id) return res.status(400).json({ error: 'Round id is required' });
+
+    const rounds = store.puntersClub.rounds || [];
+    const idx = rounds.findIndex((r) => String(r.id) === id);
+    if (idx === -1) return res.status(404).json({ error: 'Round not found' });
+
+    const removed = rounds[idx];
+    rounds.splice(idx, 1);
+    writeStore(store);
+    return res.json({ ok: true, removed: { id: removed.id, label: removed.label, status: removed.status } });
+  });
+
   app.post('/api/punters/rounds/:id/publish-winner', auth, adminOnly, (req, res) => {
     const store = readStore();
     ensurePuntersClubStore(store);

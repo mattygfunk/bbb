@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -489,6 +489,7 @@ async function refresh(){
   try {
     const out = await req(withTrack(API.puntersRounds));
     const rounds = out.rounds || [];
+    renderRoundHistoryTable(rounds);
     const openRound = rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || null;
     const latestClosed = rounds.filter((r)=>String(r.status||'').toLowerCase()==='closed').sort((a,b)=>Number(b.closedAt||0)-Number(a.closedAt||0))[0] || null;
     const target = openRound || latestClosed;
@@ -736,6 +737,40 @@ function renderRoundStatusCard(target, live = {}){
     : 'Round is closed. Use Override only if you need to correct winner metadata.';
 }
 
+function renderRoundHistoryTable(rounds = []){
+  const body = $('round-history-body');
+  if (!body) return;
+  body.innerHTML = '';
+  if (!rounds.length) {
+    body.innerHTML = "<tr><td colspan='7' class='muted'>No rounds found.</td></tr>";
+    return;
+  }
+
+  rounds
+    .slice()
+    .sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0))
+    .forEach((r)=>{
+      const winner = String(r?.winner?.member || r?.snapshot?.winner?.member || '').trim() || '—';
+      const payout = Number(r?.winner?.payout ?? r?.snapshot?.winner?.payout ?? r?.snapshot?.finalPotAmount ?? 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input type='checkbox' data-round-check='${encodeURIComponent(String(r.id||''))}' /></td><td>${esc(r.label || r.id || '—')}</td><td>${esc(String(r.status || '').toUpperCase())}</td><td>${esc(winner)}</td><td>${Number.isFinite(payout)?`$${payout}`:'—'}</td><td>${esc(formatMelbourne(r.closedAt || r.createdAt))}</td><td><button class='btn btn-ghost' data-round-delete='${encodeURIComponent(String(r.id||''))}'>Delete</button></td>`;
+      body.appendChild(tr);
+    });
+
+  body.querySelectorAll('button[data-round-delete]').forEach((btn)=>{
+    btn.addEventListener('click', async ()=>{
+      const id = decodeURIComponent(btn.dataset.roundDelete || '');
+      if (!id) return;
+      if (!confirm('Delete this round permanently?')) return;
+      await withButtonFeedback('round-delete-selected-btn', 'Deleting…', async ()=>{
+        await req(withTrack(API.deleteRound(id)), { method:'DELETE' });
+        $('archive-round-msg').textContent = 'Round deleted.';
+        await refresh();
+      }).catch(()=>{});
+    });
+  });
+}
+
 async function getCurrentPuntersRound(){
   const out = await req(withTrack(API.puntersRounds));
   const rounds = out.rounds || [];
@@ -768,6 +803,40 @@ $('winner-override-btn')?.addEventListener('click', () => {
   if (msg) msg.textContent = disabled
     ? 'Override enabled. Winner fields are now editable.'
     : 'Override disabled. Winner fields are locked.';
+});
+
+$('round-history-refresh-btn')?.addEventListener('click', async () => {
+  await withButtonFeedback('round-history-refresh-btn', 'Refreshing…', async () => {
+    await refresh();
+    $('archive-round-msg').textContent = 'Round history refreshed.';
+  }).catch(()=>{});
+});
+
+$('round-select-all-btn')?.addEventListener('click', () => {
+  document.querySelectorAll('[data-round-check]').forEach((el)=>{ el.checked = true; });
+});
+
+$('round-clear-select-btn')?.addEventListener('click', () => {
+  document.querySelectorAll('[data-round-check]').forEach((el)=>{ el.checked = false; });
+});
+
+$('round-delete-selected-btn')?.addEventListener('click', async () => {
+  const ids = [...document.querySelectorAll('[data-round-check]:checked')]
+    .map((el)=>decodeURIComponent(el.getAttribute('data-round-check') || ''))
+    .filter(Boolean);
+  if (!ids.length) {
+    $('archive-round-msg').textContent = 'Select one or more rounds first.';
+    return;
+  }
+  if (!confirm(`Delete ${ids.length} selected round(s) permanently?`)) return;
+
+  await withButtonFeedback('round-delete-selected-btn', 'Deleting…', async () => {
+    for (const id of ids) {
+      await req(withTrack(API.deleteRound(id)), { method:'DELETE' });
+    }
+    $('archive-round-msg').textContent = `Deleted ${ids.length} round(s).`;
+    await refresh();
+  }).catch(()=>{});
 });
 
 $('publish-winner-btn')?.addEventListener('click', async () => {

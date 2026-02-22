@@ -135,6 +135,23 @@
               <input id="next-round-opens-at" name="nextRoundOpensAt" type="datetime-local" />
             </label>
           </form>
+          <section class="card" style="margin-top:.65rem">
+            <h3 style="margin:0 0 .35rem 0">Round History & Cleanup</h3>
+            <p class="muted">API-driven history for all rounds on this track. Select one or more rounds to remove accidental duplicates.</p>
+            <div class="row-actions" style="margin-bottom:.45rem">
+              <button class="btn btn-ghost" type="button" id="round-history-refresh-btn">Refresh History</button>
+              <button class="btn btn-ghost" type="button" id="round-select-all-btn">Select All</button>
+              <button class="btn btn-ghost" type="button" id="round-clear-select-btn">Clear Selection</button>
+              <button class="btn btn-danger" type="button" id="round-delete-selected-btn">Delete Selected</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th></th><th>Round</th><th>Status</th><th>Winner</th><th>Payout</th><th>Closed/Created</th><th>Action</th></tr></thead>
+                <tbody id="round-history-body"><tr><td colspan="7" class="muted">Loading rounds…</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
           <form id="tip-lockout-form" class="stack" style="margin-top:.6rem">
             <p class="muted">Punters lockout deadline (Melbourne time)</p>
             <label>Set custom lockout date/time
@@ -487,6 +504,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260222-20"></script>
+    <script src="admin.js?v=20260222-21"></script>
   </body>
 </html>
