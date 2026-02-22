@@ -9,7 +9,7 @@ const DEFAULTS = {
   consent:false
 };
 
-const state = { token: localStorage.getItem(tokenKey)||'', user:null, prefs: structuredClone(DEFAULTS), busy:false };
+const state = { token: localStorage.getItem(tokenKey)||'', user:null, prefs: structuredClone(DEFAULTS), busy:false, emailVerifyStatus:'idle', emailVerifyMsg:'' };
 const app = document.getElementById('alerts-app');
 const preview = document.getElementById('preview-panel');
 
@@ -67,11 +67,11 @@ function render(){
         <h3>Email (recommended)</h3>
         <label>Email address<input data-b='contact.email' value='${esc(state.prefs.contact.email)}' placeholder='you@domain.com'></label>
         <div class='row two'>
-          <button class='btn ghost' data-action='verify-email' ${!state.user || !String(state.prefs.contact.email||'').trim() ? 'disabled' : ''}>Verify email</button>
-          <button class='btn ghost' data-action='verify-email-self' ${!state.user ? 'disabled' : ''}>Send test to account email</button>
+          <button class='btn ghost' data-action='verify-email' ${!state.user || !String(state.prefs.contact.email||'').trim() || state.emailVerifyStatus==='sending' ? 'disabled' : ''}>${state.emailVerifyStatus==='sending' ? 'Sending…' : 'Verify email'}</button>
+          <button class='btn ghost' data-action='verify-email-self' ${!state.user || state.emailVerifyStatus==='sending' ? 'disabled' : ''}>${state.emailVerifyStatus==='sending' ? 'Please wait…' : 'Send test to account email'}</button>
         </div>
         <span class='muted'>${state.prefs.methods.email.verified?'Verified ✅':(state.prefs.contact.email?'Pending verification':'Add email')}</span>
-        <p class='footer-note' id='email-verify-msg'></p>
+        <p class='footer-note ${state.emailVerifyStatus==='success' ? 'good' : (state.emailVerifyStatus==='error' ? 'bad' : '')}' id='email-verify-msg'>${esc(state.emailVerifyMsg || '')}</p>
       </article>
       <article class='method'>
         <h3>SMS</h3>
@@ -122,37 +122,53 @@ function bind(){
   app.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
   app.querySelector('[data-action="verify-email"]')?.addEventListener('click', async ()=>{
     if(!state.user){ alert('Log in first.'); return; }
-    const msg = document.getElementById('email-verify-msg');
     const email = normalizeEmail(state.prefs.contact.email);
     if (!validEmail(email)) {
-      if (msg) msg.textContent = 'Enter a valid email before sending verification.';
+      state.emailVerifyStatus = 'error';
+      state.emailVerifyMsg = 'Enter a valid email before sending verification.';
+      render();
       return;
     }
     state.prefs.contact.email = email;
+    state.emailVerifyStatus = 'sending';
+    state.emailVerifyMsg = `Sending verification to ${email}…`;
+    render();
     try{
       const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email }) });
-      if (msg) msg.textContent = `Verification email sent to ${out.sentTo}.`;
+      state.emailVerifyStatus = 'success';
+      state.emailVerifyMsg = `Verification email sent to ${out.sentTo}. Check your inbox and click the green confirm button.`;
     } catch(e){
       const detail = String(e.message || 'Verification failed');
-      if (msg) msg.textContent = `Email verify failed: ${detail}`;
+      state.emailVerifyStatus = 'error';
+      state.emailVerifyMsg = `Email verify failed: ${detail}`;
     }
+    render();
   });
   app.querySelector('[data-action="verify-email-self"]')?.addEventListener('click', async ()=>{
     if(!state.user){ alert('Log in first.'); return; }
-    const msg = document.getElementById('email-verify-msg');
+    state.emailVerifyStatus = 'sending';
+    state.emailVerifyMsg = 'Checking account email…';
+    render();
     try {
       const prof = await req(API.profile);
       const accountEmail = normalizeEmail(prof?.profile?.email || '');
       if (!validEmail(accountEmail)) {
-        if (msg) msg.textContent = 'Your account profile email is missing/invalid. Set it in Profile first.';
+        state.emailVerifyStatus = 'error';
+        state.emailVerifyMsg = 'Your account profile email is missing/invalid. Set it in Profile first.';
+        render();
         return;
       }
       state.prefs.contact.email = accountEmail;
+      state.emailVerifyMsg = `Sending verification to ${accountEmail}…`;
+      render();
       const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email: accountEmail }) });
-      if (msg) msg.textContent = `Test verification sent to account email: ${out.sentTo}`;
+      state.emailVerifyStatus = 'success';
+      state.emailVerifyMsg = `Test verification sent to account email: ${out.sentTo}`;
     } catch(e) {
-      if (msg) msg.textContent = `Send test failed: ${String(e.message||'Unknown error')}`;
+      state.emailVerifyStatus = 'error';
+      state.emailVerifyMsg = `Send test failed: ${String(e.message||'Unknown error')}`;
     }
+    render();
   });
 
   document.getElementById('save-btn')?.addEventListener('click', save);
@@ -182,8 +198,9 @@ async function save(){
     if (verifyToken) {
       const out = await req(API.confirmEmailVerify, { method:'POST', body: JSON.stringify({ token: verifyToken }) });
       state.prefs.contact.email = out.email; state.prefs.methods.email.verified = true;
+      state.emailVerifyStatus = 'success';
+      state.emailVerifyMsg = `Nice. ${out.email} is now verified and ready for alerts.`;
       const u = new URL(window.location.href); u.searchParams.delete('verify'); window.history.replaceState({}, '', u.toString());
-      alert(`Email verified: ${out.email}`);
     }
     render();
   } catch {}

@@ -1827,8 +1827,21 @@ function createApp() {
         from: SMTP_FROM,
         to: email,
         subject: 'Big Bluff Bay Alerts • Verify your email',
-        text: `Hey ${user.username},\n\nVerify your BBB Alerts email:\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
-        html: `<p>Hey <strong>${user.username}</strong>,</p><p>Verify your BBB Alerts email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 30 minutes.</p>`
+        text: `Hey ${user.username},\n\nTap this link to verify your BBB Alerts email:\n${verifyUrl}\n\nThis link expires in 30 minutes. If you didn’t request this, you can ignore this email.`,
+        html: `
+          <div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;">
+            <div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;">
+              <p style="margin:0 0 10px;opacity:.9;">Hey <strong>${user.username}</strong>,</p>
+              <h2 style="margin:0 0 12px;font-size:20px;color:#f8fafc;">Confirm your BBB Alerts email</h2>
+              <p style="margin:0 0 16px;color:#c7d6e4;">Click the button below to verify this address and start receiving alerts.</p>
+              <p style="margin:0 0 18px;">
+                <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Verify email</a>
+              </p>
+              <p style="margin:0 0 8px;color:#9fb0bf;font-size:13px;">Or paste this link into your browser:</p>
+              <p style="margin:0 0 16px;word-break:break-all;"><a href="${verifyUrl}" style="color:#86efac;">${verifyUrl}</a></p>
+              <p style="margin:0;color:#9fb0bf;font-size:13px;">This link expires in 30 minutes. If you didn’t request this, you can ignore this email.</p>
+            </div>
+          </div>`
       });
     } catch (err) {
       const code = String(err?.code || '').trim();
