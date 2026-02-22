@@ -118,22 +118,40 @@ function renderFixtures(fixtures, overview, jackpot, lockText = 'Updating…') {
   const accent = document.getElementById('next-track-accent');
   if (!title || !venue || !date || !firstRace || !races || !lock || !pot || !entries || !paid || !accent) return;
 
-  const trackId = String(overview?.track?.id || 'thoroughbreds');
+  const roundStatus = String(overview?.round?.status || '').toUpperCase();
+  const betweenRounds = roundStatus !== 'OPEN';
+  const nextTeaser = overview?.nextRoundTeaser || null;
+  const trackId = String((betweenRounds ? nextTeaser?.trackId : overview?.track?.id) || overview?.track?.id || 'thoroughbreds');
   const isDogs = trackId === 'greyhounds';
   accent.textContent = isDogs ? '🐕 Greyhounds Track' : '🐎 Thoroughbreds Track';
-  title.textContent = isDogs ? 'Next Up: Wednesday Greyhounds' : 'Next Up: Saturday Thoroughbreds';
+  title.textContent = betweenRounds
+    ? `Next Up: ${isDogs ? 'Wednesday Greyhounds' : 'Saturday Thoroughbreds'}`
+    : (isDogs ? 'Next Up: Wednesday Greyhounds' : 'Next Up: Saturday Thoroughbreds');
 
   if (!f) {
-    venue.textContent = 'TBA';
-    date.textContent = 'TBA';
-    firstRace.textContent = 'TBA';
-    races.textContent = '--';
-    lock.textContent = lockText;
-    pot.textContent = `$${Number(jackpot?.totalPot || 0).toFixed(0)}`;
-    entries.textContent = String(Number(overview?.tiers?.free || 0));
-    paid.textContent = String(Number(overview?.tiers?.jackpotEligible || 0));
+    venue.textContent = String(nextTeaser?.venue || 'TBA');
+    date.textContent = String(nextTeaser?.title || 'TBA');
+    firstRace.textContent = 'As listed';
+    races.textContent = String(Number((isDogs ? 10 : 12)));
+    lock.textContent = betweenRounds ? 'Pending next round' : lockText;
+    pot.textContent = betweenRounds ? 'Pending' : `$${Number(jackpot?.totalPot || 0).toFixed(0)}`;
+    entries.textContent = betweenRounds ? '—' : String(Number(overview?.tiers?.free || 0));
+    paid.textContent = betweenRounds ? '—' : String(Number(overview?.tiers?.jackpotEligible || 0));
     if (fallback) fallback.hidden = false;
     if (winner) winner.textContent = String(overview?.winnerBanner?.member || overview?.pastRounds?.[0]?.winner || 'No winner yet');
+    return;
+  }
+
+  if (betweenRounds) {
+    venue.textContent = String(nextTeaser?.venue || 'TBA');
+    date.textContent = String(nextTeaser?.title || f.date || 'TBA');
+    firstRace.textContent = 'As listed';
+    races.textContent = String(Number((isDogs ? 10 : 12)));
+    lock.textContent = 'Pending next round';
+    pot.textContent = 'Pending';
+    entries.textContent = '—';
+    paid.textContent = '—';
+    if (fallback) fallback.hidden = false;
     return;
   }
 
