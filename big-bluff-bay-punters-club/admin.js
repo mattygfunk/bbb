@@ -764,8 +764,12 @@ function renderRoundHistoryTable(rounds = []){
       if (!confirm('Delete this round permanently?')) return;
       await withButtonFeedback('round-delete-selected-btn', 'Deleting…', async ()=>{
         await req(withTrack(API.deleteRound(id)), { method:'DELETE' });
-        $('archive-round-msg').textContent = 'Round deleted.';
         await refresh();
+        const out = await req(withTrack(API.puntersRounds));
+        const openCount = (out.rounds || []).filter((r)=>String(r.status||'').toLowerCase()==='open').length;
+        $('archive-round-msg').textContent = openCount > 0
+          ? `Round deleted. ${openCount} OPEN round(s) still exist.`
+          : 'Round deleted. No open round remains; status now reflects latest closed round.';
       }).catch(()=>{});
     });
   });
@@ -834,8 +838,12 @@ $('round-delete-selected-btn')?.addEventListener('click', async () => {
     for (const id of ids) {
       await req(withTrack(API.deleteRound(id)), { method:'DELETE' });
     }
-    $('archive-round-msg').textContent = `Deleted ${ids.length} round(s).`;
     await refresh();
+    const out = await req(withTrack(API.puntersRounds));
+    const openCount = (out.rounds || []).filter((r)=>String(r.status||'').toLowerCase()==='open').length;
+    $('archive-round-msg').textContent = openCount > 0
+      ? `Deleted ${ids.length} round(s). ${openCount} OPEN round(s) still exist.`
+      : `Deleted ${ids.length} round(s). No open round remains; status now reflects latest closed round.`;
   }).catch(()=>{});
 });
 
