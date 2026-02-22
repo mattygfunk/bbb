@@ -573,6 +573,11 @@ async function refresh(){
   loadAdminUsers().catch(()=>{});
   refreshClaims().catch(()=>{});
 
+  if (!hasOpenRound) {
+    $('admin-list').innerHTML = '<p class="muted">No OPEN round currently. Tip list hidden between rounds.</p>';
+    return;
+  }
+
   if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
 
   const byUser = new Map();

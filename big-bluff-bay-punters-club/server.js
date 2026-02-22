@@ -2092,6 +2092,7 @@ function createApp() {
       return {
         requestedTrackId,
         roundStatus: 'CLOSED',
+        roundPhase: 'BETWEEN_ROUNDS',
         allComplete: true,
         editable: false,
         lockAtMs: null,
@@ -2155,9 +2156,14 @@ function createApp() {
     const othersCount = userHasTip ? Math.max(0, enteredMembers.size - 1) : enteredMembers.size;
     const venue = String(fixture?.track || fixture?.event || fixture?.venue || '').trim();
 
+    const roundPhase = allComplete
+      ? 'LOCKED_PENDING_RESULTS'
+      : (editable ? 'OPEN_FOR_TIPS' : 'LOCKED_PENDING_RESULTS');
+
     return {
       requestedTrackId,
       roundStatus: allComplete ? 'CLOSED' : 'OPEN',
+      roundPhase,
       allComplete,
       editable,
       lockAtMs,
@@ -2181,6 +2187,7 @@ function createApp() {
         trackId: s.requestedTrackId,
         trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
         roundStatus: s.roundStatus,
+        roundPhase: s.roundPhase,
         editable: s.editable,
         statusBadge: s.allComplete ? 'Closed' : (s.editable ? 'Editable' : 'Locked'),
         ladderRank: s.ladderRank,
@@ -2220,6 +2227,7 @@ function createApp() {
       const s = buildSimpleNextTipState(req, store);
       return res.json({
         roundStatus: s.roundStatus,
+        roundPhase: s.roundPhase,
         trackId: s.requestedTrackId,
         trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
         venue: s.venue,
@@ -2518,7 +2526,7 @@ function createApp() {
     return res.json({
       track: { id: trackId, name: TRACKS[trackId]?.name || trackId, accent: TRACKS[trackId]?.accent || '#999' },
       tracks: Object.values(TRACKS),
-      round: { id: round?.id, trackId, label: round?.label, status: String(round?.status || 'open').toUpperCase(), createdAt: round?.createdAt, closedAt: round?.closedAt || null },
+      round: { id: round?.id, trackId, label: round?.label, status: String(round?.status || 'closed').toUpperCase(), phase: openRound ? (canEditTipsNow(store) ? 'OPEN_FOR_TIPS' : 'LOCKED_PENDING_RESULTS') : 'BETWEEN_ROUNDS', createdAt: round?.createdAt, closedAt: round?.closedAt || null },
       tiers: { free: freeMembers, jackpotEligible: paidMembers, entryFee },
       jackpot: { currentRoundPot, rollover, totalPot, tieRule: 'Top-point ties roll over to next round.' },
       ladder: ladderView,
