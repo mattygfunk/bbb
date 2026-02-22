@@ -1726,12 +1726,15 @@ function createApp() {
       .map((u) => {
         const profile = normalizeUserProfile(u.profile);
         const contact = profile?.settings?.alertsPreferences?.contact || {};
+        const pendingVerifyEmail = String(profile?.settings?.alertsEmailVerify?.email || '').trim().toLowerCase();
+        const contactEmail = String(contact?.email || '').trim().toLowerCase();
+        const profileEmail = String(profile?.email || '').trim().toLowerCase();
         return {
           id: u.id,
           username: u.username,
           role: u.role || 'member',
           createdAt: Number(u.createdAt || 0),
-          email: String(profile?.email || '').trim().toLowerCase(),
+          email: contactEmail || profileEmail || pendingVerifyEmail,
           phone: String(contact?.phone || '').trim(),
           whatsapp: String(contact?.whatsapp || '').trim(),
           telegram: String(contact?.telegramUser || '').trim()
