@@ -544,7 +544,13 @@ async function refresh(){
   state.popularByRace = computePopularByRace(state.tipsAll);
   renderBossesSuggested(state.popularByRace);
 
-  const activeTips = (p.tips || []).filter((t) => t.status !== 'removed');
+  let hasOpenRound = false;
+  try {
+    const ro = await req(withTrack(API.puntersRounds));
+    hasOpenRound = (ro.rounds || []).some((r)=>String(r.status||'').toLowerCase()==='open');
+  } catch {}
+
+  const activeTips = hasOpenRound ? (p.tips || []).filter((t) => t.status !== 'removed') : [];
   state.summary.tipUsers = new Set(activeTips.map((t) => String(t.member || '').trim()).filter(Boolean)).size;
   state.summary.paidUsers = new Set(activeTips.filter((t) => t.paid).map((t) => String(t.member || '').trim()).filter(Boolean)).size;
 
