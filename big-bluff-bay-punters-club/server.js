@@ -6,7 +6,6 @@ const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
-const nodemailer = require('nodemailer');
 const { registerPokerRoutes, ensurePokerV2Store } = require('./poker-system');
 
 const PORT = Number(process.env.PORT || 3000);
@@ -252,10 +251,16 @@ function ensureUserProfile(user) {
 }
 
 let smtpTransport = null;
+let nodemailerLib = null;
 function getSmtpTransport() {
   if (smtpTransport) return smtpTransport;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
-  smtpTransport = nodemailer.createTransport({
+  try {
+    if (!nodemailerLib) nodemailerLib = require('nodemailer');
+  } catch (_err) {
+    return null;
+  }
+  smtpTransport = nodemailerLib.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
