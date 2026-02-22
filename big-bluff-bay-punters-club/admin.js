@@ -105,7 +105,11 @@ async function loadAdminUsers(){
       const created = u.createdAt ? new Date(Number(u.createdAt)).toLocaleDateString('en-AU') : '-';
       const actionLabel = u.role === 'admin' ? 'Set Member' : 'Make Admin';
       const nextRole = u.role === 'admin' ? 'member' : 'admin';
-      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${esc(u.email || '-')}</td><td>${esc(u.phone || '-')}</td><td>${esc(u.whatsapp || '-')}</td><td>${esc(u.telegram || '-')}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
+      const withVerify = (value, ok) => {
+        const v = String(value || '-');
+        return `${esc(v)} ${ok ? "<span title='Verified'>✅</span>" : "<span title='Not verified'>⚪</span>"}`;
+      };
+      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${withVerify(u.email, u?.verified?.email)}</td><td>${withVerify(u.phone, u?.verified?.phone)}</td><td>${withVerify(u.whatsapp, u?.verified?.whatsapp)}</td><td>${withVerify(u.telegram, u?.verified?.telegram)}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
       body.appendChild(tr);
     });
     if (!users.length) body.innerHTML = "<tr><td colspan='8' class='muted'>No users found.</td></tr>";

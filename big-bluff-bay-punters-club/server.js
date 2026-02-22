@@ -1729,6 +1729,7 @@ function createApp() {
         const pendingVerifyEmail = String(profile?.settings?.alertsEmailVerify?.email || '').trim().toLowerCase();
         const contactEmail = String(contact?.email || '').trim().toLowerCase();
         const profileEmail = String(profile?.email || '').trim().toLowerCase();
+        const methods = profile?.settings?.alertsPreferences?.methods || {};
         return {
           id: u.id,
           username: u.username,
@@ -1737,7 +1738,13 @@ function createApp() {
           email: contactEmail || profileEmail || pendingVerifyEmail,
           phone: String(contact?.phone || '').trim(),
           whatsapp: String(contact?.whatsapp || '').trim(),
-          telegram: String(contact?.telegramUser || '').trim()
+          telegram: String(contact?.telegramUser || '').trim(),
+          verified: {
+            email: Boolean(methods?.email?.verified),
+            phone: Boolean(methods?.sms?.verified),
+            whatsapp: Boolean(methods?.whatsapp?.verified),
+            telegram: Boolean(methods?.telegram?.verified || methods?.telegram?.linked)
+          }
         };
       })
       .sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
