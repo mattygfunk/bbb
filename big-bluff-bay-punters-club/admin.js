@@ -407,9 +407,14 @@ async function refresh(){
     state.raceCount = Number(meet.raceCount || 12);
     const form = $('fixture-form');
     if (form) {
-      if (form.date && !form.date.value) {
+      if ((form.dateOnly || form.timeOnly) && (!form.dateOnly?.value || !form.timeOnly?.value)) {
         const parsed = parseAnyDateInput(meet.date || '');
-        form.date.value = parsed ? toDateTimeLocalValue(parsed) : '';
+        if (parsed) {
+          const local = toDateTimeLocalValue(parsed);
+          const [dPart, tPart] = String(local).split('T');
+          if (form.dateOnly && !form.dateOnly.value) form.dateOnly.value = dPart || '';
+          if (form.timeOnly && !form.timeOnly.value) form.timeOnly.value = tPart || '';
+        }
       }
       if (form.event && !form.event.value) form.event.value = meet.event || '';
       if (form.track && !form.track.value) form.track.value = meet.track || '';
@@ -950,7 +955,7 @@ $('refresh-claims-btn')?.addEventListener('click', ()=>refreshClaims().catch(()=
 
 $('login-form').addEventListener('submit',async(e)=>{e.preventDefault();const f=new FormData(e.target);const username=String(f.get('member')||'').trim();const password=String(f.get('pin')||'').trim();try{const r=await req(API.login,{method:'POST',body:JSON.stringify({username,password})});state.token=r.token;state.user=r.user;localStorage.setItem(tokenKey,state.token);$('login-msg').textContent='Logged in.';await refresh();}catch(err){$('login-msg').textContent=err.message;}});
 
-$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);const rawDate=String(f.get('date')||'').trim();const parsedMs=parseAnyDateInput(rawDate);const normalizedDate=parsedMs?new Date(parsedMs).toLocaleString('en-AU',{timeZone:'Australia/Melbourne',weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).replace(',',''):rawDate;try{await req(withTrack(API.updateFixture(state.fixtureId || `pc-${state.trackId}-f1`)),{method:'PUT',body:JSON.stringify({date:normalizedDate,event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim(),raceCount:Number(f.get('raceCount')||12),trackId:state.trackId})});$('fixture-msg').textContent=`Fixture updated (${state.trackId}).`;await refresh();}catch(err){$('fixture-msg').textContent=err.message;}});
+$('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!isAdmin()){ $('fixture-msg').textContent='Admin login required.'; return; }const f=new FormData(e.target);const dateOnly=String(f.get('dateOnly')||'').trim();const timeOnly=String(f.get('timeOnly')||'').trim();const rawDate=(dateOnly&&timeOnly)?`${dateOnly}T${timeOnly}`:dateOnly;const parsedMs=parseAnyDateInput(rawDate);const normalizedDate=parsedMs?new Date(parsedMs).toLocaleString('en-AU',{timeZone:'Australia/Melbourne',weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).replace(',',''):rawDate;try{await req(withTrack(API.updateFixture(state.fixtureId || `pc-${state.trackId}-f1`)),{method:'PUT',body:JSON.stringify({date:normalizedDate,event:String(f.get('event')||'').trim(),track:String(f.get('track')||'').trim(),raceCount:Number(f.get('raceCount')||12),trackId:state.trackId})});$('fixture-msg').textContent=`Fixture updated (${state.trackId}).`;await refresh();}catch(err){$('fixture-msg').textContent=err.message;}});
 
 $('archive-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
