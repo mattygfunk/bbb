@@ -12,6 +12,8 @@
       .wrap{max-width:1200px;margin:0 auto;padding:1rem}
       .badge{display:inline-block;padding:.24rem .55rem;border:1px solid #7c2d12;background:#2a140e;color:#fdba74;border-radius:999px;font-size:.75rem}
       .hero{border:1px solid var(--line);background:linear-gradient(180deg,#0f1722,#0c121a);border-radius:14px;padding:1rem}
+      .hero-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
+      .auth{display:flex;gap:.45rem;align-items:center}
       h1,h2,h3{margin:.2rem 0 .4rem} .muted{color:var(--muted)}
       .trust{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.6rem}.chip{border:1px solid #2a3f34;background:#102019;padding:.3rem .55rem;border-radius:999px;font-size:.82rem}
       .layout{display:grid;grid-template-columns:1fr;gap:1rem;margin-top:1rem}
@@ -37,7 +39,10 @@
   <body>
     <main class="wrap">
       <section class="hero">
-        <span class="badge">Not live yet • design preview only</span>
+        <div class="hero-top">
+          <span class="badge">Live wiring enabled • preview-safe sending stubs</span>
+          <div class="auth" id="alerts-auth"></div>
+        </div>
         <h1>BBB Alerts</h1>
         <p class="muted">Pick what you want. Pick how you want it. No spam. Opt out anytime.</p>
         <div class="trust">
