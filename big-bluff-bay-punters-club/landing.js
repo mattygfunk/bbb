@@ -707,7 +707,9 @@ async function hydrateLandingCritical() {
     renderFixtures(effectiveFixtures, overview, jackpot, lockText);
 
     const roundStatus = String(overview?.round?.status || '').toUpperCase();
+    const roundPhase = String(overview?.round?.phase || '').toUpperCase();
     const closedRound = roundStatus === 'CLOSED';
+    const betweenRounds = roundPhase === 'BETWEEN_ROUNDS' || (closedRound && !overview?.round?.id);
     const opensAt = Number(overview?.nextRoundOpensAt || 0);
     if (closedRound) {
       const preOpenText = opensAt > Date.now()
@@ -791,8 +793,45 @@ async function hydrateLandingCritical() {
 
     const recentPayoutTotal = winnersWallRows.reduce((sum, r) => sum + Number(r.prize || 0), 0);
 
-    document.getElementById('status-meet').textContent = meet;
-    document.getElementById('status-entries').textContent = 'Live';
+    const heroKicker = document.getElementById('hero-kicker-text');
+    const heroSubline = document.getElementById('hero-subline-text');
+    const heroProof1 = document.getElementById('hero-proof-1');
+    const heroProof2 = document.getElementById('hero-proof-2');
+    const heroProof3 = document.getElementById('hero-proof-3');
+    const heroNewHere = document.getElementById('hero-new-here-copy');
+    const heroCta = document.getElementById('hero-primary-cta');
+
+    if (betweenRounds) {
+      if (heroKicker) heroKicker.textContent = 'Between rounds • archive + prep mode';
+      if (heroSubline) heroSubline.textContent = 'Last round is settled. Next meet details will appear here once published.';
+      if (heroProof1) heroProof1.innerHTML = '<strong>Review outcomes:</strong> verify final ladder, winner, and payout snapshot.';
+      if (heroProof2) heroProof2.innerHTML = '<strong>Prep for next open:</strong> keep your account ready and watch for the meet announcement.';
+      if (heroProof3) heroProof3.innerHTML = '<strong>Stay sharp:</strong> track recent form and return for lock-in once round opens.';
+      if (heroNewHere) heroNewHere.innerHTML = 'New here? <a href="/winners.html">Explore winners, streaks, and payout history</a> while the next meet is being set.';
+      if (heroCta) {
+        heroCta.textContent = 'View Winners & Archive';
+        heroCta.href = '/winners.html';
+      }
+      document.getElementById('status-jackpot-label').textContent = 'Carryover ready';
+      document.getElementById('status-meet').textContent = 'Awaiting next meet announcement';
+      const lockNode = document.getElementById('status-lock');
+      if (lockNode) lockNode.textContent = 'Pending';
+    } else {
+      if (heroKicker) heroKicker.textContent = 'Premium punters-to-poker ladder';
+      if (heroSubline) heroSubline.textContent = 'Tip fast. Lock in. Win real. Verified results. Transparent payouts.';
+      if (heroProof1) heroProof1.innerHTML = '<strong>Lock tips fast:</strong> one clean entry flow before cutoff.';
+      if (heroProof2) heroProof2.innerHTML = '<strong>Track results live:</strong> points, winners, and jackpots update transparently.';
+      if (heroProof3) heroProof3.innerHTML = '<strong>Level up to poker:</strong> convert discipline into nightly and Sunday events.';
+      if (heroNewHere) heroNewHere.innerHTML = 'New here? <a href="/winners.html">See recent winners, streaks, and payout history</a>.';
+      if (heroCta) {
+        heroCta.textContent = 'Log In to Continue';
+        heroCta.href = '/punters.html#punters-login-gate';
+      }
+      document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
+      document.getElementById('status-meet').textContent = meet;
+    }
+
+    document.getElementById('status-entries').textContent = betweenRounds ? 'Between rounds' : 'Live';
     document.getElementById('stat-weeks').textContent = String(puntersRecent.length || '—');
     document.getElementById('stat-paid').textContent = money.format(recentPayoutTotal);
     const heroEntries = document.getElementById('hero-social-entries');
