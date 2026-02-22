@@ -1822,13 +1822,24 @@ function createApp() {
     settings.alertsPreferences.contact = { ...(settings.alertsPreferences.contact || {}), email };
     user.profile = normalizeUserProfile({ ...profile, email, settings });
 
-    await tx.sendMail({
-      from: SMTP_FROM,
-      to: email,
-      subject: 'Big Bluff Bay Alerts • Verify your email',
-      text: `Hey ${user.username},\n\nVerify your BBB Alerts email:\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
-      html: `<p>Hey <strong>${user.username}</strong>,</p><p>Verify your BBB Alerts email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 30 minutes.</p>`
-    });
+    try {
+      await tx.sendMail({
+        from: SMTP_FROM,
+        to: email,
+        subject: 'Big Bluff Bay Alerts • Verify your email',
+        text: `Hey ${user.username},\n\nVerify your BBB Alerts email:\n${verifyUrl}\n\nThis link expires in 30 minutes.`,
+        html: `<p>Hey <strong>${user.username}</strong>,</p><p>Verify your BBB Alerts email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p><p>This link expires in 30 minutes.</p>`
+      });
+    } catch (err) {
+      const code = String(err?.code || '').trim();
+      const responseCode = Number(err?.responseCode || 0);
+      return res.status(502).json({
+        error: 'SMTP send failed',
+        detail: String(err?.message || 'Unknown SMTP error'),
+        code: code || undefined,
+        responseCode: Number.isFinite(responseCode) && responseCode > 0 ? responseCode : undefined
+      });
+    }
 
     writeStore(store);
     return res.json({ ok: true, sentTo: email });
