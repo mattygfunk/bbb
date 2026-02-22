@@ -3331,6 +3331,8 @@ function createApp() {
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
   app.get('/punters-club/:track/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
+  app.get(['/alerts', '/alerts/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
+  app.get(['/alerts/preview', '/alerts/preview/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
   app.get(['/punters', '/punters/', '/punters.html'], (_req, res) => res.redirect(302, '/punters-club/thoroughbreds'));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));

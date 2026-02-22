@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BBB Alerts Preferences (Preview) • Big Bluff Bay</title>
+    <meta name="description" content="Preview-only alerts and messaging preferences for Big Bluff Bay. Design mock only, not wired to live sending." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      :root{--bg:#0a0d10;--card:#11161b;--muted:#9fb0bf;--txt:#eaf2f8;--line:#253240;--good:#34d399;--accent:#22c55e;--warn:#f59e0b}
+      *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 450px at 15% -20%,#12331f66,transparent 65%),linear-gradient(180deg,#090c10,#0b1118);color:var(--txt)}
+      .wrap{max-width:1200px;margin:0 auto;padding:1rem}
+      .badge{display:inline-block;padding:.24rem .55rem;border:1px solid #7c2d12;background:#2a140e;color:#fdba74;border-radius:999px;font-size:.75rem}
+      .hero{border:1px solid var(--line);background:linear-gradient(180deg,#0f1722,#0c121a);border-radius:14px;padding:1rem}
+      h1,h2,h3{margin:.2rem 0 .4rem} .muted{color:var(--muted)}
+      .trust{display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.6rem}.chip{border:1px solid #2a3f34;background:#102019;padding:.3rem .55rem;border-radius:999px;font-size:.82rem}
+      .layout{display:grid;grid-template-columns:1fr;gap:1rem;margin-top:1rem}
+      .main{display:grid;gap:1rem}
+      .card{border:1px solid var(--line);background:linear-gradient(180deg,#121922,#0e141d);border-radius:12px;padding:.85rem}
+      .step{display:flex;align-items:center;gap:.6rem}.step .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#183326;border:1px solid #2f5a46;font-weight:700}
+      .row{display:grid;gap:.6rem}.row.two{grid-template-columns:1fr}.grid{display:grid;gap:.6rem}.grid.two{grid-template-columns:1fr}.grid.three{grid-template-columns:1fr}
+      .toggle{display:flex;justify-content:space-between;align-items:center;padding:.6rem;border:1px solid #2a3644;border-radius:10px;background:#0f1620}
+      .toggle input{transform:scale(1.2)}
+      details{border:1px dashed #314357;border-radius:10px;padding:.55rem} summary{cursor:pointer;font-weight:600}
+      label{display:grid;gap:.25rem;font-size:.9rem} input,select{background:#0d141d;border:1px solid #2b3d4e;color:var(--txt);border-radius:8px;padding:.52rem}
+      .methods .method{border:1px solid #2f4153;border-radius:10px;padding:.7rem;background:#0f1721}
+      .coming{opacity:.6;filter:grayscale(.25)}
+      .btn{background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;padding:.62rem .8rem;border-radius:9px;font-weight:700;cursor:pointer}
+      .btn.ghost{background:#111a24;color:#d7e4ef;border:1px solid #334a61}
+      .sticky{position:static}
+      .preview-msg{border:1px solid #2b3f50;background:#0d1520;border-radius:10px;padding:.55rem;margin:.45rem 0}
+      .footer-note{font-size:.82rem;color:#95a7b7}
+      @media(min-width:980px){.layout{grid-template-columns:1.2fr .8fr}.sticky{position:sticky;top:12px;height:fit-content}.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}.row.two{grid-template-columns:1fr 1fr}}
+      :focus-visible{outline:2px solid #34d399;outline-offset:2px}
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <span class="badge">Not live yet • design preview only</span>
+        <h1>BBB Alerts</h1>
+        <p class="muted">Pick what you want. Pick how you want it. No spam. Opt out anytime.</p>
+        <div class="trust">
+          <span class="chip">Melbourne time ✅</span>
+          <span class="chip">Smart cooldowns ✅</span>
+          <span class="chip">No drongos ✅</span>
+        </div>
+      </section>
+
+      <section class="layout">
+        <div class="main" id="alerts-app"></div>
+        <aside class="card sticky" id="preview-panel"></aside>
+      </section>
+    </main>
+    <script src="alerts.js"></script>
+  </body>
+</html>
