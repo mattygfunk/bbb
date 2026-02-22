@@ -3,7 +3,7 @@ const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadlin
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
 const PREFILL = (typeof window !== 'undefined' && window.__PUNTERS_PREFILL__) ? window.__PUNTERS_PREFILL__ : null;
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',roundPhase:'OPEN_FOR_TIPS',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
 const $=id=>document.getElementById(id);
 const PUNTERS_API_CACHE_KEY='bbb-punters-api-cache-v1';
 
@@ -503,10 +503,13 @@ function renderUpgradeButtonState(){
 }
 
 function renderRoundMeta(overview){
-  const lockWholeEntry = state.roundStatus !== 'OPEN' || !state.tipsEditableNow;
+  const betweenRounds = state.roundPhase === 'BETWEEN_ROUNDS';
+  const lockWholeEntry = state.roundStatus !== 'OPEN' || !state.tipsEditableNow || betweenRounds;
   const quickTipsCard = $('quick-tips-entry-card');
+  const raceMarket = $('race-market');
   const bossesCard = $('bosses-bet-card');
   if (quickTipsCard) quickTipsCard.style.display = lockWholeEntry ? 'none' : '';
+  if (raceMarket) raceMarket.style.display = betweenRounds ? 'none' : '';
   // Keep Bosses Multi tracker visible at all times (pre-lock + post-lock).
   if (bossesCard) bossesCard.style.display = '';
 
@@ -671,6 +674,11 @@ function renderTipEntryState() {
     summaryText.textContent = 'Checking your saved tips…';
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
+    return;
+  }
+
+  if (state.roundPhase === 'BETWEEN_ROUNDS') {
+    setVisible(entryCard, false);
     return;
   }
 
@@ -1025,6 +1033,7 @@ async function refresh(){
   state.lastOverview = overview || state.lastOverview;
   state.raceRunners = (overview || state.lastOverview)?.raceRunners || state.raceRunners || {};
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
+  state.roundPhase = String((overview || state.lastOverview)?.round?.phase || (state.roundStatus === 'OPEN' ? 'OPEN_FOR_TIPS' : 'BETWEEN_ROUNDS')).toUpperCase();
   const rulesJackpot = $('rules-jackpot-value');
   if (rulesJackpot && (overview || state.lastOverview)) rulesJackpot.textContent = `$${Number((overview||state.lastOverview)?.jackpot?.totalPot || 0).toFixed(0)}`;
   renderTierStrip(overview || state.lastOverview);
