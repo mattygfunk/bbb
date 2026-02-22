@@ -878,6 +878,11 @@ async function hydrateNextTipCard(trackId){
       setLockline('');
     }
 
+    if (isBetweenRounds) {
+      const raceMarket = $('race-market');
+      if (raceMarket) raceMarket.style.display = 'none';
+    }
+
     if(String(d?.state||'')==='ROUND_COMPLETE'){
       card.className = 'card next-tip-card next-tip-card--closed';
       if (isBetweenRounds) {
@@ -1033,7 +1038,9 @@ async function refresh(){
   state.lastOverview = overview || state.lastOverview;
   state.raceRunners = (overview || state.lastOverview)?.raceRunners || state.raceRunners || {};
   state.roundStatus = String((overview || state.lastOverview)?.round?.status || 'OPEN').toUpperCase();
-  state.roundPhase = String((overview || state.lastOverview)?.round?.phase || (state.roundStatus === 'OPEN' ? 'OPEN_FOR_TIPS' : 'BETWEEN_ROUNDS')).toUpperCase();
+  const roundIdNow = String((overview || state.lastOverview)?.round?.id || '').trim();
+  const apiPhase = String((overview || state.lastOverview)?.round?.phase || '').trim();
+  state.roundPhase = String(apiPhase || (!roundIdNow || state.roundStatus !== 'OPEN' ? 'BETWEEN_ROUNDS' : 'OPEN_FOR_TIPS')).toUpperCase();
   const rulesJackpot = $('rules-jackpot-value');
   if (rulesJackpot && (overview || state.lastOverview)) rulesJackpot.textContent = `$${Number((overview||state.lastOverview)?.jackpot?.totalPot || 0).toFixed(0)}`;
   renderTierStrip(overview || state.lastOverview);
