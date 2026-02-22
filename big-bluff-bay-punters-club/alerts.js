@@ -14,10 +14,12 @@ const app = document.getElementById('alerts-app');
 const preview = document.getElementById('preview-panel');
 
 function esc(s=''){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
-async function req(url, opt={}){ const h={'Content-Type':'application/json',...(opt.headers||{})}; if(state.token) h.Authorization=`Bearer ${state.token}`; const r=await fetch(url,{...opt,headers:h}); const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error||`HTTP ${r.status}`); return d; }
+async function req(url, opt={}){ const h={'Content-Type':'application/json',...(opt.headers||{})}; if(state.token) h.Authorization=`Bearer ${state.token}`; const r=await fetch(url,{...opt,headers:h}); const d=await r.json().catch(()=>({})); if(!r.ok){ const parts=[d.error||`HTTP ${r.status}`]; if(d.detail) parts.push(d.detail); if(d.responseCode) parts.push(`SMTP ${d.responseCode}`); if(d.code) parts.push(d.code); throw new Error(parts.join(' • ')); } return d; }
 function mergeDefaults(x){ return { ...structuredClone(DEFAULTS), ...(x||{}), alerts:{...DEFAULTS.alerts,...(x?.alerts||{})}, methods:{ email:{...DEFAULTS.methods.email,...(x?.methods?.email||{})}, sms:{...DEFAULTS.methods.sms,...(x?.methods?.sms||{})}, telegram:{...DEFAULTS.methods.telegram,...(x?.methods?.telegram||{}) } }, rules:{...DEFAULTS.rules,...(x?.rules||{})}, contact:{...DEFAULTS.contact,...(x?.contact||{})} }; }
 
 function set(path, v){ const p=path.split('.'); let o=state.prefs; for(let i=0;i<p.length-1;i++) o=o[p[i]]; o[p.at(-1)] = v; render(); }
+function normalizeEmail(v=''){ return String(v||'').trim().toLowerCase(); }
+function validEmail(v=''){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(v)); }
 
 function applyPreset(name){
   const p = structuredClone(state.prefs);
@@ -66,8 +68,10 @@ function render(){
         <label>Email address<input data-b='contact.email' value='${esc(state.prefs.contact.email)}' placeholder='you@domain.com'></label>
         <div class='row two'>
           <button class='btn ghost' data-action='verify-email' ${!state.user || !String(state.prefs.contact.email||'').trim() ? 'disabled' : ''}>Verify email</button>
-          <span class='muted'>${state.prefs.methods.email.verified?'Verified ✅':(state.prefs.contact.email?'Pending verification':'Add email')}</span>
+          <button class='btn ghost' data-action='verify-email-self' ${!state.user ? 'disabled' : ''}>Send test to account email</button>
         </div>
+        <span class='muted'>${state.prefs.methods.email.verified?'Verified ✅':(state.prefs.contact.email?'Pending verification':'Add email')}</span>
+        <p class='footer-note' id='email-verify-msg'></p>
       </article>
       <article class='method'>
         <h3>SMS</h3>
@@ -118,8 +122,39 @@ function bind(){
   app.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
   app.querySelector('[data-action="verify-email"]')?.addEventListener('click', async ()=>{
     if(!state.user){ alert('Log in first.'); return; }
-    try{ const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email: state.prefs.contact.email }) }); alert(`Verification email sent to ${out.sentTo}`); } catch(e){ alert(e.message); }
+    const msg = document.getElementById('email-verify-msg');
+    const email = normalizeEmail(state.prefs.contact.email);
+    if (!validEmail(email)) {
+      if (msg) msg.textContent = 'Enter a valid email before sending verification.';
+      return;
+    }
+    state.prefs.contact.email = email;
+    try{
+      const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email }) });
+      if (msg) msg.textContent = `Verification email sent to ${out.sentTo}.`;
+    } catch(e){
+      const detail = String(e.message || 'Verification failed');
+      if (msg) msg.textContent = `Email verify failed: ${detail}`;
+    }
   });
+  app.querySelector('[data-action="verify-email-self"]')?.addEventListener('click', async ()=>{
+    if(!state.user){ alert('Log in first.'); return; }
+    const msg = document.getElementById('email-verify-msg');
+    try {
+      const prof = await req(API.profile);
+      const accountEmail = normalizeEmail(prof?.profile?.email || '');
+      if (!validEmail(accountEmail)) {
+        if (msg) msg.textContent = 'Your account profile email is missing/invalid. Set it in Profile first.';
+        return;
+      }
+      state.prefs.contact.email = accountEmail;
+      const out = await req(API.sendEmailVerify,{ method:'POST', body: JSON.stringify({ email: accountEmail }) });
+      if (msg) msg.textContent = `Test verification sent to account email: ${out.sentTo}`;
+    } catch(e) {
+      if (msg) msg.textContent = `Send test failed: ${String(e.message||'Unknown error')}`;
+    }
+  });
+
   document.getElementById('save-btn')?.addEventListener('click', save);
 }
 
