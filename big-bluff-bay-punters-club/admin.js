@@ -523,11 +523,15 @@ async function refresh(){
     const msg = $('archive-round-msg');
     if (msg && target) {
       const isOpen = String(target.status || '').toLowerCase() === 'open';
-      const winner = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim() || 'TBD';
-      const payout = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+      const winner = isOpen
+        ? (String(liveLeader?.member || '').trim() || String(target?.winner?.member || '').trim() || 'TBD')
+        : (String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim() || 'TBD');
+      const payout = isOpen
+        ? Number(livePot || 0)
+        : Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
       const closedAt = Number(target?.closedAt || 0);
       msg.textContent = isOpen
-        ? `Live round: ${target.label || target.id}. Winner auto-finalises after final race result.`
+        ? `Live round: ${target.label || target.id}. Leader now ${winner}${Number.isFinite(payout) ? ` • projected payout $${payout}` : ''}. Winner auto-finalises after final race result.`
         : `Round closed: ${target.label || target.id}. Winner ${winner}${Number.isFinite(payout) ? ` • payout $${payout}` : ''}${closedAt ? ` • closed ${formatMelbourne(closedAt)}` : ''}.`;
     }
   } catch {}
@@ -714,10 +718,10 @@ function renderRoundStatusCard(target, live = {}){
   const isOpen = String(target.status || '').toLowerCase() === 'open';
   const declaredWinner = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim();
   const projectedWinner = String(live?.leader?.member || '').trim();
-  const winnerName = declaredWinner || projectedWinner || 'TBD';
+  const winnerName = isOpen ? (projectedWinner || declaredWinner || 'TBD') : (declaredWinner || projectedWinner || 'TBD');
   const declaredPayout = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
   const projectedPayout = Number(live?.totalPot ?? 0);
-  const payoutNum = declaredPayout > 0 ? declaredPayout : projectedPayout;
+  const payoutNum = isOpen ? projectedPayout : (declaredPayout > 0 ? declaredPayout : projectedPayout);
   const closedAt = Number(target?.closedAt || 0);
   const nextOpenMs = Number(target?.nextRoundOpensAt || 0);
 
