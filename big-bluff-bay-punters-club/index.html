@@ -446,11 +446,40 @@
         "@context": "https://schema.org",
         "@type": "SportsEvent",
         "name": "Big Bluff Bay Punters Club Weekly Meet",
+        "description": "Weekly Big Bluff Bay Punters Club race tipping meet with live leaderboard updates and jackpot tracking.",
         "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "sport": "Horse Racing",
-        "organizer": {"@type": "Organization", "name": "Big Bluff Bay Punters Club"},
-        "location": {"@type": "Place", "name": "Pinjarra"},
-        "url": "https://bigbluffbay.au/"
+        "startDate": "2026-02-25T19:00:00+11:00",
+        "endDate": "2026-02-25T22:00:00+11:00",
+        "image": ["https://bigbluffbay.au/assets/theme-banner.jpg"],
+        "organizer": {
+          "@type": "Organization",
+          "name": "Big Bluff Bay Punters Club",
+          "url": "https://bigbluffbay.au/punters.html"
+        },
+        "location": {
+          "@type": "Place",
+          "name": "Pinjarra",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Pinjarra",
+            "addressRegion": "WA",
+            "addressCountry": "AU"
+          }
+        },
+        "performer": {
+          "@type": "Organization",
+          "name": "Big Bluff Bay Punters Club"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "20",
+          "priceCurrency": "AUD",
+          "availability": "https://schema.org/InStock",
+          "url": "https://bigbluffbay.au/punters.html"
+        },
+        "url": "https://bigbluffbay.au/punters.html"
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
