@@ -507,7 +507,18 @@ async function refresh(){
     const nextOpenInput = $('next-round-opens-at');
     if (nextOpenInput && nextOpenMs > 0) nextOpenInput.value = toDateTimeLocalValue(nextOpenMs);
 
-    renderRoundStatusCard(target);
+    let liveLeader = null;
+    let livePot = 0;
+    try {
+      const [ladderOut, jackpotOut] = await Promise.all([
+        req(withTrack(API.ladder)),
+        req(withTrack(API.jackpot))
+      ]);
+      liveLeader = (ladderOut?.ladder || [])[0] || null;
+      livePot = Number(jackpotOut?.totalPot || 0);
+    } catch {}
+
+    renderRoundStatusCard(target, { leader: liveLeader, totalPot: livePot });
 
     const msg = $('archive-round-msg');
     if (msg && target) {
@@ -656,7 +667,7 @@ function setRoundWinnerFormDisabled(disabled){
   if (btn) btn.textContent = disabled ? 'Enable Override' : 'Disable Override';
 }
 
-function renderRoundStatusCard(target){
+function renderRoundStatusCard(target, live = {}){
   const pill = $('round-status-pill');
   const label = $('round-status-label');
   const winner = $('round-status-winner');
@@ -678,19 +689,23 @@ function renderRoundStatusCard(target){
   }
 
   const isOpen = String(target.status || '').toLowerCase() === 'open';
-  const winnerName = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim() || 'TBD';
-  const payoutNum = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+  const declaredWinner = String(target?.winner?.member || target?.snapshot?.winner?.member || '').trim();
+  const projectedWinner = String(live?.leader?.member || '').trim();
+  const winnerName = declaredWinner || projectedWinner || 'TBD';
+  const declaredPayout = Number(target?.winner?.payout ?? target?.snapshot?.winner?.payout ?? target?.snapshot?.finalPotAmount ?? 0);
+  const projectedPayout = Number(live?.totalPot ?? 0);
+  const payoutNum = declaredPayout > 0 ? declaredPayout : projectedPayout;
   const closedAt = Number(target?.closedAt || 0);
   const nextOpenMs = Number(target?.nextRoundOpensAt || 0);
 
   pill.textContent = isOpen ? 'LIVE' : 'CLOSED';
   label.textContent = String(target.label || target.id || '—');
   winner.textContent = winnerName;
-  payout.textContent = Number.isFinite(payoutNum) ? `$${payoutNum}` : '—';
+  payout.textContent = Number.isFinite(payoutNum) && payoutNum >= 0 ? `$${payoutNum}` : '—';
   closed.textContent = isOpen ? 'Not closed yet' : formatMelbourne(closedAt);
   nextOpen.textContent = nextOpenMs > 0 ? formatMelbourne(nextOpenMs) : '—';
   hint.textContent = isOpen
-    ? 'Round is live. Winner auto-finalises after final race result.'
+    ? (declaredWinner ? 'Round is live with winner override set. Auto-finalise still runs at final result.' : 'Live projected winner from ladder API. Auto-finalises after final race result.')
     : 'Round is closed. Use Override only if you need to correct winner metadata.';
 }
 
