@@ -667,6 +667,29 @@ function setRoundWinnerFormDisabled(disabled){
   if (btn) btn.textContent = disabled ? 'Enable Override' : 'Disable Override';
 }
 
+async function withButtonFeedback(buttonId, workingLabel, fn){
+  const btn = $(buttonId);
+  const msg = $('archive-round-msg');
+  const oldText = btn ? btn.textContent : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = workingLabel;
+    btn.classList.add('is-busy');
+  }
+  try {
+    await fn();
+  } catch (err) {
+    if (msg) msg.textContent = err?.message || 'Action failed.';
+    throw err;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = oldText;
+      btn.classList.remove('is-busy');
+    }
+  }
+}
+
 function renderRoundStatusCard(target, live = {}){
   const pill = $('round-status-pill');
   const label = $('round-status-label');
@@ -737,23 +760,27 @@ $('winner-override-btn')?.addEventListener('click', () => {
   if (!form) return;
   const disabled = Boolean(form.winner?.disabled);
   setRoundWinnerFormDisabled(!disabled);
+  const msg = $('archive-round-msg');
+  if (msg) msg.textContent = disabled
+    ? 'Override enabled. Winner fields are now editable.'
+    : 'Override disabled. Winner fields are locked.';
 });
 
 $('publish-winner-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
-  try {
+  await withButtonFeedback('publish-winner-btn', 'Publishing…', async () => {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
     const payload = getRoundWinnerPayload();
     await req(withTrack(API.publishWinner(round.id)), { method:'POST', body: JSON.stringify(payload) });
     $('archive-round-msg').textContent = `Winner published for ${round.label || 'selected round'}.`;
     await refresh();
-  } catch (err) { $('archive-round-msg').textContent = err.message; }
+  }).catch(()=>{});
 });
 
 $('close-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
-  try {
+  await withButtonFeedback('close-round-btn', 'Closing…', async () => {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
     if (String(round.status || '').toLowerCase() === 'closed') {
@@ -764,27 +791,28 @@ $('close-round-btn')?.addEventListener('click', async () => {
     await req(withTrack(API.closeRound(round.id)), { method:'POST', body: JSON.stringify(payload) });
     $('archive-round-msg').textContent = 'Round closed and snapshot frozen.';
     await refresh();
-  } catch (err) { $('archive-round-msg').textContent = err.message; }
+  }).catch(()=>{});
 });
 
 $('recompute-snapshot-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
-  try {
+  await withButtonFeedback('recompute-snapshot-btn', 'Recomputing…', async () => {
     const round = await getCurrentPuntersRound();
     if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
     await req(withTrack(API.recomputeSnapshot(round.id)), { method:'POST' });
-    $('archive-round-msg').textContent = 'Snapshot recomputed.';
-  } catch (err) { $('archive-round-msg').textContent = err.message; }
+    $('archive-round-msg').textContent = 'Snapshot recomputed and frozen.';
+    await refresh();
+  }).catch(()=>{});
 });
 
 $('open-next-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
-  try {
+  await withButtonFeedback('open-next-round-btn', 'Opening…', async () => {
     const payload = getRoundWinnerPayload();
     await req(withTrack(API.openNextRound), { method:'POST', body: JSON.stringify({ nextRoundOpensAt: payload.nextRoundOpensAt }) });
-    $('archive-round-msg').textContent = 'Next round is open.';
+    $('archive-round-msg').textContent = 'Next round opened.';
     await refresh();
-  } catch (err) { $('archive-round-msg').textContent = err.message; }
+  }).catch(()=>{});
 });
 
 $('round-winner-form')?.addEventListener('change', async () => {
@@ -823,29 +851,25 @@ $('fixture-form').addEventListener('submit',async(e)=>{e.preventDefault();if(!is
 $('archive-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   if(!confirm('Archive current meet tips/results and reset active round?')) return;
-  try {
+  await withButtonFeedback('archive-round-btn', 'Archiving…', async () => {
     const r = await req(withTrack(API.archiveRound), { method: 'POST', body: JSON.stringify({ trackId: state.trackId }) });
     const outcome = r.outrightWinner
       ? `Outright winner: ${r.outrightWinner}. Jackpot resets.`
       : `No outright winner. Jackpot rolls to next week: $${Number(r.rolloverToNextWeek || 0)}.`;
     $('archive-round-msg').textContent = `Archived ${r.tipsArchived || 0} tips${r.fixture ? ` from ${r.fixture}` : ''}. ${outcome}`;
     await refresh();
-  } catch (err) {
-    $('archive-round-msg').textContent = err.message;
-  }
+  }).catch(()=>{});
 });
 
 $('unlock-sat-noon-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   if(!confirm('Unlock tip edits until next Saturday 12:00 PM (Melbourne time)?')) return;
-  try {
+  await withButtonFeedback('unlock-sat-noon-btn', 'Unlocking…', async () => {
     const r = await req(API.unlockSatNoon, { method: 'POST' });
     const local = new Date(Number(r.deadlineMs || 0)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', dateStyle: 'full', timeStyle: 'short' });
     $('archive-round-msg').textContent = `Tips unlocked until ${local}.`;
     await refresh();
-  } catch (err) {
-    $('archive-round-msg').textContent = err.message;
-  }
+  }).catch(()=>{});
 });
 
 $('tip-lockout-form')?.addEventListener('submit', async (e) => {
