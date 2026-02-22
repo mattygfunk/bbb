@@ -1,4 +1,4 @@
-const tokenKey = 'bbb_token';
+const tokenKey = 'bbb-token-v3';
 const API = { me:'/api/me', profile:'/api/profile', sendEmailVerify:'/api/alerts/email/verify/send', confirmEmailVerify:'/api/alerts/email/verify/confirm' };
 
 const DEFAULTS = {
