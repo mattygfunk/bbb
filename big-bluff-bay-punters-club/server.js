@@ -862,17 +862,25 @@ function buildRoundSnapshot(store, round) {
   return snapshot;
 }
 
-function autoFinalizeRoundIfComplete(store, trackId = 'thoroughbreds', closedBy = 'system') {
+function autoFinalizeRoundIfComplete(store, trackId = 'thoroughbreds', closedBy = 'system', triggerRace = '') {
   const tId = normalizeTrackId(trackId);
   const openRound = getCurrentRound(store, { autoCreate: false, trackId: tId });
   if (!openRound || String(openRound.status || '').toLowerCase() !== 'open') return null;
 
   const trackData = getTrackData(store, tId);
   const raceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[tId].defaultRaceCount || 12);
-  const isResolvedRace = (rr) => Array.isArray(rr?.first) && rr.first.length > 0;
+  const isResolvedRace = (rr) => (
+    (Array.isArray(rr?.first) && rr.first.length > 0)
+    || (Array.isArray(rr?.second) && rr.second.length > 0)
+    || (Array.isArray(rr?.third) && rr.third.length > 0)
+  );
   const allResolved = Array.from({ length: raceCount }, (_, i) => `R${i + 1}`)
     .every((race) => isResolvedRace(trackData?.raceResults?.[race]));
-  if (!allResolved) return null;
+
+  const triggerRaceNum = Number(String(triggerRace || '').toUpperCase().replace('R', ''));
+  const triggerIsFinalRace = Number.isFinite(triggerRaceNum) && triggerRaceNum >= raceCount && isResolvedRace(trackData?.raceResults?.[`R${triggerRaceNum}`]);
+
+  if (!allResolved && !triggerIsFinalRace) return null;
 
   syncCurrentRoundEntries(store, { autoCreate: false, trackId: tId });
   const ladder = computeLadder(store, { trackId: tId });
@@ -1964,7 +1972,7 @@ function createApp() {
       store.raceResults = trackData.raceResults;
     }
 
-    const autoFinalized = autoFinalizeRoundIfComplete(store, trackId, req.user?.username || 'admin');
+    const autoFinalized = autoFinalizeRoundIfComplete(store, trackId, req.user?.username || 'admin', race);
 
     writeStore(store);
     return res.json({ ok: true, trackId, race, result: trackData.raceResults[race], autoFinalized });
