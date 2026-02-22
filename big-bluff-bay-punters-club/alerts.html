@@ -9,13 +9,20 @@
     <style>
       :root{--bg:#0a0d10;--card:#11161b;--muted:#9fb0bf;--txt:#eaf2f8;--line:#253240;--good:#34d399;--accent:#22c55e;--warn:#f59e0b}
       *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 450px at 15% -20%,#12331f66,transparent 65%),linear-gradient(180deg,#090c10,#0b1118);color:var(--txt)}
-      .site-head,.site-foot{border-top:1px solid #1f2a36;border-bottom:1px solid #1f2a36;background:#0b1219}
-      .site-head .wrap,.site-foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap}
-      .brand{font-weight:800;letter-spacing:.2px}
-      .links{display:flex;gap:.5rem;flex-wrap:wrap}
-      .links a{color:#c7d6e4;text-decoration:none;border:1px solid #2c3f52;border-radius:999px;padding:.25rem .55rem;font-size:.82rem}
-      .links a:hover{border-color:#34d399;color:#ecfdf5}
+      .hero{position:relative;border-bottom:1px solid #243041;overflow:hidden}
+      .overlay{position:absolute;inset:0;background:linear-gradient(130deg,#22c55e14,#38bdf81a 55%,transparent 80%)}
+      .nav{position:relative;display:flex;justify-content:space-between;align-items:center;padding:1rem 0;gap:.75rem;flex-wrap:wrap}
+      .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:inherit}
+      .badge-brand{width:2rem;height:2rem;border-radius:.5rem;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:#052e16;color:#86efac;border:1px solid #14532d}
+      .menu-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+      .menu-link{color:#fff;text-decoration:none;border:1px solid #8aa4c7;background:#0f1b2d;border-radius:999px;padding:.5rem .78rem;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem}
+      .menu-link.active{color:#052e16;background:#86efac;border-color:#86efac;font-weight:700}
       .wrap{max-width:1200px;margin:0 auto;padding:1rem}
+      .footer{margin:1.2rem auto 0;padding:1rem 0 2rem;border-top:1px solid #243041}
+      .footer-grid{display:grid;gap:1rem;grid-template-columns:1fr}
+      .footer-heading{margin:.2rem 0 .5rem;font-size:1rem}
+      .footer-note,.footer-bottom{margin:.4rem 0 0}
+      .social-logo{width:14px;height:14px;display:inline-block;vertical-align:middle}
       .badge{display:inline-block;padding:.24rem .55rem;border:1px solid #7c2d12;background:#2a140e;color:#fdba74;border-radius:999px;font-size:.75rem}
       .hero{border:1px solid var(--line);background:linear-gradient(180deg,#0f1722,#0c121a);border-radius:14px;padding:1rem}
       .hero-top{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
@@ -40,21 +47,26 @@
       .footer-note{font-size:.82rem;color:#95a7b7}
       .footer-note.good{color:#6ee7b7}
       .footer-note.bad{color:#fca5a5}
-      @media(min-width:980px){.layout{grid-template-columns:1.2fr .8fr}.sticky{position:sticky;top:12px;height:fit-content}.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}.row.two{grid-template-columns:1fr 1fr}}
+      @media(min-width:980px){.layout{grid-template-columns:1.2fr .8fr}.sticky{position:sticky;top:12px;height:fit-content}.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}.row.two{grid-template-columns:1fr 1fr}.footer-grid{grid-template-columns:1.2fr 1fr 1fr 1fr}}
       :focus-visible{outline:2px solid #34d399;outline-offset:2px}
     </style>
   </head>
   <body>
-    <header class="site-head">
-      <div class="wrap">
-        <div class="brand">🏇 Big Bluff Bay</div>
-        <nav class="links" aria-label="Primary">
-          <a href="/">Home</a>
-          <a href="/punters.html">Punters</a>
-          <a href="/poker-schedule.html">Poker</a>
-          <a href="/profile">Profile</a>
-        </nav>
-      </div>
+    <header class="hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap" aria-label="Primary">
+        <a class="brand" href="/">
+          <span class="badge-brand">BBB</span>
+          <span><strong>Big Bluff Bay</strong><small style="display:block;opacity:.78">Punters Club</small></span>
+        </a>
+        <div class="menu-links">
+          <a class="menu-link" href="/">🏠 Home</a>
+          <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+          <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a>
+          <a class="menu-link active" href="/alerts">🔔 Alerts</a>
+          <a class="menu-link" href="/winners.html">🏆 Winners</a>
+        </div>
+      </nav>
     </header>
 
     <main class="wrap">
@@ -78,15 +90,27 @@
       </section>
     </main>
 
-    <footer class="site-foot">
-      <div class="wrap">
-        <p class="muted" style="margin:0">18+ only. Gamble responsibly. Private social club.</p>
-        <nav class="links" aria-label="Footer">
-          <a href="/privacy.html">Privacy</a>
-          <a href="/terms.html">Terms</a>
-          <a href="/winners.html">Winners</a>
-        </nav>
+    <footer class="wrap footer enhanced-footer muted">
+      <div class="footer-grid">
+        <div>
+          <strong>Big Bluff Bay</strong>
+          <p class="muted">Track rail × card table. Weekly tips, live leaderboard, and poker nights.</p>
+        </div>
+        <div>
+          <h3 class="footer-heading">🧭 Navigate</h3>
+          <p><a class="menu-link" href="/">🏠 Home</a> <a class="menu-link" href="/punters.html">🏇 Punters Club</a> <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a></p>
+        </div>
+        <div>
+          <h3 class="footer-heading">Legal</h3>
+          <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p>
+        </div>
+        <div>
+          <h3 class="footer-heading">Social</h3>
+          <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a></p>
+        </div>
       </div>
+      <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
+      <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
 
     <script src="alerts.js"></script>
