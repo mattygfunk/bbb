@@ -34,9 +34,14 @@ function render(){
   const auth = document.getElementById('alerts-auth');
   auth.innerHTML = state.user ? `<span class='chip'>${esc(state.user.username)}</span><button class='btn ghost' id='logout-btn'>Log out</button>` : `<a class='btn ghost' href='/punters.html#punters-login-gate'>Log in</a>`;
 
+  const enabledAlertCount = Object.values(state.prefs.alerts).filter(Boolean).length;
+  const enabledMethodCount = [state.prefs.contact.email, state.prefs.contact.phone, state.prefs.contact.telegramUser].filter((v)=>String(v||'').trim()).length;
+  const completion = [enabledAlertCount > 0, enabledMethodCount > 0, Boolean(state.prefs.consent)].filter(Boolean).length;
+
   app.innerHTML = `
   <section class='card'>
     <div class='step'><span class='n'>A</span><h2>Choose Alerts</h2></div>
+    <p class='muted'>${state.user ? `Nice one, ${esc(state.user.username)}.` : 'Pick your setup first, then log in to save.'} ${enabledAlertCount} alert type${enabledAlertCount===1?'':'s'} enabled.</p>
     <p class='muted'>Keep it simple: pick a preset, then tweak if you want.</p>
     <div class='row two'>
       <button class='btn ghost' data-preset='minimal'>Minimal</button>
@@ -60,8 +65,8 @@ function render(){
         <h3>Email (recommended)</h3>
         <label>Email address<input data-b='contact.email' value='${esc(state.prefs.contact.email)}' placeholder='you@domain.com'></label>
         <div class='row two'>
-          <button class='btn ghost' data-action='verify-email'>Verify email</button>
-          <span class='muted'>${state.prefs.methods.email.verified?'Verified ✅':'Not verified'}</span>
+          <button class='btn ghost' data-action='verify-email' ${!state.user || !String(state.prefs.contact.email||'').trim() ? 'disabled' : ''}>Verify email</button>
+          <span class='muted'>${state.prefs.methods.email.verified?'Verified ✅':(state.prefs.contact.email?'Pending verification':'Add email')}</span>
         </div>
       </article>
       <article class='method'>
@@ -93,8 +98,8 @@ function render(){
   <section class='card'>
     <div class='step'><span class='n'>D</span><h2>Save</h2></div>
     <label><input type='checkbox' data-b='consent' ${state.prefs.consent?'checked':''}> I agree to receive messages from Big Bluff Bay.</label>
-    <p class='footer-note'>You’re in control — mute us anytime.</p>
-    <button class='btn' id='save-btn'>${state.busy?'Saving…':'Save Preferences'}</button>
+    <p class='footer-note'>You’re in control — mute us anytime. Setup progress: ${completion}/3</p>
+    <button class='btn' id='save-btn' ${!state.user || state.busy ? 'disabled' : ''}>${state.busy?'Saving…':(state.user?'Save Preferences':'Log in to Save')}</button>
   </section>`;
 
   const active = Object.values(state.prefs.alerts).filter(Boolean).length;
@@ -102,7 +107,7 @@ function render(){
   <p class='muted'>No spam. Just the good stuff.</p>
   <div class='preview-msg'><strong>Schedule</strong><p>Tonight’s drop is ready. Melbourne time, always.</p></div>
   <div class='preview-msg'><strong>Starting soon</strong><p>Your selected events start in 15 mins.</p></div>
-  <div class='preview-msg'><strong>Status</strong><p>${active} alert types enabled • tone: ${state.prefs.rules.tone}</p></div>`;
+  <div class='preview-msg'><strong>Status</strong><p>${active} alert types enabled • ${enabledMethodCount} contact method${enabledMethodCount===1?'':'s'} set • tone: ${state.prefs.rules.tone}</p></div>`;
 
   bind();
 }
