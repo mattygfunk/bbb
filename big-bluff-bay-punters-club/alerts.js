@@ -5,6 +5,7 @@ const DEFAULTS = {
   alerts: { scheduleDrop:true, startingSoon:true, lateReg:true, overlayWatch:false, winnerPosts:true, breakingNews:true },
   methods: { email:{enabled:true, verified:false, mode:'Digest'}, sms:{enabled:false}, telegram:{enabled:false, linked:false} },
   rules: { timezone:'Australia/Melbourne', quietStart:'23:00', quietEnd:'08:00', allowHighQuiet:true, maxDay:4, tone:'Balanced' },
+  advanced: { weeklyCap: 16, raceTypes: { thoroughbreds:true, greyhounds:true, harness:false }, segments: { jackpots:true, promos:true, coaching:false } },
   contact: { email:'', phone:'', telegramUser:'' },
   consent:false
 };
@@ -15,7 +16,7 @@ const preview = document.getElementById('preview-panel');
 
 function esc(s=''){return String(s).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
 async function req(url, opt={}){ const h={'Content-Type':'application/json',...(opt.headers||{})}; if(state.token) h.Authorization=`Bearer ${state.token}`; const r=await fetch(url,{...opt,headers:h}); const d=await r.json().catch(()=>({})); if(!r.ok){ const parts=[d.error||`HTTP ${r.status}`]; if(d.detail) parts.push(d.detail); if(d.responseCode) parts.push(`SMTP ${d.responseCode}`); if(d.code) parts.push(d.code); throw new Error(parts.join(' • ')); } return d; }
-function mergeDefaults(x){ return { ...structuredClone(DEFAULTS), ...(x||{}), alerts:{...DEFAULTS.alerts,...(x?.alerts||{})}, methods:{ email:{...DEFAULTS.methods.email,...(x?.methods?.email||{})}, sms:{...DEFAULTS.methods.sms,...(x?.methods?.sms||{})}, telegram:{...DEFAULTS.methods.telegram,...(x?.methods?.telegram||{}) } }, rules:{...DEFAULTS.rules,...(x?.rules||{})}, contact:{...DEFAULTS.contact,...(x?.contact||{})} }; }
+function mergeDefaults(x){ return { ...structuredClone(DEFAULTS), ...(x||{}), alerts:{...DEFAULTS.alerts,...(x?.alerts||{})}, methods:{ email:{...DEFAULTS.methods.email,...(x?.methods?.email||{})}, sms:{...DEFAULTS.methods.sms,...(x?.methods?.sms||{})}, telegram:{...DEFAULTS.methods.telegram,...(x?.methods?.telegram||{}) } }, rules:{...DEFAULTS.rules,...(x?.rules||{})}, advanced:{...DEFAULTS.advanced,...(x?.advanced||{}), raceTypes:{...DEFAULTS.advanced.raceTypes,...(x?.advanced?.raceTypes||{})}, segments:{...DEFAULTS.advanced.segments,...(x?.advanced?.segments||{})}}, contact:{...DEFAULTS.contact,...(x?.contact||{})} }; }
 
 function set(path, v){ const p=path.split('.'); let o=state.prefs; for(let i=0;i<p.length-1;i++) o=o[p[i]]; o[p.at(-1)] = v; render(); }
 function normalizeEmail(v=''){ return String(v||'').trim().toLowerCase(); }
@@ -96,7 +97,23 @@ function render(){
       <label>Tone<select data-b='rules.tone'><option ${state.prefs.rules.tone==='Larrikin'?'selected':''}>Larrikin</option><option ${state.prefs.rules.tone==='Balanced'?'selected':''}>Balanced</option><option ${state.prefs.rules.tone==='Professional'?'selected':''}>Professional</option></select></label>
       <label><input type='checkbox' data-b='rules.allowHighQuiet' ${state.prefs.rules.allowHighQuiet?'checked':''}> Allow High priority during quiet hours</label>
     </div>
-    <details style='margin-top:.6rem'><summary>Advanced options (optional)</summary><p class='muted'>We’ll unlock deeper controls (caps, filters, segments) once alert engine is fully live.</p></details>
+    <details style='margin-top:.6rem'>
+      <summary>Advanced options (optional)</summary>
+      <div class='grid two' style='margin-top:.6rem'>
+        <label>Weekly alert cap<input type='number' min='1' max='60' data-b='advanced.weeklyCap' value='${Number(state.prefs.advanced?.weeklyCap || 16)}'></label>
+        <label>Email mode<select data-b='methods.email.mode'><option ${state.prefs.methods.email.mode==='Digest'?'selected':''}>Digest</option><option ${state.prefs.methods.email.mode==='Instant'?'selected':''}>Instant</option><option ${state.prefs.methods.email.mode==='Priority only'?'selected':''}>Priority only</option></select></label>
+      </div>
+      <div class='grid two' style='margin-top:.6rem'>
+        <label><input type='checkbox' data-b='advanced.raceTypes.thoroughbreds' ${state.prefs.advanced?.raceTypes?.thoroughbreds?'checked':''}> Thoroughbreds alerts</label>
+        <label><input type='checkbox' data-b='advanced.raceTypes.greyhounds' ${state.prefs.advanced?.raceTypes?.greyhounds?'checked':''}> Greyhounds alerts</label>
+        <label><input type='checkbox' data-b='advanced.raceTypes.harness' ${state.prefs.advanced?.raceTypes?.harness?'checked':''}> Harness alerts</label>
+      </div>
+      <div class='grid two' style='margin-top:.4rem'>
+        <label><input type='checkbox' data-b='advanced.segments.jackpots' ${state.prefs.advanced?.segments?.jackpots?'checked':''}> Jackpot updates</label>
+        <label><input type='checkbox' data-b='advanced.segments.promos' ${state.prefs.advanced?.segments?.promos?'checked':''}> Promo drops</label>
+        <label><input type='checkbox' data-b='advanced.segments.coaching' ${state.prefs.advanced?.segments?.coaching?'checked':''}> Tips/coaching content</label>
+      </div>
+    </details>
   </section>
 
   <section class='card'>
