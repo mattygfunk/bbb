@@ -506,10 +506,13 @@ function renderRoundMeta(overview){
   const betweenRounds = state.roundPhase === 'BETWEEN_ROUNDS';
   const lockWholeEntry = state.roundStatus !== 'OPEN' || !state.tipsEditableNow || betweenRounds;
   const quickTipsCard = $('quick-tips-entry-card');
-  const raceMarket = $('race-market');
+  const raceMarket = $('race-market-card');
   const bossesCard = $('bosses-bet-card');
   if (quickTipsCard) quickTipsCard.style.display = lockWholeEntry ? 'none' : '';
-  if (raceMarket) raceMarket.style.display = betweenRounds ? 'none' : '';
+  if (raceMarket) {
+    raceMarket.style.display = betweenRounds ? 'none' : '';
+    raceMarket.hidden = betweenRounds;
+  }
   // Keep Bosses Multi tracker visible at all times (pre-lock + post-lock).
   if (bossesCard) bossesCard.style.display = '';
 
@@ -879,7 +882,7 @@ async function hydrateNextTipCard(trackId){
     }
 
     if (isBetweenRounds) {
-      const raceMarket = $('race-market');
+      const raceMarket = $('race-market-card');
       if (raceMarket) raceMarket.style.display = 'none';
     }
 
