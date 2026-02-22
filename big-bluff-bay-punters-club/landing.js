@@ -611,9 +611,11 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       card.className = 'card next-tip-card next-tip-card--closed';
       badgeEl.textContent = isBetweenRounds ? 'BETWEEN ROUNDS' : 'ROUND COMPLETE';
       pickEl.textContent = '#—';
-      socialEl.textContent = isBetweenRounds ? 'No meet announced yet. Waiting for next round setup.' : 'Next round opens soon.';
-      primary.textContent = isBetweenRounds ? 'View Archive' : 'View Results';
-      primary.href = isBetweenRounds ? '/winners.html' : '/punters.html#leaderboard';
+      socialEl.textContent = isBetweenRounds
+        ? `Next scheduled rotation: ${(d?.nextMeet?.trackName || d?.trackName || 'Next track')} • ${String(d?.nextMeet?.dateLabel || d?.fixture?.date || 'next race day')}.`
+        : 'Next round opens soon.';
+      primary.textContent = isBetweenRounds ? 'See Next Schedule' : 'View Results';
+      primary.href = isBetweenRounds ? '/punters.html#next-round-teaser' : '/punters.html#leaderboard';
       secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;

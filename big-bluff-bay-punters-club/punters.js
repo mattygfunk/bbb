@@ -920,7 +920,8 @@ async function hydrateNextTipCard(trackId){
         badge.textContent = 'BETWEEN ROUNDS';
         race.textContent = `${trackType} • Next meet pending`;
         pick.textContent = '✅ Last round settled • Waiting for admin to publish next meet';
-        setSocial('What you can do now: check final leaderboard, review archive snapshots, and confirm your $20 jackpot eligibility for next round.', { suppressFav: true });
+        const nextLabel = String(d?.nextMeet?.dateLabel || d?.fixture?.date || '').trim();
+        setSocial(`Next scheduled round: ${String(d?.nextMeet?.trackName || trackType)}${nextLabel ? ` • ${nextLabel}` : ''}. Review final leaderboard, archive snapshots, and confirm your $20 eligibility.`, { suppressFav: true });
         primary.textContent = 'View Last Results';
         primary.href = '/punters.html#leaderboard';
         secondary.hidden = false;

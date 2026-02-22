@@ -804,6 +804,33 @@ function getDefaultNextRoundOpenAtMs(trackId = 'thoroughbreds', store = null) {
   return next.getTime();
 }
 
+function getNextScheduledMeet(store = null) {
+  const candidates = Object.keys(TRACKS).map((trackId) => {
+    const openAt = getDefaultNextRoundOpenAtMs(trackId, store);
+    return { trackId, openAt };
+  }).sort((a, b) => Number(a.openAt || 0) - Number(b.openAt || 0));
+
+  const next = candidates[0] || { trackId: 'thoroughbreds', openAt: Date.now() };
+  const track = TRACKS[next.trackId] || TRACKS.thoroughbreds;
+  const openDate = new Date(Number(next.openAt || Date.now()));
+  const dateLabel = openDate.toLocaleString('en-AU', {
+    timeZone: 'Australia/Melbourne',
+    weekday: 'long',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  return {
+    trackId: next.trackId,
+    trackName: track.name,
+    venue: track.defaultTrackLabel || 'Venue TBA',
+    openAt: Number(next.openAt || 0),
+    dateLabel
+  };
+}
+
 function getLatestClosedRound(store, trackId = 'thoroughbreds') {
   const tId = normalizeTrackId(trackId);
   return (store.puntersClub?.rounds || []).find((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'closed') || null;
@@ -2083,19 +2110,23 @@ function createApp() {
     const trackData = getTrackData(store, requestedTrackId);
 
     if (!round) {
-      const fixture = (
-        (Array.isArray(store?.puntersClub?.tracks?.[requestedTrackId]?.fixtures) && store.puntersClub.tracks[requestedTrackId].fixtures[0])
-        || (Array.isArray(store?.fixtures) && store.fixtures[0])
-        || null
-      );
-      const venue = String(fixture?.track || fixture?.event || fixture?.venue || '').trim();
+      const nextMeet = getNextScheduledMeet(store);
+      const fixture = {
+        id: `next-${nextMeet.trackId}`,
+        date: nextMeet.dateLabel,
+        event: `${nextMeet.trackName} Next Meet`,
+        track: nextMeet.venue,
+        raceCount: TRACKS[nextMeet.trackId]?.defaultRaceCount || 10
+      };
+      const venue = String(nextMeet.venue || '').trim();
       return {
         requestedTrackId,
         roundStatus: 'CLOSED',
         roundPhase: 'BETWEEN_ROUNDS',
+        nextMeet,
         allComplete: true,
         editable: false,
-        lockAtMs: null,
+        lockAtMs: Number(nextMeet.openAt || 0) || null,
         fixture,
         venue,
         nextRace: null,
@@ -2195,6 +2226,7 @@ function createApp() {
         ladderRankAvailable: Boolean(s.ladderRankAvailable),
         fixture: s.fixture,
         venue: s.venue,
+        nextMeet: s.nextMeet || null,
         nextRace: s.nextRace,
         startAtMs: null,
         lockAtMs: s.lockAtMs,
@@ -2231,6 +2263,7 @@ function createApp() {
         trackId: s.requestedTrackId,
         trackName: TRACKS[s.requestedTrackId]?.name || s.requestedTrackId,
         venue: s.venue,
+        nextMeet: s.nextMeet || null,
         raceNumber: s.nextRace,
         startTime: null,
         lockTime: s.lockAtMs,
@@ -2539,7 +2572,15 @@ function createApp() {
       winnerBanner,
       recap,
       nextRoundOpensAt,
-      nextRoundTeaser: !openRound ? { title: 'Next Punters Club opens Friday afternoon', venue: 'Venue TBA' } : null,
+      nextRoundTeaser: !openRound ? (() => {
+        const m = getNextScheduledMeet(store);
+        return {
+          title: `Next ${m.trackName} round opens ${m.dateLabel}`,
+          venue: m.venue || 'Venue TBA',
+          trackId: m.trackId,
+          openAt: m.openAt
+        };
+      })() : null,
       pastRounds,
       banterWall,
       generatedAt: Date.now()
