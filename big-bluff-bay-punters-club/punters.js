@@ -842,13 +842,14 @@ async function hydrateNextTipCard(trackId){
     countdown.style.display = activeCountdown > 0 ? '' : 'none';
     countdown.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
+    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
-    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
+    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next round pending' : 'Race');
     state.nextTipRace = Number.isFinite(raceNum) && raceNum > 0 ? `R${raceNum}` : state.nextTipRace;
     renderRaceMarket(state.nextTipRace);
     const apiVenue = String(d?.venue || '').trim();
     const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
-    const venue = (apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (fallbackVenue || 'Track');
+    const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? 'Track' : (fallbackVenue || 'Track'));
     race.textContent = venue && venue !== 'Track' ? `${raceLabel} — ${venue}` : raceLabel;
     const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
     context.textContent = venue && venue !== 'Track' ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
@@ -868,9 +869,9 @@ async function hydrateNextTipCard(trackId){
 
     if(String(d?.state||'')==='ROUND_COMPLETE'){
       card.className = 'card next-tip-card next-tip-card--closed';
-      badge.textContent = 'ROUND COMPLETE';
+      badge.textContent = isBetweenRounds ? 'BETWEEN ROUNDS' : 'ROUND COMPLETE';
       pick.textContent = '#—';
-      setSocial('Next round opens soon.');
+      setSocial(isBetweenRounds ? 'No meet announced yet. Waiting for next round setup.' : 'Next round opens soon.');
       primary.textContent = 'View Results';
       primary.href = '/punters.html#leaderboard';
       return;

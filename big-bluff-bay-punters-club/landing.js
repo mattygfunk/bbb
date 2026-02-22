@@ -566,23 +566,23 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     countdownEl.style.display = activeCountdown > 0 ? '' : 'none';
     countdownEl.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
+    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
     const rawVenue = String(d?.venue || '').trim();
-    const venue = rawVenue && !/^venue\s*tba$/i.test(rawVenue) ? rawVenue : '';
+    const venue = (!isBetweenRounds && rawVenue && !/^venue\s*tba$/i.test(rawVenue)) ? rawVenue : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
-    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : 'Race';
+    const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next round pending' : 'Race');
     raceEl.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
-    contextEl.textContent = venue ? `${venue} meeting` : `Round open`;
+    contextEl.textContent = isBetweenRounds ? 'No meet published yet' : (venue ? `${venue} meeting` : `Round open`);
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
     const canEditEffective = Boolean(d?.canEdit) && !hardLocked;
 
     if (inlineState) {
       const roundComplete = String(d?.state || '').toUpperCase() === 'ROUND_COMPLETE';
-      inlineState.textContent = (!hardLocked && !roundComplete) ? '🟢 Open now' : '🔴 Closed';
+      inlineState.textContent = (!hardLocked && !roundComplete && !isBetweenRounds) ? '🟢 Open now' : '🔴 Closed';
     }
     if (inlineJackpot) inlineJackpot.textContent = `💰 Jackpot live: ${document.getElementById('status-jackpot')?.textContent || '$0'}`;
-    const meetFallback = String(document.getElementById('status-meet')?.textContent || '').trim();
-    if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${venue || meetFallback || '—'}`;
+    if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${isBetweenRounds ? '—' : (venue || '—')}`;
     const statusLockText = String(document.getElementById('status-lock')?.textContent || '').trim();
     if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : (statusLockText || '--:--:--')}`;
     if (lockRef > 0 && !hardLocked) {
@@ -598,9 +598,9 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
 
     if (String(d?.state || '') === 'ROUND_COMPLETE') {
       card.className = 'card next-tip-card next-tip-card--closed';
-      badgeEl.textContent = 'ROUND COMPLETE';
+      badgeEl.textContent = isBetweenRounds ? 'BETWEEN ROUNDS' : 'ROUND COMPLETE';
       pickEl.textContent = '#—';
-      socialEl.textContent = 'Next round opens soon.';
+      socialEl.textContent = isBetweenRounds ? 'No meet announced yet. Waiting for next round setup.' : 'Next round opens soon.';
       primary.textContent = 'View Results';
       primary.href = '/punters.html#leaderboard';
       secondary.textContent = 'Log In First';
