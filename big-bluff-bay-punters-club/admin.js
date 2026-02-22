@@ -791,6 +791,12 @@ async function getCurrentPuntersRound(){
   return open || latestClosed || rounds[0] || null;
 }
 
+async function getOpenPuntersRound(){
+  const out = await req(withTrack(API.puntersRounds));
+  const rounds = out.rounds || [];
+  return rounds.find((r)=>String(r.status||'').toLowerCase()==='open') || null;
+}
+
 function getRoundWinnerPayload(){
   const form = $('round-winner-form');
   const f = form ? new FormData(form) : new FormData();
@@ -868,15 +874,11 @@ $('publish-winner-btn')?.addEventListener('click', async () => {
 $('close-round-btn')?.addEventListener('click', async () => {
   if(!isAdmin()){ $('archive-round-msg').textContent='Admin login required.'; return; }
   await withButtonFeedback('close-round-btn', 'Closing…', async () => {
-    const round = await getCurrentPuntersRound();
-    if(!round){ $('archive-round-msg').textContent='No round found.'; return; }
-    if (String(round.status || '').toLowerCase() === 'closed') {
-      $('archive-round-msg').textContent = 'Round is already closed. Use Recompute & Freeze Snapshot if needed.';
-      return;
-    }
+    const round = await getOpenPuntersRound();
+    if(!round){ $('archive-round-msg').textContent='No OPEN round found. Nothing to close.'; return; }
     const payload = getRoundWinnerPayload();
     await req(withTrack(API.closeRound(round.id)), { method:'POST', body: JSON.stringify(payload) });
-    $('archive-round-msg').textContent = 'Round closed and snapshot frozen.';
+    $('archive-round-msg').textContent = `Round closed and snapshot frozen: ${round.label || round.id}.`;
     await refresh();
   }).catch(()=>{});
 });

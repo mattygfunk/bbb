@@ -2257,11 +2257,8 @@ function createApp() {
     const selection = String(req.body.selection || req.body.horse || '').trim();
     const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
     const store = readStore();
-    let openRound = getCurrentRound(store, { autoCreate: false, trackId });
+    const openRound = getCurrentRound(store, { autoCreate: false, trackId });
     const adminOverride = Boolean(req.body?.adminOverride) && req.user?.role === 'admin';
-    if (!openRound && (store.puntersClub?.rounds || []).filter((r)=>normalizeTrackId(r.trackId)===trackId).length === 0) {
-      openRound = getCurrentRound(store, { autoCreate: true, trackId });
-    }
     if (!openRound && !adminOverride) {
       return res.status(403).json({ error: 'Round finished ✅. Tips are locked until next round opens.' });
     }
@@ -2859,11 +2856,8 @@ function createApp() {
     const store = readStore();
     ensurePuntersClubStore(store);
     const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
-    let openRound = getCurrentRound(store, { autoCreate: false, trackId });
+    const openRound = getCurrentRound(store, { autoCreate: false, trackId });
     const adminOverride = Boolean(req.body?.adminOverride) && req.user?.role === 'admin';
-    if (!openRound && (store.puntersClub?.rounds || []).filter((r) => normalizeTrackId(r.trackId) === trackId).length === 0) {
-      openRound = getCurrentRound(store, { autoCreate: true, trackId });
-    }
     if (!openRound && !adminOverride) {
       return res.status(403).json({ error: 'Round finished ✅. Upgrade/payment claims are closed for this round.' });
     }
