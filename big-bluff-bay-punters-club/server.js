@@ -3519,8 +3519,83 @@ function createApp() {
   return app;
 }
 
+function getVerifiedAlertEmails(store) {
+  const users = Array.isArray(store?.users) ? store.users : [];
+  const out = [];
+  const seen = new Set();
+  for (const u of users) {
+    const profile = normalizeUserProfile(u?.profile || {});
+    const methods = profile?.settings?.alertsPreferences?.methods || {};
+    if (!Boolean(methods?.email?.verified)) continue;
+    const contactEmail = String(profile?.settings?.alertsPreferences?.contact?.email || '').trim().toLowerCase();
+    const profileEmail = String(profile?.email || '').trim().toLowerCase();
+    const email = contactEmail || profileEmail;
+    if (!email || seen.has(email)) continue;
+    seen.add(email);
+    out.push(email);
+  }
+  return out;
+}
+
+async function sendNightlyGtdStartSoonEmail() {
+  const tx = getSmtpTransport();
+  if (!tx) return { ok: false, reason: 'smtp-not-configured' };
+
+  const store = readStore();
+  const recipients = getVerifiedAlertEmails(store);
+  if (!recipients.length) return { ok: false, reason: 'no-verified-recipients' };
+
+  await tx.sendMail({
+    from: SMTP_FROM,
+    bcc: recipients,
+    subject: '⏰ Tonight’s $500 GTD starts soon — 7:55pm reminder',
+    text: `Big Bluff Bay\n\nHeads up legend — the $500 GTD is about to start.\n\nStart reminder: 7:55pm (Melbourne time) nightly\n\nJump in now so you’re seated and ready.\n\nGood luck at the tables,\nBig Bluff Bay`,
+    html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;">
+      <div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;">
+        <p style="margin:0 0 10px;opacity:.9;">Big Bluff Bay</p>
+        <h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⏰ Tonight’s <span style="color:#86efac">$500 GTD</span> starts soon</h2>
+        <p style="margin:0 0 14px;color:#c7d6e4;">Quick reminder: nightly start alert is <strong>7:55pm (Melbourne time)</strong>.</p>
+        <p style="margin:0 0 18px;color:#c7d6e4;">Get in now, lock your seat, and run hot 🔥</p>
+        <p style="margin:0;"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p>
+      </div>
+    </div>`
+  });
+
+  return { ok: true, recipients: recipients.length };
+}
+
+function startNightlyGtdReminderCron() {
+  const tick = async () => {
+    try {
+      const now = new Date();
+      const parts = getMelbourneParts(now);
+      if (parts.hour !== 19 || parts.minute !== 55) return;
+
+      const dayKey = `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
+      const store = readStore();
+      store.system = store.system && typeof store.system === 'object' ? store.system : {};
+      if (String(store.system.lastNightlyGtdReminderDate || '') === dayKey) return;
+
+      const sent = await sendNightlyGtdStartSoonEmail();
+      if (sent.ok) {
+        store.system.lastNightlyGtdReminderDate = dayKey;
+        writeStore(store);
+        console.log(`[alerts-cron] Sent nightly $500 GTD reminder to ${sent.recipients} verified emails (${dayKey})`);
+      } else {
+        console.log(`[alerts-cron] Skipped nightly $500 GTD reminder: ${sent.reason}`);
+      }
+    } catch (err) {
+      console.error('[alerts-cron] Failed nightly reminder tick:', err?.message || err);
+    }
+  };
+
+  tick();
+  setInterval(tick, 30 * 1000);
+}
+
 function start() {
   ensureStore();
+  startNightlyGtdReminderCron();
   const app = createApp();
   app.listen(PORT, () => {
     console.log(`Big Bluff Bay V5 running: http://localhost:${PORT}`);
