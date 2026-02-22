@@ -473,7 +473,9 @@ function renderNextTipInlineStatus(overviewData, tipDeadlineRes, fixtures) {
   const betweenRounds = phase === 'BETWEEN_ROUNDS' || (status !== 'OPEN' && !overviewData?.round?.id);
 
   stateEl.textContent = status === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
-  jackpotEl.textContent = `💰 Jackpot live: $${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
+  jackpotEl.textContent = betweenRounds
+    ? '💰 Jackpot: Pending next round'
+    : `💰 Jackpot live: $${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
   const meet = betweenRounds ? '—' : String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '—');
   meetEl.textContent = `🏁 Meet: ${meet}`;
 
@@ -878,10 +880,9 @@ async function hydrateNextTipCard(trackId){
     const mm = String(Math.max(0, Math.floor(activeCountdown/60000))).padStart(2,'0');
     const ss = String(Math.max(0, Math.floor((activeCountdown%60000)/1000))).padStart(2,'0');
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
-    countdown.style.display = activeCountdown > 0 ? '' : 'none';
-    countdown.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
-
     const isBetweenRounds = String(d?.roundPhase || state.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
+    countdown.style.display = (!isBetweenRounds && activeCountdown > 0) ? '' : 'none';
+    countdown.textContent = (!isBetweenRounds && activeCountdown > 0) ? `${mm}:${ss}` : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next round pending' : 'Race');
     state.nextTipRace = Number.isFinite(raceNum) && raceNum > 0 ? `R${raceNum}` : state.nextTipRace;
@@ -890,7 +891,8 @@ async function hydrateNextTipCard(trackId){
     const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
     const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? 'Track' : (fallbackVenue || 'Track'));
     race.textContent = venue && venue !== 'Track' ? `${raceLabel} — ${venue}` : raceLabel;
-    const trackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+    const baseTrackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+    const trackType = isBetweenRounds ? String(d?.nextMeet?.trackName || baseTrackType || 'Next track') : baseTrackType;
     context.textContent = venue && venue !== 'Track' ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
