@@ -571,7 +571,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     countdownEl.style.display = activeCountdown > 0 ? '' : 'none';
     countdownEl.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
-    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
+    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS'
+      || (String(d?.roundStatus || '').toUpperCase() === 'CLOSED' && !String(d?.raceNumber || '').trim());
     const rawVenue = String(d?.venue || '').trim();
     const venue = (!isBetweenRounds && rawVenue && !/^venue\s*tba$/i.test(rawVenue)) ? rawVenue : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
@@ -589,15 +590,20 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     if (inlineJackpot) inlineJackpot.textContent = `💰 Jackpot live: ${document.getElementById('status-jackpot')?.textContent || '$0'}`;
     if (inlineMeet) inlineMeet.textContent = `🏁 Meet: ${isBetweenRounds ? '—' : (venue || '—')}`;
     const statusLockText = String(document.getElementById('status-lock')?.textContent || '').trim();
-    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : (statusLockText || '--:--:--')}`;
-    if (lockRef > 0 && !hardLocked) {
+    if (inlineLock) inlineLock.textContent = isBetweenRounds
+      ? '🔒 Lock: Pending'
+      : `🔒 Lock: ${lockRef > 0 ? fmtHHMMSS(lockRef - now) : (statusLockText || '--:--:--')}`;
+    if (isBetweenRounds) {
+      contextEl.textContent = 'No meet published yet';
+      setLockline('');
+    } else if (lockRef > 0 && !hardLocked) {
       contextEl.textContent = `Locks in ${mm}:${ss} (Melbourne)`;
       setLockline('');
     } else if (lockRef > 0 && hardLocked) {
       contextEl.textContent = `Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne)`;
       setLockline('');
     } else {
-      contextEl.textContent = venue ? `${venue} meeting` : `Round open`;
+      contextEl.textContent = venue ? `${venue} meeting` : `Waiting for next meet`;
       setLockline('');
     }
 
@@ -606,8 +612,8 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       badgeEl.textContent = isBetweenRounds ? 'BETWEEN ROUNDS' : 'ROUND COMPLETE';
       pickEl.textContent = '#—';
       socialEl.textContent = isBetweenRounds ? 'No meet announced yet. Waiting for next round setup.' : 'Next round opens soon.';
-      primary.textContent = 'View Results';
-      primary.href = '/punters.html#leaderboard';
+      primary.textContent = isBetweenRounds ? 'View Archive' : 'View Results';
+      primary.href = isBetweenRounds ? '/winners.html' : '/punters.html#leaderboard';
       secondary.textContent = 'Log In First';
       secondary.href = '/punters.html';
       return;
