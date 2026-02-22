@@ -451,13 +451,18 @@ function renderNextTipInlineStatus(overviewData, tipDeadlineRes, fixtures) {
   if (!stateEl || !jackpotEl || !meetEl || !lockEl) return;
 
   const status = String(overviewData?.round?.status || 'OPEN').toUpperCase();
+  const phase = String(overviewData?.round?.phase || '').toUpperCase();
+  const betweenRounds = phase === 'BETWEEN_ROUNDS' || (status !== 'OPEN' && !overviewData?.round?.id);
+
   stateEl.textContent = status === 'OPEN' ? '🟢 Open now' : '🔴 Closed';
   jackpotEl.textContent = `💰 Jackpot live: $${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
-  const meet = String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '—');
+  const meet = betweenRounds ? '—' : String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '—');
   meetEl.textContent = `🏁 Meet: ${meet}`;
 
   const lockAt = Number(tipDeadlineRes?.effectiveDeadlineMs || tipDeadlineRes?.lockAtMs || 0);
-  lockEl.textContent = `🔒 Lock: ${lockAt > 0 ? fmtHHMMSS(lockAt - Date.now()) : '--:--:--'}`;
+  lockEl.textContent = betweenRounds
+    ? '🔒 Lock: Pending'
+    : `🔒 Lock: ${lockAt > 0 ? fmtHHMMSS(lockAt - Date.now()) : '--:--:--'}`;
 }
 
 
@@ -759,8 +764,9 @@ async function hydrateNextTipCard(trackId){
   const pick = $('next-tip-punters-pick');
   const social = $('next-tip-punters-social');
   if(!card || !primary || !badge || !countdown || !race || !context || !pick || !social) return;
-  const setSocial = (text='') => {
-    const fav = getRaceFavoriteText(state.nextTipRace || 'R1');
+  const setSocial = (text='', opts={}) => {
+    const suppressFav = Boolean(opts?.suppressFav);
+    const fav = suppressFav ? '' : getRaceFavoriteText(state.nextTipRace || 'R1');
     social.textContent = fav ? `${text} • ${fav}` : text;
   };
   const setLockline = (text = '') => {
@@ -857,7 +863,7 @@ async function hydrateNextTipCard(trackId){
     countdown.style.display = activeCountdown > 0 ? '' : 'none';
     countdown.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
 
-    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
+    const isBetweenRounds = String(d?.roundPhase || state.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
     const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next round pending' : 'Race');
     state.nextTipRace = Number.isFinite(raceNum) && raceNum > 0 ? `R${raceNum}` : state.nextTipRace;
@@ -896,7 +902,7 @@ async function hydrateNextTipCard(trackId){
         badge.textContent = 'BETWEEN ROUNDS';
         race.textContent = `${trackType} • Next meet pending`;
         pick.textContent = '✅ Last round settled • Waiting for admin to publish next meet';
-        setSocial('What you can do now: check final leaderboard, review archive snapshots, and confirm your $20 jackpot eligibility for next round.');
+        setSocial('What you can do now: check final leaderboard, review archive snapshots, and confirm your $20 jackpot eligibility for next round.', { suppressFav: true });
         primary.textContent = 'View Last Results';
         primary.href = '/punters.html#leaderboard';
         secondary.hidden = false;
