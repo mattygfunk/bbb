@@ -520,8 +520,13 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
         };
       }
 
+      if (String(d?.roundStatus || '').toUpperCase() === 'CLOSED') {
+        d.state = 'ROUND_COMPLETE';
+        d.userHasTip = false;
+      }
+
       // Last-resort salvage from tips endpoint to avoid false "No tip entered".
-      if (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber)) {
+      if (String(d?.roundStatus || '').toUpperCase() !== 'CLOSED' && (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber))) {
         const tipsRes = await fetch(`/api/tips?status=all&trackId=${encodeURIComponent(trackId)}`, { credentials: 'same-origin' });
         const meRes = await fetch('/api/me', { credentials: 'same-origin', headers: { Authorization: `Bearer ${token}` } });
         if (tipsRes.ok && meRes.ok) {

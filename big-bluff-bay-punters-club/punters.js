@@ -801,8 +801,13 @@ async function hydrateNextTipCard(trackId){
           : (lg?.hasTip ? (lg?.editable ? 'EDITABLE' : 'LOCKED') : 'MISSING_TIP')
       };
 
+      if (String(d?.roundStatus || '').toUpperCase() === 'CLOSED') {
+        d.state = 'ROUND_COMPLETE';
+        d.userHasTip = false;
+      }
+
       // Last-resort salvage: if APIs are degraded but user has tips, do NOT show false "No tip entered".
-      if (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber)) {
+      if (String(d?.roundStatus || '').toUpperCase() !== 'CLOSED' && (String(d?.state || '') === 'ERROR' || (!d?.userHasTip && !d?.raceNumber))) {
         const tipsAll = await req(`/tips?status=all&trackId=${encodeURIComponent(trackId || 'thoroughbreds')}`);
         const mine = (tipsAll?.tips || [])
           .filter((t) => String(t.status || '') !== 'removed')
