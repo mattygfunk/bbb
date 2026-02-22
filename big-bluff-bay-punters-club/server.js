@@ -2076,6 +2076,34 @@ function createApp() {
 
   function buildSimpleNextTipState(req, store) {
     const requestedTrackId = normalizeTrackId(req.query.track || req.query.trackId || req.query.trackSlug);
+    const round = getCurrentRound(store, { autoCreate: false, trackId: requestedTrackId });
+    const trackData = getTrackData(store, requestedTrackId);
+
+    if (!round) {
+      const fixture = (
+        (Array.isArray(store?.puntersClub?.tracks?.[requestedTrackId]?.fixtures) && store.puntersClub.tracks[requestedTrackId].fixtures[0])
+        || (Array.isArray(store?.fixtures) && store.fixtures[0])
+        || null
+      );
+      const venue = String(fixture?.track || fixture?.event || fixture?.venue || '').trim();
+      return {
+        requestedTrackId,
+        roundStatus: 'CLOSED',
+        allComplete: true,
+        editable: false,
+        lockAtMs: null,
+        fixture,
+        venue,
+        nextRace: null,
+        tip: null,
+        userHasTip: false,
+        othersCount: 0,
+        ladderRank: null,
+        ladderSize: 0,
+        ladderRankAvailable: false
+      };
+    }
+
     const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
     const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
     const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
@@ -2086,7 +2114,6 @@ function createApp() {
       .filter((t) => String(t.member || '').trim().toLowerCase() === userKey)
       .sort((a, b) => Number(String(a.race || 'R999').replace('R', '')) - Number(String(b.race || 'R999').replace('R', '')));
 
-    const trackData = getTrackData(store, requestedTrackId);
     const fixtureRaceCount = Number(trackData?.fixtures?.[0]?.raceCount || TRACKS[requestedTrackId]?.defaultRaceCount || 12);
     const raceCount = Number.isFinite(fixtureRaceCount) && fixtureRaceCount > 0 ? fixtureRaceCount : 12;
 
@@ -2111,7 +2138,6 @@ function createApp() {
     const enteredMembers = new Set(raceTips.map((t) => String(t.member || '').trim().toLowerCase()).filter(Boolean));
 
     const editable = canEditTipsNow(store);
-    const round = getCurrentRound(store, { autoCreate: false, trackId: requestedTrackId });
     const lockAtMs = Number(round?.lockAt || 0) || Number(getEffectiveTipEditDeadlineMs(store) || 0) || null;
     const ladderRows = round ? computeLadderCached(store, round.id, requestedTrackId) : [];
     const myRankIdx = ladderRows.findIndex((row) => String(row?.member || '').trim().toLowerCase() === userKey);
