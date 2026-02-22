@@ -1484,10 +1484,12 @@ function createApp() {
       ensurePuntersClubStore(store);
       const trackId = normalizeTrackId(req.query.track || req.query.trackId);
       const trackData = getTrackData(store, trackId);
-      const openRound = getCurrentRound(store, { autoCreate: false, trackId }) || getCurrentRound(store, { autoCreate: true, trackId });
+      const openRound = getCurrentRound(store, { autoCreate: false, trackId });
+      const closedRound = getLatestClosedRound(store, trackId);
+      const activeRound = openRound || closedRound || null;
       const live = computeJackpotTierData(store, { autoCreate: false, trackId });
       const tier = 'free';
-      const ladder = computeLadderCached(store, openRound?.id, trackId);
+      const ladder = computeLadderCached(store, activeRound?.id || 'live', trackId);
       const ladderView = (ladder || []).map((row, idx) => {
         const isEligible = !!(openRound?.entries || []).find((e) => String(e.member || '').toLowerCase() === String(row.member || '').toLowerCase() && e.tier === 'JACKPOT');
         const maskedName = idx < 3 ? row.member : `${String(row.member || '').slice(0, 1)}***`;
@@ -1504,7 +1506,7 @@ function createApp() {
         trackId,
         overview: {
           track: { id: trackId, name: TRACKS[trackId]?.name || trackId, accent: TRACKS[trackId]?.accent || '#999' },
-          round: { id: openRound?.id, trackId, label: openRound?.label || `${TRACKS[trackId]?.name || 'Punters'} Round`, status: String(openRound?.status || 'open').toUpperCase() },
+          round: { id: activeRound?.id || null, trackId, label: activeRound?.label || `${TRACKS[trackId]?.name || 'Punters'} Round`, status: String(activeRound?.status || 'closed').toUpperCase() },
           tiers: { free: live.freeMembers, jackpotEligible: live.paidMembers, entryFee: live.entryFee },
           jackpot: { currentRoundPot: live.currentRoundPot, rollover: getTrackJackpotCarry(store, trackId), totalPot: live.totalPot },
           ladder: ladderView,
@@ -2466,15 +2468,24 @@ function createApp() {
         statusText: 'Next round opens Friday afternoon'
       };
     } else {
-      round = getCurrentRound(store, { autoCreate: true, trackId });
-      const live = computeJackpotTierData(store, { autoCreate: false, trackId });
-      paidMembers = live.paidMembers;
-      freeMembers = live.freeMembers;
-      entryFee = live.entryFee;
-      currentRoundPot = live.currentRoundPot;
-      totalPot = live.totalPot;
-      ladder = computeLadderCached(store, round.id, trackId);
-      tipsFeed = getTipsForTrack(store, trackId);
+      // Keep site in closed/idle mode until admin explicitly opens next round.
+      round = null;
+      paidMembers = 0;
+      freeMembers = 0;
+      entryFee = Number(store.entryFee || 20);
+      currentRoundPot = 0;
+      totalPot = getTrackJackpotCarry(store, trackId);
+      ladder = [];
+      tipsFeed = [];
+      frozen = true;
+      recap = {
+        winner: '—',
+        top3: [],
+        totalEntries: 0,
+        paidEntries: 0,
+        finalPot: 0,
+        statusText: 'Round closed. Waiting for next round to open.'
+      };
     }
 
     const masked = tier !== 'paid';
