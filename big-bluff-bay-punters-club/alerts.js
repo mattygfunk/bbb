@@ -203,17 +203,21 @@ async function save(){
       state.emailVerifyStatus = 'success';
       state.emailVerifyMsg = `Nice. ${out.email} is now verified and you’re now signed in.`;
       const u = new URL(window.location.href); u.searchParams.delete('verify'); window.history.replaceState({}, '', u.toString());
+      render();
     }
 
     if(state.token){
-      if (!state.user) state.user = (await req(API.me)).user;
-      const profile = await req(API.profile);
-      state.prefs = mergeDefaults(profile?.profile?.settings?.alertsPreferences || DEFAULTS);
-      if (state.emailVerifyStatus === 'success') {
-        state.prefs.methods.email.verified = true;
-      }
+      try {
+        if (!state.user) state.user = (await req(API.me)).user;
+      } catch {}
+      try {
+        const profile = await req(API.profile);
+        state.prefs = mergeDefaults(profile?.profile?.settings?.alertsPreferences || DEFAULTS);
+        if (state.emailVerifyStatus === 'success') {
+          state.prefs.methods.email.verified = true;
+        }
+      } catch {}
     }
-
-    render();
   } catch {}
+  finally { render(); }
 })();
