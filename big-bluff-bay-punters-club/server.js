@@ -1858,13 +1858,18 @@ function createApp() {
     return res.json({ ok: true, sentTo: email });
   });
 
-  app.post('/api/alerts/email/verify/confirm', auth, (req, res) => {
+  app.post('/api/alerts/email/verify/confirm', (req, res) => {
     const store = readStore();
-    const user = store.users.find((u) => u.id === req.user.sub);
-    if (!user) return res.status(404).json({ error: 'User not found' });
 
     const token = String(req.body?.token || '').trim();
     if (!token) return res.status(400).json({ error: 'Verification token is required' });
+
+    const user = (store.users || []).find((u) => {
+      const profile = normalizeUserProfile(u.profile);
+      const verify = profile?.settings?.alertsEmailVerify || null;
+      return verify && String(verify.token || '') === token;
+    });
+    if (!user) return res.status(400).json({ error: 'Invalid verification token' });
 
     const profile = normalizeUserProfile(user.profile);
     const settings = { ...(profile.settings || {}) };
@@ -1879,8 +1884,9 @@ function createApp() {
     delete settings.alertsEmailVerify;
 
     user.profile = normalizeUserProfile({ ...profile, email: verify.email, settings });
+    const safeUser = { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) };
     writeStore(store);
-    return res.json({ ok: true, email: verify.email });
+    return res.json({ ok: true, email: verify.email, token: issueToken(safeUser), user: safeUser });
   });
 
   app.get('/api/fixtures', (req, res) => {

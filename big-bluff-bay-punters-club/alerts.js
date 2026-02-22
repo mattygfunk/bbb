@@ -189,19 +189,31 @@ async function save(){
 
 (async function init(){
   render();
-  if(!state.token) return;
   try{
-    state.user = (await req(API.me)).user;
-    const profile = await req(API.profile);
-    state.prefs = mergeDefaults(profile?.profile?.settings?.alertsPreferences || DEFAULTS);
     const verifyToken = new URLSearchParams(window.location.search).get('verify');
     if (verifyToken) {
       const out = await req(API.confirmEmailVerify, { method:'POST', body: JSON.stringify({ token: verifyToken }) });
-      state.prefs.contact.email = out.email; state.prefs.methods.email.verified = true;
+      if (out?.token) {
+        state.token = out.token;
+        localStorage.setItem(tokenKey, out.token);
+      }
+      if (out?.user) state.user = out.user;
+      state.prefs.contact.email = out.email;
+      state.prefs.methods.email.verified = true;
       state.emailVerifyStatus = 'success';
-      state.emailVerifyMsg = `Nice. ${out.email} is now verified and ready for alerts.`;
+      state.emailVerifyMsg = `Nice. ${out.email} is now verified and you’re now signed in.`;
       const u = new URL(window.location.href); u.searchParams.delete('verify'); window.history.replaceState({}, '', u.toString());
     }
+
+    if(state.token){
+      if (!state.user) state.user = (await req(API.me)).user;
+      const profile = await req(API.profile);
+      state.prefs = mergeDefaults(profile?.profile?.settings?.alertsPreferences || DEFAULTS);
+      if (state.emailVerifyStatus === 'success') {
+        state.prefs.methods.email.verified = true;
+      }
+    }
+
     render();
   } catch {}
 })();
