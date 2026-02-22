@@ -19,7 +19,9 @@ const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || '';
 const SOCIAL_CACHE_TTL_MS = Number(process.env.SOCIAL_CACHE_TTL_MS || 15 * 60 * 1000);
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_SECURE = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
+const SMTP_SECURE = process.env.SMTP_SECURE
+  ? String(process.env.SMTP_SECURE).toLowerCase() === 'true'
+  : SMTP_PORT === 465;
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
 const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER || 'no-reply@bigbluffbay.au';
