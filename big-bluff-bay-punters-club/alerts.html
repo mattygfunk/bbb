@@ -9,6 +9,12 @@
     <style>
       :root{--bg:#0a0d10;--card:#11161b;--muted:#9fb0bf;--txt:#eaf2f8;--line:#253240;--good:#34d399;--accent:#22c55e;--warn:#f59e0b}
       *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 450px at 15% -20%,#12331f66,transparent 65%),linear-gradient(180deg,#090c10,#0b1118);color:var(--txt)}
+      .site-head,.site-foot{border-top:1px solid #1f2a36;border-bottom:1px solid #1f2a36;background:#0b1219}
+      .site-head .wrap,.site-foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap}
+      .brand{font-weight:800;letter-spacing:.2px}
+      .links{display:flex;gap:.5rem;flex-wrap:wrap}
+      .links a{color:#c7d6e4;text-decoration:none;border:1px solid #2c3f52;border-radius:999px;padding:.25rem .55rem;font-size:.82rem}
+      .links a:hover{border-color:#34d399;color:#ecfdf5}
       .wrap{max-width:1200px;margin:0 auto;padding:1rem}
       .badge{display:inline-block;padding:.24rem .55rem;border:1px solid #7c2d12;background:#2a140e;color:#fdba74;border-radius:999px;font-size:.75rem}
       .hero{border:1px solid var(--line);background:linear-gradient(180deg,#0f1722,#0c121a);border-radius:14px;padding:1rem}
@@ -37,6 +43,18 @@
     </style>
   </head>
   <body>
+    <header class="site-head">
+      <div class="wrap">
+        <div class="brand">🏇 Big Bluff Bay</div>
+        <nav class="links" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/punters.html">Punters</a>
+          <a href="/poker-schedule.html">Poker</a>
+          <a href="/profile">Profile</a>
+        </nav>
+      </div>
+    </header>
+
     <main class="wrap">
       <section class="hero">
         <div class="hero-top">
@@ -57,6 +75,18 @@
         <aside class="card sticky" id="preview-panel"></aside>
       </section>
     </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <p class="muted" style="margin:0">18+ only. Gamble responsibly. Private social club.</p>
+        <nav class="links" aria-label="Footer">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/winners.html">Winners</a>
+        </nav>
+      </div>
+    </footer>
+
     <script src="alerts.js"></script>
   </body>
 </html>
