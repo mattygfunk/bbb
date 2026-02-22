@@ -196,7 +196,7 @@
 
         <section class="card"><h2>Edit Next Meet</h2>
           <form id="fixture-form" class="stack">
-            <label>Date & Time <input name="date" type="text" placeholder="Sat 14 Feb, 3:19 PM" /></label>
+            <label>Date & Time <input name="date" type="datetime-local" step="60" /></label>
             <label>Event <input name="event" type="text" placeholder="Next Meet" /></label>
             <label>Track <input name="track" type="text" placeholder="Pinjarra" /></label>
             <label>Number of races <input name="raceCount" type="number" min="1" max="24" value="12" /></label>
@@ -506,6 +506,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260222-26"></script>
+    <script src="admin.js?v=20260222-27"></script>
   </body>
 </html>
