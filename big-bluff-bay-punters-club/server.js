@@ -1723,7 +1723,20 @@ function createApp() {
   app.get('/api/users', auth, adminOnly, (_req, res) => {
     const store = readStore();
     const users = (store.users || [])
-      .map((u) => ({ id: u.id, username: u.username, role: u.role || 'member', createdAt: Number(u.createdAt || 0) }))
+      .map((u) => {
+        const profile = normalizeUserProfile(u.profile);
+        const contact = profile?.settings?.alertsPreferences?.contact || {};
+        return {
+          id: u.id,
+          username: u.username,
+          role: u.role || 'member',
+          createdAt: Number(u.createdAt || 0),
+          email: String(profile?.email || '').trim().toLowerCase(),
+          phone: String(contact?.phone || '').trim(),
+          whatsapp: String(contact?.whatsapp || '').trim(),
+          telegram: String(contact?.telegramUser || '').trim()
+        };
+      })
       .sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
     return res.json({ users, count: users.length });
   });

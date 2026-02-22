@@ -93,7 +93,7 @@ async function loadAdminUsers(){
   const msg = $('admin-users-msg');
   if (!body) return;
   if (!isAdmin()) {
-    body.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
+    body.innerHTML = "<tr><td colspan='8' class='muted'>Admin login required.</td></tr>";
     return;
   }
   try {
@@ -105,10 +105,10 @@ async function loadAdminUsers(){
       const created = u.createdAt ? new Date(Number(u.createdAt)).toLocaleDateString('en-AU') : '-';
       const actionLabel = u.role === 'admin' ? 'Set Member' : 'Make Admin';
       const nextRole = u.role === 'admin' ? 'member' : 'admin';
-      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
+      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${esc(u.email || '-')}</td><td>${esc(u.phone || '-')}</td><td>${esc(u.whatsapp || '-')}</td><td>${esc(u.telegram || '-')}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
       body.appendChild(tr);
     });
-    if (!users.length) body.innerHTML = "<tr><td colspan='4' class='muted'>No users found.</td></tr>";
+    if (!users.length) body.innerHTML = "<tr><td colspan='8' class='muted'>No users found.</td></tr>";
 
     body.querySelectorAll('button[data-user-id]').forEach((btn)=>{
       btn.addEventListener('click', async ()=>{
@@ -124,7 +124,7 @@ async function loadAdminUsers(){
       });
     });
   } catch (err) {
-    body.innerHTML = `<tr><td colspan='4' class='muted'>${esc(err.message || 'Could not load users.')}</td></tr>`;
+    body.innerHTML = `<tr><td colspan='8' class='muted'>${esc(err.message || 'Could not load users.')}</td></tr>`;
   }
 }
 
