@@ -3749,8 +3749,8 @@ function appendAlertsDeliveryLog(entry = {}) {
 }
 
 function getDefaultAlertTemplates() {
-  const shellStart = `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><p style="margin:0 0 10px;opacity:.9;letter-spacing:.02em">Big Bluff Bay</p>`;
-  const shellEnd = `<p style="margin:18px 0 0"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p></div></div>`;
+  const shellStart = `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><img src="https://bigbluffbay.au/assets/theme-banner-768.jpg" alt="Big Bluff Bay clubhouse" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px" /><p style="margin:0 0 10px;opacity:.9;letter-spacing:.02em">Big Bluff Bay</p>`;
+  const shellEnd = `<p style="margin:18px 0 0"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p><p style="margin:16px 0 0;color:#9fb0bf;font-size:12px">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href="https://bigbluffbay.au/alerts.html" style="color:#93c5fd">Unsubscribe / manage alerts</a> • <a href="https://bigbluffbay.au/terms.html" style="color:#93c5fd">T&amp;Cs</a> • <a href="https://bigbluffbay.au/privacy.html" style="color:#93c5fd">Privacy</a></p></div></div>`;
 
   return [
     {
@@ -3851,11 +3851,13 @@ async function sendNightlyGtdStartSoonEmail() {
     text: `Big Bluff Bay\n\nHeads up legend — the $500 GTD is about to start.\n\nStart reminder: 7:55pm (Melbourne time) nightly\n\nJump in now so you’re seated and ready.\n\nGood luck at the tables,\nBig Bluff Bay`,
     html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;">
       <div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;">
+        <img src="https://bigbluffbay.au/assets/theme-banner-768.jpg" alt="Big Bluff Bay clubhouse" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px" />
         <p style="margin:0 0 10px;opacity:.9;">Big Bluff Bay</p>
         <h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⏰ Tonight’s <span style="color:#86efac">$500 GTD</span> starts soon</h2>
         <p style="margin:0 0 14px;color:#c7d6e4;">Quick reminder: nightly start alert is <strong>7:55pm (Melbourne time)</strong>.</p>
         <p style="margin:0 0 18px;color:#c7d6e4;">Get in now, lock your seat, and run hot 🔥</p>
         <p style="margin:0;"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p>
+        <p style="margin:16px 0 0;color:#9fb0bf;font-size:12px">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href="https://bigbluffbay.au/alerts.html" style="color:#93c5fd">Unsubscribe / manage alerts</a> • <a href="https://bigbluffbay.au/terms.html" style="color:#93c5fd">T&amp;Cs</a> • <a href="https://bigbluffbay.au/privacy.html" style="color:#93c5fd">Privacy</a></p>
       </div>
     </div>`
   });
