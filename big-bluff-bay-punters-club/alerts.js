@@ -29,8 +29,8 @@ async function req(url, opt = {}) {
 
 function readForm() {
   const email = normalizeEmail(document.getElementById('email')?.value || '');
-  const quietStart = String(document.getElementById('quietStart')?.value || '23:00');
-  const quietEnd = String(document.getElementById('quietEnd')?.value || '08:00');
+  const quietStart = String(document.getElementById('quietStart')?.value || '01:00');
+  const quietEnd = String(document.getElementById('quietEnd')?.value || '09:00');
 
   const checked = (name) => Boolean(form?.querySelector(`input[name="${name}"]`)?.checked);
   return {
@@ -63,8 +63,8 @@ function fillFromPrefs(prefs = {}) {
   setCheck('freerolls', prefs?.alerts?.freerolls ?? true);
   setCheck('cashActive', prefs?.alerts?.cashActive ?? false);
 
-  document.getElementById('quietStart').value = String(prefs?.rules?.quietStart || '23:00');
-  document.getElementById('quietEnd').value = String(prefs?.rules?.quietEnd || '08:00');
+  document.getElementById('quietStart').value = String(prefs?.rules?.quietStart || '01:00');
+  document.getElementById('quietEnd').value = String(prefs?.rules?.quietEnd || '09:00');
 }
 
 async function initVerifyFromLink(){

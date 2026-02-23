@@ -17,6 +17,7 @@
       .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:1.25rem}
       .top a{font-size:.95rem;color:#111827}
       .panel{border:1px solid var(--line);padding:18px;border-radius:10px}
+      .divider{border-top:1px solid var(--line);margin:14px 0}
       .stack{display:grid;gap:14px}
       label{display:grid;gap:6px;font-size:.95rem}
       input[type="email"],input[type="time"]{width:100%;padding:12px;border:1px solid var(--line-strong);border-radius:8px;font-size:1rem;background:#fff;color:var(--text)}
@@ -41,8 +42,11 @@
         <a href="/punters.html">Punters</a>
       </header>
 
+      <div class="divider"></div>
       <h1>BIG BLUFF BAY</h1>
       <p class="muted">Get notified when it matters.</p>
+      <p class="muted">We monitor tournaments automatically and only alert you when a selected condition is true.</p>
+      <div class="divider"></div>
 
       <section class="panel" style="margin-top:16px">
         <form id="alerts-form" class="stack" novalidate>
@@ -54,24 +58,26 @@
           <div>
             <p class="subhead">Alert me when:</p>
             <div class="checks">
-              <label class="check"><input type="checkbox" name="overlayWatch" checked /> <span>Overlay risk</span></label>
-              <label class="check"><input type="checkbox" name="lateReg" checked /> <span>Late reg closing</span></label>
-              <label class="check"><input type="checkbox" name="startingSoon" checked /> <span>Starting soon</span></label>
-              <label class="check"><input type="checkbox" name="freerolls" checked /> <span>Freerolls</span></label>
-              <label class="check"><input type="checkbox" name="cashActive" /> <span>Cash active</span></label>
+              <label class="check"><input type="checkbox" name="overlayWatch" checked /> <span>Overlay risk detected</span></label>
+              <label class="check"><input type="checkbox" name="lateReg" checked /> <span>Late registration closing (15 mins)</span></label>
+              <label class="check"><input type="checkbox" name="startingSoon" checked /> <span>Tournament starting soon (30 mins)</span></label>
+              <label class="check"><input type="checkbox" name="freerolls" checked /> <span>Freeroll posted</span></label>
+              <label class="check"><input type="checkbox" name="cashActive" /> <span>Cash tables active</span></label>
             </div>
           </div>
 
           <div>
-            <p class="subhead">Optional quiet hours</p>
+            <p class="subhead">Quiet hours (optional)</p>
             <div class="quiet">
-              <label>Start <input id="quietStart" type="time" value="23:00" /></label>
-              <label>End <input id="quietEnd" type="time" value="08:00" /></label>
+              <label>From <input id="quietStart" type="time" value="01:00" /></label>
+              <label>To <input id="quietEnd" type="time" value="09:00" /></label>
             </div>
           </div>
 
           <button id="activate" class="btn" type="submit">Activate Alerts</button>
-          <p class="trust">No spam. Condition-based alerts. Unsubscribe anytime.</p>
+          <div class="divider" style="margin:8px 0 0"></div>
+          <p class="trust">• No spam. • Alerts are condition-based. • Unsubscribe anytime.</p>
+          <div class="divider" style="margin:8px 0 0"></div>
           <p id="status" aria-live="polite"></p>
         </form>
       </section>
