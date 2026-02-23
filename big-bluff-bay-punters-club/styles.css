@@ -1010,3 +1010,57 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
 .join-checklist label { display:flex; gap:.5rem; align-items:center; }
 .join-checklist input[type='checkbox'] { width:auto; }
 .join-faq details { margin-top: .5rem; }
+
+/* Alerts monitoring interface (bleeding-edge admin polish) */
+.alerts-monitor {
+  border: 1px solid rgba(80, 190, 255, 0.35);
+  background:
+    radial-gradient(900px 320px at 12% -12%, rgba(37, 99, 235, 0.22), transparent 58%),
+    radial-gradient(760px 260px at 86% -25%, rgba(34, 197, 94, 0.18), transparent 60%),
+    linear-gradient(180deg, #0c1628, #0a1322);
+}
+.alerts-monitor-kpis {
+  display: grid;
+  gap: .6rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin: .65rem 0 1rem;
+}
+.alerts-kpi-card {
+  border: 1px solid rgba(120, 170, 240, .34);
+  border-radius: .8rem;
+  padding: .7rem .78rem;
+  background: linear-gradient(180deg, rgba(20, 33, 56, .95), rgba(11, 20, 36, .98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 22px rgba(0,0,0,.22);
+}
+.alerts-kpi-card strong {
+  display: block;
+  font-size: 1.28rem;
+  margin-top: .18rem;
+  letter-spacing: .01em;
+}
+.alerts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  align-items: flex-end;
+  margin: .4rem 0;
+  flex-wrap: wrap;
+}
+.alerts-toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .5rem;
+}
+.alerts-table-wrap {
+  border: 1px solid rgba(92, 120, 165, .4);
+  border-radius: .8rem;
+  overflow: auto;
+  background: rgba(8, 14, 26, .75);
+}
+.alerts-table-wrap table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #0f1c33;
+}

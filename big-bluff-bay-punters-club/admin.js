@@ -179,9 +179,17 @@ async function loadAlertsMonitor(){
     const templates = out.templates || [];
     const history = out.history || [];
 
-    $('alerts-mon-subs').textContent = String(summary.totalSubscribers || subscribersRaw.length || 0);
-    $('alerts-mon-verified').textContent = String(summary.verifiedEmailSubscribers || 0);
-    $('alerts-mon-next-count').textContent = String(nextAlerts.length || 0);
+    const totalSubscribers = Number(summary.totalSubscribers || subscribersRaw.length || 0);
+    const verifiedSubscribers = Number(summary.verifiedEmailSubscribers || 0);
+    const nextCount = Number(nextAlerts.length || 0);
+    const mobileCount = Number((summary.channels && summary.channels.phone) || subscribersRaw.filter((s) => String(s.phone || '').trim()).length || 0);
+    const verifiedRate = totalSubscribers > 0 ? Math.round((verifiedSubscribers / totalSubscribers) * 100) : 0;
+
+    $('alerts-mon-subs').textContent = String(totalSubscribers);
+    $('alerts-mon-verified').textContent = String(verifiedSubscribers);
+    $('alerts-mon-next-count').textContent = String(nextCount);
+    if ($('alerts-mon-mobile-count')) $('alerts-mon-mobile-count').textContent = String(mobileCount);
+    if ($('alerts-mon-verified-rate')) $('alerts-mon-verified-rate').textContent = `${verifiedRate}%`;
 
     const mode = String(filterEl?.value || 'all');
     const q = String(searchEl?.value || '').trim().toLowerCase();
@@ -213,9 +221,13 @@ async function loadAlertsMonitor(){
     }[k] || k);
 
     subscribers.forEach((s) => {
-      const enabled = Object.entries(s.alerts || {}).filter(([,v]) => v).map(([k]) => prettyAlertName(k)).join(', ') || 'none';
+      const enabledList = Object.entries(s.alerts || {}).filter(([,v]) => v).map(([k]) => prettyAlertName(k));
+      const enabled = enabledList.length ? enabledList.join(', ') : 'none';
+      const enabledHtml = enabledList.length
+        ? enabledList.map((name) => `<span class="pill" style="margin-right:.25rem">${esc(name)}</span>`).join('')
+        : '<span class="muted">none</span>';
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(s.username || '-')}</td><td>${esc(s.email || '-')}</td><td>${s.verifiedEmail ? '✅' : '⚪'}</td><td>${esc(s.phone || '-')}</td><td>${esc(enabled)}</td>`;
+      tr.innerHTML = `<td>${esc(s.username || '-')}</td><td>${esc(s.email || '-')}</td><td>${s.verifiedEmail ? '<span class="pill" style="color:#86efac;border-color:#14532d;background:#052e16">✅ verified</span>' : '<span class="pill">⚪ pending</span>'}</td><td>${esc(s.phone || '-')}</td><td title="${esc(enabled)}">${enabledHtml}</td>`;
       subsBody.appendChild(tr);
     });
     if (!subscribers.length) subsBody.innerHTML = "<tr><td colspan='5' class='muted'>No matching subscribers.</td></tr>";
