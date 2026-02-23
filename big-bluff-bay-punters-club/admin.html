@@ -75,11 +75,12 @@
 
         <div id="admin-racing-sections">
         <section class="card">
-          <h2>🏇 Racing Operations</h2>
-          <p class="muted">Fixture setup, race results, round settlement, and Bosses Bet controls.</p>
-          <p class="muted">Active track for legacy fixture/results/bosses controls: <strong id="legacy-active-track">Thoroughbreds (thoroughbreds)</strong></p>
-        </section>
-        <section class="card"><h2>Round Lifecycle</h2>
+          <details id="racing-ops-accordion" open>
+            <summary><strong>🏇 Racing Operations</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <p class="muted">Fixture setup, race results, round settlement, and Bosses Bet controls.</p>
+              <p class="muted">Active track for legacy fixture/results/bosses controls: <strong id="legacy-active-track">Thoroughbreds (thoroughbreds)</strong></p>
+              <section class="card" style="margin:0"><h2>Round Lifecycle</h2>
           <p class="muted">Professional controls for settlement: auto-finalise winner after last race, publish/recompute snapshots, then open the next round cleanly.</p>
           <label>Track
             <select id="punters-track-select">
@@ -171,6 +172,9 @@
           </form>
           <p id="archive-round-msg" class="muted"></p>
           <p id="tip-unlock-status" class="muted"></p>
+              </section>
+            </div>
+          </details>
         </section>
 
         <section class="card"><h2>Punters Tier Payments + Payout Audit</h2>
@@ -585,6 +589,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-alerts-preview"></script>
+    <script src="admin.js?v=20260224-alerts-preview-racing-accordion"></script>
   </body>
 </html>
