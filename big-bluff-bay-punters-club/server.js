@@ -1873,7 +1873,8 @@ function createApp() {
       const mins = Number(row.minutesBefore);
       out[id] = {
         minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : defaults[id].minutesBefore,
-        trigger: String(row.trigger || defaults[id].trigger)
+        trigger: String(row.trigger || defaults[id].trigger),
+        enabled: row.enabled !== false
       };
     });
 
@@ -1882,6 +1883,53 @@ function createApp() {
     store.system.alertTemplateLogic = out;
     writeStore(store);
     return res.json({ ok: true, logic: out });
+  });
+
+
+  app.put('/api/alerts/templates/logic/:id', auth, adminOnly, (req, res) => {
+    const id = String(req.params?.id || '').trim();
+    const defaults = getDefaultAlertTemplateLogic();
+    if (!defaults[id]) return res.status(404).json({ error: 'Template logic not found' });
+
+    const mins = Number(req.body?.minutesBefore);
+    const trigger = String(req.body?.trigger || defaults[id].trigger);
+    const enabled = req.body?.enabled !== false;
+
+    const store = readStore();
+    store.system = store.system && typeof store.system === 'object' ? store.system : {};
+    const cur = store.system.alertTemplateLogic && typeof store.system.alertTemplateLogic === 'object' ? store.system.alertTemplateLogic : {};
+    store.system.alertTemplateLogic = {
+      ...cur,
+      [id]: {
+        minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : defaults[id].minutesBefore,
+        trigger,
+        enabled
+      }
+    };
+    writeStore(store);
+    return res.json({ ok: true, logic: store.system.alertTemplateLogic[id] });
+  });
+
+  app.delete('/api/alerts/templates/:id', auth, adminOnly, (req, res) => {
+    const id = String(req.params?.id || '').trim();
+    const defaults = getDefaultAlertTemplateLogic();
+    if (!defaults[id]) return res.status(404).json({ error: 'Template not found' });
+
+    const store = readStore();
+    store.system = store.system && typeof store.system === 'object' ? store.system : {};
+    // remove custom content override
+    if (store.system.alertTemplates && typeof store.system.alertTemplates === 'object') {
+      delete store.system.alertTemplates[id];
+    }
+    // disable logic (acts like delete)
+    const cur = store.system.alertTemplateLogic && typeof store.system.alertTemplateLogic === 'object' ? store.system.alertTemplateLogic : {};
+    const base = defaults[id];
+    store.system.alertTemplateLogic = {
+      ...cur,
+      [id]: { minutesBefore: Number(base.minutesBefore || 0), trigger: String(base.trigger || ''), enabled: false }
+    };
+    writeStore(store);
+    return res.json({ ok: true, deleted: id });
   });
 
   app.put('/api/alerts/templates/:id', auth, adminOnly, (req, res) => {
@@ -3848,11 +3896,11 @@ function buildAlertsSubscribers(store) {
 
 function getDefaultAlertTemplateLogic() {
   return {
-    startingSoon: { minutesBefore: 10, trigger: '10 minutes before shuffle' },
-    lateReg: { minutesBefore: 15, trigger: '15 minutes before late reg closes' },
-    overlayWatch: { minutesBefore: 20, trigger: '20 minutes before start (only if entries below target)' },
-    freerolls: { minutesBefore: 0, trigger: 'When freeroll listing is published' },
-    cashActive: { minutesBefore: 0, trigger: 'When cash lobby status flips active' }
+    startingSoon: { minutesBefore: 10, trigger: '10 minutes before shuffle', enabled: true },
+    lateReg: { minutesBefore: 15, trigger: '15 minutes before late reg closes', enabled: true },
+    overlayWatch: { minutesBefore: 20, trigger: '20 minutes before start (only if entries below target)', enabled: true },
+    freerolls: { minutesBefore: 0, trigger: 'When freeroll listing is published', enabled: true },
+    cashActive: { minutesBefore: 0, trigger: 'When cash lobby status flips active', enabled: true }
   };
 }
 
@@ -3865,7 +3913,8 @@ function getAlertTemplateLogic(store = readStore()) {
     const mins = Number(v.minutesBefore);
     out[id] = {
       minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : base[id].minutesBefore,
-      trigger: String(v.trigger || base[id].trigger)
+      trigger: String(v.trigger || base[id].trigger),
+      enabled: v.enabled !== false && base[id].enabled !== false
     };
   });
   return out;
@@ -3873,9 +3922,9 @@ function getAlertTemplateLogic(store = readStore()) {
 
 function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS, templateLogic = getDefaultAlertTemplateLogic()) {
   const templates = {
-    startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: Number(templateLogic?.startingSoon?.minutesBefore ?? 10) },
-    lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: Number(templateLogic?.lateReg?.minutesBefore ?? 15) },
-    overlayWatch: { id: 'overlayWatch', label: 'Overlay risk check', minusMin: Number(templateLogic?.overlayWatch?.minutesBefore ?? 20) }
+    startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: Number(templateLogic?.startingSoon?.minutesBefore ?? 10), enabled: templateLogic?.startingSoon?.enabled !== false },
+    lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: Number(templateLogic?.lateReg?.minutesBefore ?? 15), enabled: templateLogic?.lateReg?.enabled !== false },
+    overlayWatch: { id: 'overlayWatch', label: 'Overlay risk check', minusMin: Number(templateLogic?.overlayWatch?.minutesBefore ?? 20), enabled: templateLogic?.overlayWatch?.enabled !== false }
   };
 
   const queue = [];
@@ -3888,6 +3937,7 @@ function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = AL
         for (const key of Object.keys(templates)) {
           if (!sub.alerts[key]) continue;
           const t = templates[key];
+          if (!t || t.enabled === false) continue;
           const sendAt = new Date(start.getTime() - t.minusMin * 60 * 1000);
           if (sendAt.getTime() <= Date.now()) continue;
           queue.push({
@@ -3982,6 +4032,7 @@ function buildAlertTemplatesPreview(store = readStore()) {
     return {
       ...tpl,
       trigger: String((logic[tpl.id] && logic[tpl.id].trigger) || ov.trigger || tpl.trigger),
+      enabled: (logic[tpl.id] && logic[tpl.id].enabled) !== false,
       subject: String(ov.subject || tpl.subject),
       bodyPreview: String(ov.bodyPreview || tpl.bodyPreview),
       html: String(ov.html || tpl.html)
