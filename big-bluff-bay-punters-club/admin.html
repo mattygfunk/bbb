@@ -480,6 +480,45 @@
             <p id="admin-users-msg" class="muted"></p>
           </details>
         </section>
+
+        <section class="card" id="admin-alerts-monitor">
+          <details>
+            <summary><strong>Alerts Monitoring Interface</strong> <span class="muted">(expand)</span></summary>
+            <p class="muted" style="margin-top:.6rem">Monitor subscribers, upcoming alert queue, and template payloads.</p>
+
+            <div class="grid three" style="margin:.5rem 0 1rem">
+              <div class="card" style="padding:.75rem"><div class="muted">Subscribers</div><strong id="alerts-mon-subs">0</strong></div>
+              <div class="card" style="padding:.75rem"><div class="muted">Verified email</div><strong id="alerts-mon-verified">0</strong></div>
+              <div class="card" style="padding:.75rem"><div class="muted">Next queue items</div><strong id="alerts-mon-next-count">0</strong></div>
+            </div>
+
+            <h3 style="margin:.4rem 0">Who subscribed to what</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>User</th><th>Email</th><th>Verified</th><th>Mobile</th><th>Enabled alerts</th></tr></thead>
+                <tbody id="alerts-mon-subs-body"><tr><td colspan="5" class="muted">Loading monitor data…</td></tr></tbody>
+              </table>
+            </div>
+
+            <h3 style="margin:1rem 0 .4rem">Next 10 alerts to be sent</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>When</th><th>Template</th><th>Event</th><th>Recipient</th></tr></thead>
+                <tbody id="alerts-mon-next-body"><tr><td colspan="4" class="muted">Loading queue…</td></tr></tbody>
+              </table>
+            </div>
+
+            <h3 style="margin:1rem 0 .4rem">Alert templates</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Template</th><th>Trigger</th><th>Subject</th><th>Preview</th></tr></thead>
+                <tbody id="alerts-mon-templates-body"><tr><td colspan="4" class="muted">Loading templates…</td></tr></tbody>
+              </table>
+            </div>
+
+            <p id="alerts-mon-msg" class="muted"></p>
+          </details>
+        </section>
       </div>
     </main>
 

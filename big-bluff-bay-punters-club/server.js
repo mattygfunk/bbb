@@ -1771,6 +1771,21 @@ function createApp() {
     return res.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
   });
 
+  app.get('/api/alerts/monitor', auth, adminOnly, (_req, res) => {
+    const store = readStore();
+    const subscribers = buildAlertsSubscribers(store);
+    const nextAlerts = buildNextAlertQueuePreview(subscribers, 10);
+    const templates = buildAlertTemplatesPreview();
+    const summary = {
+      totalSubscribers: subscribers.length,
+      verifiedEmailSubscribers: subscribers.filter((s) => s.verifiedEmail).length,
+      channelCoverage: {
+        email: subscribers.filter((s) => Boolean(s.email)).length,
+        phone: subscribers.filter((s) => Boolean(s.phone)).length
+      }
+    };
+    return res.json({ ok: true, summary, subscribers, nextAlerts, templates, generatedAt: Date.now() });
+  });
 
   app.get('/api/profile', auth, (req, res) => {
     const store = readStore();
@@ -3517,6 +3532,139 @@ function createApp() {
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   return app;
+}
+
+const ALERT_SCHEDULE_EVENTS = [
+  { id: 'nightly-prime', title: 'Nightly Prime', day: 'daily', hour: 20, minute: 0 },
+  { id: 'late-night-gtd', title: 'Late Night GTD', day: 'daily', hour: 22, minute: 0 },
+  { id: 'sunday-main', title: 'Sunday Main', day: 0, hour: 18, minute: 0 }
+];
+
+function nextOccurrenceFromMelbourne(event, fromDate = new Date()) {
+  const m = getMelbourneParts(fromDate);
+  let addDays = 0;
+  const nowMins = m.hour * 60 + m.minute;
+  const eventMins = Number(event.hour || 0) * 60 + Number(event.minute || 0);
+
+  if (event.day === 'daily') {
+    addDays = eventMins > nowMins ? 0 : 1;
+  } else {
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const eventDay = Number(event.day || 0);
+    const nowDay = weekdays.indexOf(String(m.weekday || '').slice(0, 3));
+    addDays = (eventDay - nowDay + 7) % 7;
+    if (addDays === 0 && eventMins <= nowMins) addDays = 7;
+  }
+
+  const targetProbeUtc = new Date(fromDate.getTime() + addDays * 24 * 60 * 60 * 1000);
+  const targetParts = getMelbourneParts(targetProbeUtc);
+  const offsetMin = getMelbourneOffsetMinutes(new Date(Date.UTC(targetParts.year, targetParts.month - 1, targetParts.day, Number(event.hour || 0), Number(event.minute || 0), 0)));
+  return new Date(Date.UTC(targetParts.year, targetParts.month - 1, targetParts.day, Number(event.hour || 0), Number(event.minute || 0), 0) - offsetMin * 60 * 1000);
+}
+
+function buildAlertsSubscribers(store) {
+  const users = Array.isArray(store?.users) ? store.users : [];
+  return users.map((u) => {
+    const profile = normalizeUserProfile(u?.profile || {});
+    const prefs = profile?.settings?.alertsPreferences || {};
+    const alerts = prefs?.alerts || {};
+    const methods = prefs?.methods || {};
+    const contact = prefs?.contact || {};
+    const email = String(contact?.email || profile?.email || '').trim().toLowerCase();
+    const phone = String(contact?.phone || '').trim();
+    return {
+      id: u.id,
+      username: String(u.username || ''),
+      email,
+      phone,
+      verifiedEmail: Boolean(methods?.email?.verified),
+      alerts: {
+        overlayWatch: Boolean(alerts?.overlayWatch),
+        lateReg: Boolean(alerts?.lateReg),
+        startingSoon: Boolean(alerts?.startingSoon),
+        freerolls: Boolean(alerts?.freerolls),
+        cashActive: Boolean(alerts?.cashActive)
+      }
+    };
+  }).filter((s) => s.email && Object.values(s.alerts).some(Boolean)).sort((a, b) => a.username.localeCompare(b.username));
+}
+
+function buildNextAlertQueuePreview(subscribers, limit = 10) {
+  const templates = {
+    startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: 30 },
+    lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: 15 },
+    overlayWatch: { id: 'overlayWatch', label: 'Overlay risk check', minusMin: 20 }
+  };
+
+  const queue = [];
+  const horizonRuns = 5;
+  for (const sub of subscribers) {
+    for (const e of ALERT_SCHEDULE_EVENTS) {
+      let cursor = new Date();
+      for (let i = 0; i < horizonRuns; i += 1) {
+        const start = nextOccurrenceFromMelbourne(e, cursor);
+        for (const key of Object.keys(templates)) {
+          if (!sub.alerts[key]) continue;
+          const t = templates[key];
+          const sendAt = new Date(start.getTime() - t.minusMin * 60 * 1000);
+          if (sendAt.getTime() <= Date.now()) continue;
+          queue.push({
+            sendAt: sendAt.getTime(),
+            sendAtIso: sendAt.toISOString(),
+            templateId: t.id,
+            templateLabel: t.label,
+            eventId: e.id,
+            eventTitle: e.title,
+            recipient: sub.email,
+            username: sub.username
+          });
+        }
+        cursor = new Date(start.getTime() + 60 * 1000);
+      }
+    }
+  }
+
+  return queue.sort((a, b) => a.sendAt - b.sendAt).slice(0, Math.max(1, Number(limit || 10)));
+}
+
+function buildAlertTemplatesPreview() {
+  return [
+    {
+      id: 'startingSoon',
+      name: 'Tournament Starting Soon',
+      trigger: '30 minutes before shuffle',
+      subject: 'Starting soon: {eventTitle}',
+      bodyPreview: 'Your selected tournament starts in ~30 minutes. Join now to secure entry.'
+    },
+    {
+      id: 'lateReg',
+      name: 'Late Registration Closing',
+      trigger: '15 minutes before late reg closes',
+      subject: 'Late reg closing soon: {eventTitle}',
+      bodyPreview: 'Late registration window is closing. Enter now if you want in.'
+    },
+    {
+      id: 'overlayWatch',
+      name: 'Overlay Risk',
+      trigger: '20 minutes before start (only if entries below target)',
+      subject: 'Overlay watch: {eventTitle}',
+      bodyPreview: 'Overlay conditions detected. Value spot may be live.'
+    },
+    {
+      id: 'freerolls',
+      name: 'Freeroll Posted',
+      trigger: 'When freeroll listing is published',
+      subject: 'New freeroll posted',
+      bodyPreview: 'A freeroll has been posted. Open schedule for details.'
+    },
+    {
+      id: 'cashActive',
+      name: 'Cash Tables Active',
+      trigger: 'When cash lobby status flips active',
+      subject: 'Cash tables now active',
+      bodyPreview: 'Cash tables are active now.'
+    }
+  ];
 }
 
 function getVerifiedAlertEmails(store) {

@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -129,6 +129,62 @@ async function loadAdminUsers(){
     });
   } catch (err) {
     body.innerHTML = `<tr><td colspan='8' class='muted'>${esc(err.message || 'Could not load users.')}</td></tr>`;
+  }
+}
+
+async function loadAlertsMonitor(){
+  const subsBody = $('alerts-mon-subs-body');
+  const nextBody = $('alerts-mon-next-body');
+  const templatesBody = $('alerts-mon-templates-body');
+  const msg = $('alerts-mon-msg');
+  if (!subsBody || !nextBody || !templatesBody) return;
+  if (!isAdmin()) {
+    subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
+    nextBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
+    templatesBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
+    return;
+  }
+
+  try {
+    const out = await req(API.alertsMonitor);
+    const summary = out.summary || {};
+    const subscribers = out.subscribers || [];
+    const nextAlerts = out.nextAlerts || [];
+    const templates = out.templates || [];
+
+    $('alerts-mon-subs').textContent = String(summary.totalSubscribers || subscribers.length || 0);
+    $('alerts-mon-verified').textContent = String(summary.verifiedEmailSubscribers || 0);
+    $('alerts-mon-next-count').textContent = String(nextAlerts.length || 0);
+
+    subsBody.innerHTML = '';
+    subscribers.forEach((s) => {
+      const enabled = Object.entries(s.alerts || {}).filter(([,v]) => v).map(([k]) => k).join(', ') || 'none';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(s.username || '-')}</td><td>${esc(s.email || '-')}</td><td>${s.verifiedEmail ? '✅' : '⚪'}</td><td>${esc(s.phone || '-')}</td><td>${esc(enabled)}</td>`;
+      subsBody.appendChild(tr);
+    });
+    if (!subscribers.length) subsBody.innerHTML = "<tr><td colspan='5' class='muted'>No alert subscribers yet.</td></tr>";
+
+    nextBody.innerHTML = '';
+    nextAlerts.forEach((a) => {
+      const tr = document.createElement('tr');
+      const when = a.sendAtIso ? new Date(a.sendAtIso).toLocaleString('en-AU') : '-';
+      tr.innerHTML = `<td>${esc(when)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
+      nextBody.appendChild(tr);
+    });
+    if (!nextAlerts.length) nextBody.innerHTML = "<tr><td colspan='4' class='muted'>No upcoming alerts in queue.</td></tr>";
+
+    templatesBody.innerHTML = '';
+    templates.forEach((t) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td>`;
+      templatesBody.appendChild(tr);
+    });
+    if (!templates.length) templatesBody.innerHTML = "<tr><td colspan='4' class='muted'>No templates configured.</td></tr>";
+
+    if (msg) msg.textContent = `Monitor refreshed ${new Date().toLocaleTimeString('en-AU')}.`;
+  } catch (err) {
+    if (msg) msg.textContent = err.message || 'Could not load alerts monitor data.';
   }
 }
 
@@ -583,6 +639,7 @@ async function refresh(){
   renderAdminSummaryCounts();
   refreshPokerPlayerOptions().catch(()=>{});
   loadAdminUsers().catch(()=>{});
+  loadAlertsMonitor().catch(()=>{});
   refreshClaims().catch(()=>{});
 
   if (!hasOpenRound) {
