@@ -1839,6 +1839,9 @@ function createApp() {
         day,
         hour,
         minute,
+        startingStack: String(e?.startingStack || '').trim(),
+        blinds: String(e?.blinds || '').trim(),
+        earlyBirdRefunds: String(e?.earlyBirdRefunds || '').trim(),
         enabled: e?.enabled !== false
       };
     });
@@ -3689,6 +3692,9 @@ function getAlertScheduleEvents(store = readStore()) {
       day,
       hour,
       minute,
+      startingStack: String(e?.startingStack || '').trim(),
+      blinds: String(e?.blinds || '').trim(),
+      earlyBirdRefunds: String(e?.earlyBirdRefunds || '').trim(),
       enabled: e?.enabled !== false
     };
   });

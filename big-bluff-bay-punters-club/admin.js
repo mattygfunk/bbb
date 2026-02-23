@@ -265,12 +265,12 @@ async function loadAlertsMonitor(){
       eventsBody.innerHTML = '';
       scheduleEvents.forEach((e) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
+        tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><input data-evt-stack type='text' value='${esc(e.startingStack || '')}' placeholder='e.g. 20,000' style='min-width:120px;width:100%' /></td><td><input data-evt-blinds type='text' value='${esc(e.blinds || '')}' placeholder='e.g. 100/200/200' style='min-width:140px;width:100%' /></td><td><input data-evt-refunds type='text' value='${esc(e.earlyBirdRefunds || '')}' placeholder='e.g. $5 before 7:15pm' style='min-width:160px;width:100%' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
         const daySel = tr.querySelector('[data-evt-day]');
         if (daySel) daySel.value = String(e.day === 'daily' ? 'daily' : Number(e.day || 0));
         eventsBody.appendChild(tr);
       });
-      if (!scheduleEvents.length) eventsBody.innerHTML = "<tr><td colspan='7' class='muted'>No tournaments configured.</td></tr>";
+      if (!scheduleEvents.length) eventsBody.innerHTML = "<tr><td colspan='10' class='muted'>No tournaments configured.</td></tr>";
     }
 
     nextBody.innerHTML = '';
@@ -382,7 +382,7 @@ async function loadAlertsMonitor(){
       addEventBtn.addEventListener('click', () => {
         if (!eventsBody) return;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input data-evt-id type='text' value='' placeholder='event-id' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='' placeholder='Tournament name' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='20' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='0' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' checked /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
+        tr.innerHTML = `<td><input data-evt-id type='text' value='' placeholder='event-id' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='' placeholder='Tournament name' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='20' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='0' style='width:86px' /></td><td><input data-evt-stack type='text' value='' placeholder='e.g. 20,000' style='min-width:120px;width:100%' /></td><td><input data-evt-blinds type='text' value='' placeholder='e.g. 100/200/200' style='min-width:140px;width:100%' /></td><td><input data-evt-refunds type='text' value='' placeholder='e.g. $5 before 7:15pm' style='min-width:160px;width:100%' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' checked /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
         eventsBody.appendChild(tr);
       });
     }
@@ -409,8 +409,11 @@ async function loadAlertsMonitor(){
           const day = dayRaw === 'daily' ? 'daily' : Number(dayRaw || 0);
           const hour = Number(tr.querySelector('[data-evt-hour]')?.value || 0);
           const minute = Number(tr.querySelector('[data-evt-minute]')?.value || 0);
+          const startingStack = String(tr.querySelector('[data-evt-stack]')?.value || '').trim();
+          const blinds = String(tr.querySelector('[data-evt-blinds]')?.value || '').trim();
+          const earlyBirdRefunds = String(tr.querySelector('[data-evt-refunds]')?.value || '').trim();
           const enabled = Boolean(tr.querySelector('[data-evt-enabled]')?.checked);
-          return { id, title, day, hour, minute, enabled };
+          return { id, title, day, hour, minute, startingStack, blinds, earlyBirdRefunds, enabled };
         }).filter((e) => e.title);
 
         const ids = events.map((e) => String(e.id || '').toLowerCase());
