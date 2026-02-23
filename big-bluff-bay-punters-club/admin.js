@@ -69,16 +69,16 @@ function renderAdminSummaryCounts(){
   const paidUsers = Number(state.summary?.paidUsers || 0);
   const pokerEvents = Number(state.summary?.pokerEvents || 0);
 
-  const all = tipUsers + pokerEvents;
-  const racing = tipUsers;
-  const poker = pokerEvents;
+  const racingCount = document.querySelectorAll('#admin-racing-sections > section.card').length;
+  const pokerCount = document.querySelectorAll('#admin-poker-sections > section.card').length;
+  const allCount = racingCount + pokerCount;
 
   const allEl = $('admin-count-all');
   const racingEl = $('admin-count-racing');
   const pokerEl = $('admin-count-poker');
-  if (allEl) allEl.textContent = String(all);
-  if (racingEl) racingEl.textContent = String(racing);
-  if (pokerEl) pokerEl.textContent = String(poker);
+  if (allEl) allEl.textContent = String(allCount);
+  if (racingEl) racingEl.textContent = String(racingCount);
+  if (pokerEl) pokerEl.textContent = String(pokerCount);
 
   const tipUsersEl = $('admin-stat-tip-users');
   const paidUsersEl = $('admin-stat-paid-users');
