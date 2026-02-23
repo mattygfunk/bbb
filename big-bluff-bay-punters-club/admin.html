@@ -247,8 +247,11 @@
           </details>
         </section>
 
-        <section class="card"><h2>Paste Runners Import</h2>
-          <form id="runners-import-form" class="stack">
+        <section class="card">
+          <details id="paste-runners-import-accordion">
+            <summary><strong>Paste Runners Import</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <form id="runners-import-form" class="stack">
             <div class="split">
               <label>Import into Race #
                 <select id="runners-import-race" name="race"><option value="R1">R1</option></select>
@@ -269,14 +272,16 @@
               <button class="btn btn-ghost" type="button" id="runners-clear-btn">Clear</button>
             </div>
           </form>
-          <p id="runners-import-msg" class="muted" aria-live="polite"></p>
-          <div class="table-wrap table-cards" style="margin-top:.55rem">
-            <table>
-              <caption>Parsed runners preview</caption>
-              <thead><tr><th>Horse</th><th>Barrier</th><th>Form</th><th>Wt</th><th>Rating</th><th>Win</th><th>Place</th><th>Status</th><th>Warnings</th><th>Confidence</th></tr></thead>
-              <tbody id="runners-preview-body"><tr><td colspan="10" class="muted">No parsed runners yet.</td></tr></tbody>
-            </table>
-          </div>
+              <p id="runners-import-msg" class="muted" aria-live="polite"></p>
+              <div class="table-wrap table-cards" style="margin-top:.55rem">
+                <table>
+                  <caption>Parsed runners preview</caption>
+                  <thead><tr><th>Horse</th><th>Barrier</th><th>Form</th><th>Wt</th><th>Rating</th><th>Win</th><th>Place</th><th>Status</th><th>Warnings</th><th>Confidence</th></tr></thead>
+                  <tbody id="runners-preview-body"><tr><td colspan="10" class="muted">No parsed runners yet.</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
         </section>
 
         <section class="card">
@@ -609,6 +614,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-more-accordions"></script>
+    <script src="admin.js?v=20260224-runners-accordion"></script>
   </body>
 </html>
