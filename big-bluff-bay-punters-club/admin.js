@@ -6,6 +6,30 @@ const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,f
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';let lastStatus=0;let lastData={};for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';lastStatus=r.status;lastData=d;continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';lastStatus=r.status;lastData=d;continue;}lastErr=d.error||`Request failed (${r.status})`;lastStatus=r.status;lastData=d;}const err=new Error(lastErr||'Request failed');err.status=lastStatus;err.data=lastData;throw err;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+function ensureAlertsPreviewModal(){
+  let modal = document.getElementById('alerts-template-preview-modal');
+  if (modal) return modal;
+
+  modal = document.createElement('div');
+  modal.id = 'alerts-template-preview-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem;';
+  modal.innerHTML = `
+    <div style="width:min(980px,96vw);height:min(86vh,860px);background:#0b1220;border:1px solid #334155;border-radius:12px;display:grid;grid-template-rows:auto 1fr;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.45)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .85rem;border-bottom:1px solid #233044;gap:.7rem">
+        <strong id="alerts-template-preview-title">Template Preview</strong>
+        <button type="button" class="btn btn-ghost" id="alerts-template-preview-close">Close</button>
+      </div>
+      <iframe id="alerts-template-preview-frame" title="Alert template HTML preview" style="width:100%;height:100%;border:0;background:#0b1219"></iframe>
+    </div>`;
+  document.body.appendChild(modal);
+
+  const close = () => { modal.style.display = 'none'; };
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  modal.querySelector('#alerts-template-preview-close')?.addEventListener('click', close);
+  return modal;
+}
+
 function toastBosses(msg, tone='ok'){
   const el = $('bosses-msg');
   if(!el) return;
@@ -264,14 +288,13 @@ async function loadAlertsMonitor(){
           .replaceAll('{eventTitle}', 'Nightly Prime')
           .replaceAll('{startTime}', '7:30 PM')
           .replaceAll('{recipientName}', 'Matt');
-        const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=740');
-        if (!win) {
-          if (msg) msg.textContent = 'Preview popup blocked. Please allow popups for this site.';
-          return;
-        }
-        win.document.open();
-        win.document.write(`<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Template Preview • ${esc(template.name || templateId)}</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`);
-        win.document.close();
+
+        const modal = ensureAlertsPreviewModal();
+        const frame = modal.querySelector('#alerts-template-preview-frame');
+        const title = modal.querySelector('#alerts-template-preview-title');
+        if (title) title.textContent = `Template Preview • ${String(template.name || templateId)}`;
+        if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Template Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
+        modal.style.display = 'flex';
       });
     });
 
