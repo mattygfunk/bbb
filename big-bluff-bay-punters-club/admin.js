@@ -132,6 +132,8 @@ async function loadAdminUsers(){
   }
 }
 
+let alertsMonitorCache = { subscribersRaw: [] };
+
 async function loadAlertsMonitor(){
   const subsBody = $('alerts-mon-subs-body');
   const nextBody = $('alerts-mon-next-body');
@@ -139,6 +141,8 @@ async function loadAlertsMonitor(){
   const msg = $('alerts-mon-msg');
   const filterEl = $('alerts-mon-filter');
   const testEmailEl = $('alerts-mon-test-email');
+  const refreshBtn = $('alerts-mon-refresh');
+  const exportBtn = $('alerts-mon-export');
   if (!subsBody || !nextBody || !templatesBody) return;
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
@@ -159,6 +163,7 @@ async function loadAlertsMonitor(){
     $('alerts-mon-next-count').textContent = String(nextAlerts.length || 0);
 
     const mode = String(filterEl?.value || 'all');
+    alertsMonitorCache.subscribersRaw = subscribersRaw;
     const subscribers = subscribersRaw.filter((s) => {
       if (mode === 'verified') return Boolean(s.verifiedEmail);
       if (mode === 'overlay') return Boolean(s?.alerts?.overlayWatch);
@@ -167,8 +172,16 @@ async function loadAlertsMonitor(){
     });
 
     subsBody.innerHTML = '';
+    const prettyAlertName = (k) => ({
+      overlayWatch: 'overlay',
+      lateReg: 'late-reg',
+      startingSoon: 'starting-soon',
+      freerolls: 'freeroll',
+      cashActive: 'cash-active'
+    }[k] || k);
+
     subscribers.forEach((s) => {
-      const enabled = Object.entries(s.alerts || {}).filter(([,v]) => v).map(([k]) => k).join(', ') || 'none';
+      const enabled = Object.entries(s.alerts || {}).filter(([,v]) => v).map(([k]) => prettyAlertName(k)).join(', ') || 'none';
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${esc(s.username || '-')}</td><td>${esc(s.email || '-')}</td><td>${s.verifiedEmail ? '✅' : '⚪'}</td><td>${esc(s.phone || '-')}</td><td>${esc(enabled)}</td>`;
       subsBody.appendChild(tr);
@@ -179,7 +192,9 @@ async function loadAlertsMonitor(){
     nextAlerts.forEach((a) => {
       const tr = document.createElement('tr');
       const when = a.sendAtIso ? new Date(a.sendAtIso).toLocaleString('en-AU') : '-';
-      tr.innerHTML = `<td>${esc(when)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
+      const mins = Number.isFinite(a.sendAt) ? Math.max(0, Math.round((Number(a.sendAt) - Date.now()) / 60000)) : null;
+      const rel = mins == null ? '' : ` (${mins}m)`;
+      tr.innerHTML = `<td>${esc(`${when}${rel}`)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
       nextBody.appendChild(tr);
     });
     if (!nextAlerts.length) nextBody.innerHTML = "<tr><td colspan='4' class='muted'>No upcoming alerts in queue.</td></tr>";
@@ -215,6 +230,43 @@ async function loadAlertsMonitor(){
     if (!filterEl?.dataset.bound) {
       filterEl.dataset.bound = '1';
       filterEl.addEventListener('change', () => loadAlertsMonitor().catch(()=>{}));
+    }
+
+    if (refreshBtn && !refreshBtn.dataset.bound) {
+      refreshBtn.dataset.bound = '1';
+      refreshBtn.addEventListener('click', () => loadAlertsMonitor().catch(()=>{}));
+    }
+
+    if (exportBtn && !exportBtn.dataset.bound) {
+      exportBtn.dataset.bound = '1';
+      exportBtn.addEventListener('click', () => {
+        const modeNow = String(filterEl?.value || 'all');
+        const filtered = (alertsMonitorCache.subscribersRaw || []).filter((s) => {
+          if (modeNow === 'verified') return Boolean(s.verifiedEmail);
+          if (modeNow === 'overlay') return Boolean(s?.alerts?.overlayWatch);
+          if (modeNow === 'no-mobile') return !String(s.phone || '').trim();
+          return true;
+        });
+        const rows = [['username','email','verifiedEmail','phone','overlayWatch','lateReg','startingSoon','freerolls','cashActive']];
+        filtered.forEach((s) => rows.push([
+          String(s.username || ''),
+          String(s.email || ''),
+          String(Boolean(s.verifiedEmail)),
+          String(s.phone || ''),
+          String(Boolean(s?.alerts?.overlayWatch)),
+          String(Boolean(s?.alerts?.lateReg)),
+          String(Boolean(s?.alerts?.startingSoon)),
+          String(Boolean(s?.alerts?.freerolls)),
+          String(Boolean(s?.alerts?.cashActive))
+        ]));
+        const csv = rows.map((r) => r.map((v) => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `alerts-subscribers-${modeNow}-${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
     }
 
     if (msg) msg.textContent = `Monitor refreshed ${new Date().toLocaleTimeString('en-AU')}.`;
