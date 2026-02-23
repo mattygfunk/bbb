@@ -769,7 +769,8 @@ async function refresh(){
   const loginCard=$('admin-login-card');
   if(adminOnly) adminOnly.style.display=isAdmin()?'grid':'none';
   if(loginCard) loginCard.style.display=isAdmin()?'none':'block';
-  $('admin-list').innerHTML='';
+  const adminListEl = $('admin-list');
+  if (adminListEl) adminListEl.innerHTML='';
   updateTrackLabels();
   renderAdminSummaryCounts();
   if(!isAdmin()){ return; }
@@ -958,11 +959,11 @@ async function refresh(){
   refreshClaims().catch(()=>{});
 
   if (!hasOpenRound) {
-    $('admin-list').innerHTML = '<p class="muted">No OPEN round currently. Tip list hidden between rounds.</p>';
+    if (adminListEl) adminListEl.innerHTML = '<p class="muted">No OPEN round currently. Tip list hidden between rounds.</p>';
     return;
   }
 
-  if(!p.tips?.length){$('admin-list').innerHTML='<p class="muted">No tips submitted yet.</p>';return;}
+  if(!p.tips?.length){ if (adminListEl) adminListEl.innerHTML='<p class="muted">No tips submitted yet.</p>'; return; }
 
   const byUser = new Map();
   (p.tips || []).filter(t=>t.status!=='removed').forEach((t) => {
@@ -983,10 +984,12 @@ async function refresh(){
       row.className = 'row';
       row.style.alignItems = 'flex-start';
       row.innerHTML = `<div><strong>${esc(member)}</strong><div class='muted'>${tips.length} race${tips.length===1?'':'s'} tipped • ${allPaid ? 'Paid' : 'Unpaid'}</div><div class='muted'>${lines}</div></div><div class='row-actions'><button class='btn btn-ghost' data-action='toggle-paid' data-member='${encodeURIComponent(member)}' data-paid='${allPaid ? 'false' : 'true'}'>Mark ${allPaid ? 'Unpaid' : 'Paid'}</button><button class='btn btn-ghost' data-action='edit-tips' data-member='${encodeURIComponent(member)}'>Edit Tips</button></div>`;
-      $('admin-list').appendChild(row);
+      if (adminListEl) adminListEl.appendChild(row);
     });
 
-  $('admin-list').querySelectorAll("button[data-action='toggle-paid']").forEach((btn) => {
+  if (!adminListEl) return;
+
+  adminListEl.querySelectorAll("button[data-action='toggle-paid']").forEach((btn) => {
     btn.onclick = async () => {
       try {
         const member = decodeURIComponent(btn.dataset.member || '');
@@ -1002,7 +1005,7 @@ async function refresh(){
     };
   });
 
-  $('admin-list').querySelectorAll("button[data-action='edit-tips']").forEach((btn) => {
+  adminListEl.querySelectorAll("button[data-action='edit-tips']").forEach((btn) => {
     btn.onclick = async () => {
       try {
         const member = decodeURIComponent(btn.dataset.member || '');
