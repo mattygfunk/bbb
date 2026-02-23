@@ -1622,37 +1622,12 @@ setInterval(() => {
 
 
 const pokerEventPreset = $('poker-event-preset');
-const pokerEventCustomWrap = $('poker-event-custom-wrap');
-const pokerEventCustom = $('poker-event-custom');
 
-function syncPokerEventMode(){
-  const isCustom = pokerEventPreset?.value === 'custom';
-  if (pokerEventCustomWrap) pokerEventCustomWrap.hidden = !isCustom;
-  if (pokerEventCustom) {
-    pokerEventCustom.required = Boolean(isCustom);
-    if (isCustom) setTimeout(() => pokerEventCustom.focus(), 0);
-    if (!isCustom) pokerEventCustom.value = '';
-  }
-}
-
-
-function syncPokerPlayerMode() {
-  const select = $('poker-player-select');
-  const wrap = $('poker-player-custom-wrap');
-  const input = $('poker-player-custom');
-  const isCustom = String(select?.value || '') === '__custom__';
-  if (wrap) wrap.hidden = !isCustom;
-  if (input) {
-    input.required = isCustom;
-    if (!isCustom) input.value = '';
-  }
-}
+function syncPokerEventMode() {}
+function syncPokerPlayerMode() {}
 
 function selectedPokerPlayer(formData) {
-  const selected = String(formData.get('playerSelect') || '').trim();
-  const custom = String(formData.get('playerCustom') || '').trim();
-  if (selected === '__custom__') return custom;
-  return selected;
+  return String(formData.get('playerSelect') || '').trim();
 }
 
 function renderPokerPlayerOptions(players = []) {
@@ -1664,7 +1639,6 @@ function renderPokerPlayerOptions(players = []) {
     const safe = String(name || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
     options.push(`<option value="${safe}">${safe}</option>`);
   });
-  options.push('<option value="__custom__">Other (type manually)…</option>');
   select.innerHTML = options.join('');
 
   if (current && Array.from(select.options).some((o) => o.value === current)) {
@@ -1744,15 +1718,9 @@ function applyPokerBulkFromQuery(){
   const eventName = String(params.get('eventName') || '').trim();
   if (eventName) {
     const preset = $('poker-event-preset');
-    const custom = $('poker-event-custom');
     const known = ['Nightly 500gtd', 'Nightly 700gtd', 'Sunday 1300gtd'];
     if (preset) {
-      if (known.includes(eventName)) {
-        preset.value = eventName;
-      } else {
-        preset.value = 'custom';
-        if (custom) custom.value = eventName;
-      }
+      if (known.includes(eventName)) preset.value = eventName;
       syncPokerEventMode();
     }
   }
@@ -1767,10 +1735,8 @@ syncPokerPlayerMode();
 applyPokerBulkFromQuery();
 
 function selectedPokerEventName(formData){
-  const eventPreset = String(formData.get('eventPreset') || 'Nightly 500gtd').trim();
-  const eventNameCustom = String(formData.get('eventNameCustom') || '').trim();
-  const eventName = eventPreset === 'custom' ? eventNameCustom : eventPreset;
-  return { eventPreset, eventNameCustom, eventName };
+  const eventName = String(formData.get('eventPreset') || 'Nightly 500gtd').trim();
+  return { eventName };
 }
 
 $('poker-result-form')?.addEventListener('submit', async (e) => {
@@ -1779,13 +1745,13 @@ $('poker-result-form')?.addEventListener('submit', async (e) => {
   const f = new FormData(e.target);
   const player = String(selectedPokerPlayer(f) || '').trim();
   const points = Number(f.get('points'));
-  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(f);
+  const { eventName } = selectedPokerEventName(f);
   const finalTable = f.get('finalTable') !== null;
   const cashed = f.get('cashed') !== null;
 
   if (!player) { setPokerResultMsg('err','Player is required.'); return; }
   if (!Number.isFinite(points) || points < 0) { setPokerResultMsg('err','Enter a valid points value.'); return; }
-  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name.'); return; }
+  // Manual event entry removed: event comes from preset only.
 
   try {
     await req(API.pokerResults, {
@@ -1875,12 +1841,12 @@ $('poker-bulk-form')?.addEventListener('submit', async (e) => {
   const raw = String(formData.get('bulkLines') || '');
   const rows = parsePokerBulkRows(raw);
   const parentFormData = new FormData($('poker-result-form'));
-  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(parentFormData);
+  const { eventName } = selectedPokerEventName(parentFormData);
   const finalTableDefault = parentFormData.get('finalTable') !== null;
   const cashedDefault = parentFormData.get('cashed') !== null;
 
   if (!rows.length) { setPokerResultMsg('err', 'Paste at least one valid row.'); return; }
-  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name first.'); return; }
+  // Manual event entry removed: event comes from preset only.
 
   const results = [];
   const errors = [];
@@ -1931,10 +1897,10 @@ $('poker-xlsx-import-form')?.addEventListener('submit', async (e) => {
   if (!source) { setPokerResultMsg('err', 'Select an XLSX source.'); return; }
 
   const parentFormData = new FormData($('poker-result-form'));
-  const { eventPreset, eventNameCustom, eventName } = selectedPokerEventName(parentFormData);
+  const { eventName } = selectedPokerEventName(parentFormData);
   const finalTableDefault = parentFormData.get('finalTable') !== null;
   const cashedDefault = parentFormData.get('cashed') !== null;
-  if (eventPreset === 'custom' && !eventNameCustom) { setPokerResultMsg('err','Enter a custom event name first.'); return; }
+  // Manual event entry removed: event comes from preset only.
 
   try {
     const resp = await fetch(source, { cache: 'no-store' });
