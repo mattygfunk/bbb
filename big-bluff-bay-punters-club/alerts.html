@@ -29,10 +29,15 @@
           linear-gradient(160deg,var(--bg-a),var(--bg-b));
         min-height:100vh;
       }
+      .site-wrap{width:min(1120px,92%);margin:0 auto}
       .wrap{max-width:680px;margin:0 auto;padding:24px}
-      .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
-      .top a{color:#e6dbc0;text-decoration:none;font-size:.9rem}
       .hero{margin:24px 0}
+      .nav{position:relative;display:flex;justify-content:space-between;align-items:center;padding:1rem 0;gap:.75rem;flex-wrap:wrap}
+      .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:inherit}
+      .badge{width:2rem;height:2rem;border-radius:.5rem;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:#052e16;color:#86efac;border:1px solid #14532d}
+      .menu-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+      .menu-link{color:#fff;text-decoration:none;border:1px solid #8aa4c7;background:#0f1b2d;border-radius:999px;padding:.5rem .78rem;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem}
+      .menu-link.active{color:#052e16;background:#86efac;border-color:#86efac;font-weight:700}
       h1{margin:0;font-size:clamp(1.7rem,4.8vw,2.4rem);letter-spacing:.06em}
       .sub{margin-top:24px;color:var(--muted);line-height:1.5}
 
@@ -76,12 +81,23 @@
     </style>
   </head>
   <body>
-    <main class="wrap">
-      <header class="top">
-        <a href="/">← Home</a>
-        <a href="/poker-schedule.html">Poker Tournaments</a>
-      </header>
+    <header>
+      <nav class="nav site-wrap" aria-label="Primary">
+        <a class="brand" href="/">
+          <span class="badge">BBB</span>
+          <span><strong>Big Bluff Bay</strong><small style="display:block;opacity:.78">Punters Club</small></span>
+        </a>
+        <div class="menu-links">
+          <a class="menu-link" href="/">🏠 Home</a>
+          <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+          <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a>
+          <a class="menu-link active" href="/alerts">🔔 Alerts <span aria-hidden="true" style="color:#ef4444">●</span></a>
+          <a class="menu-link" href="/winners.html">🏆 Winners</a>
+        </div>
+      </nav>
+    </header>
 
+    <main class="wrap">
       <section class="hero">
         <h1>PRIVATE CLUB ALERTS</h1>
         <p class="sub">Stay ahead of overlays. Know before late reg closes. Get the edge.</p>
@@ -122,6 +138,11 @@
         </div>
       </section>
     </main>
+
+    <footer class="site-wrap" style="padding:1rem 0 2rem;border-top:1px solid rgba(212,175,55,.25);margin-top:1rem">
+      <p style="margin:.2rem 0;color:#cbbf9d">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
+      <p style="margin:.2rem 0;color:#a8a089">© 2026 Big Bluff Bay</p>
+    </footer>
 
     <script src="alerts.js"></script>
   </body>
