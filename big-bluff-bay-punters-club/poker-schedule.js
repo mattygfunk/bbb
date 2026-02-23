@@ -29,14 +29,27 @@
     $('next-event-ics-btn').onclick = () => downloadICS(n.event, n.start);
   }
 
+  function updateEventCardStatuses() {
+    document.querySelectorAll('[data-event-start]').forEach((el) => {
+      const startMs = Number(el.getAttribute('data-event-start') || 0);
+      if (!Number.isFinite(startMs) || startMs <= 0) return;
+      const start = new Date(startMs);
+      const status = eventStatus(start);
+      const remaining = fmtCountdown(startMs - Date.now());
+      el.textContent = status === 'Starts in' ? `Starts in ${remaining}` : status;
+    });
+  }
+
   function renderCountdown() {
     if (!state.nextEvent) return;
     const ms = state.nextEvent.start.getTime() - Date.now();
     const text = fmtCountdown(ms);
     $('next-event-countdown').textContent = text;
-    $('next-event-status').textContent = eventStatus(state.nextEvent.start);
+    const nextStatus = eventStatus(state.nextEvent.start);
+    $('next-event-status').textContent = nextStatus === 'Starts in' ? `Starts in ${text}` : nextStatus;
     const chip = $('next-game-chip');
     if (chip) chip.textContent = `⏱ Next game starts in ${text}`;
+    updateEventCardStatuses();
   }
 
   function renderEventCards() {
@@ -47,8 +60,10 @@
       const occ = shared.nextOccurrence(e);
       const article = document.createElement('article');
       article.className = 'card poker-event-card';
+      const statusNow = eventStatus(occ.start);
+      const statusText = statusNow === 'Starts in' ? `Starts in ${fmtCountdown(occ.start.getTime() - Date.now())}` : statusNow;
       article.innerHTML = `
-        <p class='pill'>${eventStatus(occ.start)}</p>
+        <p class='pill' data-event-start='${occ.start.getTime()}'>${statusText}</p>
         <h2>${e.title}</h2>
         <p class='muted'><strong>${fmtInZone(occ.start, state.tzMode === 'local' ? getLocalTZ() : MEL_TZ)}</strong> • ${e.format}</p>
         <p class='muted'>${e.whoFor}</p>
