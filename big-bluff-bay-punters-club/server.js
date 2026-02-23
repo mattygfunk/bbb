@@ -1808,7 +1808,7 @@ function createApp() {
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);
     const nextAlerts = buildNextAlertQueuePreview(subscribers, 10);
-    const templates = buildAlertTemplatesPreview();
+    const templates = buildAlertTemplatesPreview(store);
     const history = Array.isArray(store?.system?.alertsDeliveryLog) ? store.system.alertsDeliveryLog.slice(0, 50) : [];
     const summary = {
       totalSubscribers: subscribers.length,
@@ -1819,6 +1819,36 @@ function createApp() {
       }
     };
     return res.json({ ok: true, summary, subscribers, nextAlerts, templates, history, generatedAt: Date.now() });
+  });
+
+  app.put('/api/alerts/templates/:id', auth, adminOnly, (req, res) => {
+    const id = String(req.params?.id || '').trim();
+    const defaults = getDefaultAlertTemplates();
+    const exists = defaults.some((t) => t.id === id);
+    if (!exists) return res.status(404).json({ error: 'Template not found' });
+
+    const subject = String(req.body?.subject || '').trim();
+    const bodyPreview = String(req.body?.bodyPreview || '').trim();
+    const html = String(req.body?.html || '').trim();
+
+    if (!subject) return res.status(400).json({ error: 'subject is required' });
+    if (!bodyPreview) return res.status(400).json({ error: 'bodyPreview is required' });
+    if (!html) return res.status(400).json({ error: 'html is required' });
+    if (html.length > 30000) return res.status(400).json({ error: 'html too large (max 30k)' });
+
+    const store = readStore();
+    store.system = store.system && typeof store.system === 'object' ? store.system : {};
+    store.system.alertTemplates = store.system.alertTemplates && typeof store.system.alertTemplates === 'object' ? store.system.alertTemplates : {};
+    store.system.alertTemplates[id] = {
+      subject,
+      bodyPreview,
+      html,
+      updatedAt: Date.now()
+    };
+    writeStore(store);
+
+    const template = buildAlertTemplatesPreview(store).find((t) => t.id === id);
+    return res.json({ ok: true, template });
   });
 
   app.post('/api/alerts/templates/test', auth, adminOnly, async (req, res) => {
@@ -1833,12 +1863,13 @@ function createApp() {
     if (!t) return res.status(404).json({ error: 'Template not found' });
 
     try {
+      const vars = { eventTitle: 'Nightly Prime' };
       await tx.sendMail({
         from: SMTP_FROM,
         to,
-        subject: `[TEST] ${t.subject}`,
-        text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${t.bodyPreview}`,
-        html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:20px;color:#eaf2f8"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:12px;padding:18px"><p style="margin:0 0 8px;color:#9fb0bf">TEST TEMPLATE</p><h2 style="margin:0 0 10px">${t.name}</h2><p style="margin:0 0 8px;color:#c7d6e4"><strong>Trigger:</strong> ${t.trigger}</p><p style="margin:0;color:#c7d6e4">${t.bodyPreview}</p></div></div>`
+        subject: `[TEST] ${renderTemplateVars(t.subject, vars)}`,
+        text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${renderTemplateVars(t.bodyPreview, vars)}`,
+        html: renderTemplateVars(t.html, vars)
       });
       appendAlertsDeliveryLog({ status: 'sent', templateId, recipients: 1, note: `test -> ${to}` });
       return res.json({ ok: true, sentTo: to, templateId });
@@ -3717,44 +3748,74 @@ function appendAlertsDeliveryLog(entry = {}) {
   writeStore(store);
 }
 
-function buildAlertTemplatesPreview() {
+function getDefaultAlertTemplates() {
+  const shellStart = `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><p style="margin:0 0 10px;opacity:.9;letter-spacing:.02em">Big Bluff Bay</p>`;
+  const shellEnd = `<p style="margin:18px 0 0"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p></div></div>`;
+
   return [
     {
       id: 'startingSoon',
       name: 'Tournament Starting Soon',
       trigger: '30 minutes before shuffle',
       subject: 'Starting soon: {eventTitle}',
-      bodyPreview: 'Your selected tournament starts in ~30 minutes. Join now to secure entry.'
+      bodyPreview: 'Your selected tournament starts in ~30 minutes. Join now to secure entry.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⏰ Starting soon: <span style="color:#86efac">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Your selected tournament starts in <strong>~30 minutes</strong>.</p><p style="margin:0;color:#c7d6e4;">Join now to secure entry and avoid missing first hand.</p>${shellEnd}`
     },
     {
       id: 'lateReg',
       name: 'Late Registration Closing',
       trigger: '15 minutes before late reg closes',
       subject: 'Late reg closing soon: {eventTitle}',
-      bodyPreview: 'Late registration window is closing. Enter now if you want in.'
+      bodyPreview: 'Late registration window is closing. Enter now if you want in.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⌛ Late reg closing: <span style="color:#fbbf24">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Late registration closes in about <strong>15 minutes</strong>.</p><p style="margin:0;color:#c7d6e4;">If you want in, now is the time to jump in.</p>${shellEnd}`
     },
     {
       id: 'overlayWatch',
       name: 'Overlay Risk',
       trigger: '20 minutes before start (only if entries below target)',
       subject: 'Overlay watch: {eventTitle}',
-      bodyPreview: 'Overlay conditions detected. Value spot may be live.'
+      bodyPreview: 'Overlay conditions detected. Value spot may be live.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">📉 Overlay watch: <span style="color:#38bdf8">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Overlay conditions detected before shuffle.</p><p style="margin:0;color:#c7d6e4;">This may be a value spot — keep it on your radar.</p>${shellEnd}`
     },
     {
       id: 'freerolls',
       name: 'Freeroll Posted',
       trigger: 'When freeroll listing is published',
       subject: 'New freeroll posted',
-      bodyPreview: 'A freeroll has been posted. Open schedule for details.'
+      bodyPreview: 'A freeroll has been posted. Open schedule for details.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">🎁 New freeroll posted</h2><p style="margin:0 0 14px;color:#c7d6e4;">A new freeroll has landed on the schedule.</p><p style="margin:0;color:#c7d6e4;">Open the lobby and lock in your seat.</p>${shellEnd}`
     },
     {
       id: 'cashActive',
       name: 'Cash Tables Active',
       trigger: 'When cash lobby status flips active',
       subject: 'Cash tables now active',
-      bodyPreview: 'Cash tables are active now.'
+      bodyPreview: 'Cash tables are active now.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">💵 Cash tables active now</h2><p style="margin:0 0 14px;color:#c7d6e4;">Cash lobby status just flipped active.</p><p style="margin:0;color:#c7d6e4;">If you're keen for ring games, seats should be open now.</p>${shellEnd}`
     }
   ];
+}
+
+function buildAlertTemplatesPreview(store = readStore()) {
+  const defaults = getDefaultAlertTemplates();
+  const saved = store?.system?.alertTemplates && typeof store.system.alertTemplates === 'object' ? store.system.alertTemplates : {};
+  return defaults.map((tpl) => {
+    const ov = saved[tpl.id] && typeof saved[tpl.id] === 'object' ? saved[tpl.id] : {};
+    return {
+      ...tpl,
+      subject: String(ov.subject || tpl.subject),
+      bodyPreview: String(ov.bodyPreview || tpl.bodyPreview),
+      html: String(ov.html || tpl.html)
+    };
+  });
+}
+
+function renderTemplateVars(raw = '', vars = {}) {
+  let out = String(raw || '');
+  Object.entries(vars || {}).forEach(([k, v]) => {
+    out = out.replaceAll(`{${String(k)}}`, String(v ?? ''));
+  });
+  return out;
 }
 
 function getVerifiedAlertEmails(store) {

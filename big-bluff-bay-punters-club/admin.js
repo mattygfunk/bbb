@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -246,10 +246,33 @@ async function loadAlertsMonitor(){
     templatesBody.innerHTML = '';
     templates.forEach((t) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td><td><button class='btn btn-ghost' data-alert-test='${esc(t.id || '')}'>Send test</button></td>`;
+      const templateId = String(t.id || '');
+      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td><input data-alert-subject='${esc(templateId)}' type='text' value='${esc(t.subject || '')}' style='min-width:240px' /></td><td><textarea data-alert-html='${esc(templateId)}' rows='7' style='min-width:320px;width:100%;font-family:ui-monospace,Menlo,monospace'>${esc(t.html || '')}</textarea><div style='margin-top:.35rem'><input data-alert-preview='${esc(templateId)}' type='text' value='${esc(t.bodyPreview || '')}' placeholder='Plain-text preview' style='min-width:240px;width:100%' /></div></td><td><div class='row' style='gap:.35rem;flex-wrap:wrap'><button class='btn btn-ghost' data-alert-save='${esc(templateId)}'>Save</button><button class='btn btn-ghost' data-alert-test='${esc(templateId)}'>Send test</button></div></td>`;
       templatesBody.appendChild(tr);
     });
     if (!templates.length) templatesBody.innerHTML = "<tr><td colspan='5' class='muted'>No templates configured.</td></tr>";
+
+    templatesBody.querySelectorAll('button[data-alert-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const templateId = String(btn.getAttribute('data-alert-save') || '');
+        const subject = String(templatesBody.querySelector(`[data-alert-subject="${templateId}"]`)?.value || '').trim();
+        const html = String(templatesBody.querySelector(`[data-alert-html="${templateId}"]`)?.value || '').trim();
+        const bodyPreview = String(templatesBody.querySelector(`[data-alert-preview="${templateId}"]`)?.value || '').trim();
+        if (!subject || !html || !bodyPreview) {
+          if (msg) msg.textContent = 'Subject, HTML, and preview are required.';
+          return;
+        }
+        btn.disabled = true;
+        try {
+          await req(API.alertsTemplateUpdate(templateId), { method:'PUT', body: JSON.stringify({ subject, html, bodyPreview }) });
+          if (msg) msg.textContent = `Template saved: ${templateId}`;
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not save template.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
 
     templatesBody.querySelectorAll('button[data-alert-test]').forEach((btn) => {
       btn.addEventListener('click', async () => {
