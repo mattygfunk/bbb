@@ -263,6 +263,32 @@ async function loadAlertsMonitor(){
       const mins = Number.isFinite(a.sendAt) ? Math.max(0, Math.round((Number(a.sendAt) - Date.now()) / 60000)) : null;
       const rel = mins == null ? '' : ` (${mins}m)`;
       tr.innerHTML = `<td>${esc(`${when}${rel}`)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
+      tr.style.cursor = 'pointer';
+      tr.title = 'Click to preview this outgoing email';
+      tr.addEventListener('click', () => {
+        const template = templates.find((t) => String(t.id || '') === String(a.templateId || ''));
+        if (!template) {
+          if (msg) msg.textContent = `No template found for ${String(a.templateLabel || a.templateId || 'this alert')}.`;
+          return;
+        }
+        const email = String(a.recipient || 'member@bigbluffbay.au');
+        const recipientName = email.includes('@') ? email.split('@')[0] : email;
+        const vars = {
+          eventTitle: String(a.eventTitle || 'Nightly Prime'),
+          recipientName,
+          startTime: when,
+          recipientEmail: email
+        };
+        let html = String(template.html || '');
+        Object.entries(vars).forEach(([k, v]) => { html = html.replaceAll(`{${k}}`, String(v)); });
+
+        const modal = ensureAlertsPreviewModal();
+        const frame = modal.querySelector('#alerts-template-preview-frame');
+        const title = modal.querySelector('#alerts-template-preview-title');
+        if (title) title.textContent = `Queue Preview • ${String(a.templateLabel || template.name || a.templateId || 'Alert')} → ${email}`;
+        if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Queued Alert Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
+        modal.style.display = 'flex';
+      });
       nextBody.appendChild(tr);
     });
     if (!nextAlerts.length) nextBody.innerHTML = "<tr><td colspan='4' class='muted'>No upcoming alerts in queue.</td></tr>";
