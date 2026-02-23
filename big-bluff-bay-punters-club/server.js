@@ -1902,7 +1902,20 @@ function createApp() {
     if (!t) return res.status(404).json({ error: 'Template not found' });
 
     try {
-      const vars = { eventTitle: 'Nightly Prime' };
+      const store = readStore();
+      const scheduleEvents = getAlertScheduleEvents(store).filter((e) => e.enabled !== false);
+      const sampleEvent = scheduleEvents[0] || {};
+      const vars = {
+        eventTitle: String(sampleEvent.title || 'Tournament'),
+        startTime: `${String(sampleEvent.hour ?? '').padStart(2, '0')}:${String(sampleEvent.minute ?? '').padStart(2, '0')}`,
+        recipientName: String(to.split('@')[0] || 'Member'),
+        recipientEmail: to,
+        buyIn: String(sampleEvent.buyIn || ''),
+        rebuys: String(sampleEvent.rebuys || ''),
+        startingStack: String(sampleEvent.startingStack || ''),
+        blinds: String(sampleEvent.blinds || ''),
+        earlyBirdRefunds: String(sampleEvent.earlyBirdRefunds || '')
+      };
       await tx.sendMail({
         from: SMTP_FROM,
         to,
@@ -3869,7 +3882,7 @@ function appendAlertsDeliveryLog(entry = {}) {
 
 function getDefaultAlertTemplates() {
   const shellStart = `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><img src="https://bigbluffbay.au/assets/theme-banner-768.jpg" alt="Big Bluff Bay clubhouse" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px" /><p style="margin:0 0 10px;opacity:.9;letter-spacing:.02em">Big Bluff Bay</p>`;
-  const shellEnd = `<p style="margin:18px 0 0"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p><p style="margin:16px 0 0;color:#9fb0bf;font-size:12px">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href="https://bigbluffbay.au/alerts.html" style="color:#93c5fd">Unsubscribe / manage alerts</a> • <a href="https://bigbluffbay.au/terms.html" style="color:#93c5fd">T&amp;Cs</a> • <a href="https://bigbluffbay.au/privacy.html" style="color:#93c5fd">Privacy</a></p></div></div>`;
+  const shellEnd = `<div style="margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px"><div><strong>Start:</strong> {startTime}</div><div><strong>Buy-in:</strong> {buyIn}</div><div><strong>Rebuys:</strong> {rebuys}</div><div><strong>Starting stack:</strong> {startingStack}</div><div><strong>Blinds:</strong> {blinds}</div><div><strong>Early bird refunds:</strong> {earlyBirdRefunds}</div></div><p style="margin:18px 0 0"><a href="https://bigbluffbay.au/poker-schedule.html" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Open Poker Tournaments</a></p><p style="margin:16px 0 0;color:#9fb0bf;font-size:12px">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href="https://bigbluffbay.au/alerts.html" style="color:#93c5fd">Unsubscribe / manage alerts</a> • <a href="https://bigbluffbay.au/terms.html" style="color:#93c5fd">T&amp;Cs</a> • <a href="https://bigbluffbay.au/privacy.html" style="color:#93c5fd">Privacy</a></p></div></div>`;
 
   return [
     {

@@ -290,11 +290,17 @@ async function loadAlertsMonitor(){
         }
         const email = String(a.recipient || 'member@bigbluffbay.au');
         const recipientName = email.includes('@') ? email.split('@')[0] : email;
+        const matchingEvent = (scheduleEvents || []).find((e) => String(e.title || '') === String(a.eventTitle || '')) || {};
         const vars = {
-          eventTitle: String(a.eventTitle || 'Nightly Prime'),
+          eventTitle: String(a.eventTitle || matchingEvent.title || 'Tournament'),
           recipientName,
           startTime: when,
-          recipientEmail: email
+          recipientEmail: email,
+          buyIn: String(matchingEvent.buyIn || ''),
+          rebuys: String(matchingEvent.rebuys || ''),
+          startingStack: String(matchingEvent.startingStack || ''),
+          blinds: String(matchingEvent.blinds || ''),
+          earlyBirdRefunds: String(matchingEvent.earlyBirdRefunds || '')
         };
         let html = String(template.html || '');
         Object.entries(vars).forEach(([k, v]) => { html = html.replaceAll(`{${k}}`, String(v)); });
@@ -331,17 +337,27 @@ async function loadAlertsMonitor(){
           if (msg) msg.textContent = 'Template not found for preview.';
           return;
         }
-        const html = String(template.html || '')
-          .replaceAll('{eventTitle}', 'Nightly Prime')
-          .replaceAll('{startTime}', '7:30 PM')
-          .replaceAll('{recipientName}', 'Matt');
+        const sampleEvent = (scheduleEvents || []).find((e) => e.enabled !== false) || (scheduleEvents || [])[0] || {};
+        const sampleVars = {
+          eventTitle: String(sampleEvent.title || 'Tournament'),
+          startTime: `${String(sampleEvent.hour ?? '').padStart(2,'0')}:${String(sampleEvent.minute ?? '').padStart(2,'0')}`,
+          recipientName: 'Member',
+          recipientEmail: String(testEmailEl?.value || 'member@bigbluffbay.au'),
+          buyIn: String(sampleEvent.buyIn || ''),
+          rebuys: String(sampleEvent.rebuys || ''),
+          startingStack: String(sampleEvent.startingStack || ''),
+          blinds: String(sampleEvent.blinds || ''),
+          earlyBirdRefunds: String(sampleEvent.earlyBirdRefunds || '')
+        };
+        let html = String(template.html || '');
+        Object.entries(sampleVars).forEach(([k, v]) => { html = html.replaceAll(`{${k}}`, String(v)); });
 
         const modal = ensureAlertsPreviewModal();
         const frame = modal.querySelector('#alerts-template-preview-frame');
         const title = modal.querySelector('#alerts-template-preview-title');
         const subjectEl = modal.querySelector('#alerts-template-preview-subject');
         let subject = String(template.subject || '');
-        subject = subject.replaceAll('{eventTitle}', 'Nightly Prime').replaceAll('{startTime}', '7:30 PM').replaceAll('{recipientName}', 'Matt');
+        Object.entries(sampleVars).forEach(([k, v]) => { subject = subject.replaceAll(`{${k}}`, String(v)); });
         if (title) title.textContent = `Template Preview • ${String(template.name || templateId)}`;
         if (subjectEl) subjectEl.innerHTML = `<strong style="color:#9fb3ce">Subject:</strong> ${esc(subject || '-')}`;
         if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Template Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
