@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -188,6 +188,9 @@ async function loadAlertsMonitor(){
   const refreshBtn = $('alerts-mon-refresh');
   const exportBtn = $('alerts-mon-export');
   const historyBody = $('alerts-mon-history-body');
+  const eventsBody = $('alerts-mon-events-body');
+  const saveEventsBtn = $('alerts-mon-save-events');
+  const addEventBtn = $('alerts-mon-add-event');
   if (!subsBody || !nextBody || !templatesBody) return;
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
@@ -203,6 +206,7 @@ async function loadAlertsMonitor(){
     const nextAlerts = out.nextAlerts || [];
     const templates = out.templates || [];
     const history = out.history || [];
+    const scheduleEvents = out.scheduleEvents || [];
 
     const totalSubscribers = Number(summary.totalSubscribers || subscribersRaw.length || 0);
     const verifiedSubscribers = Number(summary.verifiedEmailSubscribers || 0);
@@ -256,6 +260,18 @@ async function loadAlertsMonitor(){
       subsBody.appendChild(tr);
     });
     if (!subscribers.length) subsBody.innerHTML = "<tr><td colspan='5' class='muted'>No matching subscribers.</td></tr>";
+
+    if (eventsBody) {
+      eventsBody.innerHTML = '';
+      scheduleEvents.forEach((e) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td>`;
+        const daySel = tr.querySelector('[data-evt-day]');
+        if (daySel) daySel.value = String(e.day === 'daily' ? 'daily' : Number(e.day || 0));
+        eventsBody.appendChild(tr);
+      });
+      if (!scheduleEvents.length) eventsBody.innerHTML = "<tr><td colspan='6' class='muted'>No tournaments configured.</td></tr>";
+    }
 
     nextBody.innerHTML = '';
     nextAlerts.forEach((a) => {
@@ -360,6 +376,45 @@ async function loadAlertsMonitor(){
         }
       });
     });
+
+    if (addEventBtn && !addEventBtn.dataset.bound) {
+      addEventBtn.dataset.bound = '1';
+      addEventBtn.addEventListener('click', () => {
+        if (!eventsBody) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input data-evt-id type='text' value='' placeholder='event-id' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='' placeholder='Tournament name' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='20' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='0' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' checked /> on</label></td>`;
+        eventsBody.appendChild(tr);
+      });
+    }
+
+    if (saveEventsBtn && !saveEventsBtn.dataset.bound) {
+      saveEventsBtn.dataset.bound = '1';
+      saveEventsBtn.addEventListener('click', async () => {
+        if (!eventsBody) return;
+        const rows = Array.from(eventsBody.querySelectorAll('tr'));
+        const events = rows.map((tr, idx) => {
+          const id = String(tr.querySelector('[data-evt-id]')?.value || '').trim() || `event-${idx+1}`;
+          const title = String(tr.querySelector('[data-evt-title]')?.value || '').trim() || `Event ${idx+1}`;
+          const dayRaw = String(tr.querySelector('[data-evt-day]')?.value || 'daily');
+          const day = dayRaw === 'daily' ? 'daily' : Number(dayRaw || 0);
+          const hour = Number(tr.querySelector('[data-evt-hour]')?.value || 0);
+          const minute = Number(tr.querySelector('[data-evt-minute]')?.value || 0);
+          const enabled = Boolean(tr.querySelector('[data-evt-enabled]')?.checked);
+          return { id, title, day, hour, minute, enabled };
+        }).filter((e) => e.title);
+
+        saveEventsBtn.disabled = true;
+        try {
+          await req(API.alertsEvents, { method:'PUT', body: JSON.stringify({ events }) });
+          if (msg) msg.textContent = `Saved ${events.length} tournaments.`;
+          loadAlertsMonitor().catch(()=>{});
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not save tournaments.';
+        } finally {
+          saveEventsBtn.disabled = false;
+        }
+      });
+    }
 
     if (historyBody) {
       historyBody.innerHTML = '';

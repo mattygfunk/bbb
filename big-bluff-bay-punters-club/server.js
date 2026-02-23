@@ -1807,7 +1807,8 @@ function createApp() {
   app.get('/api/alerts/monitor', auth, adminOnly, (_req, res) => {
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);
-    const nextAlerts = buildNextAlertQueuePreview(subscribers, 10);
+    const scheduleEvents = getAlertScheduleEvents(store);
+    const nextAlerts = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents);
     const templates = buildAlertTemplatesPreview(store);
     const history = Array.isArray(store?.system?.alertsDeliveryLog) ? store.system.alertsDeliveryLog.slice(0, 50) : [];
     const summary = {
@@ -1818,7 +1819,35 @@ function createApp() {
         phone: subscribers.filter((s) => Boolean(s.phone)).length
       }
     };
-    return res.json({ ok: true, summary, subscribers, nextAlerts, templates, history, generatedAt: Date.now() });
+    return res.json({ ok: true, summary, subscribers, nextAlerts, scheduleEvents, templates, history, generatedAt: Date.now() });
+  });
+
+  app.put('/api/alerts/events', auth, adminOnly, (req, res) => {
+    const items = Array.isArray(req.body?.events) ? req.body.events : null;
+    if (!items) return res.status(400).json({ error: 'events array is required' });
+    if (!items.length) return res.status(400).json({ error: 'At least one event is required' });
+
+    const normalized = items.slice(0, 40).map((e, idx) => {
+      const hour = Math.max(0, Math.min(23, Number(e?.hour ?? 0) || 0));
+      const minute = Math.max(0, Math.min(59, Number(e?.minute ?? 0) || 0));
+      const rawDay = String(e?.day ?? 'daily').toLowerCase();
+      const day = rawDay === 'daily' ? 'daily' : Math.max(0, Math.min(6, Number(rawDay) || 0));
+      const id = String(e?.id || `event-${idx + 1}`).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+      return {
+        id: id || `event-${idx + 1}`,
+        title: String(e?.title || `Event ${idx + 1}`).trim() || `Event ${idx + 1}`,
+        day,
+        hour,
+        minute,
+        enabled: e?.enabled !== false
+      };
+    });
+
+    const store = readStore();
+    store.system = store.system && typeof store.system === 'object' ? store.system : {};
+    store.system.alertScheduleEvents = normalized;
+    writeStore(store);
+    return res.json({ ok: true, events: normalized });
   });
 
   app.put('/api/alerts/templates/:id', auth, adminOnly, (req, res) => {
@@ -3640,10 +3669,30 @@ function createApp() {
 }
 
 const ALERT_SCHEDULE_EVENTS = [
-  { id: 'nightly-prime', title: 'Nightly Prime', day: 'daily', hour: 20, minute: 0 },
-  { id: 'late-night-gtd', title: 'Late Night GTD', day: 'daily', hour: 22, minute: 0 },
-  { id: 'sunday-main', title: 'Sunday Main', day: 0, hour: 18, minute: 0 }
+  { id: 'nightly-prime', title: 'Nightly Prime', day: 'daily', hour: 20, minute: 0, enabled: true },
+  { id: 'late-night-gtd', title: 'Late Night GTD', day: 'daily', hour: 22, minute: 0, enabled: true },
+  { id: 'sunday-main', title: 'Sunday Main', day: 0, hour: 18, minute: 0, enabled: true }
 ];
+
+function getAlertScheduleEvents(store = readStore()) {
+  const saved = Array.isArray(store?.system?.alertScheduleEvents) ? store.system.alertScheduleEvents : [];
+  const src = saved.length ? saved : ALERT_SCHEDULE_EVENTS;
+  return src.map((e, idx) => {
+    const hour = Math.max(0, Math.min(23, Number(e?.hour ?? 0) || 0));
+    const minute = Math.max(0, Math.min(59, Number(e?.minute ?? 0) || 0));
+    const rawDay = String(e?.day ?? 'daily').toLowerCase();
+    const day = rawDay === 'daily' ? 'daily' : Math.max(0, Math.min(6, Number(rawDay) || 0));
+    const id = String(e?.id || `event-${idx + 1}`).trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+    return {
+      id: id || `event-${idx + 1}`,
+      title: String(e?.title || `Event ${idx + 1}`).trim() || `Event ${idx + 1}`,
+      day,
+      hour,
+      minute,
+      enabled: e?.enabled !== false
+    };
+  });
+}
 
 function nextOccurrenceFromMelbourne(event, fromDate = new Date()) {
   const m = getMelbourneParts(fromDate);
@@ -3694,7 +3743,7 @@ function buildAlertsSubscribers(store) {
   }).filter((s) => s.email && Object.values(s.alerts).some(Boolean)).sort((a, b) => a.username.localeCompare(b.username));
 }
 
-function buildNextAlertQueuePreview(subscribers, limit = 10) {
+function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS) {
   const templates = {
     startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: 30 },
     lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: 15 },
@@ -3704,7 +3753,7 @@ function buildNextAlertQueuePreview(subscribers, limit = 10) {
   const queue = [];
   const horizonRuns = 5;
   for (const sub of subscribers) {
-    for (const e of ALERT_SCHEDULE_EVENTS) {
+    for (const e of (scheduleEvents || []).filter((x) => x?.enabled !== false)) {
       let cursor = new Date();
       for (let i = 0; i < horizonRuns; i += 1) {
         const start = nextOccurrenceFromMelbourne(e, cursor);
