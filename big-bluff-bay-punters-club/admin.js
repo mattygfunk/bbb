@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -137,24 +137,34 @@ async function loadAlertsMonitor(){
   const nextBody = $('alerts-mon-next-body');
   const templatesBody = $('alerts-mon-templates-body');
   const msg = $('alerts-mon-msg');
+  const filterEl = $('alerts-mon-filter');
+  const testEmailEl = $('alerts-mon-test-email');
   if (!subsBody || !nextBody || !templatesBody) return;
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
     nextBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
-    templatesBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
+    templatesBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
     return;
   }
 
   try {
     const out = await req(API.alertsMonitor);
     const summary = out.summary || {};
-    const subscribers = out.subscribers || [];
+    const subscribersRaw = out.subscribers || [];
     const nextAlerts = out.nextAlerts || [];
     const templates = out.templates || [];
 
-    $('alerts-mon-subs').textContent = String(summary.totalSubscribers || subscribers.length || 0);
+    $('alerts-mon-subs').textContent = String(summary.totalSubscribers || subscribersRaw.length || 0);
     $('alerts-mon-verified').textContent = String(summary.verifiedEmailSubscribers || 0);
     $('alerts-mon-next-count').textContent = String(nextAlerts.length || 0);
+
+    const mode = String(filterEl?.value || 'all');
+    const subscribers = subscribersRaw.filter((s) => {
+      if (mode === 'verified') return Boolean(s.verifiedEmail);
+      if (mode === 'overlay') return Boolean(s?.alerts?.overlayWatch);
+      if (mode === 'no-mobile') return !String(s.phone || '').trim();
+      return true;
+    });
 
     subsBody.innerHTML = '';
     subscribers.forEach((s) => {
@@ -163,7 +173,7 @@ async function loadAlertsMonitor(){
       tr.innerHTML = `<td>${esc(s.username || '-')}</td><td>${esc(s.email || '-')}</td><td>${s.verifiedEmail ? '✅' : '⚪'}</td><td>${esc(s.phone || '-')}</td><td>${esc(enabled)}</td>`;
       subsBody.appendChild(tr);
     });
-    if (!subscribers.length) subsBody.innerHTML = "<tr><td colspan='5' class='muted'>No alert subscribers yet.</td></tr>";
+    if (!subscribers.length) subsBody.innerHTML = "<tr><td colspan='5' class='muted'>No matching subscribers.</td></tr>";
 
     nextBody.innerHTML = '';
     nextAlerts.forEach((a) => {
@@ -177,10 +187,35 @@ async function loadAlertsMonitor(){
     templatesBody.innerHTML = '';
     templates.forEach((t) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td>`;
+      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td><td><button class='btn btn-ghost' data-alert-test='${esc(t.id || '')}'>Send test</button></td>`;
       templatesBody.appendChild(tr);
     });
-    if (!templates.length) templatesBody.innerHTML = "<tr><td colspan='4' class='muted'>No templates configured.</td></tr>";
+    if (!templates.length) templatesBody.innerHTML = "<tr><td colspan='5' class='muted'>No templates configured.</td></tr>";
+
+    templatesBody.querySelectorAll('button[data-alert-test]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const email = String(testEmailEl?.value || '').trim();
+        if (!email || !email.includes('@')) {
+          if (msg) msg.textContent = 'Enter a valid test email first.';
+          return;
+        }
+        const templateId = String(btn.getAttribute('data-alert-test') || '');
+        btn.disabled = true;
+        try {
+          await req(API.alertsTemplateTest, { method:'POST', body: JSON.stringify({ templateId, email }) });
+          if (msg) msg.textContent = `Test sent: ${templateId} → ${email}`;
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Test send failed.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    if (!filterEl?.dataset.bound) {
+      filterEl.dataset.bound = '1';
+      filterEl.addEventListener('change', () => loadAlertsMonitor().catch(()=>{}));
+    }
 
     if (msg) msg.textContent = `Monitor refreshed ${new Date().toLocaleTimeString('en-AU')}.`;
   } catch (err) {

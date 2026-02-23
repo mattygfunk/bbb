@@ -492,7 +492,17 @@
               <div class="card" style="padding:.75rem"><div class="muted">Next queue items</div><strong id="alerts-mon-next-count">0</strong></div>
             </div>
 
-            <h3 style="margin:.4rem 0">Who subscribed to what</h3>
+            <div class="row" style="justify-content:space-between;gap:.75rem;align-items:end;margin:.4rem 0">
+              <h3 style="margin:0">Who subscribed to what</h3>
+              <label style="display:grid;gap:.25rem;min-width:220px">Filter
+                <select id="alerts-mon-filter">
+                  <option value="all">All subscribers</option>
+                  <option value="verified">Verified email only</option>
+                  <option value="overlay">Overlay alert enabled</option>
+                  <option value="no-mobile">No mobile on file</option>
+                </select>
+              </label>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>User</th><th>Email</th><th>Verified</th><th>Mobile</th><th>Enabled alerts</th></tr></thead>
@@ -508,11 +518,16 @@
               </table>
             </div>
 
-            <h3 style="margin:1rem 0 .4rem">Alert templates</h3>
+            <div class="row" style="justify-content:space-between;gap:.75rem;align-items:end;margin:1rem 0 .4rem">
+              <h3 style="margin:0">Alert templates</h3>
+              <label style="display:grid;gap:.25rem;min-width:240px">Test send email
+                <input id="alerts-mon-test-email" type="email" placeholder="admin@domain.com" />
+              </label>
+            </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Template</th><th>Trigger</th><th>Subject</th><th>Preview</th></tr></thead>
-                <tbody id="alerts-mon-templates-body"><tr><td colspan="4" class="muted">Loading templates…</td></tr></tbody>
+                <thead><tr><th>Template</th><th>Trigger</th><th>Subject</th><th>Preview</th><th>Action</th></tr></thead>
+                <tbody id="alerts-mon-templates-body"><tr><td colspan="5" class="muted">Loading templates…</td></tr></tbody>
               </table>
             </div>
 

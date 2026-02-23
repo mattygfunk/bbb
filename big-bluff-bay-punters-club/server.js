@@ -1787,6 +1787,28 @@ function createApp() {
     return res.json({ ok: true, summary, subscribers, nextAlerts, templates, generatedAt: Date.now() });
   });
 
+  app.post('/api/alerts/templates/test', auth, adminOnly, async (req, res) => {
+    const templateId = String(req.body?.templateId || '').trim();
+    const to = String(req.body?.email || '').trim().toLowerCase();
+    if (!templateId) return res.status(400).json({ error: 'templateId is required' });
+    if (!to || !to.includes('@')) return res.status(400).json({ error: 'Valid email is required' });
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const t = buildAlertTemplatesPreview().find((x) => String(x.id) === templateId);
+    if (!t) return res.status(404).json({ error: 'Template not found' });
+
+    await tx.sendMail({
+      from: SMTP_FROM,
+      to,
+      subject: `[TEST] ${t.subject}`,
+      text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${t.bodyPreview}`,
+      html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:20px;color:#eaf2f8"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:12px;padding:18px"><p style="margin:0 0 8px;color:#9fb0bf">TEST TEMPLATE</p><h2 style="margin:0 0 10px">${t.name}</h2><p style="margin:0 0 8px;color:#c7d6e4"><strong>Trigger:</strong> ${t.trigger}</p><p style="margin:0;color:#c7d6e4">${t.bodyPreview}</p></div></div>`
+    });
+
+    return res.json({ ok: true, sentTo: to, templateId });
+  });
+
   app.get('/api/profile', auth, (req, res) => {
     const store = readStore();
     const user = store.users.find((u) => u.id === req.user.sub);
