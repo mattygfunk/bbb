@@ -3663,6 +3663,8 @@ function createApp() {
   });
 
   app.get(['/profile', '/profile/:member'], (_req, res) => res.sendFile(path.join(__dirname, 'profile.html')));
+  app.get('/admin/racing', (_req, res) => res.redirect(302, '/admin.html?view=racing'));
+  app.get('/admin/poker-legacy', (_req, res) => res.redirect(302, '/admin.html?view=poker'));
   app.get('/punters-club', (_req, res) => res.sendFile(path.join(__dirname, 'punters-club.html')));
   app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
