@@ -264,8 +264,11 @@
           </div>
         </section>
 
-        <section class="card"><h2>Bosses Multi</h2>
-          <div class="card" id="bosses-upload-panel">
+        <section class="card">
+          <details id="bosses-multi-accordion" open>
+            <summary><strong>Bosses Multi</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <div class="card" id="bosses-upload-panel">
             <h3>Upload Betting Screenshot</h3>
             <p class="muted">Upload → Extract → Verify → Fill → Save</p>
             <div class="row-actions">
@@ -349,8 +352,10 @@
               <button class="btn btn-ghost" type="button" id="reset-bosses-results-btn">Reset Bosses Multi Results</button>
             </div>
           </form>
-          <div id="bosses-suggested" class="muted"></div>
-          <p id="bosses-msg" class="muted" role="status" aria-live="polite"></p>
+              <div id="bosses-suggested" class="muted"></div>
+              <p id="bosses-msg" class="muted" role="status" aria-live="polite"></p>
+            </div>
+          </details>
         </section>
 
         
@@ -589,6 +594,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-admin-view-counts"></script>
+    <script src="admin.js?v=20260224-bosses-accordion"></script>
   </body>
 </html>
