@@ -1832,16 +1832,33 @@ function createApp() {
     const t = buildAlertTemplatesPreview().find((x) => String(x.id) === templateId);
     if (!t) return res.status(404).json({ error: 'Template not found' });
 
-    await tx.sendMail({
-      from: SMTP_FROM,
-      to,
-      subject: `[TEST] ${t.subject}`,
-      text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${t.bodyPreview}`,
-      html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:20px;color:#eaf2f8"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:12px;padding:18px"><p style="margin:0 0 8px;color:#9fb0bf">TEST TEMPLATE</p><h2 style="margin:0 0 10px">${t.name}</h2><p style="margin:0 0 8px;color:#c7d6e4"><strong>Trigger:</strong> ${t.trigger}</p><p style="margin:0;color:#c7d6e4">${t.bodyPreview}</p></div></div>`
-    });
-    appendAlertsDeliveryLog({ status: 'sent', templateId, recipients: 1, note: `test -> ${to}` });
-
-    return res.json({ ok: true, sentTo: to, templateId });
+    try {
+      await tx.sendMail({
+        from: SMTP_FROM,
+        to,
+        subject: `[TEST] ${t.subject}`,
+        text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${t.bodyPreview}`,
+        html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:20px;color:#eaf2f8"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:12px;padding:18px"><p style="margin:0 0 8px;color:#9fb0bf">TEST TEMPLATE</p><h2 style="margin:0 0 10px">${t.name}</h2><p style="margin:0 0 8px;color:#c7d6e4"><strong>Trigger:</strong> ${t.trigger}</p><p style="margin:0;color:#c7d6e4">${t.bodyPreview}</p></div></div>`
+      });
+      appendAlertsDeliveryLog({ status: 'sent', templateId, recipients: 1, note: `test -> ${to}` });
+      return res.json({ ok: true, sentTo: to, templateId });
+    } catch (err) {
+      const diagnostics = {
+        code: err?.code || '',
+        responseCode: Number.isFinite(Number(err?.responseCode)) ? Number(err.responseCode) : 0,
+        command: err?.command || '',
+        host: SMTP_HOST || '',
+        port: SMTP_PORT || 0,
+        secure: Boolean(SMTP_SECURE),
+        message: String(err?.message || 'sendMail failed')
+      };
+      const note = `test-failed -> ${to}; ${diagnostics.message}${diagnostics.code ? `; code=${diagnostics.code}` : ''}${diagnostics.responseCode ? `; smtp=${diagnostics.responseCode}` : ''}`;
+      appendAlertsDeliveryLog({ status: 'failed', templateId, recipients: 1, note });
+      return res.status(502).json({
+        error: `Email test failed: ${diagnostics.message}`,
+        diagnostics
+      });
+    }
   });
 
   app.get('/api/profile', auth, (req, res) => {

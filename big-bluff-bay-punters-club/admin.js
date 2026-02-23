@@ -4,7 +4,7 @@ const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
 const $=id=>document.getElementById(id);
-async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';continue;}lastErr=d.error||`Request failed (${r.status})`;}throw new Error(lastErr||'Request failed');}
+async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';let lastStatus=0;let lastData={};for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';lastStatus=r.status;lastData=d;continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';lastStatus=r.status;lastData=d;continue;}lastErr=d.error||`Request failed (${r.status})`;lastStatus=r.status;lastData=d;}const err=new Error(lastErr||'Request failed');err.status=lastStatus;err.data=lastData;throw err;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function toastBosses(msg, tone='ok'){
   const el = $('bosses-msg');
@@ -265,7 +265,14 @@ async function loadAlertsMonitor(){
           if (msg) msg.textContent = `Test sent: ${templateId} → ${email}`;
           loadAlertsMonitor().catch(()=>{});
         } catch (err) {
-          if (msg) msg.textContent = err.message || 'Test send failed.';
+          const diag = err?.data?.diagnostics || {};
+          const parts = [];
+          if (diag.code) parts.push(`code=${diag.code}`);
+          if (diag.responseCode) parts.push(`smtp=${diag.responseCode}`);
+          if (diag.command) parts.push(`cmd=${diag.command}`);
+          if (diag.host) parts.push(`host=${diag.host}`);
+          if (diag.port) parts.push(`port=${diag.port}`);
+          if (msg) msg.textContent = `${err.message || 'Test send failed.'}${parts.length ? ` (${parts.join(', ')})` : ''}`;
         } finally {
           btn.disabled = false;
         }
