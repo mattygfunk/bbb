@@ -35,11 +35,11 @@ function readForm() {
   const checked = (name) => Boolean(form?.querySelector(`input[name="${name}"]`)?.checked);
   return {
     alerts: {
-      scheduleDrop: checked('scheduleDrop'),
+      overlayWatch: checked('overlayWatch'),
       startingSoon: checked('startingSoon'),
       lateReg: checked('lateReg'),
-      winnerPosts: checked('winnerPosts'),
-      breakingNews: checked('breakingNews')
+      freerolls: checked('freerolls'),
+      cashActive: checked('cashActive')
     },
     methods: { email: { enabled: true, verified: false, mode: 'Digest' } },
     rules: { timezone:'Australia/Melbourne', quietStart, quietEnd, allowHighQuiet:true, maxDay:4, tone:'Balanced' },
@@ -57,11 +57,11 @@ function fillFromPrefs(prefs = {}) {
     if (el) el.checked = Boolean(val);
   };
 
-  setCheck('scheduleDrop', prefs?.alerts?.scheduleDrop ?? true);
+  setCheck('overlayWatch', prefs?.alerts?.overlayWatch ?? false);
   setCheck('startingSoon', prefs?.alerts?.startingSoon ?? true);
   setCheck('lateReg', prefs?.alerts?.lateReg ?? true);
-  setCheck('winnerPosts', prefs?.alerts?.winnerPosts ?? true);
-  setCheck('breakingNews', prefs?.alerts?.breakingNews ?? false);
+  setCheck('freerolls', prefs?.alerts?.freerolls ?? true);
+  setCheck('cashActive', prefs?.alerts?.cashActive ?? false);
 
   document.getElementById('quietStart').value = String(prefs?.rules?.quietStart || '23:00');
   document.getElementById('quietEnd').value = String(prefs?.rules?.quietEnd || '08:00');
