@@ -6,6 +6,7 @@
   const winnerEl = document.getElementById('wheel-winner');
   const winnerPrizeEl = document.getElementById('wheel-result-prize');
   const resultCard = document.getElementById('wheel-result-card');
+  const fairnessEl = document.getElementById('wheel-fairness');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const colors = ['#2563eb','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2','#4f46e5','#be123c'];
@@ -80,6 +81,7 @@
       resultCard.hidden = false;
       winnerEl.textContent = state.spin.winnerUsername;
       winnerPrizeEl.textContent = state.prize?.title || '';
+      if (fairnessEl) fairnessEl.textContent = `Seed hash: ${String(state.spin.serverSeedHash || '').slice(0, 16)}… • Entrants hash: ${String(state.spin.entrantsHash || '').slice(0, 16)}…`;
     }
     drawWheel();
   }
@@ -121,12 +123,20 @@
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Spin failed');
+      state.spin = d.spin || {
+        winnerUsername: d.winnerUsername,
+        winnerIndex: d.winnerIndex,
+        finalRotationDeg: d.finalRotationDeg,
+        serverSeedHash: d.serverSeedHash || '',
+        entrantsHash: d.entrantsHash || ''
+      };
       statusEl.textContent = 'Spinning…';
       await animateTo(Number(d.finalRotationDeg || 0), Number(d.durationMs || 7200));
       statusEl.textContent = `Winner: ${d.winnerUsername}`;
       resultCard.hidden = false;
       winnerEl.textContent = d.winnerUsername;
       winnerPrizeEl.textContent = state.prize?.title || '';
+      if (fairnessEl) fairnessEl.textContent = `Seed hash: ${String(state.spin.serverSeedHash || '').slice(0, 16)}… • Entrants hash: ${String(state.spin.entrantsHash || '').slice(0, 16)}…`;
     } catch (err) {
       statusEl.textContent = err.message || 'Spin failed';
       spinBtn.disabled = false;

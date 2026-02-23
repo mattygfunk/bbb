@@ -29,6 +29,9 @@
       prizeSel.innerHTML = state.prizes.filter((p) => p.active !== false).map((p) => `<option value="${p.id}">${p.title}</option>`).join('');
     }
 
+    const userList = $('wheel-users-datalist');
+    if (userList) userList.innerHTML = state.users.map((u)=>`<option value="${u}"></option>`).join('');
+
     const sessionsBody = $('wheel-sessions');
     if (sessionsBody) {
       sessionsBody.innerHTML = '';
@@ -55,7 +58,7 @@
         const s = state.sessions.find((x) => String(x.id) === String(sp.wheelSessionId));
         const pz = state.prizes.find((p) => String(p.id) === String(sp.prizeId));
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${new Date(Number(sp.spunAt||0)).toLocaleString('en-AU')}</td><td>${s?.title || sp.wheelSessionId}</td><td>${sp.winnerUsername}</td><td>${pz?.title || '-'}</td><td>${sp.spunByAdminUserId || '-'}</td>`;
+        tr.innerHTML = `<td>${new Date(Number(sp.spunAt||0)).toLocaleString('en-AU')}</td><td>${s?.title || sp.wheelSessionId}</td><td>${sp.winnerUsername}</td><td>${pz?.title || '-'}</td><td>${sp.spunByAdminUserId || '-'}</td><td><code>${String(sp.serverSeedHash || '').slice(0,16)}…</code></td>`;
         spinsBody.appendChild(tr);
       });
     }
@@ -108,10 +111,57 @@
     await load();
   }
 
+
+  function appendEntrant(name) {
+    const cleaned = String(name || '').trim();
+    if (!cleaned) return;
+    const current = entrantsFromTextarea();
+    if (current.includes(cleaned)) return;
+    current.push(cleaned);
+    $('wheel-entrants').value = current.join('\n');
+  }
+
+  function dedupeEntrants() {
+    const uniq = entrantsFromTextarea();
+    $('wheel-entrants').value = uniq.join('\n');
+  }
+
+  function exportAuditCsv() {
+    const rows = [['spunAt','sessionTitle','winner','prize','spunBy','serverSeedHash','serverSeedRevealed','winnerIndex','entrantsHash']];
+    state.spins.forEach((sp) => {
+      const s = state.sessions.find((x) => String(x.id) === String(sp.wheelSessionId));
+      const pz = state.prizes.find((p) => String(p.id) === String(sp.prizeId));
+      rows.push([
+        new Date(Number(sp.spunAt||0)).toISOString(),
+        String(s?.title || ''),
+        String(sp.winnerUsername || ''),
+        String(pz?.title || ''),
+        String(sp.spunByAdminUserId || ''),
+        String(sp.serverSeedHash || ''),
+        String(sp.serverSeedRevealed || ''),
+        String(sp.winnerIndex ?? ''),
+        String(sp.entrantsHash || '')
+      ]);
+    });
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replaceAll('"', '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wheel-audit-${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   $('wheel-save-draft')?.addEventListener('click', () => createOrUpdate('DRAFT').catch((e)=>{ $('wheel-admin-msg').textContent=e.message; }));
   $('wheel-mark-ready')?.addEventListener('click', () => createOrUpdate('READY').catch((e)=>{ $('wheel-admin-msg').textContent=e.message; }));
   $('wheel-spin')?.addEventListener('click', () => spin().catch((e)=>{ $('wheel-admin-msg').textContent=e.message; }));
   $('wheel-reset')?.addEventListener('click', () => resetSession().catch((e)=>{ $('wheel-admin-msg').textContent=e.message; }));
+  $('wheel-add-user')?.addEventListener('click', () => { appendEntrant($('wheel-user-search')?.value || ''); if ($('wheel-user-search')) $('wheel-user-search').value = ''; });
+  $('wheel-dedupe')?.addEventListener('click', () => dedupeEntrants());
+  $('wheel-export-audit')?.addEventListener('click', () => exportAuditCsv());
 
   load().catch((e) => { $('wheel-admin-msg').textContent = e.message || 'Could not load wheel admin'; });
 })();
