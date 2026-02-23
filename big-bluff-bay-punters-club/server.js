@@ -1813,7 +1813,8 @@ function createApp() {
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);
     const scheduleEvents = getAlertScheduleEvents(store);
-    const nextAlerts = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents);
+    const templateLogic = getAlertTemplateLogic(store);
+    const nextAlerts = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents, templateLogic);
     const templates = buildAlertTemplatesPreview(store);
     const history = Array.isArray(store?.system?.alertsDeliveryLog) ? store.system.alertsDeliveryLog.slice(0, 50) : [];
     const summary = {
@@ -1824,7 +1825,7 @@ function createApp() {
         phone: subscribers.filter((s) => Boolean(s.phone)).length
       }
     };
-    return res.json({ ok: true, summary, subscribers, nextAlerts, scheduleEvents, templates, history, generatedAt: Date.now() });
+    return res.json({ ok: true, summary, subscribers, nextAlerts, scheduleEvents, templateLogic, templates, history, generatedAt: Date.now() });
   });
 
   app.put('/api/alerts/events', auth, adminOnly, (req, res) => {
@@ -1858,6 +1859,29 @@ function createApp() {
     store.system.alertScheduleEvents = normalized;
     writeStore(store);
     return res.json({ ok: true, events: normalized });
+  });
+
+
+  app.put('/api/alerts/templates/logic', auth, adminOnly, (req, res) => {
+    const logicIn = req.body?.logic && typeof req.body.logic === 'object' ? req.body.logic : null;
+    if (!logicIn) return res.status(400).json({ error: 'logic object is required' });
+
+    const defaults = getDefaultAlertTemplateLogic();
+    const out = {};
+    Object.keys(defaults).forEach((id) => {
+      const row = logicIn[id] && typeof logicIn[id] === 'object' ? logicIn[id] : {};
+      const mins = Number(row.minutesBefore);
+      out[id] = {
+        minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : defaults[id].minutesBefore,
+        trigger: String(row.trigger || defaults[id].trigger)
+      };
+    });
+
+    const store = readStore();
+    store.system = store.system && typeof store.system === 'object' ? store.system : {};
+    store.system.alertTemplateLogic = out;
+    writeStore(store);
+    return res.json({ ok: true, logic: out });
   });
 
   app.put('/api/alerts/templates/:id', auth, adminOnly, (req, res) => {
@@ -3821,11 +3845,37 @@ function buildAlertsSubscribers(store) {
   }).filter((s) => s.email && Object.values(s.alerts).some(Boolean)).sort((a, b) => a.username.localeCompare(b.username));
 }
 
-function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS) {
+
+function getDefaultAlertTemplateLogic() {
+  return {
+    startingSoon: { minutesBefore: 10, trigger: '10 minutes before shuffle' },
+    lateReg: { minutesBefore: 15, trigger: '15 minutes before late reg closes' },
+    overlayWatch: { minutesBefore: 20, trigger: '20 minutes before start (only if entries below target)' },
+    freerolls: { minutesBefore: 0, trigger: 'When freeroll listing is published' },
+    cashActive: { minutesBefore: 0, trigger: 'When cash lobby status flips active' }
+  };
+}
+
+function getAlertTemplateLogic(store = readStore()) {
+  const base = getDefaultAlertTemplateLogic();
+  const saved = store?.system?.alertTemplateLogic && typeof store.system.alertTemplateLogic === 'object' ? store.system.alertTemplateLogic : {};
+  const out = { ...base };
+  Object.keys(base).forEach((id) => {
+    const v = saved[id] && typeof saved[id] === 'object' ? saved[id] : {};
+    const mins = Number(v.minutesBefore);
+    out[id] = {
+      minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : base[id].minutesBefore,
+      trigger: String(v.trigger || base[id].trigger)
+    };
+  });
+  return out;
+}
+
+function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS, templateLogic = getDefaultAlertTemplateLogic()) {
   const templates = {
-    startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: 30 },
-    lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: 15 },
-    overlayWatch: { id: 'overlayWatch', label: 'Overlay risk check', minusMin: 20 }
+    startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: Number(templateLogic?.startingSoon?.minutesBefore ?? 10) },
+    lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: Number(templateLogic?.lateReg?.minutesBefore ?? 15) },
+    overlayWatch: { id: 'overlayWatch', label: 'Overlay risk check', minusMin: Number(templateLogic?.overlayWatch?.minutesBefore ?? 20) }
   };
 
   const queue = [];
@@ -3883,10 +3933,10 @@ function getDefaultAlertTemplates() {
     {
       id: 'startingSoon',
       name: 'Tournament Starting Soon',
-      trigger: '30 minutes before shuffle',
+      trigger: '10 minutes before shuffle',
       subject: 'Starting soon: {eventTitle}',
-      bodyPreview: 'Your selected tournament starts in ~30 minutes. Join now to secure entry.',
-      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⏰ Starting soon: <span style="color:#86efac">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Your selected tournament starts in <strong>~30 minutes</strong>.</p><p style="margin:0;color:#c7d6e4;">Join now to secure entry and avoid missing first hand.</p>${shellEnd}`
+      bodyPreview: 'Your selected tournament starts in ~10 minutes. Join now to secure entry.',
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⏰ Starting soon: <span style="color:#86efac">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Your selected tournament starts in <strong>~10 minutes</strong>.</p><p style="margin:0;color:#c7d6e4;">Join now to secure entry and avoid missing first hand.</p>${shellEnd}`
     },
     {
       id: 'lateReg',
@@ -3925,11 +3975,13 @@ function getDefaultAlertTemplates() {
 
 function buildAlertTemplatesPreview(store = readStore()) {
   const defaults = getDefaultAlertTemplates();
+  const logic = getAlertTemplateLogic(store);
   const saved = store?.system?.alertTemplates && typeof store.system.alertTemplates === 'object' ? store.system.alertTemplates : {};
   return defaults.map((tpl) => {
     const ov = saved[tpl.id] && typeof saved[tpl.id] === 'object' ? saved[tpl.id] : {};
     return {
       ...tpl,
+      trigger: String((logic[tpl.id] && logic[tpl.id].trigger) || ov.trigger || tpl.trigger),
       subject: String(ov.subject || tpl.subject),
       bodyPreview: String(ov.bodyPreview || tpl.bodyPreview),
       html: String(ov.html || tpl.html)

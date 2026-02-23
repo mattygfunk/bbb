@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -240,6 +240,7 @@ async function loadAlertsMonitor(){
     const templates = out.templates || [];
     const history = out.history || [];
     const scheduleEvents = out.scheduleEvents || [];
+    const templateLogic = out.templateLogic || {};
 
     const totalSubscribers = Number(summary.totalSubscribers || subscribersRaw.length || 0);
     const verifiedSubscribers = Number(summary.verifiedEmailSubscribers || 0);
@@ -350,10 +351,37 @@ async function loadAlertsMonitor(){
     templates.forEach((t) => {
       const tr = document.createElement('tr');
       const templateId = String(t.id || '');
-      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td>${esc(t.trigger || '-')}</td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td><td><div class='row' style='gap:.35rem;flex-wrap:wrap'><button class='btn btn-ghost' data-alert-preview-open='${esc(templateId)}'>Preview HTML</button><button class='btn btn-ghost' data-alert-test='${esc(templateId)}'>Send test</button></div></td>`;
+      const logic = templateLogic[templateId] || {};
+      tr.innerHTML = `<td>${esc(t.name || t.id || '-')}</td><td><input data-alert-trigger='${esc(templateId)}' type='text' value='${esc((logic.trigger || t.trigger || ''))}' style='min-width:220px;width:100%' /><div style='margin-top:.35rem'><label class='muted' style='font-size:.8rem'>Minutes before <input data-alert-mins='${esc(templateId)}' type='number' min='0' max='240' value='${Number(logic.minutesBefore ?? (templateId==='startingSoon'?10:templateId==='lateReg'?15:20))}' style='width:80px;margin-left:.35rem' /></label></div></td><td>${esc(t.subject || '-')}</td><td>${esc(t.bodyPreview || '-')}</td><td><div class='row' style='gap:.35rem;flex-wrap:wrap'><button class='btn btn-ghost' data-alert-logic-save='${esc(templateId)}'>Save logic</button><button class='btn btn-ghost' data-alert-preview-open='${esc(templateId)}'>Preview HTML</button><button class='btn btn-ghost' data-alert-test='${esc(templateId)}'>Send test</button></div></td>`;
       templatesBody.appendChild(tr);
     });
     if (!templates.length) templatesBody.innerHTML = "<tr><td colspan='5' class='muted'>No templates configured.</td></tr>";
+
+    templatesBody.querySelectorAll('button[data-alert-logic-save]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const templateId = String(btn.getAttribute('data-alert-logic-save') || '');
+        const trigger = String(templatesBody.querySelector(`[data-alert-trigger="${templateId}"]`)?.value || '').trim();
+        const minutesBefore = Number(templatesBody.querySelector(`[data-alert-mins="${templateId}"]`)?.value || 0);
+        const payload = {
+          ...templateLogic,
+          [templateId]: {
+            ...(templateLogic[templateId] || {}),
+            trigger,
+            minutesBefore
+          }
+        };
+        btn.disabled = true;
+        try {
+          await req(API.alertsTemplateLogic, { method:'PUT', body: JSON.stringify({ logic: payload }) });
+          if (msg) msg.textContent = `Logic saved: ${templateId}`;
+          loadAlertsMonitor().catch(()=>{});
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not save template logic.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
 
     templatesBody.querySelectorAll('button[data-alert-preview-open]').forEach((btn) => {
       btn.addEventListener('click', () => {
