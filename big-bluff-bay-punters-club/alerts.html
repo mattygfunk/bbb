@@ -3,85 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Private Club Alerts • Big Bluff Bay</title>
-    <meta name="description" content="Private Club Alerts for high-signal tournament notifications." />
+    <title>Alerts • Big Bluff Bay</title>
+    <meta name="description" content="Condition-based tournament alerts for Big Bluff Bay members." />
+    <link rel="canonical" href="https://bigbluffbay.au/alerts.html" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
-      :root{
-        --bg-a:#050706;
-        --bg-b:#072216;
-        --text:#f5f5f0;
-        --muted:#c8c8bc;
-        --gold:#d4af37;
-        --gold-soft:#a9872c;
-        --glass:rgba(10,16,13,.55);
-        --line:rgba(212,175,55,.55);
-      }
-      *{box-sizing:border-box}
-      html,body{margin:0;padding:0}
-      body{
-        font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-        color:var(--text);
-        background:
-          radial-gradient(circle at 25% 20%, rgba(212,175,55,.06), transparent 32%),
-          radial-gradient(circle at 75% 75%, rgba(39,103,73,.18), transparent 35%),
-          repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px),
-          linear-gradient(160deg,var(--bg-a),var(--bg-b));
-        min-height:100vh;
-      }
+      :root{--bg:#070b14;--text:#e5e7eb;--muted:#b7c5d6;--line:#243041;--brand:#22c55e}
+      *{box-sizing:border-box}html,body{margin:0;padding:0}
+      body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);background:radial-gradient(1100px 500px at 20% -10%,#13365f55 0%,transparent 55%),linear-gradient(180deg,#030712 0%,var(--bg) 100%)}
       .site-wrap{width:min(1120px,92%);margin:0 auto}
-      .wrap{max-width:680px;margin:0 auto;padding:24px}
-      .hero{margin:24px 0}
+
+      .hero{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+      .overlay{position:absolute;inset:0;background:linear-gradient(130deg,#22c55e14,#38bdf81a 55%,transparent 80%)}
       .nav{position:relative;display:flex;justify-content:space-between;align-items:center;padding:1rem 0;gap:.75rem;flex-wrap:wrap}
       .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:inherit}
       .badge{width:2rem;height:2rem;border-radius:.5rem;display:grid;place-items:center;font-size:.72rem;font-weight:800;background:#052e16;color:#86efac;border:1px solid #14532d}
       .menu-links{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
       .menu-link{color:#fff;text-decoration:none;border:1px solid #8aa4c7;background:#0f1b2d;border-radius:999px;padding:.5rem .78rem;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:.9rem}
       .menu-link.active{color:#052e16;background:#86efac;border-color:#86efac;font-weight:700}
-      h1{margin:0;font-size:clamp(1.7rem,4.8vw,2.4rem);letter-spacing:.06em}
-      .sub{margin-top:24px;color:var(--muted);line-height:1.5}
 
-      .card{
-        background:var(--glass);
-        backdrop-filter: blur(8px);
-        border:1px solid var(--line);
-        border-radius:14px;
-        padding:24px;
-        box-shadow:0 8px 30px rgba(0,0,0,.28);
-      }
-      .stack{display:grid;gap:24px}
-      label{display:grid;gap:8px;font-size:.92rem;color:#efe5c8}
-      input[type="email"],input[type="tel"]{
-        width:100%;padding:12px 13px;border-radius:9px;
-        border:1px solid rgba(212,175,55,.35);background:rgba(0,0,0,.28);color:var(--text);
-      }
-      .checks{display:grid;grid-template-columns:1fr;gap:12px}
-      .check{
-        display:flex;gap:10px;align-items:flex-start;
-        border:1px solid rgba(212,175,55,.2);border-radius:10px;padding:10px 12px;background:rgba(0,0,0,.15);
-      }
-      .check input{margin-top:2px;accent-color:#d4af37}
-      .cta{
-        appearance:none;border:1px solid var(--gold-soft);border-radius:10px;
-        background:linear-gradient(180deg,#e7c55a,#c89f2a);color:#15120a;
-        font-weight:800;letter-spacing:.04em;padding:13px 16px;cursor:pointer;
-        transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
-      }
-      .cta:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(212,175,55,.18);filter:saturate(1.08)}
-      .cta:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
-      .privacy{font-size:.82rem;color:#cbbf9d}
-      .status{min-height:1.2em;color:#cabf9b;font-size:.9rem}
+      .wrap{max-width:680px;margin:0 auto;padding:1.2rem 0 2rem}
+      .section{background:linear-gradient(180deg,#0b1221 0%,#0b1220 100%);border:1px solid var(--line);border-radius:1rem;padding:1rem}
+      h1{margin:0 0 .35rem;font-size:clamp(1.7rem,4.2vw,2.2rem)}
+      .muted{color:var(--muted)}
+      .stack{display:grid;gap:1rem;margin-top:1rem}
+      label{display:grid;gap:.45rem;font-size:.95rem}
+      input[type="email"],input[type="tel"]{width:100%;padding:.72rem .78rem;border:1px solid #334155;border-radius:.65rem;background:#0b1322;color:#f8fafc}
+      .subhead{font-size:.84rem;text-transform:uppercase;letter-spacing:.04em;color:#9fb3c8;margin:0}
+      .checks{display:grid;grid-template-columns:1fr;gap:.55rem}
+      .check{display:flex;gap:.6rem;align-items:flex-start;border:1px solid #223244;border-radius:.65rem;padding:.55rem .65rem;background:#0a1422}
+      .check input{margin-top:.15rem;accent-color:#22c55e}
+      .btn{appearance:none;border:1px solid #1e6b41;background:var(--brand);color:#052e16;border-radius:.65rem;padding:.72rem .9rem;font-weight:700;cursor:pointer}
+      .btn:disabled{opacity:.6;cursor:not-allowed}
+      .trust{font-size:.82rem;color:#9fb0bf}
+      .status{font-size:.9rem;color:#bfd0df;min-height:1.25em}
+      .proof{margin-top:1rem;display:grid;grid-template-columns:1fr;gap:.55rem}
+      .pill{border:1px solid #334155;border-radius:999px;padding:.45rem .65rem;font-size:.85rem;color:#c8d5e2;background:#0c1523;text-align:center}
 
-      .proof{margin-top:24px;padding:18px;border:1px solid rgba(212,175,55,.35);border-radius:12px;background:rgba(0,0,0,.22)}
-      .proof h2{margin:0 0 24px;font-size:1rem;color:#ead9aa;letter-spacing:.03em}
-      .proof-grid{display:grid;grid-template-columns:1fr;gap:12px}
-      .pill{border:1px solid rgba(212,175,55,.25);border-radius:999px;padding:10px 12px;color:#dfd3b4;font-size:.9rem;text-align:center;background:rgba(6,10,8,.4)}
+      .footer{padding:1rem 0 2rem;border-top:1px solid var(--line)}
+      .footer-grid{display:grid;gap:1rem;grid-template-columns:1fr}
+      .footer-heading{margin:.2rem 0 .5rem;font-size:1rem}
+      .social-logo{width:14px;height:14px;display:inline-block;vertical-align:middle}
+      .footer-note,.footer-bottom{margin:.4rem 0 0;color:#9fb0bf}
 
-      @media (min-width:640px){.checks{grid-template-columns:1fr 1fr}.proof-grid{grid-template-columns:repeat(3,1fr)}}
+      @media (min-width:820px){.proof{grid-template-columns:repeat(3,1fr)}.footer-grid{grid-template-columns:1.2fr 1fr 1fr 1fr}}
     </style>
   </head>
   <body>
-    <header>
+    <header class="hero">
+      <div class="overlay"></div>
       <nav class="nav site-wrap" aria-label="Primary">
         <a class="brand" href="/">
           <span class="badge">BBB</span>
@@ -91,47 +61,43 @@
           <a class="menu-link" href="/">🏠 Home</a>
           <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
           <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a>
-          <a class="menu-link active" href="/alerts">🔔 Alerts <span aria-hidden="true" style="color:#ef4444">●</span></a>
+          <a class="menu-link active" href="/alerts.html">🔔 Alerts <span aria-hidden="true" style="color:#ef4444">●</span></a>
           <a class="menu-link" href="/winners.html">🏆 Winners</a>
         </div>
       </nav>
     </header>
 
-    <main class="wrap">
-      <section class="hero">
-        <h1>PRIVATE CLUB ALERTS</h1>
-        <p class="sub">Stay ahead of overlays. Know before late reg closes. Get the edge.</p>
-      </section>
+    <main class="site-wrap">
+      <section class="wrap">
+        <div class="section">
+          <h1>BIG BLUFF BAY</h1>
+          <p class="muted">Get notified when it matters.</p>
 
-      <section class="card">
-        <form id="alerts-form" class="stack" novalidate>
-          <label>
-            Email
-            <input id="email" type="email" placeholder="you@domain.com" autocomplete="email" required />
-          </label>
+          <form id="alerts-form" class="stack" novalidate>
+            <label>Email
+              <input id="email" type="email" placeholder="you@domain.com" autocomplete="email" required />
+            </label>
 
-          <label>
-            Mobile (optional)
-            <input id="mobile" type="tel" placeholder="04xx xxx xxx" autocomplete="tel" />
-          </label>
+            <label>Mobile (optional)
+              <input id="mobile" type="tel" placeholder="04xx xxx xxx" autocomplete="tel" />
+            </label>
 
-          <div class="checks" aria-label="Alert types">
-            <label class="check"><input type="checkbox" name="overlayWatch" checked /><span>Overlay risk detected</span></label>
-            <label class="check"><input type="checkbox" name="lateReg" checked /><span>Late reg closing (15m)</span></label>
-            <label class="check"><input type="checkbox" name="startingSoon" checked /><span>Starting soon (30m)</span></label>
-            <label class="check"><input type="checkbox" name="freerolls" checked /><span>Freeroll posted</span></label>
-            <label class="check"><input type="checkbox" name="cashActive" /><span>Cash tables active</span></label>
-          </div>
+            <p class="subhead">Alert me when:</p>
+            <div class="checks" aria-label="Alert types">
+              <label class="check"><input type="checkbox" name="overlayWatch" checked /><span>Overlay risk detected</span></label>
+              <label class="check"><input type="checkbox" name="lateReg" checked /><span>Late registration closing (15 mins)</span></label>
+              <label class="check"><input type="checkbox" name="startingSoon" checked /><span>Tournament starting soon (30 mins)</span></label>
+              <label class="check"><input type="checkbox" name="freerolls" checked /><span>Freeroll posted</span></label>
+              <label class="check"><input type="checkbox" name="cashActive" /><span>Cash tables active</span></label>
+            </div>
 
-          <button id="activate" class="cta" type="submit">ACTIVATE ALERTS</button>
-          <p class="privacy">Private by default. Condition-based sends only. Unsubscribe anytime.</p>
-          <p id="status" class="status" aria-live="polite"></p>
-        </form>
-      </section>
+            <button id="activate" class="btn" type="submit">Activate Alerts</button>
+            <p class="trust">• No spam. • Alerts are condition-based. • Unsubscribe anytime.</p>
+            <p id="status" class="status" aria-live="polite"></p>
+          </form>
+        </div>
 
-      <section class="proof" aria-label="Social proof">
-        <h2>Operator Signal</h2>
-        <div class="proof-grid">
+        <div class="proof" aria-label="Social proof">
           <div class="pill">No duplicate alerts</div>
           <div class="pill">Melbourne-time scheduling</div>
           <div class="pill">Verified-contact delivery</div>
@@ -139,9 +105,27 @@
       </section>
     </main>
 
-    <footer class="site-wrap" style="padding:1rem 0 2rem;border-top:1px solid rgba(212,175,55,.25);margin-top:1rem">
-      <p style="margin:.2rem 0;color:#cbbf9d">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
-      <p style="margin:.2rem 0;color:#a8a089">© 2026 Big Bluff Bay</p>
+    <footer class="site-wrap footer enhanced-footer muted">
+      <div class="footer-grid">
+        <div>
+          <strong>Big Bluff Bay</strong>
+          <p class="muted">Track rail × card table. Weekly tips, live leaderboard, and poker nights.</p>
+        </div>
+        <div>
+          <h3 class="footer-heading">🧭 Navigate</h3>
+          <p><a class="menu-link" href="/">🏠 Home</a> <a class="menu-link" href="/punters.html">🏇 Punters Club</a> <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a></p>
+        </div>
+        <div>
+          <h3 class="footer-heading">Legal</h3>
+          <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p>
+        </div>
+        <div>
+          <h3 class="footer-heading">Social</h3>
+          <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a></p>
+        </div>
+      </div>
+      <p class="footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
+      <p class="footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
 
     <script src="alerts.js"></script>
