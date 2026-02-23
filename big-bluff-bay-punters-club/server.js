@@ -1771,6 +1771,39 @@ function createApp() {
     return res.json({ ok: true, user: { id: user.id, username: user.username, role: user.role } });
   });
 
+  app.patch('/api/users/:id/verify', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const id = String(req.params.id || '').trim();
+    const channel = String(req.body?.channel || '').trim().toLowerCase();
+    const verified = Boolean(req.body?.verified);
+    if (!id) return res.status(400).json({ error: 'User id is required' });
+    if (!['email', 'phone', 'whatsapp', 'telegram'].includes(channel)) return res.status(400).json({ error: 'Channel must be email|phone|whatsapp|telegram' });
+
+    const user = (store.users || []).find((u) => String(u.id || '') === id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const profile = normalizeUserProfile(user.profile);
+    const settings = { ...(profile.settings || {}) };
+    settings.alertsPreferences = settings.alertsPreferences || {};
+    settings.alertsPreferences.methods = settings.alertsPreferences.methods || {};
+    settings.alertsPreferences.methods.email = { ...(settings.alertsPreferences.methods.email || {}) };
+    settings.alertsPreferences.methods.sms = { ...(settings.alertsPreferences.methods.sms || {}) };
+    settings.alertsPreferences.methods.whatsapp = { ...(settings.alertsPreferences.methods.whatsapp || {}) };
+    settings.alertsPreferences.methods.telegram = { ...(settings.alertsPreferences.methods.telegram || {}) };
+
+    if (channel === 'email') settings.alertsPreferences.methods.email.verified = verified;
+    if (channel === 'phone') settings.alertsPreferences.methods.sms.verified = verified;
+    if (channel === 'whatsapp') settings.alertsPreferences.methods.whatsapp.verified = verified;
+    if (channel === 'telegram') {
+      settings.alertsPreferences.methods.telegram.verified = verified;
+      settings.alertsPreferences.methods.telegram.linked = verified;
+    }
+
+    user.profile = normalizeUserProfile({ ...profile, settings });
+    writeStore(store);
+    return res.json({ ok: true, id: user.id, channel, verified });
+  });
+
   app.get('/api/alerts/monitor', auth, adminOnly, (_req, res) => {
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);

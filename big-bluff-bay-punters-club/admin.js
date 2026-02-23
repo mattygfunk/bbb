@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -105,11 +105,13 @@ async function loadAdminUsers(){
       const created = u.createdAt ? new Date(Number(u.createdAt)).toLocaleDateString('en-AU') : '-';
       const actionLabel = u.role === 'admin' ? 'Set Member' : 'Make Admin';
       const nextRole = u.role === 'admin' ? 'member' : 'admin';
-      const withVerify = (value, ok) => {
+      const withVerify = (value, ok, channel) => {
         const v = String(value || '-');
-        return `${esc(v)} ${ok ? "<span title='Verified'>✅</span>" : "<span title='Not verified'>⚪</span>"}`;
+        const next = !Boolean(ok);
+        const label = next ? 'Mark verified' : 'Unverify';
+        return `${esc(v)} ${ok ? "<span title='Verified'>✅</span>" : "<span title='Not verified'>⚪</span>"} <button class='btn btn-ghost' style='padding:.18rem .4rem;min-height:auto' data-verify-user='${encodeURIComponent(String(u.id || ''))}' data-verify-channel='${channel}' data-verify-next='${next ? 'true' : 'false'}'>${label}</button>`;
       };
-      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${withVerify(u.email, u?.verified?.email)}</td><td>${withVerify(u.phone, u?.verified?.phone)}</td><td>${withVerify(u.whatsapp, u?.verified?.whatsapp)}</td><td>${withVerify(u.telegram, u?.verified?.telegram)}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
+      tr.innerHTML = `<td>${esc(u.username || '-')}</td><td>${esc(u.role || 'member')}</td><td>${withVerify(u.email, u?.verified?.email, 'email')}</td><td>${withVerify(u.phone, u?.verified?.phone, 'phone')}</td><td>${withVerify(u.whatsapp, u?.verified?.whatsapp, 'whatsapp')}</td><td>${withVerify(u.telegram, u?.verified?.telegram, 'telegram')}</td><td>${esc(created)}</td><td><button class='btn btn-ghost' data-user-id='${encodeURIComponent(String(u.id || ''))}' data-next-role='${nextRole}'>${actionLabel}</button></td>`;
       body.appendChild(tr);
     });
     if (!users.length) body.innerHTML = "<tr><td colspan='8' class='muted'>No users found.</td></tr>";
@@ -124,6 +126,21 @@ async function loadAdminUsers(){
           await loadAdminUsers();
         } catch (err) {
           if (msg) msg.textContent = err.message || 'Could not update role.';
+        }
+      });
+    });
+
+    body.querySelectorAll('button[data-verify-user]').forEach((btn)=>{
+      btn.addEventListener('click', async ()=>{
+        const id = decodeURIComponent(btn.dataset.verifyUser || '');
+        const channel = String(btn.dataset.verifyChannel || 'email');
+        const verified = String(btn.dataset.verifyNext || 'false') === 'true';
+        try {
+          await req(API.userVerify(id), { method:'PATCH', body: JSON.stringify({ channel, verified }) });
+          if (msg) msg.textContent = `${channel} ${verified ? 'marked verified' : 'set unverified'}.`;
+          await loadAdminUsers();
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not update verification.';
         }
       });
     });
