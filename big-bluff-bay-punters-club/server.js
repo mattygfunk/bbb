@@ -1495,6 +1495,50 @@ function adminOnly(req, res, next) {
   next();
 }
 
+
+function ensureWheelStore(store) {
+  store.system = store.system && typeof store.system === 'object' ? store.system : {};
+  const wheel = store.system.wheel && typeof store.system.wheel === 'object' ? store.system.wheel : {};
+  wheel.prizes = Array.isArray(wheel.prizes) ? wheel.prizes : [];
+  wheel.sessions = Array.isArray(wheel.sessions) ? wheel.sessions : [];
+  wheel.spins = Array.isArray(wheel.spins) ? wheel.spins : [];
+  wheel.ticketGrants = Array.isArray(wheel.ticketGrants) ? wheel.ticketGrants : [];
+  store.system.wheel = wheel;
+  return wheel;
+}
+
+function nextEventForPrize(store = readStore()) {
+  const events = getAlertScheduleEvents(store).filter((e) => e.enabled !== false);
+  if (!events.length) return null;
+  const event = events[0];
+  const start = nextOccurrenceFromMelbourne(event, new Date());
+  return { id: event.id, title: event.title, startAt: start.toISOString() };
+}
+
+function wheelDeterministicResult(session = {}, clientNonce = '') {
+  const entrants = Array.isArray(session.entrantsSnapshot) ? session.entrantsSnapshot : [];
+  if (!entrants.length) throw new Error('No entrants');
+  const serverSeed = crypto.randomBytes(32).toString('hex');
+  const payload = `${serverSeed}:${String(clientNonce || '')}:${session.id}:${entrants.join('|')}`;
+  const digest = crypto.createHash('sha256').update(payload).digest('hex');
+  const n = BigInt('0x' + digest.slice(0, 16));
+  const winnerIndex = Number(n % BigInt(entrants.length));
+  const winnerUsername = entrants[winnerIndex];
+  const segDeg = 360 / entrants.length;
+  const centerOffset = (winnerIndex * segDeg) + (segDeg / 2);
+  const turns = 6 + (Number(crypto.randomInt(0, 4)));
+  const finalRotationDeg = (turns * 360) + (360 - centerOffset);
+  return {
+    serverSeed,
+    serverSeedHash: crypto.createHash('sha256').update(serverSeed).digest('hex'),
+    winnerIndex,
+    winnerUsername,
+    finalRotationDeg,
+    durationMs: 7600,
+    easingPreset: 'cubic-bezier(0.12, 0.86, 0.14, 1)'
+  };
+}
+
 function createApp() {
   const app = express();
   app.set('trust proxy', 1);
@@ -1754,6 +1798,167 @@ function createApp() {
       })
       .sort((a, b) => String(a.username || '').localeCompare(String(b.username || '')));
     return res.json({ users, count: users.length });
+  });
+
+
+  app.get('/api/wheel/current', (_req, res) => {
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    const sessions = wheel.sessions.slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
+    const session = sessions.find((x) => String(x.status||'') === 'READY' || String(x.status||'') === 'SPUN') || sessions[0] || null;
+    if (!session) return res.json({ ok: true, session: null });
+    const spin = wheel.spins.find((x) => String(x.wheelSessionId||'') === String(session.id||'')) || null;
+    const prize = wheel.prizes.find((p) => String(p.id||'') === String(session.prizeId||'')) || null;
+    return res.json({ ok: true, session, spin, prize });
+  });
+
+  app.get('/api/admin/wheel/bootstrap', auth, adminOnly, (_req, res) => {
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    if (!wheel.prizes.length) {
+      const nxt = nextEventForPrize(store);
+      wheel.prizes.push({
+        id: crypto.randomUUID(),
+        title: 'Ticket into next event',
+        description: nxt ? `Auto-linked to ${nxt.title}` : 'Ticket prize',
+        prizeType: 'EVENT_TICKET',
+        eventId: nxt?.id || null,
+        metadata: nxt ? { nextEvent: nxt } : {},
+        active: true,
+        createdAt: Date.now()
+      });
+      writeStore(store);
+    }
+    const users = (store.users || []).map((u)=>String(u.username||'').trim()).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+    return res.json({ ok: true, users, prizes: wheel.prizes, sessions: wheel.sessions, spins: wheel.spins });
+  });
+
+  app.post('/api/admin/wheel/prizes', auth, adminOnly, (req, res) => {
+    const title = String(req.body?.title || '').trim();
+    if (!title) return res.status(400).json({ error: 'title is required' });
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    const prize = {
+      id: crypto.randomUUID(),
+      title,
+      description: String(req.body?.description || '').trim(),
+      prizeType: String(req.body?.prizeType || 'EVENT_TICKET').trim() || 'EVENT_TICKET',
+      eventId: req.body?.eventId ? String(req.body.eventId) : null,
+      metadata: req.body?.metadata && typeof req.body.metadata === 'object' ? req.body.metadata : {},
+      active: req.body?.active !== false,
+      createdAt: Date.now()
+    };
+    wheel.prizes.unshift(prize);
+    writeStore(store);
+    return res.status(201).json({ ok: true, prize });
+  });
+
+  app.post('/api/admin/wheel/sessions', auth, adminOnly, (req, res) => {
+    const entrants = Array.isArray(req.body?.entrants) ? req.body.entrants.map((x)=>String(x||'').trim()).filter(Boolean) : [];
+    const uniq = Array.from(new Set(entrants));
+    if (uniq.length < 2) return res.status(400).json({ error: 'At least 2 entrants required' });
+    if (uniq.length > 200) return res.status(400).json({ error: 'Max 200 entrants' });
+
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    const prizeId = String(req.body?.prizeId || '').trim();
+    if (!wheel.prizes.find((p)=>String(p.id||'')===prizeId)) return res.status(400).json({ error: 'Valid prize required' });
+
+    const session = {
+      id: crypto.randomUUID(),
+      title: String(req.body?.title || `Wheel Session ${new Date().toLocaleString('en-AU')}`).trim(),
+      status: String(req.body?.status || 'DRAFT').toUpperCase(),
+      entrantsSnapshot: uniq,
+      prizeId,
+      createdByAdminUserId: String(req.user.sub || ''),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      spunAt: null,
+      spunByAdminUserId: null
+    };
+    wheel.sessions.unshift(session);
+    writeStore(store);
+    return res.status(201).json({ ok: true, session });
+  });
+
+  app.patch('/api/admin/wheel/sessions/:id', auth, adminOnly, (req, res) => {
+    const id = String(req.params?.id || '');
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    const session = wheel.sessions.find((x)=>String(x.id||'')===id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    if (String(session.status||'') === 'SPUN' && req.body?.reset !== true) return res.status(400).json({ error: 'Already spun. Reset required.' });
+
+    if (req.body?.reset === true) {
+      session.status = 'READY';
+      session.spunAt = null;
+      session.spunByAdminUserId = null;
+      wheel.spins = wheel.spins.filter((x)=>String(x.wheelSessionId||'')!==id);
+    }
+
+    if (Array.isArray(req.body?.entrants)) {
+      const uniq = Array.from(new Set(req.body.entrants.map((x)=>String(x||'').trim()).filter(Boolean)));
+      if (uniq.length < 2) return res.status(400).json({ error: 'At least 2 entrants required' });
+      session.entrantsSnapshot = uniq;
+    }
+    if (req.body?.title !== undefined) session.title = String(req.body.title || session.title).trim();
+    if (req.body?.status) session.status = String(req.body.status).toUpperCase();
+    if (req.body?.prizeId) session.prizeId = String(req.body.prizeId);
+    session.updatedAt = Date.now();
+    writeStore(store);
+    return res.json({ ok: true, session });
+  });
+
+  app.post('/api/admin/wheel/sessions/:id/spin', auth, adminOnly, (req, res) => {
+    const id = String(req.params?.id || '');
+    const clientNonce = String(req.body?.clientNonce || '').slice(0, 128);
+    const store = readStore();
+    const wheel = ensureWheelStore(store);
+    const session = wheel.sessions.find((x)=>String(x.id||'')===id);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    if (String(session.status||'') !== 'READY') return res.status(400).json({ error: 'Session must be READY to spin' });
+    if (wheel.spins.find((x)=>String(x.wheelSessionId||'')===id)) return res.status(409).json({ error: 'Session already spun' });
+
+    const result = wheelDeterministicResult(session, clientNonce);
+    const spin = {
+      id: crypto.randomUUID(),
+      wheelSessionId: session.id,
+      winnerUsername: result.winnerUsername,
+      winnerIndex: result.winnerIndex,
+      serverSeedHash: result.serverSeedHash,
+      serverSeedRevealed: result.serverSeed,
+      clientNonce,
+      entrantsSnapshot: session.entrantsSnapshot,
+      entrantsHash: crypto.createHash('sha256').update(JSON.stringify(session.entrantsSnapshot)).digest('hex'),
+      finalRotationDeg: result.finalRotationDeg,
+      durationMs: result.durationMs,
+      easingPreset: result.easingPreset,
+      spunByAdminUserId: String(req.user.sub || ''),
+      spunAt: Date.now(),
+      prizeId: session.prizeId
+    };
+
+    session.status = 'SPUN';
+    session.spunAt = spin.spunAt;
+    session.spunByAdminUserId = spin.spunByAdminUserId;
+    session.updatedAt = Date.now();
+    wheel.spins.unshift(spin);
+
+    const prize = wheel.prizes.find((p)=>String(p.id||'')===String(session.prizeId||''));
+    if (prize && String(prize.prizeType||'') === 'EVENT_TICKET') {
+      wheel.ticketGrants.unshift({
+        id: crypto.randomUUID(),
+        wheelSpinId: spin.id,
+        username: spin.winnerUsername,
+        eventId: prize.eventId || null,
+        status: 'GRANTED',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      });
+    }
+
+    writeStore(store);
+    return res.json({ ok: true, spin, winnerUsername: spin.winnerUsername, winnerIndex: spin.winnerIndex, finalRotationDeg: spin.finalRotationDeg, durationMs: spin.durationMs, easingPreset: spin.easingPreset });
   });
 
   app.patch('/api/users/:id/role', auth, adminOnly, (req, res) => {
@@ -3795,6 +4000,8 @@ function createApp() {
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
   app.get('/punters-club/:track/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
   app.get(['/alerts', '/alerts/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
+  app.get(['/wheel', '/wheel/'], (_req, res) => res.sendFile(path.join(__dirname, 'wheel.html')));
+  app.get('/admin/wheel', (_req, res) => res.sendFile(path.join(__dirname, 'admin-wheel.html')));
   app.get(['/alerts/preview', '/alerts/preview/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
   app.get(['/punters', '/punters/', '/punters.html'], (_req, res) => res.redirect(302, '/punters-club/thoroughbreds'));
 

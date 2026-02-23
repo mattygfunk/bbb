@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wheel Admin • Big Bluff Bay</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="wrap" style="padding:1rem 0 2rem">
+    <section class="card">
+      <h1>🎡 Wheel Admin</h1>
+      <p class="muted">Create/edit sessions, set prize, spin exactly once unless reset.</p>
+
+      <div class="stack">
+        <label>Session title <input id="wheel-title" type="text" placeholder="Wednesday Freeroll Wheel – Feb 2026" /></label>
+        <label>Entrants (newline-separated usernames)
+          <textarea id="wheel-entrants" rows="8" placeholder="alice&#10;bob&#10;charlie"></textarea>
+        </label>
+        <label>Prize
+          <select id="wheel-prize"></select>
+        </label>
+        <div class="row-actions">
+          <button id="wheel-save-draft" class="btn btn-ghost" type="button">Save Draft</button>
+          <button id="wheel-mark-ready" class="btn" type="button">Mark READY</button>
+          <button id="wheel-spin" class="btn" type="button">Spin</button>
+          <button id="wheel-reset" class="btn btn-ghost" type="button">Reset</button>
+          <a class="btn btn-ghost" href="/wheel">Open Public Wheel</a>
+        </div>
+        <p id="wheel-admin-msg" class="muted" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Sessions</h2>
+      <div class="table-wrap"><table><thead><tr><th>Title</th><th>Status</th><th>Entrants</th><th>Prize</th><th>Action</th></tr></thead><tbody id="wheel-sessions"></tbody></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Spin audit</h2>
+      <div class="table-wrap"><table><thead><tr><th>When</th><th>Session</th><th>Winner</th><th>Prize</th><th>By admin</th></tr></thead><tbody id="wheel-spins"></tbody></table></div>
+    </section>
+  </main>
+  <script src="/admin-wheel.js?v=20260224-1"></script>
+</body>
+</html>
