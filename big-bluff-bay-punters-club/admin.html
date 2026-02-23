@@ -75,7 +75,7 @@
 
         <div id="admin-racing-sections">
         <section class="card">
-          <details id="racing-ops-accordion" open>
+          <details id="racing-ops-accordion">
             <summary><strong>🏇 Racing Operations</strong> <span class="muted">(expand)</span></summary>
             <div class="stack" style="margin-top:.7rem">
               <p class="muted">Fixture setup, race results, round settlement, and Bosses Bet controls.</p>
@@ -177,8 +177,11 @@
           </details>
         </section>
 
-        <section class="card"><h2>Punters Tier Payments + Payout Audit</h2>
-          <form id="punters-payment-form" class="stack">
+        <section class="card">
+          <details id="punters-payments-accordion">
+            <summary><strong>Punters Tier Payments + Payout Audit</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <form id="punters-payment-form" class="stack">
             <label>Member username
               <input name="member" type="text" placeholder="e.g. farmilut" required />
             </label>
@@ -193,8 +196,10 @@
               <button class="btn btn-ghost" type="button" id="refresh-claims-btn">Refresh Claims</button>
             </div>
           </form>
-          <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Member</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="claims-body"><tr><td colspan="4" class="muted">No pending claims.</td></tr></tbody></table></div>
-          <p id="punters-payment-msg" class="muted"></p>
+              <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Member</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="claims-body"><tr><td colspan="4" class="muted">No pending claims.</td></tr></tbody></table></div>
+              <p id="punters-payment-msg" class="muted"></p>
+            </div>
+          </details>
         </section>
 
         <section class="card"><h2>Edit Next Meet</h2>
@@ -265,7 +270,7 @@
         </section>
 
         <section class="card">
-          <details id="bosses-multi-accordion" open>
+          <details id="bosses-multi-accordion">
             <summary><strong>Bosses Multi</strong> <span class="muted">(expand)</span></summary>
             <div class="stack" style="margin-top:.7rem">
               <div class="card" id="bosses-upload-panel">
@@ -594,6 +599,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-bosses-accordion"></script>
+    <script src="admin.js?v=20260224-admin-accordions-closed"></script>
   </body>
 </html>
