@@ -503,6 +503,17 @@
                     <option value="no-mobile">No mobile on file</option>
                   </select>
                 </label>
+                <label style="display:grid;gap:.25rem;min-width:180px">Search
+                  <input id="alerts-mon-search" type="text" placeholder="username or email" />
+                </label>
+                <label style="display:grid;gap:.25rem;min-width:180px">Sort
+                  <select id="alerts-mon-sort">
+                    <option value="username-asc">Username A→Z</option>
+                    <option value="username-desc">Username Z→A</option>
+                    <option value="email-asc">Email A→Z</option>
+                    <option value="verified-desc">Verified first</option>
+                  </select>
+                </label>
                 <button id="alerts-mon-refresh" class="btn btn-ghost" type="button">Refresh</button>
                 <button id="alerts-mon-export" class="btn btn-ghost" type="button">Export CSV</button>
               </div>
@@ -532,6 +543,14 @@
               <table>
                 <thead><tr><th>Template</th><th>Trigger</th><th>Subject</th><th>Preview</th><th>Action</th></tr></thead>
                 <tbody id="alerts-mon-templates-body"><tr><td colspan="5" class="muted">Loading templates…</td></tr></tbody>
+              </table>
+            </div>
+
+            <h3 style="margin:1rem 0 .4rem">Delivery audit history</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>When</th><th>Status</th><th>Template</th><th>Recipients</th><th>Note</th></tr></thead>
+                <tbody id="alerts-mon-history-body"><tr><td colspan="5" class="muted">Loading history…</td></tr></tbody>
               </table>
             </div>
 

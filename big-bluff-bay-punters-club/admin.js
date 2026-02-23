@@ -140,9 +140,12 @@ async function loadAlertsMonitor(){
   const templatesBody = $('alerts-mon-templates-body');
   const msg = $('alerts-mon-msg');
   const filterEl = $('alerts-mon-filter');
+  const searchEl = $('alerts-mon-search');
+  const sortEl = $('alerts-mon-sort');
   const testEmailEl = $('alerts-mon-test-email');
   const refreshBtn = $('alerts-mon-refresh');
   const exportBtn = $('alerts-mon-export');
+  const historyBody = $('alerts-mon-history-body');
   if (!subsBody || !nextBody || !templatesBody) return;
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
@@ -157,18 +160,30 @@ async function loadAlertsMonitor(){
     const subscribersRaw = out.subscribers || [];
     const nextAlerts = out.nextAlerts || [];
     const templates = out.templates || [];
+    const history = out.history || [];
 
     $('alerts-mon-subs').textContent = String(summary.totalSubscribers || subscribersRaw.length || 0);
     $('alerts-mon-verified').textContent = String(summary.verifiedEmailSubscribers || 0);
     $('alerts-mon-next-count').textContent = String(nextAlerts.length || 0);
 
     const mode = String(filterEl?.value || 'all');
+    const q = String(searchEl?.value || '').trim().toLowerCase();
+    const sortBy = String(sortEl?.value || 'username-asc');
     alertsMonitorCache.subscribersRaw = subscribersRaw;
     const subscribers = subscribersRaw.filter((s) => {
-      if (mode === 'verified') return Boolean(s.verifiedEmail);
-      if (mode === 'overlay') return Boolean(s?.alerts?.overlayWatch);
-      if (mode === 'no-mobile') return !String(s.phone || '').trim();
+      if (mode === 'verified' && !Boolean(s.verifiedEmail)) return false;
+      if (mode === 'overlay' && !Boolean(s?.alerts?.overlayWatch)) return false;
+      if (mode === 'no-mobile' && String(s.phone || '').trim()) return false;
+      if (q) {
+        const hay = `${String(s.username || '').toLowerCase()} ${String(s.email || '').toLowerCase()}`;
+        if (!hay.includes(q)) return false;
+      }
       return true;
+    }).sort((a,b)=>{
+      if (sortBy === 'username-desc') return String(b.username||'').localeCompare(String(a.username||''));
+      if (sortBy === 'email-asc') return String(a.email||'').localeCompare(String(b.email||''));
+      if (sortBy === 'verified-desc') return Number(Boolean(b.verifiedEmail)) - Number(Boolean(a.verifiedEmail)) || String(a.username||'').localeCompare(String(b.username||''));
+      return String(a.username||'').localeCompare(String(b.username||''));
     });
 
     subsBody.innerHTML = '';
@@ -219,6 +234,7 @@ async function loadAlertsMonitor(){
         try {
           await req(API.alertsTemplateTest, { method:'POST', body: JSON.stringify({ templateId, email }) });
           if (msg) msg.textContent = `Test sent: ${templateId} → ${email}`;
+          loadAlertsMonitor().catch(()=>{});
         } catch (err) {
           if (msg) msg.textContent = err.message || 'Test send failed.';
         } finally {
@@ -227,9 +243,28 @@ async function loadAlertsMonitor(){
       });
     });
 
+    if (historyBody) {
+      historyBody.innerHTML = '';
+      history.forEach((h) => {
+        const tr = document.createElement('tr');
+        const when = Number(h.at || 0) > 0 ? new Date(Number(h.at)).toLocaleString('en-AU') : '-';
+        tr.innerHTML = `<td>${esc(when)}</td><td>${esc(h.status || '-')}</td><td>${esc(h.templateId || '-')}</td><td>${esc(String(h.recipients || 0))}</td><td>${esc(h.note || '-')}</td>`;
+        historyBody.appendChild(tr);
+      });
+      if (!history.length) historyBody.innerHTML = "<tr><td colspan='5' class='muted'>No delivery history yet.</td></tr>";
+    }
+
     if (!filterEl?.dataset.bound) {
       filterEl.dataset.bound = '1';
       filterEl.addEventListener('change', () => loadAlertsMonitor().catch(()=>{}));
+    }
+    if (!searchEl?.dataset.bound) {
+      searchEl.dataset.bound = '1';
+      searchEl.addEventListener('input', () => loadAlertsMonitor().catch(()=>{}));
+    }
+    if (!sortEl?.dataset.bound) {
+      sortEl.dataset.bound = '1';
+      sortEl.addEventListener('change', () => loadAlertsMonitor().catch(()=>{}));
     }
 
     if (refreshBtn && !refreshBtn.dataset.bound) {

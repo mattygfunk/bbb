@@ -1776,6 +1776,7 @@ function createApp() {
     const subscribers = buildAlertsSubscribers(store);
     const nextAlerts = buildNextAlertQueuePreview(subscribers, 10);
     const templates = buildAlertTemplatesPreview();
+    const history = Array.isArray(store?.system?.alertsDeliveryLog) ? store.system.alertsDeliveryLog.slice(0, 50) : [];
     const summary = {
       totalSubscribers: subscribers.length,
       verifiedEmailSubscribers: subscribers.filter((s) => s.verifiedEmail).length,
@@ -1784,7 +1785,7 @@ function createApp() {
         phone: subscribers.filter((s) => Boolean(s.phone)).length
       }
     };
-    return res.json({ ok: true, summary, subscribers, nextAlerts, templates, generatedAt: Date.now() });
+    return res.json({ ok: true, summary, subscribers, nextAlerts, templates, history, generatedAt: Date.now() });
   });
 
   app.post('/api/alerts/templates/test', auth, adminOnly, async (req, res) => {
@@ -1805,6 +1806,7 @@ function createApp() {
       text: `Test send for template: ${t.name}\n\nTrigger: ${t.trigger}\n\n${t.bodyPreview}`,
       html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:20px;color:#eaf2f8"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:12px;padding:18px"><p style="margin:0 0 8px;color:#9fb0bf">TEST TEMPLATE</p><h2 style="margin:0 0 10px">${t.name}</h2><p style="margin:0 0 8px;color:#c7d6e4"><strong>Trigger:</strong> ${t.trigger}</p><p style="margin:0;color:#c7d6e4">${t.bodyPreview}</p></div></div>`
     });
+    appendAlertsDeliveryLog({ status: 'sent', templateId, recipients: 1, note: `test -> ${to}` });
 
     return res.json({ ok: true, sentTo: to, templateId });
   });
@@ -3649,6 +3651,22 @@ function buildNextAlertQueuePreview(subscribers, limit = 10) {
   return queue.sort((a, b) => a.sendAt - b.sendAt).slice(0, Math.max(1, Number(limit || 10)));
 }
 
+function appendAlertsDeliveryLog(entry = {}) {
+  const store = readStore();
+  store.system = store.system && typeof store.system === 'object' ? store.system : {};
+  const list = Array.isArray(store.system.alertsDeliveryLog) ? store.system.alertsDeliveryLog : [];
+  list.unshift({
+    at: Date.now(),
+    status: String(entry.status || 'info'),
+    channel: String(entry.channel || 'email'),
+    templateId: String(entry.templateId || ''),
+    recipients: Number(entry.recipients || 0),
+    note: String(entry.note || '')
+  });
+  store.system.alertsDeliveryLog = list.slice(0, 200);
+  writeStore(store);
+}
+
 function buildAlertTemplatesPreview() {
   return [
     {
@@ -3731,6 +3749,7 @@ async function sendNightlyGtdStartSoonEmail() {
     </div>`
   });
 
+  appendAlertsDeliveryLog({ status: 'sent', templateId: 'nightly-gtd-755', recipients: recipients.length, note: 'nightly cron send' });
   return { ok: true, recipients: recipients.length };
 }
 
@@ -3752,9 +3771,11 @@ function startNightlyGtdReminderCron() {
         writeStore(store);
         console.log(`[alerts-cron] Sent nightly $500 GTD reminder to ${sent.recipients} verified emails (${dayKey})`);
       } else {
+        appendAlertsDeliveryLog({ status: 'skipped', templateId: 'nightly-gtd-755', recipients: 0, note: String(sent.reason || 'unknown') });
         console.log(`[alerts-cron] Skipped nightly $500 GTD reminder: ${sent.reason}`);
       }
     } catch (err) {
+      appendAlertsDeliveryLog({ status: 'failed', templateId: 'nightly-gtd-755', recipients: 0, note: String(err?.message || err) });
       console.error('[alerts-cron] Failed nightly reminder tick:', err?.message || err);
     }
   };
