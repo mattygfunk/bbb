@@ -202,20 +202,28 @@
           </details>
         </section>
 
-        <section class="card"><h2>Edit Next Meet</h2>
-          <form id="fixture-form" class="stack">
+        <section class="card">
+          <details id="edit-next-meet-accordion">
+            <summary><strong>Edit Next Meet</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <form id="fixture-form" class="stack">
             <label>Date <input name="dateOnly" type="date" /></label>
             <label>Time <input name="timeOnly" type="time" step="60" /></label>
             <label>Event <input name="event" type="text" placeholder="Next Meet" /></label>
             <label>Track <input name="track" type="text" placeholder="Pinjarra" /></label>
             <label>Number of races <input name="raceCount" type="number" min="1" max="24" value="12" /></label>
             <button class="btn" type="submit">Update Fixture</button>
-          </form>
-          <p id="fixture-msg" class="muted"></p>
+              </form>
+              <p id="fixture-msg" class="muted"></p>
+            </div>
+          </details>
         </section>
 
-        <section class="card"><h2>Enter Official Results</h2>
-          <form id="results-form" class="stack">
+        <section class="card">
+          <details id="official-results-accordion">
+            <summary><strong>Enter Official Results</strong> <span class="muted">(expand)</span></summary>
+            <div class="stack" style="margin-top:.7rem">
+              <form id="results-form" class="stack">
             <label>Race <select name="race" id="results-race"></select></label>
             <label>1st (supports dead heats; comma-separated)
               <input name="first" type="text" placeholder="e.g. 4,7" />
@@ -233,8 +241,10 @@
               <button class="btn" type="submit">Save Results</button>
               <button class="btn btn-ghost" type="button" id="clear-results-btn">Clear This Race Result</button>
             </div>
-          </form>
-          <p id="results-msg" class="muted"></p>
+              </form>
+              <p id="results-msg" class="muted"></p>
+            </div>
+          </details>
         </section>
 
         <section class="card"><h2>Paste Runners Import</h2>
@@ -599,6 +609,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-queue-row-preview"></script>
+    <script src="admin.js?v=20260224-more-accordions"></script>
   </body>
 </html>
