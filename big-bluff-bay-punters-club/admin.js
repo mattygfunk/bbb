@@ -265,12 +265,12 @@ async function loadAlertsMonitor(){
       eventsBody.innerHTML = '';
       scheduleEvents.forEach((e) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td>`;
+        tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
         const daySel = tr.querySelector('[data-evt-day]');
         if (daySel) daySel.value = String(e.day === 'daily' ? 'daily' : Number(e.day || 0));
         eventsBody.appendChild(tr);
       });
-      if (!scheduleEvents.length) eventsBody.innerHTML = "<tr><td colspan='6' class='muted'>No tournaments configured.</td></tr>";
+      if (!scheduleEvents.length) eventsBody.innerHTML = "<tr><td colspan='7' class='muted'>No tournaments configured.</td></tr>";
     }
 
     nextBody.innerHTML = '';
@@ -382,8 +382,18 @@ async function loadAlertsMonitor(){
       addEventBtn.addEventListener('click', () => {
         if (!eventsBody) return;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td><input data-evt-id type='text' value='' placeholder='event-id' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='' placeholder='Tournament name' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='20' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='0' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' checked /> on</label></td>`;
+        tr.innerHTML = `<td><input data-evt-id type='text' value='' placeholder='event-id' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='' placeholder='Tournament name' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='20' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='0' style='width:86px' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' checked /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
         eventsBody.appendChild(tr);
+      });
+    }
+
+    if (eventsBody && !eventsBody.dataset.boundDel) {
+      eventsBody.dataset.boundDel = '1';
+      eventsBody.addEventListener('click', (e) => {
+        const btn = e.target?.closest?.('[data-evt-del]');
+        if (!btn) return;
+        const tr = btn.closest('tr');
+        if (tr) tr.remove();
       });
     }
 
@@ -402,6 +412,13 @@ async function loadAlertsMonitor(){
           const enabled = Boolean(tr.querySelector('[data-evt-enabled]')?.checked);
           return { id, title, day, hour, minute, enabled };
         }).filter((e) => e.title);
+
+        const ids = events.map((e) => String(e.id || '').toLowerCase());
+        const dupId = ids.find((id, i) => ids.indexOf(id) !== i);
+        if (dupId) {
+          if (msg) msg.textContent = `Duplicate event ID found: ${dupId}. IDs must be unique.`;
+          return;
+        }
 
         saveEventsBtn.disabled = true;
         try {
