@@ -15,11 +15,12 @@ function ensureAlertsPreviewModal(){
   modal.id = 'alerts-template-preview-modal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(2,6,23,.75);z-index:9999;display:none;align-items:center;justify-content:center;padding:1rem;';
   modal.innerHTML = `
-    <div style="width:min(980px,96vw);height:min(86vh,860px);background:#0b1220;border:1px solid #334155;border-radius:12px;display:grid;grid-template-rows:auto 1fr;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.45)">
+    <div style="width:min(980px,96vw);height:min(86vh,860px);background:#0b1220;border:1px solid #334155;border-radius:12px;display:grid;grid-template-rows:auto auto 1fr;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.45)">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .85rem;border-bottom:1px solid #233044;gap:.7rem">
         <strong id="alerts-template-preview-title">Template Preview</strong>
         <button type="button" class="btn btn-ghost" id="alerts-template-preview-close">Close</button>
       </div>
+      <div id="alerts-template-preview-subject" style="padding:.55rem .85rem;border-bottom:1px solid #233044;color:#c7d6e4;background:#0e172a;font-size:.92rem"><strong style="color:#9fb3ce">Subject:</strong> —</div>
       <iframe id="alerts-template-preview-frame" title="Alert template HTML preview" style="width:100%;height:100%;border:0;background:#0b1219"></iframe>
     </div>`;
   document.body.appendChild(modal);
@@ -285,7 +286,11 @@ async function loadAlertsMonitor(){
         const modal = ensureAlertsPreviewModal();
         const frame = modal.querySelector('#alerts-template-preview-frame');
         const title = modal.querySelector('#alerts-template-preview-title');
+        const subjectEl = modal.querySelector('#alerts-template-preview-subject');
+        let subject = String(template.subject || '');
+        Object.entries(vars).forEach(([k, v]) => { subject = subject.replaceAll(`{${k}}`, String(v)); });
         if (title) title.textContent = `Queue Preview • ${String(a.templateLabel || template.name || a.templateId || 'Alert')} → ${email}`;
+        if (subjectEl) subjectEl.innerHTML = `<strong style="color:#9fb3ce">Subject:</strong> ${esc(subject || '-')}`;
         if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Queued Alert Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
         modal.style.display = 'flex';
       });
@@ -318,7 +323,11 @@ async function loadAlertsMonitor(){
         const modal = ensureAlertsPreviewModal();
         const frame = modal.querySelector('#alerts-template-preview-frame');
         const title = modal.querySelector('#alerts-template-preview-title');
+        const subjectEl = modal.querySelector('#alerts-template-preview-subject');
+        let subject = String(template.subject || '');
+        subject = subject.replaceAll('{eventTitle}', 'Nightly Prime').replaceAll('{startTime}', '7:30 PM').replaceAll('{recipientName}', 'Matt');
         if (title) title.textContent = `Template Preview • ${String(template.name || templateId)}`;
+        if (subjectEl) subjectEl.innerHTML = `<strong style="color:#9fb3ce">Subject:</strong> ${esc(subject || '-')}`;
         if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Template Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
         modal.style.display = 'flex';
       });
