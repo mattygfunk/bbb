@@ -7,7 +7,23 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <main class="wrap" style="padding:1rem 0 2rem">
+  <header class="hero premium-hero">
+    <div class="overlay"></div>
+    <nav class="nav wrap">
+      <a class="brand" href="/" style="text-decoration:none;color:inherit;">
+        <span class="badge">BBB</span>
+        <span><strong>Big Bluff Bay</strong><small>Spin the Wheel</small></span>
+      </a>
+      <div class="menu-links">
+        <a class="menu-link" href="/">🏠 Home</a>
+        <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+        <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a>
+        <a class="menu-link active" href="/wheel">🎡 Wheel</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap premium-main" style="padding:1rem 0 2rem">
     <section class="card">
       <h1>🎡 Spin the Wheel</h1>
       <p class="muted" id="wheel-prize">Loading prize…</p>
@@ -28,6 +44,29 @@
       <p id="wheel-fairness" class="muted" style="font-size:.9rem"></p>
     </section>
   </main>
-  <script src="/wheel.js?v=20260224-2"></script>
+
+  <footer class="wrap footer enhanced-footer muted">
+    <div class="footer-grid">
+      <div>
+        <strong>Big Bluff Bay Poker Club</strong>
+        <p class="muted">Structured events, consistent schedules, and clear tournament pathways.</p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Navigate</h3>
+        <p><a class="menu-link" href="/">Home</a> <a class="menu-link" href="/poker.html">Poker</a> <a class="menu-link" href="/poker-guides.html">Poker Guides</a> <a class="menu-link" href="/poker-faq.html">Poker FAQ</a></p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Legal</h3>
+        <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p>
+      </div>
+      <div>
+        <h3 class="footer-heading">Social</h3>
+        <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" /></a></p>
+      </div>
+    </div>
+    <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
+    <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
+  </footer>
+  <script src="/wheel.js?v=20260224-3"></script>
 </body>
 </html>
