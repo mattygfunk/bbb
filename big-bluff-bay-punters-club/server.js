@@ -1804,6 +1804,11 @@ function createApp() {
     return res.json({ ok: true, id: user.id, channel, verified });
   });
 
+  app.get('/api/poker/schedule-events', (_req, res) => {
+    const store = readStore();
+    return res.json({ ok: true, events: buildPublicPokerScheduleEvents(store), generatedAt: Date.now() });
+  });
+
   app.get('/api/alerts/monitor', auth, adminOnly, (_req, res) => {
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);
@@ -3676,6 +3681,57 @@ const ALERT_SCHEDULE_EVENTS = [
   { id: 'late-night-gtd', title: 'Late Night GTD', day: 'daily', hour: 22, minute: 0, enabled: true },
   { id: 'sunday-main', title: 'Sunday Main', day: 0, hour: 18, minute: 0, enabled: true }
 ];
+
+const POKER_EVENT_META_DEFAULTS = {
+  'sunday-main': {
+    format: 'NLH',
+    guarantee: '$1,300 GTD',
+    valueLine: '$1,300 GTD Sunday flagship',
+    whoFor: 'Players chasing a deeper weekly run.',
+    bullets: ['Biggest weekly guarantee', 'Flagship pressure structure', 'Premier Sunday field'],
+    detailsHref: '/poker.html'
+  },
+  'nightly-prime': {
+    format: 'NLH',
+    guarantee: '$500 GTD + Sunday Ticket Pathway',
+    valueLine: '$500 GTD + Sunday ticket pathway',
+    whoFor: 'Players building disciplined nightly volume.',
+    bullets: ['Stable nightly cadence', 'Pathway into Sunday Main', 'High-value pressure reps'],
+    detailsHref: '/poker.html'
+  },
+  'late-night-gtd': {
+    format: 'NLH',
+    guarantee: '$700 GTD',
+    valueLine: '$700 GTD late-session window',
+    whoFor: 'Late players who want another high-value shot.',
+    bullets: ['Late-night lobby energy', 'Fast transition from workday', 'Strong standalone GTD'],
+    detailsHref: '/poker.html'
+  }
+};
+
+function buildPublicPokerScheduleEvents(store = readStore()) {
+  const events = getAlertScheduleEvents(store).filter((e) => e.enabled !== false);
+  return events.map((e) => {
+    const meta = POKER_EVENT_META_DEFAULTS[e.id] || {};
+    const stack = e.startingStack ? `Starting stack: ${e.startingStack}` : '';
+    const blinds = e.blinds ? `Blinds: ${e.blinds}` : '';
+    const refunds = e.earlyBirdRefunds ? `Early bird refunds: ${e.earlyBirdRefunds}` : '';
+    const extras = [stack, blinds, refunds].filter(Boolean);
+    return {
+      id: e.id,
+      title: e.title,
+      day: e.day,
+      hour: e.hour,
+      minute: e.minute,
+      format: meta.format || 'NLH',
+      guarantee: meta.guarantee || '',
+      valueLine: meta.valueLine || (extras.join(' • ') || 'Tournament scheduled'),
+      whoFor: meta.whoFor || 'Tournament players.',
+      bullets: (Array.isArray(meta.bullets) ? meta.bullets : []).concat(extras).slice(0, 3),
+      detailsHref: meta.detailsHref || '/poker.html'
+    };
+  });
+}
 
 function getAlertScheduleEvents(store = readStore()) {
   const saved = Array.isArray(store?.system?.alertScheduleEvents) ? store.system.alertScheduleEvents : [];

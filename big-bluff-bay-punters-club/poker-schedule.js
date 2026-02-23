@@ -1,8 +1,10 @@
 (() => {
   const shared = window.BBB_SHARED;
   if (!shared) return;
-  const { JOIN_CONFIG, SCHEDULE_CONFIG, getNextEvent, eventStatus, fmtInZone, fmtCountdown, downloadICS, googleCalendarUrl, getLocalTZ, MEL_TZ } = shared;
-  const state = { view: 'cards', tzMode: 'melbourne', nextEvent: null };
+  const { JOIN_CONFIG, SCHEDULE_CONFIG, eventStatus, fmtInZone, fmtCountdown, downloadICS, googleCalendarUrl, getLocalTZ, MEL_TZ } = shared;
+  const state = { view: 'cards', tzMode: 'melbourne', nextEvent: null, events: Array.isArray(SCHEDULE_CONFIG?.events) ? [...SCHEDULE_CONFIG.events] : [] };
+
+  const getNextEventLocal = () => state.events.map((e) => shared.nextOccurrence(e)).sort((a,b)=>a.start-b.start)[0] || null;
   const $ = (id) => document.getElementById(id);
 
   function renderInviteChips() {
@@ -15,7 +17,7 @@
   }
 
   function renderNextEventWidget() {
-    const n = getNextEvent();
+    const n = getNextEventLocal();
     if (!n) return;
     state.nextEvent = n;
     $('next-event-title').textContent = `${n.event.title} • ${n.event.format}`;
@@ -41,7 +43,7 @@
     const wrap = $('poker-view-cards');
     if (!wrap) return;
     wrap.innerHTML = '';
-    SCHEDULE_CONFIG.events.forEach((e) => {
+    state.events.forEach((e) => {
       const occ = shared.nextOccurrence(e);
       const article = document.createElement('article');
       article.className = 'card poker-event-card';
@@ -70,13 +72,21 @@
     days.forEach((d, i) => {
       const cell = document.createElement('article');
       cell.className = 'card poker-week-cell';
-      const rows = SCHEDULE_CONFIG.events
+      const rows = state.events
         .filter((e) => e.day === 'daily' || Number(e.day) === i)
         .map((e) => `<p><strong>${String(e.hour).padStart(2, '0')}:${String(e.minute).padStart(2, '0')}</strong> ${e.title}</p>`)
         .join('');
       cell.innerHTML = `<h3>${d}</h3>${rows || `<p class='muted'>No fixed events</p>`}`;
       wrap.appendChild(cell);
     });
+  }
+
+  async function loadEventsFromAdminSchedule() {
+    try {
+      const r = await fetch('/api/poker/schedule-events', { cache: 'no-store' });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && Array.isArray(d.events) && d.events.length) state.events = d.events;
+    } catch {}
   }
 
   function wireControls() {
@@ -104,9 +114,10 @@
     }));
   }
 
-  function boot() {
+  async function boot() {
     const heroJoin = $('schedule-join-cta');
     if (heroJoin) heroJoin.href = '/join.html';
+    await loadEventsFromAdminSchedule();
     renderInviteChips();
     renderNextEventWidget();
     renderEventCards();
@@ -116,6 +127,6 @@
     setInterval(renderCountdown, 1000);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { boot().catch(()=>{}); });
+  else boot().catch(()=>{});
 })();
