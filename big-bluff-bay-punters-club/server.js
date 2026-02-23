@@ -1844,6 +1844,8 @@ function createApp() {
         day,
         hour,
         minute,
+        buyIn: String(e?.buyIn || '').trim(),
+        rebuys: String(e?.rebuys || '').trim(),
         startingStack: String(e?.startingStack || '').trim(),
         blinds: String(e?.blinds || '').trim(),
         earlyBirdRefunds: String(e?.earlyBirdRefunds || '').trim(),
@@ -3715,10 +3717,12 @@ function buildPublicPokerScheduleEvents(store = readStore()) {
   const events = getAlertScheduleEvents(store).filter((e) => e.enabled !== false);
   return events.map((e) => {
     const meta = POKER_EVENT_META_DEFAULTS[e.id] || {};
+    const buyIn = e.buyIn ? `Buy-in: ${e.buyIn}` : '';
+    const rebuys = e.rebuys ? `Rebuys: ${e.rebuys}` : '';
     const stack = e.startingStack ? `Starting stack: ${e.startingStack}` : '';
     const blinds = e.blinds ? `Blinds: ${e.blinds}` : '';
     const refunds = e.earlyBirdRefunds ? `Early bird refunds: ${e.earlyBirdRefunds}` : '';
-    const extras = [stack, blinds, refunds].filter(Boolean);
+    const extras = [buyIn, rebuys, stack, blinds, refunds].filter(Boolean);
     return {
       id: e.id,
       title: e.title,
@@ -3750,6 +3754,8 @@ function getAlertScheduleEvents(store = readStore()) {
       day,
       hour,
       minute,
+      buyIn: String(e?.buyIn || '').trim(),
+      rebuys: String(e?.rebuys || '').trim(),
       startingStack: String(e?.startingStack || '').trim(),
       blinds: String(e?.blinds || '').trim(),
       earlyBirdRefunds: String(e?.earlyBirdRefunds || '').trim(),
