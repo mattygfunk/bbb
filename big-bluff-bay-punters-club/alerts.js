@@ -29,8 +29,9 @@ async function req(url, opt = {}) {
 
 function readForm() {
   const email = normalizeEmail(document.getElementById('email')?.value || '');
-  const quietStart = String(document.getElementById('quietStart')?.value || '01:00');
-  const quietEnd = String(document.getElementById('quietEnd')?.value || '09:00');
+  const mobile = String(document.getElementById('mobile')?.value || '').trim();
+  const quietStart = '01:00';
+  const quietEnd = '09:00';
 
   const checked = (name) => Boolean(form?.querySelector(`input[name="${name}"]`)?.checked);
   return {
@@ -43,14 +44,16 @@ function readForm() {
     },
     methods: { email: { enabled: true, verified: false, mode: 'Digest' } },
     rules: { timezone:'Australia/Melbourne', quietStart, quietEnd, allowHighQuiet:true, maxDay:4, tone:'Balanced' },
-    contact: { email, phone:'', telegramUser:'' },
+    contact: { email, phone: mobile, telegramUser:'' },
     consent: true
   };
 }
 
 function fillFromPrefs(prefs = {}) {
   const email = normalizeEmail(prefs?.contact?.email || '');
+  const mobile = String(prefs?.contact?.phone || '').trim();
   if (email) document.getElementById('email').value = email;
+  if (mobile && document.getElementById('mobile')) document.getElementById('mobile').value = mobile;
 
   const setCheck = (name, val) => {
     const el = form?.querySelector(`input[name="${name}"]`);
@@ -63,8 +66,7 @@ function fillFromPrefs(prefs = {}) {
   setCheck('freerolls', prefs?.alerts?.freerolls ?? true);
   setCheck('cashActive', prefs?.alerts?.cashActive ?? false);
 
-  document.getElementById('quietStart').value = String(prefs?.rules?.quietStart || '01:00');
-  document.getElementById('quietEnd').value = String(prefs?.rules?.quietEnd || '09:00');
+  // Quiet hours are fixed in this layout; stored defaults remain 01:00-09:00.
 }
 
 async function initVerifyFromLink(){

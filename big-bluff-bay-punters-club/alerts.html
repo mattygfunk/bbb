@@ -3,94 +3,124 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Alerts • Big Bluff Bay</title>
-    <meta name="description" content="Configure precise condition-based alerts." />
+    <title>Private Club Alerts • Big Bluff Bay</title>
+    <meta name="description" content="Private Club Alerts for high-signal tournament notifications." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
-      :root{--bg:#ffffff;--text:#0b0f14;--muted:#4b5563;--line:#d1d5db;--line-strong:#9ca3af;--btn:#111827;--btn-text:#ffffff}
+      :root{
+        --bg-a:#050706;
+        --bg-b:#072216;
+        --text:#f5f5f0;
+        --muted:#c8c8bc;
+        --gold:#d4af37;
+        --gold-soft:#a9872c;
+        --glass:rgba(10,16,13,.55);
+        --line:rgba(212,175,55,.55);
+      }
       *{box-sizing:border-box}
-      html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-      .wrap{max-width:680px;margin:0 auto;padding:20px}
-      h1{font-size:2rem;line-height:1.15;margin:0 0 .5rem}
-      p{margin:.4rem 0 0;line-height:1.55}
-      .muted{color:var(--muted)}
-      .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:1.25rem}
-      .top a{font-size:.95rem;color:#111827}
-      .panel{border:1px solid var(--line);padding:18px;border-radius:10px}
-      .divider{border-top:1px solid var(--line);margin:14px 0}
-      .stack{display:grid;gap:14px}
-      label{display:grid;gap:6px;font-size:.95rem}
-      input[type="email"],input[type="time"]{width:100%;padding:12px;border:1px solid var(--line-strong);border-radius:8px;font-size:1rem;background:#fff;color:var(--text)}
-      .checks{display:grid;gap:10px}
-      .check{display:flex;gap:10px;align-items:flex-start}
-      .check input{margin-top:3px}
-      .subhead{font-size:.86rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-      .quiet{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      .btn{appearance:none;border:0;background:var(--btn);color:var(--btn-text);padding:12px 16px;border-radius:8px;font-weight:600;font-size:1rem;cursor:pointer}
-      .btn:disabled{opacity:.55;cursor:not-allowed}
-      .trust{font-size:.88rem;color:var(--muted);margin-top:8px}
-      details{border:1px solid var(--line);border-radius:10px;padding:12px}
-      summary{cursor:pointer;font-weight:600}
-      #status{font-size:.92rem;color:var(--muted);min-height:1.3em}
-      @media (max-width:540px){h1{font-size:1.75rem}.wrap{padding:16px}.quiet{grid-template-columns:1fr}}
+      html,body{margin:0;padding:0}
+      body{
+        font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+        color:var(--text);
+        background:
+          radial-gradient(circle at 25% 20%, rgba(212,175,55,.06), transparent 32%),
+          radial-gradient(circle at 75% 75%, rgba(39,103,73,.18), transparent 35%),
+          repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 2px, transparent 2px 6px),
+          linear-gradient(160deg,var(--bg-a),var(--bg-b));
+        min-height:100vh;
+      }
+      .wrap{max-width:680px;margin:0 auto;padding:24px}
+      .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+      .top a{color:#e6dbc0;text-decoration:none;font-size:.9rem}
+      .hero{margin:24px 0}
+      h1{margin:0;font-size:clamp(1.7rem,4.8vw,2.4rem);letter-spacing:.06em}
+      .sub{margin-top:24px;color:var(--muted);line-height:1.5}
+
+      .card{
+        background:var(--glass);
+        backdrop-filter: blur(8px);
+        border:1px solid var(--line);
+        border-radius:14px;
+        padding:24px;
+        box-shadow:0 8px 30px rgba(0,0,0,.28);
+      }
+      .stack{display:grid;gap:24px}
+      label{display:grid;gap:8px;font-size:.92rem;color:#efe5c8}
+      input[type="email"],input[type="tel"]{
+        width:100%;padding:12px 13px;border-radius:9px;
+        border:1px solid rgba(212,175,55,.35);background:rgba(0,0,0,.28);color:var(--text);
+      }
+      .checks{display:grid;grid-template-columns:1fr;gap:12px}
+      .check{
+        display:flex;gap:10px;align-items:flex-start;
+        border:1px solid rgba(212,175,55,.2);border-radius:10px;padding:10px 12px;background:rgba(0,0,0,.15);
+      }
+      .check input{margin-top:2px;accent-color:#d4af37}
+      .cta{
+        appearance:none;border:1px solid var(--gold-soft);border-radius:10px;
+        background:linear-gradient(180deg,#e7c55a,#c89f2a);color:#15120a;
+        font-weight:800;letter-spacing:.04em;padding:13px 16px;cursor:pointer;
+        transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+      }
+      .cta:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(212,175,55,.18);filter:saturate(1.08)}
+      .cta:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+      .privacy{font-size:.82rem;color:#cbbf9d}
+      .status{min-height:1.2em;color:#cabf9b;font-size:.9rem}
+
+      .proof{margin-top:24px;padding:18px;border:1px solid rgba(212,175,55,.35);border-radius:12px;background:rgba(0,0,0,.22)}
+      .proof h2{margin:0 0 24px;font-size:1rem;color:#ead9aa;letter-spacing:.03em}
+      .proof-grid{display:grid;grid-template-columns:1fr;gap:12px}
+      .pill{border:1px solid rgba(212,175,55,.25);border-radius:999px;padding:10px 12px;color:#dfd3b4;font-size:.9rem;text-align:center;background:rgba(6,10,8,.4)}
+
+      @media (min-width:640px){.checks{grid-template-columns:1fr 1fr}.proof-grid{grid-template-columns:repeat(3,1fr)}}
     </style>
   </head>
   <body>
     <main class="wrap">
       <header class="top">
         <a href="/">← Home</a>
-        <a href="/punters.html">Punters</a>
+        <a href="/poker-schedule.html">Poker Tournaments</a>
       </header>
 
-      <div class="divider"></div>
-      <h1>BIG BLUFF BAY</h1>
-      <p class="muted">Get notified when it matters.</p>
-      <p class="muted">We monitor tournaments automatically and only alert you when a selected condition is true.</p>
-      <div class="divider"></div>
+      <section class="hero">
+        <h1>PRIVATE CLUB ALERTS</h1>
+        <p class="sub">Stay ahead of overlays. Know before late reg closes. Get the edge.</p>
+      </section>
 
-      <section class="panel" style="margin-top:16px">
+      <section class="card">
         <form id="alerts-form" class="stack" novalidate>
           <label>
             Email
             <input id="email" type="email" placeholder="you@domain.com" autocomplete="email" required />
           </label>
 
-          <div>
-            <p class="subhead">Alert me when:</p>
-            <div class="checks">
-              <label class="check"><input type="checkbox" name="overlayWatch" checked /> <span>Overlay risk detected</span></label>
-              <label class="check"><input type="checkbox" name="lateReg" checked /> <span>Late registration closing (15 mins)</span></label>
-              <label class="check"><input type="checkbox" name="startingSoon" checked /> <span>Tournament starting soon (30 mins)</span></label>
-              <label class="check"><input type="checkbox" name="freerolls" checked /> <span>Freeroll posted</span></label>
-              <label class="check"><input type="checkbox" name="cashActive" /> <span>Cash tables active</span></label>
-            </div>
+          <label>
+            Mobile (optional)
+            <input id="mobile" type="tel" placeholder="04xx xxx xxx" autocomplete="tel" />
+          </label>
+
+          <div class="checks" aria-label="Alert types">
+            <label class="check"><input type="checkbox" name="overlayWatch" checked /><span>Overlay risk detected</span></label>
+            <label class="check"><input type="checkbox" name="lateReg" checked /><span>Late reg closing (15m)</span></label>
+            <label class="check"><input type="checkbox" name="startingSoon" checked /><span>Starting soon (30m)</span></label>
+            <label class="check"><input type="checkbox" name="freerolls" checked /><span>Freeroll posted</span></label>
+            <label class="check"><input type="checkbox" name="cashActive" /><span>Cash tables active</span></label>
           </div>
 
-          <div>
-            <p class="subhead">Quiet hours (optional)</p>
-            <div class="quiet">
-              <label>From <input id="quietStart" type="time" value="01:00" /></label>
-              <label>To <input id="quietEnd" type="time" value="09:00" /></label>
-            </div>
-          </div>
-
-          <button id="activate" class="btn" type="submit">Activate Alerts</button>
-          <div class="divider" style="margin:8px 0 0"></div>
-          <p class="trust">• No spam. • Alerts are condition-based. • Unsubscribe anytime.</p>
-          <div class="divider" style="margin:8px 0 0"></div>
-          <p id="status" aria-live="polite"></p>
+          <button id="activate" class="cta" type="submit">ACTIVATE ALERTS</button>
+          <p class="privacy">Private by default. Condition-based sends only. Unsubscribe anytime.</p>
+          <p id="status" class="status" aria-live="polite"></p>
         </form>
       </section>
 
-      <details style="margin-top:14px">
-        <summary>How alerts work</summary>
-        <ul class="muted" style="margin:.7rem 0 0 1rem;padding:0;display:grid;gap:.4rem">
-          <li>Overlay alert triggers if entries fall below target 20 minutes before start.</li>
-          <li>Late reg alert triggers 15 minutes before close.</li>
-          <li>Starting soon alert triggers 30 minutes before shuffle.</li>
-          <li>You will not receive duplicate alerts.</li>
-        </ul>
-      </details>
+      <section class="proof" aria-label="Social proof">
+        <h2>Operator Signal</h2>
+        <div class="proof-grid">
+          <div class="pill">No duplicate alerts</div>
+          <div class="pill">Melbourne-time scheduling</div>
+          <div class="pill">Verified-contact delivery</div>
+        </div>
+      </section>
     </main>
 
     <script src="alerts.js"></script>
