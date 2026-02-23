@@ -78,7 +78,12 @@
 
       <details style="margin-top:14px">
         <summary>How alerts work</summary>
-        <p class="muted">Alerts are generated only when selected conditions are true. Quiet hours suppress non-critical sends. You can edit or disable settings at any time from this page.</p>
+        <ul class="muted" style="margin:.7rem 0 0 1rem;padding:0;display:grid;gap:.4rem">
+          <li>Overlay alert triggers if entries fall below target 20 minutes before start.</li>
+          <li>Late reg alert triggers 15 minutes before close.</li>
+          <li>Starting soon alert triggers 30 minutes before shuffle.</li>
+          <li>You will not receive duplicate alerts.</li>
+        </ul>
       </details>
     </main>
 
