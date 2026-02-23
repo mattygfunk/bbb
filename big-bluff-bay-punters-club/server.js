@@ -1872,7 +1872,7 @@ function createApp() {
       const row = logicIn[id] && typeof logicIn[id] === 'object' ? logicIn[id] : {};
       const mins = Number(row.minutesBefore);
       out[id] = {
-        minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : defaults[id].minutesBefore,
+        minutesBefore: Number.isFinite(mins) ? Math.max(-240, Math.min(240, mins)) : defaults[id].minutesBefore,
         trigger: String(row.trigger || defaults[id].trigger),
         enabled: row.enabled !== false
       };
@@ -1901,7 +1901,7 @@ function createApp() {
     store.system.alertTemplateLogic = {
       ...cur,
       [id]: {
-        minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : defaults[id].minutesBefore,
+        minutesBefore: Number.isFinite(mins) ? Math.max(-240, Math.min(240, mins)) : defaults[id].minutesBefore,
         trigger,
         enabled
       }
@@ -1960,6 +1960,48 @@ function createApp() {
 
     const template = buildAlertTemplatesPreview(store).find((t) => t.id === id);
     return res.json({ ok: true, template });
+  });
+
+
+  app.post('/api/alerts/templates/overlay/send-now', auth, adminOnly, async (req, res) => {
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const store = readStore();
+    const subscribers = buildAlertsSubscribers(store)
+      .filter((s) => Boolean(s.verifiedEmail) && Boolean(s.email) && Boolean(s.alerts?.overlayWatch));
+    if (!subscribers.length) {
+      appendAlertsDeliveryLog({ status: 'skipped', templateId: 'overlayWatch', recipients: 0, note: 'manual overlay send: no-verified-overlay-subscribers' });
+      return res.status(200).json({ ok: true, sent: 0, reason: 'no-verified-overlay-subscribers' });
+    }
+
+    const template = buildAlertTemplatesPreview(store).find((x) => String(x.id) === 'overlayWatch');
+    if (!template || template.enabled === false) return res.status(400).json({ error: 'Overlay template disabled or missing' });
+
+    const event = getAlertScheduleEvents(store).filter((e) => e.enabled !== false)[0] || {};
+    const start = event.id ? nextOccurrenceFromMelbourne(event, new Date()) : new Date();
+
+    let sent = 0;
+    for (const sub of subscribers) {
+      const vars = buildTournamentTemplateVars(event, {
+        eventTitle: String(event.title || 'Tournament'),
+        startTime: new Date(start).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne' }),
+        recipientName: String(sub.username || sub.email || 'Member'),
+        recipientEmail: String(sub.email || '')
+      });
+      try {
+        await tx.sendMail({
+          from: SMTP_FROM,
+          to: sub.email,
+          subject: renderTemplateVars(template.subject, vars),
+          text: renderTemplateVars(template.bodyPreview, vars),
+          html: renderTemplateVars(template.html, vars)
+        });
+        sent += 1;
+      } catch {}
+    }
+    appendAlertsDeliveryLog({ status: sent ? 'sent' : 'failed', templateId: 'overlayWatch', recipients: sent, note: 'manual overlay send-now' });
+    return res.json({ ok: true, sent, requested: subscribers.length });
   });
 
   app.post('/api/alerts/templates/test', auth, adminOnly, async (req, res) => {
@@ -3897,8 +3939,8 @@ function buildAlertsSubscribers(store) {
 function getDefaultAlertTemplateLogic() {
   return {
     startingSoon: { minutesBefore: 10, trigger: '10 minutes before shuffle', enabled: true },
-    lateReg: { minutesBefore: 15, trigger: '15 minutes before late reg closes', enabled: true },
-    overlayWatch: { minutesBefore: 20, trigger: '20 minutes before start (only if entries below target)', enabled: true },
+    lateReg: { minutesBefore: -60, trigger: '60 minutes after start time', enabled: true },
+    overlayWatch: { minutesBefore: 20, trigger: 'Manual send only (admin button)', enabled: false },
     freerolls: { minutesBefore: 0, trigger: 'When freeroll listing is published', enabled: true },
     cashActive: { minutesBefore: 0, trigger: 'When cash lobby status flips active', enabled: true }
   };
@@ -3912,7 +3954,7 @@ function getAlertTemplateLogic(store = readStore()) {
     const v = saved[id] && typeof saved[id] === 'object' ? saved[id] : {};
     const mins = Number(v.minutesBefore);
     out[id] = {
-      minutesBefore: Number.isFinite(mins) ? Math.max(0, Math.min(240, mins)) : base[id].minutesBefore,
+      minutesBefore: Number.isFinite(mins) ? Math.max(-240, Math.min(240, mins)) : base[id].minutesBefore,
       trigger: String(v.trigger || base[id].trigger),
       enabled: v.enabled !== false && base[id].enabled !== false
     };
@@ -3991,10 +4033,10 @@ function getDefaultAlertTemplates() {
     {
       id: 'lateReg',
       name: 'Late Registration Closing',
-      trigger: '15 minutes before late reg closes',
+      trigger: '60 minutes after start time',
       subject: 'Late reg closing soon: {eventTitle}',
       bodyPreview: 'Late registration window is closing. Enter now if you want in.',
-      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⌛ Late reg closing: <span style="color:#fbbf24">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Late registration closes in about <strong>15 minutes</strong>.</p><p style="margin:0;color:#c7d6e4;">If you want in, now is the time to jump in.</p>${shellEnd}`
+      html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">⌛ Late reg closing: <span style="color:#fbbf24">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Late registration window is usually closing around this stage.</p><p style="margin:0;color:#c7d6e4;">If you want in, now is the time to jump in.</p>${shellEnd}`
     },
     {
       id: 'overlayWatch',
