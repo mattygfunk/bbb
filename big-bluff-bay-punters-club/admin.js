@@ -7,6 +7,39 @@ const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';let lastStatus=0;let lastData={};for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';lastStatus=r.status;lastData=d;continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';lastStatus=r.status;lastData=d;continue;}lastErr=d.error||`Request failed (${r.status})`;lastStatus=r.status;lastData=d;}const err=new Error(lastErr||'Request failed');err.status=lastStatus;err.data=lastData;throw err;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
+function buildTournamentTemplateVars(event = {}, base = {}) {
+  const buyIn = String(event?.buyIn || '').trim();
+  const rebuys = String(event?.rebuys || '').trim();
+  const startingStack = String(event?.startingStack || '').trim();
+  const blinds = String(event?.blinds || '').trim();
+  const refundsRaw = String(event?.earlyBirdRefunds || '').trim();
+  const earlyBirdRefunds = (!refundsRaw || refundsRaw === '0') ? '' : refundsRaw;
+  return {
+    ...base,
+    buyIn,
+    rebuys,
+    startingStack,
+    blinds,
+    earlyBirdRefunds,
+    buyInLine: buyIn ? `<div><strong>Buy-in:</strong> ${buyIn}</div>` : '',
+    rebuysLine: rebuys ? `<div><strong>Rebuys:</strong> ${rebuys}</div>` : '',
+    stackLine: startingStack ? `<div><strong>Starting stack:</strong> ${startingStack}</div>` : '',
+    blindsLine: blinds ? `<div><strong>Blinds:</strong> ${blinds}</div>` : '',
+    refundsLine: earlyBirdRefunds ? `<div><strong>Early bird refunds:</strong> ${earlyBirdRefunds}</div>` : ''
+  };
+}
+
+function renderTemplateVarsClient(raw = '', vars = {}) {
+  let out = String(raw || '');
+  Object.entries(vars || {}).forEach(([k, v]) => { out = out.replaceAll(`{${k}}`, String(v ?? '')); });
+  out = out.replace(/<div><strong>Buy-in:\/strong>\s*<\/div>/gi, '');
+  out = out.replace(/<div><strong>Rebuys:\/strong>\s*<\/div>/gi, '');
+  out = out.replace(/<div><strong>Starting stack:\/strong>\s*<\/div>/gi, '');
+  out = out.replace(/<div><strong>Blinds:\/strong>\s*<\/div>/gi, '');
+  out = out.replace(/<div><strong>Early bird refunds:\/strong>\s*(?:0)?\s*<\/div>/gi, '');
+  return out;
+}
+
 function ensureAlertsPreviewModal(){
   let modal = document.getElementById('alerts-template-preview-modal');
   if (modal) return modal;
@@ -291,26 +324,19 @@ async function loadAlertsMonitor(){
         const email = String(a.recipient || 'member@bigbluffbay.au');
         const recipientName = email.includes('@') ? email.split('@')[0] : email;
         const matchingEvent = (scheduleEvents || []).find((e) => String(e.title || '') === String(a.eventTitle || '')) || {};
-        const vars = {
+        const vars = buildTournamentTemplateVars(matchingEvent, {
           eventTitle: String(a.eventTitle || matchingEvent.title || 'Tournament'),
           recipientName,
           startTime: when,
-          recipientEmail: email,
-          buyIn: String(matchingEvent.buyIn || ''),
-          rebuys: String(matchingEvent.rebuys || ''),
-          startingStack: String(matchingEvent.startingStack || ''),
-          blinds: String(matchingEvent.blinds || ''),
-          earlyBirdRefunds: String(matchingEvent.earlyBirdRefunds || '')
-        };
-        let html = String(template.html || '');
-        Object.entries(vars).forEach(([k, v]) => { html = html.replaceAll(`{${k}}`, String(v)); });
+          recipientEmail: email
+        });
+        const html = renderTemplateVarsClient(String(template.html || ''), vars);
 
         const modal = ensureAlertsPreviewModal();
         const frame = modal.querySelector('#alerts-template-preview-frame');
         const title = modal.querySelector('#alerts-template-preview-title');
         const subjectEl = modal.querySelector('#alerts-template-preview-subject');
-        let subject = String(template.subject || '');
-        Object.entries(vars).forEach(([k, v]) => { subject = subject.replaceAll(`{${k}}`, String(v)); });
+        const subject = renderTemplateVarsClient(String(template.subject || ''), vars);
         if (title) title.textContent = `Queue Preview • ${String(a.templateLabel || template.name || a.templateId || 'Alert')} → ${email}`;
         if (subjectEl) subjectEl.innerHTML = `<strong style="color:#9fb3ce">Subject:</strong> ${esc(subject || '-')}`;
         if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Queued Alert Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
@@ -338,26 +364,19 @@ async function loadAlertsMonitor(){
           return;
         }
         const sampleEvent = (scheduleEvents || []).find((e) => e.enabled !== false) || (scheduleEvents || [])[0] || {};
-        const sampleVars = {
+        const sampleVars = buildTournamentTemplateVars(sampleEvent, {
           eventTitle: String(sampleEvent.title || 'Tournament'),
           startTime: `${String(sampleEvent.hour ?? '').padStart(2,'0')}:${String(sampleEvent.minute ?? '').padStart(2,'0')}`,
           recipientName: 'Member',
-          recipientEmail: String(testEmailEl?.value || 'member@bigbluffbay.au'),
-          buyIn: String(sampleEvent.buyIn || ''),
-          rebuys: String(sampleEvent.rebuys || ''),
-          startingStack: String(sampleEvent.startingStack || ''),
-          blinds: String(sampleEvent.blinds || ''),
-          earlyBirdRefunds: String(sampleEvent.earlyBirdRefunds || '')
-        };
-        let html = String(template.html || '');
-        Object.entries(sampleVars).forEach(([k, v]) => { html = html.replaceAll(`{${k}}`, String(v)); });
+          recipientEmail: String(testEmailEl?.value || 'member@bigbluffbay.au')
+        });
+        const html = renderTemplateVarsClient(String(template.html || ''), sampleVars);
 
         const modal = ensureAlertsPreviewModal();
         const frame = modal.querySelector('#alerts-template-preview-frame');
         const title = modal.querySelector('#alerts-template-preview-title');
         const subjectEl = modal.querySelector('#alerts-template-preview-subject');
-        let subject = String(template.subject || '');
-        Object.entries(sampleVars).forEach(([k, v]) => { subject = subject.replaceAll(`{${k}}`, String(v)); });
+        const subject = renderTemplateVarsClient(String(template.subject || ''), sampleVars);
         if (title) title.textContent = `Template Preview • ${String(template.name || templateId)}`;
         if (subjectEl) subjectEl.innerHTML = `<strong style="color:#9fb3ce">Subject:</strong> ${esc(subject || '-')}`;
         if (frame) frame.srcdoc = `<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width,initial-scale=1'/><title>Template Preview</title></head><body style='margin:0;background:#0b1219;'>${html}</body></html>`;
