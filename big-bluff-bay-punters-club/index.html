@@ -144,13 +144,18 @@
                   <button type="button" class="btn btn-ghost tiny-btn" id="toggle-password" aria-controls="home-password" aria-pressed="false">Show</button>
                 </div>
               </div>
-              <label id="home-email-wrap" hidden>Email (for updates + account recovery)
-                <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
-              </label>
-              <label id="home-alert-optin-wrap" hidden style="display:grid;gap:.35rem">
-                <span style="display:flex;align-items:flex-start;justify-content:flex-start;gap:.45rem;text-align:left"><input type="checkbox" name="alertsOptIn" id="home-alert-optin" style="margin-top:.18rem" /> <span>Set up simple email alerts (non-spam, unsubscribe anytime)</span></span>
-                <small class="muted">We only send practical updates like start reminders and major changes. You can opt out at any time.</small>
-              </label>
+              <div id="home-contact-alerts-wrap" hidden style="display:grid;gap:.45rem">
+                <label id="home-email-wrap" style="margin:0">Email (for updates + account recovery)
+                  <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
+                </label>
+                <label id="home-alert-optin-wrap" style="margin:0;display:flex;align-items:flex-start;gap:.5rem;text-align:left">
+                  <input type="checkbox" name="alertsOptIn" id="home-alert-optin" style="margin-top:.18rem" />
+                  <span>
+                    <strong style="font-weight:600">Simple email alerts</strong> <span class="muted">(non-spam, unsubscribe anytime)</span><br />
+                    <small class="muted">Start reminders and major updates only.</small>
+                  </span>
+                </label>
+              </div>
               <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
             </form>
             <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
@@ -533,7 +538,7 @@
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
-    <script defer src="home-login.js?v=20260224-alert-optin"></script>
+    <script defer src="home-login.js?v=20260224-alert-optin-layout"></script>
     <script defer src="landing.js?v=20260222-46"></script>
   </body>
 </html>

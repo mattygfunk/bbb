@@ -11,6 +11,7 @@ const modeInput = document.getElementById('home-auth-mode');
 const modeLoginBtn = document.getElementById('home-mode-login');
 const modeRegisterBtn = document.getElementById('home-mode-register');
 const submitBtn = document.getElementById('home-auth-submit');
+const contactAlertsWrap = document.getElementById('home-contact-alerts-wrap');
 const emailWrap = document.getElementById('home-email-wrap');
 const emailInput = document.getElementById('home-email');
 const alertsOptInWrap = document.getElementById('home-alert-optin-wrap');
@@ -86,8 +87,9 @@ function setAuthMode(mode) {
     modeRegisterBtn.setAttribute('aria-pressed', String(next === 'register'));
   }
   if (submitBtn) submitBtn.textContent = next === 'register' ? 'Create Account & Continue' : 'Log In & Continue';
-  if (emailWrap) emailWrap.hidden = next !== 'register';
-  if (alertsOptInWrap) alertsOptInWrap.hidden = next !== 'register';
+  if (contactAlertsWrap) contactAlertsWrap.hidden = next !== 'register';
+  if (emailWrap) emailWrap.hidden = false;
+  if (alertsOptInWrap) alertsOptInWrap.hidden = false;
   if (emailInput) {
     emailInput.required = next === 'register';
     if (next !== 'register') emailInput.value = '';
