@@ -235,7 +235,7 @@ async function loadAlertsMonitor(){
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
     nextBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
-    templatesBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
+    templatesBody.innerHTML = "<tr><td colspan='4' class='muted'>Admin login required.</td></tr>";
     return;
   }
 
