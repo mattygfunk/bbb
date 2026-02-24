@@ -4006,7 +4006,6 @@ function createApp() {
   app.get('/poker-schedule', (_req, res) => res.redirect(301, '/poker-schedule.html'));
   app.get('/wheel/', (_req, res) => res.redirect(301, '/wheel'));
   app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
-  app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
   app.get('/punters-club/:track/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
@@ -4014,7 +4013,7 @@ function createApp() {
   app.get(['/wheel', '/wheel/'], (_req, res) => res.sendFile(path.join(__dirname, 'wheel.html')));
   app.get('/admin/wheel', (_req, res) => res.sendFile(path.join(__dirname, 'admin-wheel.html')));
   app.get(['/alerts/preview', '/alerts/preview/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
-  app.get(['/punters', '/punters/', '/punters.html'], (_req, res) => res.redirect(302, '/punters-club/thoroughbreds'));
+  app.get('/punters/', (_req, res) => res.redirect(301, '/punters.html'));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   return app;
