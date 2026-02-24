@@ -1593,21 +1593,31 @@ $('upgrade-tier-btn')?.addEventListener('click', ()=>{
   }
   const amountInput = document.querySelector('#claim-form input[name="amount"]');
   const noteInput = document.querySelector('#claim-form textarea[name="note"]');
+  const ref = `BBB-${String(state.user.username || '').trim().toLowerCase()}`;
   if(amountInput) amountInput.value = '20';
-  if(noteInput && !noteInput.value) noteInput.value = `Paid via PayID for ${state.user.username}`;
+  if(noteInput && !noteInput.value) noteInput.value = ref;
+  const refEl = $('claim-ref-format');
+  if (refEl) refEl.textContent = ref;
   claimModal?.showModal();
 });
 $('claim-form')?.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const msg = $('claim-msg');
+  const submitBtn = $('claim-submit-btn');
   if(!state.user){ if(msg) msg.textContent='Log in first.'; return; }
   const f = new FormData(e.target);
+  const note = String(f.get('note')||'').trim();
+  if (!note) { if (msg) msg.textContent = 'Add transfer reference (e.g. BBB-username).'; return; }
   try {
-    await req(API.puntersClaim,{method:'POST',body:JSON.stringify({amount:Number(f.get('amount')||0), note:String(f.get('note')||'')})});
+    if (submitBtn) submitBtn.disabled = true;
+    if (msg) msg.textContent = 'Submitting claim…';
+    await req(API.puntersClaim,{method:'POST',body:JSON.stringify({amount:Number(f.get('amount')||0), note})});
     if(msg) msg.textContent = 'Claim submitted for admin review.';
     setTimeout(()=>claimModal?.close(),800);
   } catch (err) {
     if(msg) msg.textContent = err.message || 'Could not submit claim.';
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 

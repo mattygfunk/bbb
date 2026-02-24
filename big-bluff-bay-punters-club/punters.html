@@ -442,11 +442,12 @@
         <label>Amount (A$)
           <input name="amount" type="number" step="0.01" min="20" value="20" required />
         </label>
-        <label>Note
-          <textarea name="note" rows="3" placeholder="Optional transfer note/reference (use your BBB username as reference)"></textarea>
+        <label>Note / transfer reference
+          <textarea name="note" rows="3" placeholder="Use reference format: BBB-username"></textarea>
         </label>
+        <p class="muted" id="claim-ref-hint">Recommended reference: <strong id="claim-ref-format">BBB-username</strong></p>
         <div class="row-actions">
-          <button class="btn" type="submit">I’ve paid $20</button>
+          <button class="btn" type="submit" id="claim-submit-btn">I’ve paid $20</button>
           <button class="btn btn-ghost" type="button" id="close-claim-modal-btn">Cancel</button>
         </div>
         <p class="muted" id="claim-msg"></p>
@@ -474,6 +475,6 @@
       <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260224-friction-ease"></script>
+    <script defer src="punters.js?v=20260224-friction-pass2"></script>
   </body>
 </html>
