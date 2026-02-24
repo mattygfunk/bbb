@@ -103,6 +103,10 @@ Date: 2026-02-24
 - Punters track page hub/tabs/footer links now target canonical punters routes (`/punters.html` + track query).
 - Profile admin nav now points to split admin entry (`/admin/racing`) instead of legacy `/admin.html`.
 
+## Pass 4 actions completed
+- Pruned repetitive low-value schedule crosslinks in poker guide intro copy (kept one clear schedule CTA path, removed duplicate mention from intro boilerplate where present).
+- Normalized guide intros to keep support links focused on FAQ + Rules for cleaner intent flow.
+
 ---
 
 ## IA guardrails (keep future changes tight)
