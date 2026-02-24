@@ -324,6 +324,10 @@
             <button class="btn btn-ghost tier-tab" type="button" data-tier-view="paid">Jackpot Eligible View</button>
           </div>
           <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"><tr><td colspan="4" class="muted">Loading leaderboard…</td></tr></tbody></table></div>
+          <div class="card" id="leaderboard-fallback-card" hidden style="margin-top:.6rem;padding:.75rem">
+            <strong>Leaderboard temporarily unavailable</strong>
+            <p class="muted" id="leaderboard-fallback-copy" style="margin:.3rem 0 0">Showing last known values where available.</p>
+          </div>
           <p class="muted" id="ladder-fallback" hidden>Leaderboard data unavailable. Showing last known values.</p>
 
           <div class="card" id="points-breakdown" style="margin-top:.7rem">
@@ -427,6 +431,10 @@
           <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st • 2 = 2nd • 1 = 3rd • Live ladder updates.</p></article>
           <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Highest total wins • Ties roll over • Separate Dogs/Galls jackpots.</p></article>
         </div>
+        <details style="margin-top:.65rem">
+          <summary><strong>Rules, Promo Terms & FAQ</strong></summary>
+          <p class="muted" style="margin-top:.45rem"><a class="menu-link" href="/punters-rules.html">Punters Rules</a> • <a class="menu-link" href="/promo-terms.html">Promo Terms</a> • <a class="menu-link" href="/punters-faq.html">Punters FAQ</a></p>
+        </details>
       </section>
 
     </main>
@@ -475,6 +483,6 @@
       <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260224-friction-pass2"></script>
+    <script defer src="punters.js?v=20260224-fallback-skeleton"></script>
   </body>
 </html>

@@ -92,6 +92,12 @@ function renderProfileCard(){
   if(msg && !state.user) msg.textContent = 'Log in to edit your profile.';
 }
 
+function renderLeaderboardSkeleton(){
+  const body = $('leaderboard-body');
+  if (!body) return;
+  body.innerHTML = `<tr><td colspan='4' class='muted'>Fetching leaderboard…</td></tr>`;
+}
+
 function renderLeaderboard(rows){
   const body = $('leaderboard-body');
   if(!body) return;
@@ -1105,6 +1111,9 @@ async function refresh(){
   state.refreshInFlight = true;
   state.tipStateResolved = false;
   renderTipEntryState();
+  renderLeaderboardSkeleton();
+  const compactFallback = $('leaderboard-fallback-card');
+  if (compactFallback) compactFallback.hidden = true;
   try {
   const isEditingTips = tipInteractionActive() || !!document.querySelector('#quick-race-list select:focus, #tip-form button:focus');
   let fx,tp,allTipsRes,bossesRes,milestonesRes,tipDeadlineRes;
@@ -1158,6 +1167,12 @@ async function refresh(){
           ? 'Round data is syncing. Please refresh shortly.'
           : 'Leaderboard data unavailable right now. Please refresh in a moment.';
       }
+      const compactFallback = $('leaderboard-fallback-card');
+      const compactFallbackCopy = $('leaderboard-fallback-copy');
+      if (compactFallback) {
+        compactFallback.hidden = false;
+        if (compactFallbackCopy) compactFallbackCopy.textContent = 'Showing last known values where available.';
+      }
       state.tipStateResolved = true;
       renderTipEntryState();
       return;
@@ -1195,8 +1210,10 @@ async function refresh(){
   state.nextTipRace = marketRace || `R${Math.max(1, state.raceCount)}`;
   renderRaceMarket(state.nextTipRace || 'R1');
   const ladderFallback = $('ladder-fallback');
+  const compactFallback = $('leaderboard-fallback-card');
   const ladderRows = (overview || state.lastOverview)?.ladder || [];
   renderLeaderboard(ladderRows);
+  if (compactFallback) compactFallback.hidden = true;
   if (ladderFallback) {
     if (ladderRows.length > 0) {
       ladderFallback.hidden = true;
