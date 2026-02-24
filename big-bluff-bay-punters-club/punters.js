@@ -687,6 +687,42 @@ function renderMemberCockpit(data = {}) {
   }
 }
 
+function renderPuntersViewState() {
+  const title = $('punters-state-title');
+  const copy = $('punters-state-copy');
+  const cta = $('punters-state-cta');
+  if (!title || !copy || !cta) return;
+
+  if (!state.user) {
+    title.textContent = 'Join this week’s round';
+    copy.textContent = 'Register or log in once, then submit tips and track your leaderboard position.';
+    cta.textContent = 'Register / Log In';
+    cta.href = '/punters.html#punters-login-gate';
+    return;
+  }
+
+  if (state.roundStatus !== 'OPEN' || state.roundPhase === 'BETWEEN_ROUNDS') {
+    title.textContent = 'Round closed';
+    copy.textContent = 'This round is complete. Check winners and recap while we prep the next round.';
+    cta.textContent = 'View Winners & Recap';
+    cta.href = '/winners.html';
+    return;
+  }
+
+  if (state.existingByRace.size === 0) {
+    title.textContent = 'You’re in — now enter your tips';
+    copy.textContent = 'Round is live and you have no saved tips yet. Enter now before lock.';
+    cta.textContent = 'Enter Tips';
+    cta.href = '/punters.html#tip-form';
+    return;
+  }
+
+  title.textContent = 'Round live — tips submitted';
+  copy.textContent = `You’ve entered ${state.existingByRace.size} race${state.existingByRace.size===1?'':'s'}. Track ladder and lock timer below.`;
+  cta.textContent = 'View Live Leaderboard';
+  cta.href = '/punters.html#leaderboard';
+}
+
 function renderTipEntryState() {
   const entryCard = $('quick-tips-entry-card');
   const form = $('tip-form');
@@ -697,6 +733,7 @@ function renderTipEntryState() {
 
   if (!state.user) {
     setVisible(entryCard, false);
+    renderPuntersViewState();
     return;
   }
   setVisible(entryCard, true);
@@ -706,11 +743,13 @@ function renderTipEntryState() {
     summaryText.textContent = 'Checking your saved tips…';
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
+    renderPuntersViewState();
     return;
   }
 
   if (state.roundPhase === 'BETWEEN_ROUNDS') {
     setVisible(entryCard, false);
+    renderPuntersViewState();
     return;
   }
 
@@ -719,6 +758,7 @@ function renderTipEntryState() {
     summaryText.textContent = 'Round finished ✅';
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
+    renderPuntersViewState();
     return;
   }
 
@@ -734,6 +774,7 @@ function renderTipEntryState() {
     summaryText.innerHTML = `Tips are locked for this round 🔒 • ${esc(getCurrentRoundPoolText())}<div style='margin-top:.4rem'>${picksHtml}</div>`;
     setVisible(form, false);
     if (editBtn) editBtn.hidden = true;
+    renderPuntersViewState();
     return;
   }
 
@@ -757,6 +798,7 @@ function renderTipEntryState() {
     setVisible(summaryCard, false);
     setVisible(form, true);
     if (editBtn) editBtn.hidden = true;
+    renderPuntersViewState();
     return;
   }
 
@@ -770,6 +812,7 @@ function renderTipEntryState() {
   setVisible(summaryCard, true);
   setVisible(form, false);
   if (editBtn) editBtn.hidden = false;
+  renderPuntersViewState();
 }
 
 async function hydrateNextTipCard(trackId){
