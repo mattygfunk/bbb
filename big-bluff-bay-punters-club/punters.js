@@ -1325,6 +1325,8 @@ async function refresh(){
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/punters.html#punters-login-gate'>Log in</a>`;
   const loginGate = $('punters-login-gate');
   if (loginGate) loginGate.hidden = Boolean(state.user);
+  const loginCtaWrap = $('punters-login-cta-wrap');
+  if (loginCtaWrap) loginCtaWrap.hidden = Boolean(state.user);
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
