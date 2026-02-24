@@ -1541,6 +1541,8 @@ function wheelDeterministicResult(session = {}, clientNonce = '') {
   };
 }
 
+let alertsMonitorCache = { at: 0, payload: null };
+
 function createApp() {
   const app = express();
   app.set('trust proxy', 1);
@@ -2017,6 +2019,11 @@ function createApp() {
   });
 
   app.get('/api/alerts/monitor', auth, adminOnly, (_req, res) => {
+    const now = Date.now();
+    if (alertsMonitorCache.payload && (now - Number(alertsMonitorCache.at || 0) < 5000)) {
+      return res.json(alertsMonitorCache.payload);
+    }
+
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store);
     const scheduleEvents = getAlertScheduleEvents(store);
@@ -2032,7 +2039,9 @@ function createApp() {
         phone: subscribers.filter((s) => Boolean(s.phone)).length
       }
     };
-    return res.json({ ok: true, summary, subscribers, nextAlerts, scheduleEvents, templateLogic, templates, history, generatedAt: Date.now() });
+    const payload = { ok: true, summary, subscribers, nextAlerts, scheduleEvents, templateLogic, templates, history, generatedAt: now };
+    alertsMonitorCache = { at: now, payload };
+    return res.json(payload);
   });
 
   app.put('/api/alerts/events', auth, adminOnly, (req, res) => {
@@ -2065,6 +2074,7 @@ function createApp() {
     store.system = store.system && typeof store.system === 'object' ? store.system : {};
     store.system.alertScheduleEvents = normalized;
     writeStore(store);
+    alertsMonitorCache = { at: 0, payload: null };
     return res.json({ ok: true, events: normalized });
   });
 
@@ -2089,6 +2099,7 @@ function createApp() {
     store.system = store.system && typeof store.system === 'object' ? store.system : {};
     store.system.alertTemplateLogic = out;
     writeStore(store);
+    alertsMonitorCache = { at: 0, payload: null };
     return res.json({ ok: true, logic: out });
   });
 
@@ -2114,6 +2125,7 @@ function createApp() {
       }
     };
     writeStore(store);
+    alertsMonitorCache = { at: 0, payload: null };
     return res.json({ ok: true, logic: store.system.alertTemplateLogic[id] });
   });
 
@@ -2136,6 +2148,7 @@ function createApp() {
       [id]: { minutesBefore: Number(base.minutesBefore || 0), trigger: String(base.trigger || ''), enabled: false }
     };
     writeStore(store);
+    alertsMonitorCache = { at: 0, payload: null };
     return res.json({ ok: true, deleted: id });
   });
 
@@ -2164,6 +2177,7 @@ function createApp() {
       updatedAt: Date.now()
     };
     writeStore(store);
+    alertsMonitorCache = { at: 0, payload: null };
 
     const template = buildAlertTemplatesPreview(store).find((t) => t.id === id);
     return res.json({ ok: true, template });
@@ -4354,6 +4368,7 @@ async function processDueScheduledAlertsOnce() {
 }
 
 function appendAlertsDeliveryLog(entry = {}) {
+  alertsMonitorCache = { at: 0, payload: null };
   const store = readStore();
   store.system = store.system && typeof store.system === 'object' ? store.system : {};
   const list = Array.isArray(store.system.alertsDeliveryLog) ? store.system.alertsDeliveryLog : [];
