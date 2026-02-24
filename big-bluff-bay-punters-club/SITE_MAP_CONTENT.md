@@ -96,7 +96,12 @@ Date: 2026-02-24
 2. Add explicit redirect table in `server.js` for duplicate intents.
 3. Add "content clusters" section to `poker-guides.html` and reduce flat list weight.
 4. Remove/redirect `admin-poker.html` legacy entry.
-5. Normalize nav labels/targets across Home, Poker, Punters, Wheel.
+5. Normalize nav labels/targets across Home, Poker, Punters, Wheel. ✅ (pass 3 started)
+
+## Pass 3 actions completed
+- Home CTA links now use canonical punters route (`/punters.html`) instead of `/punters-club`.
+- Punters track page hub/tabs/footer links now target canonical punters routes (`/punters.html` + track query).
+- Profile admin nav now points to split admin entry (`/admin/racing`) instead of legacy `/admin.html`.
 
 ---
 
