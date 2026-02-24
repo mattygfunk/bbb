@@ -380,7 +380,7 @@ function parseImportedRunners({ text = '', raceNumber = 1 }) {
 }
 
 function issueToken(user) {
-  return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign({ sub: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '15d' });
 }
 
 const BOSSES_EXTRACT_SCHEMA = {
