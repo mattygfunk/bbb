@@ -693,6 +693,50 @@ function renderMemberCockpit(data = {}) {
   }
 }
 
+function applyPuntersStateVisibility(mode = 'logged-out') {
+  const split = $('next-tip-entry-split');
+  const leaderboard = $('leaderboard');
+  const liveSnap = $('punters-live-snapshot');
+  const howItWorks = $('punters-how-it-works');
+  const loginGate = $('punters-login-gate');
+
+  const set = (el, on) => { if (el) el.hidden = !on; };
+
+  if (mode === 'logged-out') {
+    set(loginGate, true);
+    set(split, false);
+    set(leaderboard, true);
+    set(liveSnap, false);
+    set(howItWorks, true);
+    return;
+  }
+
+  if (mode === 'round-closed') {
+    set(loginGate, false);
+    set(split, false);
+    set(leaderboard, true);
+    set(liveSnap, true);
+    set(howItWorks, true);
+    return;
+  }
+
+  if (mode === 'no-entry') {
+    set(loginGate, false);
+    set(split, true);
+    set(leaderboard, true);
+    set(liveSnap, true);
+    set(howItWorks, false);
+    return;
+  }
+
+  // live-entered
+  set(loginGate, false);
+  set(split, true);
+  set(leaderboard, true);
+  set(liveSnap, true);
+  set(howItWorks, false);
+}
+
 function renderPuntersViewState() {
   const title = $('punters-state-title');
   const copy = $('punters-state-copy');
@@ -704,6 +748,7 @@ function renderPuntersViewState() {
     copy.textContent = 'Register or log in once, then submit tips and track your leaderboard position.';
     cta.textContent = 'Register / Log In';
     cta.href = '/punters.html#punters-login-gate';
+    applyPuntersStateVisibility('logged-out');
     return;
   }
 
@@ -712,6 +757,7 @@ function renderPuntersViewState() {
     copy.textContent = 'This round is complete. Check winners and recap while we prep the next round.';
     cta.textContent = 'View Winners & Recap';
     cta.href = '/winners.html';
+    applyPuntersStateVisibility('round-closed');
     return;
   }
 
@@ -720,6 +766,7 @@ function renderPuntersViewState() {
     copy.textContent = 'Round is live and you have no saved tips yet. Enter now before lock.';
     cta.textContent = 'Enter Tips';
     cta.href = '/punters.html#tip-form';
+    applyPuntersStateVisibility('no-entry');
     return;
   }
 
@@ -727,6 +774,7 @@ function renderPuntersViewState() {
   copy.textContent = `You’ve entered ${state.existingByRace.size} race${state.existingByRace.size===1?'':'s'}. Track ladder and lock timer below.`;
   cta.textContent = 'View Live Leaderboard';
   cta.href = '/punters.html#leaderboard';
+  applyPuntersStateVisibility('live-entered');
 }
 
 function renderTipEntryState() {
