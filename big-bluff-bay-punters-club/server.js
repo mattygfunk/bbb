@@ -2170,6 +2170,50 @@ function createApp() {
   });
 
 
+  app.post('/api/alerts/queue/send-now', auth, adminOnly, async (req, res) => {
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const store = readStore();
+    const subscribers = buildAlertsSubscribers(store).filter((s) => Boolean(s.verifiedEmail) && Boolean(s.email));
+    if (!subscribers.length) return res.json({ ok: true, sent: 0, requested: 0 });
+
+    const scheduleEvents = getAlertScheduleEvents(store);
+    const logic = getAlertTemplateLogic(store);
+    const templates = buildAlertTemplatesPreview(store).reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
+    const queue = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents, logic, 0);
+
+    let sent = 0;
+    for (const item of queue) {
+      const template = templates[item.templateId];
+      if (!template || template.enabled === false) continue;
+      const event = scheduleEvents.find((e) => String(e.id || '') === String(item.eventId || '')) || {};
+      const email = String(item.recipient || '').trim().toLowerCase();
+      if (!email) continue;
+      const vars = buildTournamentTemplateVars(event, {
+        eventTitle: String(item.eventTitle || event.title || 'Tournament'),
+        startTime: new Date(Number(item.sendAt || Date.now())).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne' }),
+        recipientName: String(item.username || email.split('@')[0] || 'Member'),
+        recipientEmail: email
+      });
+      try {
+        await tx.sendMail({
+          from: SMTP_FROM,
+          to: email,
+          subject: renderTemplateVars(template.subject, vars),
+          text: renderTemplateVars(template.bodyPreview, vars),
+          html: renderTemplateVars(template.html, vars)
+        });
+        appendAlertsDeliveryLog({ status: 'sent', templateId: String(item.templateId || ''), recipients: 1, note: `queue-send-now ${item.eventTitle || item.eventId || ''} -> ${email}` });
+        sent += 1;
+      } catch (err) {
+        appendAlertsDeliveryLog({ status: 'failed', templateId: String(item.templateId || ''), recipients: 1, note: `queue-send-now ${String(err?.message || err)}` });
+      }
+    }
+
+    return res.json({ ok: true, sent, requested: queue.length });
+  });
+
   app.post('/api/alerts/templates/overlay/send-now', auth, adminOnly, async (req, res) => {
     const tx = getSmtpTransport();
     if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });

@@ -484,7 +484,10 @@
               <button id="alerts-mon-save-events" class="btn" type="button">Save Tournaments</button>
             </div>
 
-            <h3 style="margin:1rem 0 .4rem">Next 10 alerts to be sent</h3>
+            <div class="alerts-toolbar" style="margin-top:1rem">
+              <h3 style="margin:0">Next 10 alerts to be sent</h3>
+              <button id="alerts-mon-send-queue-now" class="btn" type="button">Send queued emails now</button>
+            </div>
             <div class="table-wrap alerts-table-wrap">
               <table>
                 <thead><tr><th>When</th><th>Template</th><th>Event</th><th>Recipient</th></tr></thead>
@@ -542,6 +545,6 @@
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin.js?v=20260224-templates-overhaul"></script>
+    <script src="admin.js?v=20260224-send-queue-now"></script>
   </body>
 </html>

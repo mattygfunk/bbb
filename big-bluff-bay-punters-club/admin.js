@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateLogicById:(id)=>`/alerts/templates/logic/${encodeURIComponent(id)}`,alertsTemplateDelete:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsOverlaySendNow:'/alerts/templates/overlay/send-now',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateLogicById:(id)=>`/alerts/templates/logic/${encodeURIComponent(id)}`,alertsTemplateDelete:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsQueueSendNow:'/alerts/queue/send-now',alertsOverlaySendNow:'/alerts/templates/overlay/send-now',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
@@ -224,6 +224,7 @@ async function loadAlertsMonitor(){
   const eventsBody = $('alerts-mon-events-body');
   const saveEventsBtn = $('alerts-mon-save-events');
   const addEventBtn = $('alerts-mon-add-event');
+  const sendQueueNowBtn = $('alerts-mon-send-queue-now');
   if (!subsBody || !nextBody || !templatesBody) return;
   if (!isAdmin()) {
     subsBody.innerHTML = "<tr><td colspan='5' class='muted'>Admin login required.</td></tr>";
@@ -550,6 +551,22 @@ async function loadAlertsMonitor(){
           if (msg) msg.textContent = err.message || 'Could not save tournaments.';
         } finally {
           saveEventsBtn.disabled = false;
+        }
+      });
+    }
+
+    if (sendQueueNowBtn && !sendQueueNowBtn.dataset.bound) {
+      sendQueueNowBtn.dataset.bound = '1';
+      sendQueueNowBtn.addEventListener('click', async () => {
+        sendQueueNowBtn.disabled = true;
+        try {
+          const out = await req(API.alertsQueueSendNow, { method:'POST', body: JSON.stringify({}) });
+          if (msg) msg.textContent = `Queued send complete: ${Number(out.sent || 0)} sent (${Number(out.requested || 0)} queued).`;
+          loadAlertsMonitor().catch(()=>{});
+        } catch (err) {
+          if (msg) msg.textContent = err.message || 'Could not send queued emails.';
+        } finally {
+          sendQueueNowBtn.disabled = false;
         }
       });
     }
