@@ -434,7 +434,11 @@
     <dialog id="claim-modal" class="card" style="max-width:520px;width:92%">
       <form method="dialog" class="stack" id="claim-form">
         <h3>Confirm $20 Jackpot upgrade</h3>
-        <p class="muted">Send <strong>$20</strong> via PayID <strong>0421 325 503</strong>, then click confirm below so admin can verify and mark you jackpot-eligible for this round.</p>
+        <p class="muted">Send <strong>$20</strong> via PayID <strong id="payid-number">0421 325 503</strong>, then click confirm below so admin can verify and mark you jackpot-eligible for this round.</p>
+        <div class="row-actions" style="margin-top:-.2rem">
+          <button class="btn btn-ghost" type="button" id="copy-payid-btn">Copy PayID</button>
+          <span class="muted" id="copy-payid-msg"></span>
+        </div>
         <label>Amount (A$)
           <input name="amount" type="number" step="0.01" min="20" value="20" required />
         </label>
@@ -470,6 +474,6 @@
       <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260224-state-shell"></script>
+    <script defer src="punters.js?v=20260224-friction-ease"></script>
   </body>
 </html>

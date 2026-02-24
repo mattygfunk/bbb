@@ -1611,6 +1611,29 @@ $('claim-form')?.addEventListener('submit', async (e)=>{
   }
 });
 
+$('copy-payid-btn')?.addEventListener('click', async ()=>{
+  const val = String($('payid-number')?.textContent || '').trim();
+  const out = $('copy-payid-msg');
+  if (!val) { if (out) out.textContent = 'PayID unavailable.'; return; }
+  try {
+    await navigator.clipboard.writeText(val);
+    if (out) out.textContent = 'Copied ✅';
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    if (out) out.textContent = 'Copied ✅';
+  }
+});
+
+$('punters-state-cta')?.addEventListener('click', ()=>{
+  if (state.user) return;
+  setTimeout(()=>{ document.querySelector('#login-form input[name="member"]')?.focus(); }, 50);
+});
+
 (async()=>{
   wirePuntersLeaderboardShare();
   await bootstrap();
