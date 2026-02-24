@@ -4343,10 +4343,13 @@ async function processDueScheduledAlertsOnce() {
     }
   }
 
-  // keep dedupe state bounded
+  // keep dedupe state bounded. IMPORTANT: refresh store first so we don't overwrite
+  // alert logs written during this tick by appendAlertsDeliveryLog().
   const stateEntries = Object.entries(sentState).sort((a,b)=>Number(b?.[1]?.at||0)-Number(a?.[1]?.at||0)).slice(0, 5000);
-  store.system.alertDispatchState = Object.fromEntries(stateEntries);
-  writeStore(store);
+  const latest = readStore();
+  latest.system = latest.system && typeof latest.system === 'object' ? latest.system : {};
+  latest.system.alertDispatchState = Object.fromEntries(stateEntries);
+  writeStore(latest);
 }
 
 function appendAlertsDeliveryLog(entry = {}) {
