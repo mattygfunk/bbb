@@ -305,7 +305,19 @@ async function loadAlertsMonitor(){
 
     if (eventsBody) {
       eventsBody.innerHTML = '';
-      scheduleEvents.forEach((e) => {
+      const sortedEvents = [...scheduleEvents].sort((a, b) => {
+        const dayRank = (v) => (String(v) === 'daily' ? -1 : Number(v || 0));
+        const da = dayRank(a?.day);
+        const db = dayRank(b?.day);
+        if (da !== db) return da - db;
+        const ha = Number(a?.hour || 0);
+        const hb = Number(b?.hour || 0);
+        if (ha !== hb) return ha - hb;
+        const ma = Number(a?.minute || 0);
+        const mb = Number(b?.minute || 0);
+        return ma - mb;
+      });
+      sortedEvents.forEach((e) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td><input data-evt-id type='text' value='${esc(e.id || '')}' style='min-width:120px;width:100%' /></td><td><input data-evt-title type='text' value='${esc(e.title || '')}' style='min-width:180px;width:100%' /></td><td><select data-evt-day><option value='daily'>Daily</option><option value='0'>Sun</option><option value='1'>Mon</option><option value='2'>Tue</option><option value='3'>Wed</option><option value='4'>Thu</option><option value='5'>Fri</option><option value='6'>Sat</option></select></td><td><input data-evt-hour type='number' min='0' max='23' value='${Number(e.hour || 0)}' style='width:86px' /></td><td><input data-evt-minute type='number' min='0' max='59' value='${Number(e.minute || 0)}' style='width:86px' /></td><td><input data-evt-buyin type='text' value='${esc(e.buyIn || '')}' placeholder='e.g. $11' style='min-width:100px;width:100%' /></td><td><input data-evt-rebuys type='text' value='${esc(e.rebuys || '')}' placeholder='e.g. Unlimited to L6' style='min-width:150px;width:100%' /></td><td><input data-evt-stack type='text' value='${esc(e.startingStack || '')}' placeholder='e.g. 20,000' style='min-width:120px;width:100%' /></td><td><input data-evt-blinds type='text' value='${esc(e.blinds || '')}' placeholder='e.g. 100/200/200' style='min-width:140px;width:100%' /></td><td><input data-evt-refunds type='text' value='${esc(e.earlyBirdRefunds || '')}' placeholder='e.g. $5 before 7:15pm' style='min-width:160px;width:100%' /></td><td><label style='display:flex;gap:.35rem;align-items:center'><input data-evt-enabled type='checkbox' ${e.enabled !== false ? 'checked' : ''} /> on</label></td><td><button type='button' class='btn btn-ghost' data-evt-del>Delete</button></td>`;
         const daySel = tr.querySelector('[data-evt-day]');
