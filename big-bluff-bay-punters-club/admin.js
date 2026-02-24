@@ -588,7 +588,11 @@ async function loadAlertsMonitor(){
     }
     if (!searchEl?.dataset.bound) {
       searchEl.dataset.bound = '1';
-      searchEl.addEventListener('input', () => loadAlertsMonitor().catch(()=>{}));
+      let alertsSearchDebounce = null;
+      searchEl.addEventListener('input', () => {
+        clearTimeout(alertsSearchDebounce);
+        alertsSearchDebounce = setTimeout(() => loadAlertsMonitor().catch(()=>{}), 250);
+      });
     }
     if (!sortEl?.dataset.bound) {
       sortEl.dataset.bound = '1';
