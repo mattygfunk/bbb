@@ -3994,9 +3994,17 @@ function createApp() {
   });
 
   app.get(['/profile', '/profile/:member'], (_req, res) => res.sendFile(path.join(__dirname, 'profile.html')));
-  app.get('/admin/racing', (_req, res) => res.redirect(302, '/admin.html?view=racing'));
-  app.get('/admin/poker-legacy', (_req, res) => res.redirect(302, '/admin.html?view=poker'));
-  app.get('/punters-club', (_req, res) => res.sendFile(path.join(__dirname, 'punters-club.html')));
+  app.get('/admin/racing', (_req, res) => res.redirect(301, '/admin.html?view=racing'));
+  app.get('/admin/poker-legacy', (_req, res) => res.redirect(301, '/admin.html?view=poker'));
+  // Canonical content redirects (IA pass 2)
+  app.get('/admin-poker.html', (_req, res) => res.redirect(301, '/admin/poker'));
+  app.get('/poker-app.html', (_req, res) => res.redirect(301, '/poker'));
+  app.get('/punters-club', (_req, res) => res.redirect(301, '/punters.html'));
+  app.get('/punters', (_req, res) => res.redirect(301, '/punters.html'));
+  app.get('/winners', (_req, res) => res.redirect(301, '/winners.html'));
+  app.get('/poker-schedule', (_req, res) => res.redirect(301, '/poker-schedule.html'));
+  app.get('/wheel/', (_req, res) => res.redirect(301, '/wheel'));
+  app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
