@@ -100,6 +100,14 @@ Date: 2026-02-24
 
 ---
 
+## IA guardrails (keep future changes tight)
+- One canonical URL per user intent. New pages must declare canonical target.
+- If adding a page that overlaps an existing intent, add redirect/deprecation plan in same PR.
+- Keep top-level nav to core intents only; route niche actions into subpages.
+- Destructive admin actions belong in `/admin/advanced`, not primary admin surfaces.
+- New guide pages must map to a content cluster (Bankroll / Tournament Strategy / Mental Game / Process).
+- Every PR touching navigation should update this doc if route intent changes.
+
 ## Notes
 - This pass intentionally avoids visual changes.
 - Goal is cleaner user intent paths + tighter crawl structure + less maintenance overhead.
