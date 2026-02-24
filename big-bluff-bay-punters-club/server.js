@@ -4167,6 +4167,11 @@ function getAlertTemplateLogic(store = readStore()) {
       trigger: String(v.trigger || base[id].trigger),
       enabled: v.enabled !== false && base[id].enabled !== false
     };
+    // One-off migration safety: legacy lateReg values used "15 mins before".
+    if (id === 'lateReg' && Number(out[id].minutesBefore) === 15) {
+      out[id].minutesBefore = -60;
+      out[id].trigger = '60 minutes after start time';
+    }
   });
   return out;
 }
