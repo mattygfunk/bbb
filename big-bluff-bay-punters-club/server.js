@@ -1722,6 +1722,8 @@ function createApp() {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    user.lastSeenAt = Date.now();
+    writeStore(store);
     const safeUser = { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) };
     return res.json({ ok: true, token: issueToken(safeUser), user: safeUser });
   });
@@ -1866,6 +1868,8 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const store = readStore();
     const user = store.users.find((u) => u.id === req.user.sub);
     if (!user) return res.status(404).json({ error: 'User not found' });
+    user.lastSeenAt = Date.now();
+    writeStore(store);
     return res.json({ user: { id: user.id, username: user.username, role: user.role, profile: normalizeUserProfile(user.profile) } });
   });
 
@@ -1889,6 +1893,7 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
           username: u.username,
           role: u.role || 'member',
           createdAt: Number(u.createdAt || 0),
+          lastSeenAt: Number(u.lastSeenAt || 0),
           email: contactEmail || profileEmail || pendingVerifyEmail,
           phone: String(contact?.phone || '').trim(),
           whatsapp: String(contact?.whatsapp || '').trim(),

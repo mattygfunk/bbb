@@ -2,7 +2,7 @@ const API_ROOTS=['/api'];
 const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateLogicById:(id)=>`/alerts/templates/logic/${encodeURIComponent(id)}`,alertsTemplateDelete:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsQueueSendNow:'/alerts/queue/send-now',alertsOverlaySendNow:'/alerts/templates/overlay/send-now',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
-const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0}};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0,loggedInUsers:0,loggedInNames:'—'}};
 const $=id=>document.getElementById(id);
 async function req(path,opt={}){const h={'Content-Type':'application/json',...(opt.headers||{})};if(state.token)h.Authorization=`Bearer ${state.token}`;let lastErr='';let lastStatus=0;let lastData={};for(const root of API_ROOTS){const r=await fetch(`${root}${path}`,{...opt,headers:h});const d=await r.json().catch(()=>({}));if(r.ok)return d;if(r.status===403){lastErr=d.error||'Admin only. Log in with an admin account (farmilut).';lastStatus=r.status;lastData=d;continue;}if(r.status===401){lastErr=d.error||'Session expired. Please log in again.';lastStatus=r.status;lastData=d;continue;}lastErr=d.error||`Request failed (${r.status})`;lastStatus=r.status;lastData=d;}const err=new Error(lastErr||'Request failed');err.status=lastStatus;err.data=lastData;throw err;}
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
@@ -141,9 +141,13 @@ function renderAdminSummaryCounts(){
   const tipUsersEl = $('admin-stat-tip-users');
   const paidUsersEl = $('admin-stat-paid-users');
   const pokerEventsEl = $('admin-stat-poker-events');
+  const loggedInEl = $('admin-stat-logged-in');
+  const loggedInListEl = $('admin-stat-logged-in-list');
   if (tipUsersEl) tipUsersEl.textContent = String(tipUsers);
   if (paidUsersEl) paidUsersEl.textContent = String(paidUsers);
   if (pokerEventsEl) pokerEventsEl.textContent = String(pokerEvents);
+  if (loggedInEl) loggedInEl.textContent = String(Number(state.summary?.loggedInUsers || 0));
+  if (loggedInListEl) loggedInListEl.textContent = String(state.summary?.loggedInNames || '—');
 }
 
 async function loadAdminUsers(){
@@ -157,6 +161,12 @@ async function loadAdminUsers(){
   try {
     const out = await req(API.users);
     const users = out.users || [];
+    const now = Date.now();
+    const activeUsers = users.filter((u) => Number(u?.lastSeenAt || 0) > 0 && (now - Number(u.lastSeenAt || 0)) <= (30 * 60 * 1000));
+    state.summary.loggedInUsers = activeUsers.length;
+    state.summary.loggedInNames = activeUsers.length ? activeUsers.map((u) => String(u.username || '')).filter(Boolean).slice(0, 8).join(', ') : '—';
+    renderAdminSummaryCounts();
+
     body.innerHTML = '';
     users.forEach((u)=>{
       const tr = document.createElement('tr');
