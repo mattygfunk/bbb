@@ -4149,7 +4149,7 @@ function getDefaultAlertTemplateLogic() {
   return {
     startingSoon: { minutesBefore: 10, trigger: '10 minutes before shuffle', enabled: true },
     lateReg: { minutesBefore: -60, trigger: '60 minutes after start time', enabled: true },
-    overlayWatch: { minutesBefore: 20, trigger: 'Manual send only (admin button)', enabled: false },
+    overlayWatch: { minutesBefore: 20, trigger: '20 minutes before start (sent regardless of entrants)', enabled: false },
     freerolls: { minutesBefore: 0, trigger: 'When freeroll listing is published', enabled: true },
     cashActive: { minutesBefore: 0, trigger: 'When cash lobby status flips active', enabled: true }
   };
@@ -4171,6 +4171,9 @@ function getAlertTemplateLogic(store = readStore()) {
     if (id === 'lateReg' && Number(out[id].minutesBefore) === 15) {
       out[id].minutesBefore = -60;
       out[id].trigger = '60 minutes after start time';
+    }
+    if (id === 'overlayWatch' && /only if entries below target/i.test(String(out[id].trigger || ''))) {
+      out[id].trigger = '20 minutes before start (sent regardless of entrants)';
     }
   });
   return out;
@@ -4255,7 +4258,7 @@ function getDefaultAlertTemplates() {
     {
       id: 'overlayWatch',
       name: 'Overlay Risk',
-      trigger: '20 minutes before start (only if entries below target)',
+      trigger: '20 minutes before start (sent regardless of entrants)',
       subject: 'Overlay watch: {eventTitle}',
       bodyPreview: 'Overlay conditions detected. Value spot may be live.',
       html: `${shellStart}<h2 style="margin:0 0 12px;font-size:22px;color:#f8fafc;">📉 Overlay watch: <span style="color:#38bdf8">{eventTitle}</span></h2><p style="margin:0 0 14px;color:#c7d6e4;">Overlay conditions detected before shuffle.</p><p style="margin:0;color:#c7d6e4;">This may be a value spot — keep it on your radar.</p>${shellEnd}`
