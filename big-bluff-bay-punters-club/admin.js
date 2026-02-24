@@ -208,8 +208,14 @@ async function loadAdminUsers(){
 }
 
 let alertsMonitorCache = { subscribersRaw: [] };
+let alertsMonitorInFlight = false;
+let alertsMonitorNeedsRefresh = false;
 
 async function loadAlertsMonitor(){
+  if (alertsMonitorInFlight) {
+    alertsMonitorNeedsRefresh = true;
+    return;
+  }
   const subsBody = $('alerts-mon-subs-body');
   const nextBody = $('alerts-mon-next-body');
   const templatesBody = $('alerts-mon-templates-body');
@@ -233,6 +239,7 @@ async function loadAlertsMonitor(){
     return;
   }
 
+  alertsMonitorInFlight = true;
   try {
     const out = await req(API.alertsMonitor);
     const summary = out.summary || {};
@@ -639,6 +646,12 @@ async function loadAlertsMonitor(){
     if (msg) msg.textContent = `Monitor refreshed ${new Date().toLocaleTimeString('en-AU')}.`;
   } catch (err) {
     if (msg) msg.textContent = err.message || 'Could not load alerts monitor data.';
+  } finally {
+    alertsMonitorInFlight = false;
+    if (alertsMonitorNeedsRefresh) {
+      alertsMonitorNeedsRefresh = false;
+      loadAlertsMonitor().catch(()=>{});
+    }
   }
 }
 
