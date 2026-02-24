@@ -318,10 +318,24 @@ async function loadAlertsMonitor(){
     nextBody.innerHTML = '';
     nextAlerts.forEach((a) => {
       const tr = document.createElement('tr');
-      const when = a.sendAtIso ? new Date(a.sendAtIso).toLocaleString('en-AU') : '-';
-      const mins = Number.isFinite(a.sendAt) ? Math.max(0, Math.round((Number(a.sendAt) - Date.now()) / 60000)) : null;
-      const rel = mins == null ? '' : ` (${mins}m)`;
-      tr.innerHTML = `<td>${esc(`${when}${rel}`)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
+      const sendAtMs = Number(a.sendAt || 0);
+      const sendAtDate = a.sendAtIso ? new Date(a.sendAtIso) : (sendAtMs ? new Date(sendAtMs) : null);
+      const when = sendAtDate ? sendAtDate.toLocaleString('en-AU') : '-';
+      let whenReadable = when;
+      if (sendAtDate && Number.isFinite(sendAtMs)) {
+        const now = new Date();
+        const minsTotal = Math.max(0, Math.round((sendAtMs - now.getTime()) / 60000));
+        const h = Math.floor(minsTotal / 60);
+        const m = minsTotal % 60;
+        const hm = [h ? `${h}h` : '', `${m}min`].filter(Boolean).join(' ');
+
+        const dayA = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const dayB = new Date(sendAtDate.getFullYear(), sendAtDate.getMonth(), sendAtDate.getDate()).getTime();
+        const dayDiff = Math.round((dayB - dayA) / 86400000);
+        const dayLabel = dayDiff === 0 ? 'Today' : dayDiff === 1 ? 'Tomorrow' : sendAtDate.toLocaleDateString('en-AU', { weekday:'short', day:'2-digit', month:'short' });
+        whenReadable = `${dayLabel} in ${hm} (${when})`;
+      }
+      tr.innerHTML = `<td>${esc(whenReadable)}</td><td>${esc(a.templateLabel || a.templateId || '-')}</td><td>${esc(a.eventTitle || '-')}</td><td>${esc(a.recipient || '-')}</td>`;
       tr.style.cursor = 'pointer';
       tr.title = 'Click to preview this outgoing email';
       tr.addEventListener('click', () => {
