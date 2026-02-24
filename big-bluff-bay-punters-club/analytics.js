@@ -19,15 +19,30 @@
     gtag('config', MEASUREMENT_ID, {
       anonymize_ip: true,
       allow_google_signals: true,
-      allow_ad_personalization_signals: false
+      allow_ad_personalization_signals: false,
+      send_page_view: true
     });
+
+    gtag('event', 'bbb_page_view', {
+      page_path: window.location.pathname,
+      page_title: document.title || '',
+      page_location: window.location.href
+    });
+
+    setTimeout(() => {
+      gtag('event', 'bbb_engaged_15s', {
+        page_path: window.location.pathname,
+        page_title: document.title || ''
+      });
+    }, 15000);
   }
 
-  // Ultra-lazy GA: load only after explicit user interaction.
-  // This keeps gtag.js off the critical path and avoids shipping ~145KB to bounce users.
-  ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => {
-    window.addEventListener(ev, initAnalytics, { once: true, passive: true });
-  });
+  // Initialize on load so GA always receives page events.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAnalytics, { once: true });
+  } else {
+    initAnalytics();
+  }
 
   document.addEventListener('click', (event) => {
     const cta = event.target.closest('[data-cta]');
