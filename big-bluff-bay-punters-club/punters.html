@@ -132,17 +132,18 @@
         <details class="card" style="margin-top:.6rem;max-width:460px">
           <summary>Forgot password?</summary>
           <form id="forgot-form" class="stack" style="margin-top:.6rem">
-            <label>Username
-              <input name="username" type="text" required />
+            <label>Registered email
+              <input name="email" type="email" required placeholder="you@example.com" />
             </label>
-            <label>Recovery code
-              <input name="recoveryCode" type="text" required />
-            </label>
+            <button class="btn" type="submit">Send password reset link</button>
+            <p id="forgot-msg" class="muted" aria-live="polite"></p>
+          </form>
+          <form id="reset-link-form" class="stack" style="margin-top:.75rem" hidden>
             <label>New password
               <input name="newPassword" type="password" minlength="6" required />
             </label>
-            <button class="btn" type="submit">Reset password</button>
-            <p id="forgot-msg" class="muted" aria-live="polite"></p>
+            <button class="btn" type="submit">Set new password</button>
+            <p id="reset-link-msg" class="muted" aria-live="polite"></p>
           </form>
         </details>
       </section>
@@ -483,6 +484,6 @@
       <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
       <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
     </footer>
-    <script defer src="punters.js?v=20260224-fallback-skeleton"></script>
+    <script defer src="punters.js?v=20260224-email-reset-link"></script>
   </body>
 </html>

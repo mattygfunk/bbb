@@ -1726,6 +1726,107 @@ function createApp() {
     return res.json({ ok: true, token: issueToken(safeUser), user: safeUser });
   });
 
+
+  app.post('/api/password-reset/request', async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u?.profile?.email || '').trim().toLowerCase() === email);
+    // Privacy-safe response for unknown addresses.
+    if (!user) return res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = Date.now() + (30 * 60 * 1000);
+    user.passwordReset = { token, expiresAt, sentAt: Date.now() };
+
+    const resetUrl = `${ALERTS_BASE_URL.replace(/\/$/, '')}/punters.html?resetToken=${encodeURIComponent(token)}`;
+    await tx.sendMail({
+      from: SMTP_FROM,
+      to: email,
+      subject: 'Big Bluff Bay • Reset your password',
+      text: `Hey ${user.username},
+
+Use this link to reset your BBB password:
+${resetUrl}
+
+This link expires in 30 minutes. If you did not request this, ignore this email.`,
+      html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><p style="margin:0 0 10px;opacity:.9;">Hey <strong>${user.username}</strong>,</p><h2 style="margin:0 0 12px;font-size:20px;color:#f8fafc;">Reset your BBB password</h2><p style="margin:0 0 16px;color:#c7d6e4;">Click below to set a new password.</p><p style="margin:0 0 18px;"><a href="${resetUrl}" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Reset password</a></p><p style="margin:0 0 8px;color:#9fb0bf;font-size:13px;">Or paste this link into your browser:</p><p style="margin:0 0 16px;word-break:break-all;"><a href="${resetUrl}" style="color:#86efac;">${resetUrl}</a></p><p style="margin:0;color:#9fb0bf;font-size:13px;">This link expires in 30 minutes.</p></div></div>`
+    });
+
+    writeStore(store);
+    return res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+  });
+
+  app.post('/api/password-reset/confirm', (req, res) => {
+    const token = String(req.body?.token || '').trim();
+    const newPassword = String(req.body?.newPassword || '');
+    if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password are required' });
+    if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u?.passwordReset?.token || '') === token);
+    if (!user) return res.status(400).json({ error: 'Invalid reset token' });
+    if (Number(user?.passwordReset?.expiresAt || 0) < Date.now()) return res.status(400).json({ error: 'Reset token expired' });
+
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+    delete user.passwordReset;
+    writeStore(store);
+    return res.json({ ok: true, message: 'Password reset. You can log in now.' });
+  });
+
+  app.post('/api/password-reset/request', async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u?.profile?.email || '').trim().toLowerCase() === email);
+    if (!user) return res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+
+    const tx = getSmtpTransport();
+    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = Date.now() + (30 * 60 * 1000);
+    user.passwordReset = { token, expiresAt, sentAt: Date.now() };
+    const resetUrl = `${ALERTS_BASE_URL.replace(/\/$/, '')}/punters.html?resetToken=${encodeURIComponent(token)}`;
+
+    await tx.sendMail({
+      from: SMTP_FROM,
+      to: email,
+      subject: 'Big Bluff Bay • Reset your password',
+      text: `Hey ${user.username},\n\nUse this link to reset your BBB password:\n${resetUrl}\n\nThis link expires in 30 minutes. If you did not request this, ignore this email.`,
+      html: `<div style="font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;"><div style="max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;"><p style="margin:0 0 10px;opacity:.9;">Hey <strong>${user.username}</strong>,</p><h2 style="margin:0 0 12px;font-size:20px;color:#f8fafc;">Reset your BBB password</h2><p style="margin:0 0 16px;color:#c7d6e4;">Click below to set a new password.</p><p style="margin:0 0 18px;"><a href="${resetUrl}" style="display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;">Reset password</a></p><p style="margin:0 0 8px;color:#9fb0bf;font-size:13px;">Or paste this link into your browser:</p><p style="margin:0 0 16px;word-break:break-all;"><a href="${resetUrl}" style="color:#86efac;">${resetUrl}</a></p><p style="margin:0;color:#9fb0bf;font-size:13px;">This link expires in 30 minutes.</p></div></div>`
+    });
+
+    writeStore(store);
+    return res.json({ ok: true, message: 'If that email exists, a reset link has been sent.' });
+  });
+
+  app.post('/api/password-reset/confirm', (req, res) => {
+    const token = String(req.body?.token || '').trim();
+    const newPassword = String(req.body?.newPassword || '');
+    if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password are required' });
+    if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+
+    const store = readStore();
+    const user = (store.users || []).find((u) => String(u?.passwordReset?.token || '') === token);
+    if (!user) return res.status(400).json({ error: 'Invalid reset token' });
+    if (Number(user?.passwordReset?.expiresAt || 0) < Date.now()) return res.status(400).json({ error: 'Reset token expired' });
+
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+    delete user.passwordReset;
+    writeStore(store);
+    return res.json({ ok: true, message: 'Password reset. You can log in now.' });
+  });
+
   app.post('/api/password-recovery/reset', (req, res) => {
     const username = String(req.body?.username || '').trim();
     const recoveryCode = String(req.body?.recoveryCode || '').trim();

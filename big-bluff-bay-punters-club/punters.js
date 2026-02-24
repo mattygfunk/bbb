@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',puntersBanter:'/punters/banter',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset'};
+const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',puntersBanter:'/punters/banter',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset',passwordResetRequest:'/password-reset/request',passwordResetConfirm:'/password-reset/confirm'};
 const tokenKey='bbb-token-v3';
 const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
 const PREFILL = (typeof window !== 'undefined' && window.__PUNTERS_PREFILL__) ? window.__PUNTERS_PREFILL__ : null;
@@ -1405,10 +1405,9 @@ if (loginForm) {
     const f = new FormData(e.target);
     const username = String(f.get('member') || '').trim();
     const password = String(f.get('pin') || '').trim();
-    const recoveryCode = String(f.get('recoveryCode') || '').trim();
     const mode = e.submitter?.dataset.mode || 'login';
     try {
-      if (mode === 'register') await req(API.register, { method: 'POST', body: JSON.stringify({ username, password, recoveryCode }) });
+      if (mode === 'register') await req(API.register, { method: 'POST', body: JSON.stringify({ username, password }) });
       const r = await req(API.login, { method: 'POST', body: JSON.stringify({ username, password }) });
       state.token = r.token;
       state.user = r.user;
@@ -1428,14 +1427,34 @@ if (forgotForm) {
   forgotForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
-    const username = String(f.get('username') || '').trim();
-    const recoveryCode = String(f.get('recoveryCode') || '').trim();
-    const newPassword = String(f.get('newPassword') || '');
+    const email = String(f.get('email') || '').trim();
     const msg = $('forgot-msg');
     try {
-      await req(API.passwordReset, { method: 'POST', body: JSON.stringify({ username, recoveryCode, newPassword }) });
-      if (msg) msg.textContent = 'Password reset successful. You can log in now.';
+      await req(API.passwordResetRequest, { method: 'POST', body: JSON.stringify({ email }) });
+      if (msg) msg.textContent = 'If your email exists, a reset link has been sent.';
       forgotForm.reset();
+    } catch (err) {
+      if (msg) msg.textContent = err.message || 'Could not send reset link.';
+    }
+  });
+}
+
+const resetToken = new URLSearchParams(window.location.search).get('resetToken') || '';
+const resetLinkForm = $('reset-link-form');
+if (resetLinkForm && resetToken) {
+  resetLinkForm.hidden = false;
+  resetLinkForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const newPassword = String(f.get('newPassword') || '').trim();
+    const msg = $('reset-link-msg');
+    try {
+      await req(API.passwordResetConfirm, { method: 'POST', body: JSON.stringify({ token: resetToken, newPassword }) });
+      if (msg) msg.textContent = 'Password reset successful. You can log in now.';
+      const url = new URL(window.location.href);
+      url.searchParams.delete('resetToken');
+      window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''));
+      setTimeout(() => { resetLinkForm.hidden = true; }, 1000);
     } catch (err) {
       if (msg) msg.textContent = err.message || 'Could not reset password.';
     }
