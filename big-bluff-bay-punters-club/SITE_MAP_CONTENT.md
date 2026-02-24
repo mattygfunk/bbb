@@ -107,6 +107,11 @@ Date: 2026-02-24
 - Pruned repetitive low-value schedule crosslinks in poker guide intro copy (kept one clear schedule CTA path, removed duplicate mention from intro boilerplate where present).
 - Normalized guide intros to keep support links focused on FAQ + Rules for cleaner intent flow.
 
+## Pass 5 actions completed
+- De-duplicated repeated intro boilerplate across city/state poker option pages.
+- Tightened “online + local verification” messaging to one concise pattern per page.
+- Reduced over-linking density in intro paragraphs while preserving intent and key conversion paths.
+
 ---
 
 ## IA guardrails (keep future changes tight)
