@@ -561,7 +561,7 @@ async function loadAlertsMonitor(){
         sendQueueNowBtn.disabled = true;
         try {
           const out = await req(API.alertsQueueSendNow, { method:'POST', body: JSON.stringify({}) });
-          if (msg) msg.textContent = `Queued send complete: ${Number(out.sent || 0)} sent (${Number(out.requested || 0)} queued).`;
+          if (msg) msg.textContent = `First queued send complete: ${Number(out.sent || 0)} sent (${Number(out.requested || 0)} attempted).`;
           loadAlertsMonitor().catch(()=>{});
         } catch (err) {
           if (msg) msg.textContent = err.message || 'Could not send queued emails.';

@@ -1,5 +1,5 @@
 const tokenKey = 'bbb-token-v3';
-const API = { me:'/api/me', profile:'/api/profile', confirmEmailVerify:'/api/alerts/email/verify/confirm' };
+const API = { me:'/api/me', profile:'/api/profile', confirmEmailVerify:'/api/alerts/email/verify/confirm', sendEmailVerify:'/api/alerts/email/verify/send' };
 
 const state = {
   token: localStorage.getItem(tokenKey) || '',
@@ -122,7 +122,14 @@ form?.addEventListener('submit', async (e) => {
     const existing = (await req(API.profile)).profile || {};
     const settings = { ...(existing.settings || {}), alertsPreferences: prefs };
     await req(API.profile, { method:'PUT', body: JSON.stringify({ settings }) });
-    setStatus('Alerts activated.');
+
+    // Always send verification to entered email so unknown/new addresses get verified flow.
+    try {
+      await req(API.sendEmailVerify, { method:'POST', body: JSON.stringify({ email }) });
+      setStatus(`Alerts activated. Verification email sent to ${email}.`);
+    } catch (verifyErr) {
+      setStatus(`Alerts activated. Could not send verification email: ${String(verifyErr.message || verifyErr)}`);
+    }
   } catch (err) {
     setStatus(String(err.message || 'Could not save alerts settings.'));
   } finally {

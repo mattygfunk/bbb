@@ -2188,17 +2188,18 @@ function createApp() {
     const logic = getAlertTemplateLogic(store);
     const templates = buildAlertTemplatesPreview(store).reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
     const queue = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents, logic, 0);
+    const queueItem = queue[0] || null;
 
-    if (!queue.length) {
+    if (!queueItem) {
       appendAlertsDeliveryLog({ status: 'skipped', templateId: 'queue-send-now', recipients: 0, note: 'queue-empty' });
-      return res.json({ ok: true, sent: 0, requested: 0 });
+      return res.json({ ok: true, sent: 0, failed: 0, requested: 0 });
     }
 
-    appendAlertsDeliveryLog({ status: 'info', templateId: 'queue-send-now', recipients: queue.length, note: 'manual-queue-send-started' });
+    appendAlertsDeliveryLog({ status: 'info', templateId: 'queue-send-now', recipients: 1, note: 'manual-queue-send-started-first-only' });
 
     let sent = 0;
     let failed = 0;
-    for (const item of queue) {
+    for (const item of [queueItem]) {
       const template = templates[item.templateId];
       if (!template || template.enabled === false) continue;
       const event = scheduleEvents.find((e) => String(e.id || '') === String(item.eventId || '')) || {};
@@ -2226,8 +2227,8 @@ function createApp() {
       }
     }
 
-    appendAlertsDeliveryLog({ status: failed ? 'info' : 'sent', templateId: 'queue-send-now', recipients: sent, note: `manual-queue-send-finished sent=${sent} failed=${failed} requested=${queue.length}` });
-    return res.json({ ok: true, sent, failed, requested: queue.length });
+    appendAlertsDeliveryLog({ status: failed ? 'info' : 'sent', templateId: 'queue-send-now', recipients: sent, note: `manual-queue-send-finished sent=${sent} failed=${failed} requested=1` });
+    return res.json({ ok: true, sent, failed, requested: 1 });
   });
 
   app.post('/api/alerts/templates/overlay/send-now', auth, adminOnly, async (req, res) => {
@@ -2243,7 +2244,7 @@ function createApp() {
     }
 
     const template = buildAlertTemplatesPreview(store).find((x) => String(x.id) === 'overlayWatch');
-    if (!template || template.enabled === false) return res.status(400).json({ error: 'Overlay template disabled or missing' });
+    if (!template) return res.status(400).json({ error: 'Overlay template missing' });
 
     const event = getAlertScheduleEvents(store).filter((e) => e.enabled !== false)[0] || {};
     const start = event.id ? nextOccurrenceFromMelbourne(event, new Date()) : new Date();
