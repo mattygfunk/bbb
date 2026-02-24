@@ -2172,18 +2172,32 @@ function createApp() {
 
   app.post('/api/alerts/queue/send-now', auth, adminOnly, async (req, res) => {
     const tx = getSmtpTransport();
-    if (!tx) return res.status(503).json({ error: 'SMTP is not configured on server' });
+    if (!tx) {
+      appendAlertsDeliveryLog({ status: 'failed', templateId: 'queue-send-now', recipients: 0, note: 'SMTP not configured' });
+      return res.status(503).json({ error: 'SMTP is not configured on server' });
+    }
 
     const store = readStore();
     const subscribers = buildAlertsSubscribers(store).filter((s) => Boolean(s.verifiedEmail) && Boolean(s.email));
-    if (!subscribers.length) return res.json({ ok: true, sent: 0, requested: 0 });
+    if (!subscribers.length) {
+      appendAlertsDeliveryLog({ status: 'skipped', templateId: 'queue-send-now', recipients: 0, note: 'no-verified-email-subscribers' });
+      return res.json({ ok: true, sent: 0, requested: 0 });
+    }
 
     const scheduleEvents = getAlertScheduleEvents(store);
     const logic = getAlertTemplateLogic(store);
     const templates = buildAlertTemplatesPreview(store).reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
     const queue = buildNextAlertQueuePreview(subscribers, 10, scheduleEvents, logic, 0);
 
+    if (!queue.length) {
+      appendAlertsDeliveryLog({ status: 'skipped', templateId: 'queue-send-now', recipients: 0, note: 'queue-empty' });
+      return res.json({ ok: true, sent: 0, requested: 0 });
+    }
+
+    appendAlertsDeliveryLog({ status: 'info', templateId: 'queue-send-now', recipients: queue.length, note: 'manual-queue-send-started' });
+
     let sent = 0;
+    let failed = 0;
     for (const item of queue) {
       const template = templates[item.templateId];
       if (!template || template.enabled === false) continue;
@@ -2208,10 +2222,12 @@ function createApp() {
         sent += 1;
       } catch (err) {
         appendAlertsDeliveryLog({ status: 'failed', templateId: String(item.templateId || ''), recipients: 1, note: `queue-send-now ${String(err?.message || err)}` });
+        failed += 1;
       }
     }
 
-    return res.json({ ok: true, sent, requested: queue.length });
+    appendAlertsDeliveryLog({ status: failed ? 'info' : 'sent', templateId: 'queue-send-now', recipients: sent, note: `manual-queue-send-finished sent=${sent} failed=${failed} requested=${queue.length}` });
+    return res.json({ ok: true, sent, failed, requested: queue.length });
   });
 
   app.post('/api/alerts/templates/overlay/send-now', auth, adminOnly, async (req, res) => {
