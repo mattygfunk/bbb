@@ -1527,7 +1527,9 @@ function wheelDeterministicResult(session = {}, clientNonce = '') {
   const segDeg = 360 / entrants.length;
   const centerOffset = (winnerIndex * segDeg) + (segDeg / 2);
   const turns = 6 + (Number(crypto.randomInt(0, 4)));
-  const finalRotationDeg = (turns * 360) + (360 - centerOffset);
+  // Pointer is fixed at top (270° in canvas polar angle where 0° is right).
+  // So winning segment center must end at 270° after rotation.
+  const finalRotationDeg = (turns * 360) + (270 - centerOffset);
   return {
     serverSeed,
     serverSeedHash: crypto.createHash('sha256').update(serverSeed).digest('hex'),
