@@ -4188,7 +4188,7 @@ function getAlertTemplateLogic(store = readStore()) {
   return out;
 }
 
-function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS, templateLogic = getDefaultAlertTemplateLogic()) {
+function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = ALERT_SCHEDULE_EVENTS, templateLogic = getDefaultAlertTemplateLogic(), includePastMs = 0) {
   const templates = {
     startingSoon: { id: 'startingSoon', label: 'Starting soon', minusMin: Number(templateLogic?.startingSoon?.minutesBefore ?? 10), enabled: templateLogic?.startingSoon?.enabled !== false },
     lateReg: { id: 'lateReg', label: 'Late reg closing', minusMin: Number(templateLogic?.lateReg?.minutesBefore ?? 15), enabled: templateLogic?.lateReg?.enabled !== false },
@@ -4207,7 +4207,8 @@ function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = AL
           const t = templates[key];
           if (!t || t.enabled === false) continue;
           const sendAt = new Date(start.getTime() - t.minusMin * 60 * 1000);
-          if (sendAt.getTime() <= Date.now()) continue;
+          const nowMs = Date.now();
+          if (sendAt.getTime() <= nowMs && (includePastMs <= 0 || sendAt.getTime() < nowMs - includePastMs)) continue;
           queue.push({
             sendAt: sendAt.getTime(),
             sendAtIso: sendAt.toISOString(),
@@ -4225,6 +4226,68 @@ function buildNextAlertQueuePreview(subscribers, limit = 10, scheduleEvents = AL
   }
 
   return queue.sort((a, b) => a.sendAt - b.sendAt).slice(0, Math.max(1, Number(limit || 10)));
+}
+
+async function processDueScheduledAlertsOnce() {
+  const tx = getSmtpTransport();
+  if (!tx) return;
+
+  const store = readStore();
+  const subscribers = buildAlertsSubscribers(store).filter((s) => Boolean(s.verifiedEmail) && Boolean(s.email));
+  if (!subscribers.length) return;
+
+  const scheduleEvents = getAlertScheduleEvents(store);
+  const templateLogic = getAlertTemplateLogic(store);
+  const templates = buildAlertTemplatesPreview(store).reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
+  const queue = buildNextAlertQueuePreview(subscribers, 2000, scheduleEvents, templateLogic, 5 * 60 * 1000);
+  const now = Date.now();
+  const due = queue.filter((q) => Number(q.sendAt || 0) <= now + 15_000);
+  if (!due.length) return;
+
+  store.system = store.system && typeof store.system === 'object' ? store.system : {};
+  const sentState = store.system.alertDispatchState && typeof store.system.alertDispatchState === 'object'
+    ? store.system.alertDispatchState
+    : {};
+
+  for (const item of due) {
+    const key = `${item.templateId}|${item.eventId}|${item.sendAt}|${String(item.recipient || '').toLowerCase()}`;
+    if (sentState[key]) continue;
+
+    const template = templates[item.templateId];
+    if (!template || template.enabled === false) {
+      sentState[key] = { at: now, status: 'skipped-disabled' };
+      continue;
+    }
+
+    const event = scheduleEvents.find((e) => String(e.id || '') === String(item.eventId || '')) || {};
+    const email = String(item.recipient || '').trim().toLowerCase();
+    const vars = buildTournamentTemplateVars(event, {
+      eventTitle: String(item.eventTitle || event.title || 'Tournament'),
+      startTime: new Date(Number(item.sendAt || now)).toLocaleString('en-AU', { timeZone: 'Australia/Melbourne' }),
+      recipientName: String(item.username || email.split('@')[0] || 'Member'),
+      recipientEmail: email
+    });
+
+    try {
+      await tx.sendMail({
+        from: SMTP_FROM,
+        to: email,
+        subject: renderTemplateVars(template.subject, vars),
+        text: renderTemplateVars(template.bodyPreview, vars),
+        html: renderTemplateVars(template.html, vars)
+      });
+      appendAlertsDeliveryLog({ status: 'sent', templateId: String(item.templateId || ''), recipients: 1, note: `${item.eventTitle || item.eventId || ''} -> ${email}` });
+      sentState[key] = { at: now, status: 'sent' };
+    } catch (err) {
+      appendAlertsDeliveryLog({ status: 'failed', templateId: String(item.templateId || ''), recipients: 1, note: String(err?.message || err) });
+      sentState[key] = { at: now, status: 'failed' };
+    }
+  }
+
+  // keep dedupe state bounded
+  const stateEntries = Object.entries(sentState).sort((a,b)=>Number(b?.[1]?.at||0)-Number(a?.[1]?.at||0)).slice(0, 5000);
+  store.system.alertDispatchState = Object.fromEntries(stateEntries);
+  writeStore(store);
 }
 
 function appendAlertsDeliveryLog(entry = {}) {
@@ -4399,6 +4462,18 @@ async function sendNightlyGtdStartSoonEmail() {
   return { ok: true, recipients: recipients.length };
 }
 
+function startAlertsQueueCron() {
+  const tick = async () => {
+    try {
+      await processDueScheduledAlertsOnce();
+    } catch (err) {
+      console.error('[alerts-cron] queue tick failed:', err?.message || err);
+    }
+  };
+  tick();
+  setInterval(tick, 30 * 1000);
+}
+
 function startNightlyGtdReminderCron() {
   const tick = async () => {
     try {
@@ -4432,6 +4507,7 @@ function startNightlyGtdReminderCron() {
 
 function start() {
   ensureStore();
+  startAlertsQueueCron();
   startNightlyGtdReminderCron();
   const app = createApp();
   app.listen(PORT, () => {
