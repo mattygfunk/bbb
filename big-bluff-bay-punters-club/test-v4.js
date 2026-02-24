@@ -52,6 +52,20 @@ async function api(url, opts = {}, token) {
     assert.equal(res.status, 200);
     const userToken = res.body.token;
 
+    // Ensure there is an OPEN round before tip submission.
+    res = await api('/api/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'admin123' })
+    });
+    assert.equal(res.status, 200);
+    const adminToken = res.body.token;
+
+    res = await api('/api/punters/rounds/open-next', {
+      method: 'POST',
+      body: JSON.stringify({})
+    }, adminToken);
+    assert.ok([200, 201].includes(res.status));
+
     res = await api('/api/tips', {
       method: 'POST',
       body: JSON.stringify({ race: 'R9', selection: 'Night Tide' })
@@ -70,12 +84,7 @@ async function api(url, opts = {}, token) {
     assert.equal(res.body.tip.id, tipId);
     assert.equal(res.body.tip.selection, 'Ocean Star');
 
-    res = await api('/api/login', {
-      method: 'POST',
-      body: JSON.stringify({ username: 'admin', password: 'admin123' })
-    });
-    assert.equal(res.status, 200);
-    const adminToken = res.body.token;
+    // admin token already obtained above
 
     res = await api('/api/tips?status=approved');
     assert.equal(res.status, 200);
