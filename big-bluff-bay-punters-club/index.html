@@ -147,6 +147,10 @@
               <label id="home-email-wrap" hidden>Email (for updates + account recovery)
                 <input name="email" id="home-email" type="email" placeholder="you@example.com" autocomplete="email" />
               </label>
+              <label id="home-alert-optin-wrap" hidden style="display:grid;gap:.35rem">
+                <span><input type="checkbox" name="alertsOptIn" id="home-alert-optin" /> Set up simple email alerts (non-spam, unsubscribe anytime)</span>
+                <small class="muted">We only send practical updates like start reminders and major changes. You can opt out at any time.</small>
+              </label>
               <button class="btn chip-btn" type="submit" id="home-auth-submit">Continue</button>
             </form>
             <p id="home-login-msg" class="muted" role="status" aria-live="polite"></p>
@@ -529,7 +533,7 @@
       }
     </script>
     <script defer src="menu-auth.js?v=20260216-4"></script>
-    <script defer src="home-login.js?v=20260224-hide-login-first"></script>
+    <script defer src="home-login.js?v=20260224-alert-optin"></script>
     <script defer src="landing.js?v=20260222-46"></script>
   </body>
 </html>

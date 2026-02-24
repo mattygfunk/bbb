@@ -1,5 +1,5 @@
 const API_ROOTS = ['/api'];
-const API = { register: '/register', login: '/login', me: '/me' };
+const API = { register: '/register', login: '/login', me: '/me', profile: '/profile', sendEmailVerify: '/alerts/email/verify/send' };
 const tokenKey = 'bbb-token-v3';
 
 const form = document.getElementById('home-login-form');
@@ -13,6 +13,8 @@ const modeRegisterBtn = document.getElementById('home-mode-register');
 const submitBtn = document.getElementById('home-auth-submit');
 const emailWrap = document.getElementById('home-email-wrap');
 const emailInput = document.getElementById('home-email');
+const alertsOptInWrap = document.getElementById('home-alert-optin-wrap');
+const alertsOptInInput = document.getElementById('home-alert-optin');
 const memberAccessBlock = document.getElementById('home-member-access-block');
 let sessionActive = false;
 
@@ -85,10 +87,12 @@ function setAuthMode(mode) {
   }
   if (submitBtn) submitBtn.textContent = next === 'register' ? 'Create Account & Continue' : 'Log In & Continue';
   if (emailWrap) emailWrap.hidden = next !== 'register';
+  if (alertsOptInWrap) alertsOptInWrap.hidden = next !== 'register';
   if (emailInput) {
     emailInput.required = next === 'register';
     if (next !== 'register') emailInput.value = '';
   }
+  if (alertsOptInInput && next !== 'register') alertsOptInInput.checked = false;
   if (msg) msg.textContent = next === 'register' ? 'Create your account once, then you can log in with the same details.' : '';
 }
 
@@ -116,6 +120,7 @@ if (form) {
     const username = String(data.get('member') || '').trim();
     const password = String(data.get('pin') || '').trim();
     const email = String(data.get('email') || '').trim();
+    const alertsOptIn = Boolean(data.get('alertsOptIn'));
     const mode = String(modeInput?.value || 'login');
 
     if (username.length < 3) {
@@ -149,7 +154,48 @@ if (form) {
       });
 
       localStorage.setItem(tokenKey, login.token);
-      if (msg) msg.textContent = 'Logged in. Redirecting to Punters Area...';
+
+      if (mode === 'register' && alertsOptIn && email) {
+        try {
+          const current = await req(API.profile);
+          const profile = current?.profile || {};
+          const settings = { ...(profile.settings || {}) };
+          settings.alertsPreferences = settings.alertsPreferences || {};
+          settings.alertsPreferences.alerts = {
+            overlayWatch: false,
+            startingSoon: true,
+            lateReg: true,
+            freerolls: false,
+            cashActive: false,
+            ...(settings.alertsPreferences.alerts || {})
+          };
+          settings.alertsPreferences.methods = {
+            ...(settings.alertsPreferences.methods || {}),
+            email: { enabled: true, verified: false, mode: 'Digest' }
+          };
+          settings.alertsPreferences.contact = {
+            ...(settings.alertsPreferences.contact || {}),
+            email: normalizeEmail(email)
+          };
+          settings.alertsPreferences.rules = {
+            timezone: 'Australia/Melbourne',
+            quietStart: '01:00',
+            quietEnd: '09:00',
+            allowHighQuiet: true,
+            maxDay: 4,
+            tone: 'Balanced',
+            ...(settings.alertsPreferences.rules || {})
+          };
+          await req(API.profile, { method: 'PUT', body: JSON.stringify({ settings }) });
+          await req(API.sendEmailVerify, { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email) }) });
+          if (msg) msg.textContent = 'Account created. Verification email sent for simple alerts. Redirecting...';
+        } catch {
+          if (msg) msg.textContent = 'Account created. Redirecting to Punters Area...';
+        }
+      } else {
+        if (msg) msg.textContent = 'Logged in. Redirecting to Punters Area...';
+      }
+
       window.location.href = '/punters.html';
     } catch (err) {
       if (msg) msg.textContent = err.message || 'Login failed. Please try again.';
