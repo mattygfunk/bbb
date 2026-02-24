@@ -4541,11 +4541,16 @@ async function sendNightlyGtdStartSoonEmail() {
 }
 
 function startAlertsQueueCron() {
+  let running = false;
   const tick = async () => {
+    if (running) return;
+    running = true;
     try {
       await processDueScheduledAlertsOnce();
     } catch (err) {
       console.error('[alerts-cron] queue tick failed:', err?.message || err);
+    } finally {
+      running = false;
     }
   };
   tick();
@@ -4553,7 +4558,10 @@ function startAlertsQueueCron() {
 }
 
 function startNightlyGtdReminderCron() {
+  let running = false;
   const tick = async () => {
+    if (running) return;
+    running = true;
     try {
       const now = new Date();
       const parts = getMelbourneParts(now);
@@ -4576,6 +4584,8 @@ function startNightlyGtdReminderCron() {
     } catch (err) {
       appendAlertsDeliveryLog({ status: 'failed', templateId: 'nightly-gtd-755', recipients: 0, note: String(err?.message || err) });
       console.error('[alerts-cron] Failed nightly reminder tick:', err?.message || err);
+    } finally {
+      running = false;
     }
   };
 
