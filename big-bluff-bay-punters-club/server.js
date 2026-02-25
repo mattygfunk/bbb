@@ -308,7 +308,7 @@ function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
   if (!input) return [];
 
   const runners = [];
-  const coreRe = /([0-9xX\-]{3,10})\s+(\d{1,3})\s+((?:\d+(?:\.\d+)?\s+){3}\d+(?:\.\d+)?|(?:SCR\s+){3}SCR)\b/g;
+  const coreRe = /((?=[0-9A-Za-z\-]{2,12}\b)(?=[0-9A-Za-z\-]*[0-9xX])[0-9A-Za-z\-]+)\s+(\d{1,3})\s+((?:\d+(?:\.\d+)?\s+){3}\d+(?:\.\d+)?|(?:SCR\s+){3}SCR)\b/g;
   let cursor = 0;
   let match;
 
@@ -322,6 +322,7 @@ function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
     const cleanedPrefix = prefixRaw
       .replace(/\.{3,}/g, ' ')
       .replace(/^(?:\s*SCR\s+){3}SCR\s*/i, '')
+      .replace(/^(?:\d+(?:\.\d+)?\s+)+/, '')
       .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
       .replace(/\s+/g, ' ')
       .trim();
@@ -413,7 +414,7 @@ function parseImportedRunners({ text = '', raceNumber = 1 }) {
 
     const formLine = String(block[2] || '');
     const formTokens = formLine.split(/\s+/).filter(Boolean);
-    const form = formTokens[0] && /[0-9xX-]/.test(formTokens[0]) ? formTokens[0] : null;
+    const form = formTokens[0] && /[0-9A-Za-z-]/.test(formTokens[0]) ? formTokens[0] : null;
     const nums = formTokens.map(toNum).filter((n) => n != null);
     const weightKg = nums[0] ?? null;
     const rating = nums[1] ?? null;
