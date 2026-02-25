@@ -2,6 +2,8 @@ const LOCK_AT_ISO = '2026-02-14T15:00:00+11:00';
 const LANDING_API_ROOTS = ['/api'];
 const LANDING_API_CACHE = new Map();
 const LANDING_CACHE_KEY='bbb-landing-api-cache-v1';
+const TRACK_KEY = 'bbb-punters-track-v1';
+let landingTrackId = '';
 function readLandingCache(){ try { return JSON.parse(localStorage.getItem(LANDING_CACHE_KEY)||'{}'); } catch { return {}; } }
 function writeLandingCache(path, data){ try { const c=readLandingCache(); c[path]={ts:Date.now(), data}; localStorage.setItem(LANDING_CACHE_KEY, JSON.stringify(c)); } catch {} }
 function getLandingCache(path, maxAgeMs=5*60*1000){ try { const e=readLandingCache()[path]; if(!e) return null; if((Date.now()-Number(e.ts||0))>maxAgeMs) return null; return e.data||null; } catch { return null; } }
@@ -41,6 +43,41 @@ function setStatusState(stateText, tone = 'open') {
   node.textContent = stateText;
   node.classList.remove('chip-red');
   if (tone !== 'open') node.classList.add('chip-red');
+}
+
+function getTrackFromUrl(){
+  const qs = new URLSearchParams(location.search);
+  return qs.get('trackId') || qs.get('track') || '';
+}
+
+async function resolveLandingTrackId(){
+  const explicit = getTrackFromUrl();
+  if (explicit) {
+    landingTrackId = explicit;
+    try { localStorage.setItem(TRACK_KEY, landingTrackId); } catch {}
+    return landingTrackId;
+  }
+
+  const stored = localStorage.getItem(TRACK_KEY) || '';
+  const tracks = ['greyhounds', 'thoroughbreds'];
+  try {
+    const checks = await Promise.all(tracks.map(async (trackId) => {
+      try {
+        const d = await fetchApi(`/punters/overview?tier=free&trackId=${encodeURIComponent(trackId)}`);
+        return { trackId, status: String(d?.round?.status || 'CLOSED').toUpperCase(), phase: String(d?.round?.phase || 'BETWEEN_ROUNDS').toUpperCase() };
+      } catch {
+        return { trackId, status: 'CLOSED', phase: 'BETWEEN_ROUNDS' };
+      }
+    }));
+    const open = checks.find((x) => x.status === 'OPEN' && x.phase !== 'BETWEEN_ROUNDS');
+    const pick = open || checks.find((x) => x.status === 'OPEN') || checks.find((x) => x.phase !== 'BETWEEN_ROUNDS');
+    landingTrackId = String(pick?.trackId || stored || 'thoroughbreds');
+  } catch {
+    landingTrackId = stored || 'thoroughbreds';
+  }
+
+  try { localStorage.setItem(TRACK_KEY, landingTrackId); } catch {}
+  return landingTrackId;
 }
 
 function applyTableCards() {
@@ -702,13 +739,15 @@ async function hydrateLandingCritical() {
   if (ticker) ticker.textContent = MOCK.payoutsTicker;
 
   try {
+    const trackId = await resolveLandingTrackId();
+    const tq = `trackId=${encodeURIComponent(trackId)}`;
     const [jackpot, fx, ladder, milestones, pokerResults, overview, pokerDash] = await Promise.all([
-      fetchApi('/jackpot'),
-      fetchApi('/fixtures'),
-      fetchApi('/ladder'),
-      fetchApi('/milestones'),
+      fetchApi(`/jackpot?${tq}`),
+      fetchApi(`/fixtures?${tq}`),
+      fetchApi(`/ladder?${tq}`),
+      fetchApi(`/milestones?${tq}`),
       fetchApi('/poker/results?page=1&pageSize=100'),
-      fetchApi('/punters/overview?tier=paid'),
+      fetchApi(`/punters/overview?tier=paid&${tq}`),
       fetchApi('/poker/dashboard')
     ]);
 
@@ -915,7 +954,7 @@ async function hydrateLandingCritical() {
 
     stampUpdated();
     applyTableCards();
-    hydrateNextTipHome(String(overview?.track?.id || 'thoroughbreds'));
+    hydrateNextTipHome(String(overview?.track?.id || trackId || 'thoroughbreds'));
     scheduleIdle(() => hydrateLandingDeferred(), 3000);
   } catch {
     const nextRaceCallout = document.getElementById('home-next-race-callout');
@@ -927,8 +966,9 @@ async function hydrateLandingCritical() {
 
 async function hydrateLandingDeferred() {
   try {
+    const trackId = landingTrackId || await resolveLandingTrackId();
     const [tips, social] = await Promise.all([
-      fetchApi('/tips?status=all'),
+      fetchApi(`/tips?status=all&trackId=${encodeURIComponent(trackId)}`),
       fetchApi('/social-feed')
     ]);
 
@@ -968,7 +1008,8 @@ async function initLockCountdown() {
 
   let end = new Date(LOCK_AT_ISO).getTime();
   try {
-    const dl = await fetchApi('/tips/edit-deadline');
+    const trackId = landingTrackId || await resolveLandingTrackId();
+    const dl = await fetchApi(`/tips/edit-deadline?trackId=${encodeURIComponent(trackId)}`);
     const apiEnd = Number(dl?.effectiveDeadlineMs || 0);
     if (apiEnd > 0) end = apiEnd;
   } catch {}
@@ -1001,12 +1042,12 @@ async function initLockCountdown() {
   }, 60000);
 
   // Keep next-tip card in sync with auth changes that happen after initial render.
-  setInterval(() => {
+  setInterval(async () => {
     if (document.hidden) return;
-    hydrateNextTipHome();
+    hydrateNextTipHome(landingTrackId || await resolveLandingTrackId());
   }, 15000);
-  window.addEventListener('focus', () => hydrateNextTipHome());
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'bbb-token-v3') hydrateNextTipHome();
+  window.addEventListener('focus', async () => hydrateNextTipHome(landingTrackId || await resolveLandingTrackId()));
+  window.addEventListener('storage', async (e) => {
+    if (e.key === 'bbb-token-v3' || e.key === TRACK_KEY) hydrateNextTipHome(landingTrackId || await resolveLandingTrackId());
   });
 })();
