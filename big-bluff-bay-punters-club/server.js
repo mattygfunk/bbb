@@ -1124,8 +1124,33 @@ function computeJackpotTierData(store, opts = {}) {
   const trackId = normalizeTrackId(opts.trackId);
   const autoCreate = opts.autoCreate === true;
   const round = syncCurrentRoundEntries(store, { ...opts, autoCreate, trackId });
-  const paidMembers = new Set((round?.entries || []).filter((e) => e.tier === 'JACKPOT').map((e) => String(e.member || '').toLowerCase())).size;
-  const freeMembers = new Set((round?.entries || []).map((e) => String(e.member || '').toLowerCase())).size;
+
+  const freeMemberSet = new Set((round?.entries || []).map((e) => String(e.member || '').toLowerCase()));
+  const paidMemberSet = new Set(
+    (round?.entries || [])
+      .filter((e) => String(e.tier || '').toUpperCase() === 'JACKPOT' || Boolean(e.paid))
+      .map((e) => String(e.member || '').toLowerCase())
+  );
+
+  const trackTips = getTipsForTrack(store, trackId, { includeRemoved: false }).filter((t) => String(t.status || '') !== 'removed');
+  trackTips.forEach((t) => {
+    const member = String(t.member || '').toLowerCase();
+    if (!member) return;
+    freeMemberSet.add(member);
+    if (Boolean(t.paid)) paidMemberSet.add(member);
+  });
+
+  ((store.puntersClub?.claims || [])
+    .filter((c) => normalizeTrackId(c.trackId || 'thoroughbreds') === trackId && String(c.status || '').toLowerCase() === 'paid')
+  ).forEach((c) => {
+    const member = String(c.member || '').toLowerCase();
+    if (!member) return;
+    freeMemberSet.add(member);
+    paidMemberSet.add(member);
+  });
+
+  const paidMembers = paidMemberSet.size;
+  const freeMembers = freeMemberSet.size;
   const entryFee = Number(round?.entryFee || store.entryFee || 20);
   const currentRoundPot = paidMembers * entryFee;
   const rollover = getTrackJackpotCarry(store, trackId);
@@ -3585,6 +3610,11 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     );
     (tips || []).forEach((t) => {
       if (Boolean(t?.paid)) paidByMember.add(String(t.member || '').trim().toLowerCase());
+    });
+    ((store.puntersClub?.claims || [])
+      .filter((c) => normalizeTrackId(c.trackId || 'thoroughbreds') === trackId && String(c.status || '').toLowerCase() === 'paid')
+    ).forEach((c) => {
+      paidByMember.add(String(c.member || '').trim().toLowerCase());
     });
 
     const byMember = new Map();
