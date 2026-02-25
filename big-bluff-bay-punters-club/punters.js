@@ -1085,17 +1085,19 @@ async function hydrateNextTipCard(trackId){
 
     pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(d?.userPick?.selection || '—'), String(d?.userPick?.runnerName || d?.userPick?.horse || ''))}`;
     const others = Number(d?.othersCount || 0);
+    const settledCount = Object.keys(state?.lastOverview?.raceResults || {}).length;
+    const hasScoredRace = settledCount > 0;
     const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
       ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
       : '';
-    social.textContent = positionText || (others <= 0 ? `You’re first on the card` : `You + ${others} others locked`);
+    social.textContent = positionText || (others <= 0 ? (hasScoredRace ? `You’re first on the card` : 'Tip locked — waiting for first result') : `You + ${others} others locked`);
 
     if(imminent && canEditEffective){
       card.className = 'card next-tip-card next-tip-card--imminent';
       card.classList.add('countdown-pulse');
       badge.textContent = 'LOCK IMMINENT';
-      primary.textContent = 'Edit';
-      primary.href = '/punters.html#tip-form';
+      primary.textContent = 'Full Card';
+      primary.href = '/punters.html#leaderboard';
       secondary.hidden = true;
             return;
     }
@@ -1103,8 +1105,8 @@ async function hydrateNextTipCard(trackId){
     if(canEditEffective){
       card.className = 'card next-tip-card next-tip-card--warn';
       badge.textContent = 'EDITABLE';
-      primary.textContent = 'Edit';
-      primary.href = '/punters.html#tip-form';
+      primary.textContent = 'Full Card';
+      primary.href = '/punters.html#leaderboard';
       secondary.hidden = true;
             return;
     }
@@ -1147,9 +1149,11 @@ async function hydrateNextTipCard(trackId){
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
         pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '—'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
         const others = Number(lg?.othersCount || 0);
-        social.textContent = others <= 0 ? 'You’re first on the card' : `You + ${others} others locked`;
-        primary.textContent = lg?.editable ? 'Edit' : 'Full Card';
-        primary.href = lg?.editable ? '/punters.html#tip-form' : '/punters.html#leaderboard';
+        const settledCount = Object.keys(state?.lastOverview?.raceResults || {}).length;
+        const hasScoredRace = settledCount > 0;
+        social.textContent = others <= 0 ? (hasScoredRace ? 'You’re first on the card' : 'Tip locked — waiting for first result') : `You + ${others} others locked`;
+        primary.textContent = 'Full Card';
+        primary.href = '/punters.html#leaderboard';
       }
     } catch {}
   }
