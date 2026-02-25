@@ -539,7 +539,11 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       credentials: 'same-origin',
       headers: { Authorization: `Bearer ${token}` }
     });
-    if (res.status === 401) return;
+    if (res.status === 401) {
+      try { localStorage.removeItem('bbb-token-v3'); } catch {}
+      section.hidden = true;
+      return;
+    }
     let d = null;
     if (res.ok) {
       d = await res.json();
@@ -730,7 +734,9 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     primary.textContent = 'Full Card';
     primary.href = '/punters.html';
     secondary.hidden = true;
-  } catch {}
+  } catch {
+    section.hidden = true;
+  }
 }
 
 async function hydrateLandingCritical() {
