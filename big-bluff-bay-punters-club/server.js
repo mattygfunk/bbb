@@ -299,6 +299,53 @@ function parseSubs(value) {
     .filter((x) => x.scratched && x.substitute);
 }
 
+function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
+  const input = String(text || '')
+    .replace(/\r\n?/g, ' ')
+    .replace(/[–—]+/g, ' ')
+    .replace(/\.{3,}/g, ' ')
+    .replace(/\bSCR\s+SCR\s+SCR\s+SCR\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!input) return [];
+
+  const runners = [];
+  const pattern = /([A-Z][A-Z'\- ]*[A-Z])\s+([A-Z]{1,3}\s+[A-Za-z][A-Za-z'\-]*)\s+([0-9xX\-]{3,10})\s+(\d{1,3})\s+((?:\d+(?:\.\d+)?\s+){3}\d+(?:\.\d+)?|(?:SCR\s+){3}SCR)/g;
+  let match;
+  while ((match = pattern.exec(input)) !== null) {
+    const horseName = String(match[1] || '').trim() || null;
+    const trainerRaw = String(match[2] || '').trim() || null;
+    const form = String(match[3] || '').trim() || null;
+    const rating = Number(match[4]);
+    const tail = String(match[5] || '').trim();
+    const isScratched = /\bSCR\b/i.test(tail);
+    const nums = (tail.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter((n) => Number.isFinite(n));
+    const idx = runners.length;
+
+    runners.push({
+      raceNumber: Number(raceNumber || 1),
+      runnerNumber: idx + 1,
+      horseName,
+      barrier: idx + 1,
+      jockeyRaw: null,
+      trainerRaw,
+      participantsRaw: trainerRaw,
+      form,
+      weightKg: null,
+      rating: Number.isFinite(rating) ? rating : null,
+      prices: isScratched
+        ? { win: null, place: null, alt1: null, alt2: null }
+        : { win: nums[0] ?? null, place: nums[1] ?? null, alt1: nums[2] ?? null, alt2: nums[3] ?? null },
+      isScratched,
+      warnings: [],
+      confidence: 'high',
+      rawBlock: String(match[0] || '').trim()
+    });
+  }
+
+  return runners;
+}
+
 function parseImportedRunners({ text = '', raceNumber = 1 }) {
   const input = String(text || '').replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '').trim();
   if (!input) return [];
@@ -319,7 +366,7 @@ function parseImportedRunners({ text = '', raceNumber = 1 }) {
     return Number.isFinite(n) ? n : null;
   };
 
-  return blocks.map((block, idx) => {
+  const parsed = blocks.map((block, idx) => {
     const warnings = [];
     const rawBlock = block.join('\n');
     const first = String(block[0] || '');
@@ -377,6 +424,14 @@ function parseImportedRunners({ text = '', raceNumber = 1 }) {
       rawBlock
     };
   });
+
+  const qualityIssues = parsed.filter((r) => !r.horseName || !r.barrier).length;
+  if (parsed.length <= 1 || qualityIssues > 0) {
+    const compact = parseCompactGreyhoundRunners({ text: input, raceNumber });
+    if (compact.length >= 2) return compact;
+  }
+
+  return parsed;
 }
 
 function issueToken(user) {
