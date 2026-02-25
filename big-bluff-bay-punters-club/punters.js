@@ -1,9 +1,13 @@
 const API_ROOTS=['/api'];
 const API={fixtures:'/fixtures',tips:'/tips',tipEditDeadline:'/tips/edit-deadline',ladder:'/ladder',ladderMember:(member)=>`/ladder/${encodeURIComponent(member)}`,bossesBet:'/bosses-bet',milestones:'/milestones',jackpot:'/jackpot',puntersOverview:(tier='free')=>`/punters/overview?tier=${encodeURIComponent(tier)}`,puntersClaim:'/punters/claims',puntersBanter:'/punters/banter',register:'/register',login:'/login',logout:'/logout',me:'/me',profile:'/profile',passwordReset:'/password-recovery/reset',passwordResetRequest:'/password-reset/request',passwordResetConfirm:'/password-reset/confirm'};
 const tokenKey='bbb-token-v3';
-const trackFromUrl = new URLSearchParams(location.search).get('trackId') || new URLSearchParams(location.search).get('track') || 'thoroughbreds';
+const trackKey='bbb-punters-track-v1';
+const qs = new URLSearchParams(location.search);
+const explicitTrackFromUrl = qs.get('trackId') || qs.get('track') || '';
+const storedTrack = localStorage.getItem(trackKey) || '';
+const trackFromUrl = explicitTrackFromUrl || storedTrack || 'thoroughbreds';
 const PREFILL = (typeof window !== 'undefined' && window.__PUNTERS_PREFILL__) ? window.__PUNTERS_PREFILL__ : null;
-const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',roundPhase:'OPEN_FOR_TIPS',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false};
+const state={token:localStorage.getItem(tokenKey)||null,user:null,existingByRace:new Map(),raceCount:12,raceRunners:{},nextTipRace:'R1',lastTipInteractionAt:0,selectedBreakdownMember:'',tipStateResolved:false,tierView:'free',lastOverview:null,isJackpotEligible:false,roundStatus:'OPEN',roundPhase:'OPEN_FOR_TIPS',tipsEditableNow:true,trackId:String(trackFromUrl),refreshInFlight:false,trackResolved:Boolean(explicitTrackFromUrl || storedTrack)};
 const $=id=>document.getElementById(id);
 const PUNTERS_API_CACHE_KEY='bbb-punters-api-cache-v1';
 
@@ -61,6 +65,25 @@ async function req(path,opt={}){
   }
   throw new Error(lastErr||'Request failed');
 }
+
+async function resolveTrackContext(){
+  if (state.trackResolved || explicitTrackFromUrl) return;
+  const tracks = ['greyhounds', 'thoroughbreds'];
+  try {
+    const results = await Promise.all(tracks.map((trackId)=>
+      req(`${API.puntersOverview('free')}&trackId=${encodeURIComponent(trackId)}`)
+        .then((d)=>({ trackId, roundStatus: String(d?.round?.status || 'CLOSED').toUpperCase(), roundPhase: String(d?.round?.phase || 'BETWEEN_ROUNDS').toUpperCase() }))
+        .catch(()=>({ trackId, roundStatus: 'CLOSED', roundPhase: 'BETWEEN_ROUNDS' }))
+    ));
+    const open = results.find((r)=>r.roundStatus === 'OPEN' && r.roundPhase !== 'BETWEEN_ROUNDS');
+    const candidate = open || results.find((r)=>r.roundStatus === 'OPEN') || results.find((r)=>r.roundPhase !== 'BETWEEN_ROUNDS');
+    if (candidate?.trackId) state.trackId = candidate.trackId;
+  } finally {
+    state.trackResolved = true;
+    try { localStorage.setItem(trackKey, String(state.trackId || 'thoroughbreds')); } catch {}
+  }
+}
+
 function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function applyTableCards(){document.querySelectorAll('.table-wrap').forEach((wrap)=>{const table=wrap.querySelector('table');if(!table)return;const heads=[...table.querySelectorAll('thead th')].map((th)=>th.textContent.trim());if(!heads.length)return;const rowCount=table.querySelectorAll('tbody tr').length;const sig=`${heads.join('|')}::${rowCount}`;if(wrap.dataset.cardSig===sig)return;wrap.dataset.cardSig=sig;wrap.classList.add('table-cards');table.querySelectorAll('tbody tr').forEach((tr)=>{[...tr.children].forEach((td,i)=>{if(!td.getAttribute('data-label'))td.setAttribute('data-label',heads[i]||'Value');});});});}
 
@@ -1156,6 +1179,8 @@ function renderBanterWall(items=[]){
 
 async function refresh(){
   if (state.refreshInFlight) return;
+  await resolveTrackContext();
+  try { localStorage.setItem(trackKey, String(state.trackId || 'thoroughbreds')); } catch {}
   state.refreshInFlight = true;
   state.tipStateResolved = false;
   renderTipEntryState();
