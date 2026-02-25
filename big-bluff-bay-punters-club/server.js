@@ -3078,7 +3078,7 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const tipsArr = Array.isArray(store?.tips) ? store.tips.filter((t) => t && typeof t === 'object') : [];
     const usableTips = tipsArr.filter((t) => String(t.status || '') !== 'removed');
     const trackTips = usableTips.filter((t) => normalizeTrackId(t.trackId || 'thoroughbreds') === requestedTrackId);
-    const baseTips = trackTips.length ? trackTips : usableTips;
+    const baseTips = trackTips;
 
     const userKey = String(req.user?.username || '').trim().toLowerCase();
     const mine = baseTips
