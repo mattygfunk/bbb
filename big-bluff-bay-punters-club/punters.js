@@ -1723,7 +1723,7 @@ $('claim-form')?.addEventListener('submit', async (e)=>{
   try {
     if (submitBtn) submitBtn.disabled = true;
     if (msg) msg.textContent = 'Submitting claim…';
-    await req(API.puntersClaim,{method:'POST',body:JSON.stringify({amount:Number(f.get('amount')||0), note})});
+    await req(API.puntersClaim,{method:'POST',body:JSON.stringify({amount:Number(f.get('amount')||0), note, trackId: state.trackId})});
     if(msg) msg.textContent = 'Claim submitted for admin review.';
     setTimeout(()=>claimModal?.close(),800);
   } catch (err) {
