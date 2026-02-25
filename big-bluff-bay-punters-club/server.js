@@ -3357,9 +3357,18 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const { round } = computeJackpotTierData(store, { trackId });
     const jackpotEligible = new Set(
       (round?.entries || [])
-        .filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT')
+        .filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT' || Boolean(e?.paid))
         .map((e) => String(e.member || '').trim().toLowerCase())
     );
+    getTipsForTrack(store, trackId, { includeRemoved: false }).forEach((tip) => {
+      if (String(tip?.status || '') === 'removed') return;
+      if (Boolean(tip?.paid)) jackpotEligible.add(String(tip.member || '').trim().toLowerCase());
+    });
+    (store.puntersClub?.claims || []).forEach((claim) => {
+      if (normalizeTrackId(claim?.trackId || 'thoroughbreds') !== trackId) return;
+      if (String(claim?.status || '').toLowerCase() !== 'paid') return;
+      jackpotEligible.add(String(claim.member || '').trim().toLowerCase());
+    });
     const ladderWithTier = (ladder || []).map((row) => ({
       ...row,
       tier: jackpotEligible.has(String(row.member || '').trim().toLowerCase()) ? 'JACKPOT' : 'FREE'
@@ -3502,9 +3511,24 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
       };
     }
 
+    const paidMembersSet = new Set(
+      (round?.entries || [])
+        .filter((e) => String(e?.tier || '').toUpperCase() === 'JACKPOT' || Boolean(e?.paid))
+        .map((e) => String(e.member || '').toLowerCase())
+    );
+    getTipsForTrack(store, trackId, { includeRemoved: false }).forEach((tip) => {
+      if (String(tip?.status || '') === 'removed') return;
+      if (Boolean(tip?.paid)) paidMembersSet.add(String(tip.member || '').toLowerCase());
+    });
+    (store.puntersClub?.claims || []).forEach((claim) => {
+      if (normalizeTrackId(claim?.trackId || 'thoroughbreds') !== trackId) return;
+      if (String(claim?.status || '').toLowerCase() !== 'paid') return;
+      paidMembersSet.add(String(claim.member || '').toLowerCase());
+    });
+
     const masked = tier !== 'paid';
     const ladderView = (ladder || []).map((row, idx) => {
-      const isEligible = !!(round?.entries || []).find((e) => String(e.member || '').toLowerCase() === String(row.member || '').toLowerCase() && e.tier === 'JACKPOT');
+      const isEligible = paidMembersSet.has(String(row.member || '').toLowerCase());
       if (!masked) return { ...row, tier: isEligible ? 'JACKPOT' : 'FREE' };
       const maskedName = idx < 3 ? row.member : `${String(row.member || '').slice(0, 1)}***`;
       return { ...row, member: maskedName, masked: true, tier: isEligible ? 'JACKPOT' : 'FREE', points: isEligible ? row.points : null, winners: isEligible ? row.winners : null };
