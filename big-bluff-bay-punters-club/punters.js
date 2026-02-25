@@ -1434,7 +1434,9 @@ async function refresh(){
     if (!settledRaces.has(race)) { focusRace = race; break; }
   }
   const nextUserPick = focusRace ? (state.existingByRace.get(focusRace) || '') : '';
-  const bossesStatus = myTipCount > 0 ? 'Eligible ✅' : (state.tipsEditableNow ? 'Not entered' : 'Not eligible');
+  const bossesStatus = state.isJackpotEligible
+    ? 'Eligible ✅'
+    : (myTipCount > 0 ? 'Entered (payment pending)' : (state.tipsEditableNow ? 'Not entered' : 'Not eligible'));
   renderMemberCockpit({
     userRank,
     userPoints,
