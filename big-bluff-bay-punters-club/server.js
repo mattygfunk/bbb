@@ -3580,9 +3580,12 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const rankByMember = new Map((ladder || []).map((row) => [String(row.member || '').trim().toLowerCase(), Number(row.rank || 0)]));
     const paidByMember = new Set(
       ((round?.entries || [])
-        .filter((e) => String(e.tier || '').toUpperCase() === 'JACKPOT')
+        .filter((e) => String(e.tier || '').toUpperCase() === 'JACKPOT' || Boolean(e.paid))
         .map((e) => String(e.member || '').trim().toLowerCase()))
     );
+    (tips || []).forEach((t) => {
+      if (Boolean(t?.paid)) paidByMember.add(String(t.member || '').trim().toLowerCase());
+    });
 
     const byMember = new Map();
     for (const tip of tips) {
@@ -3846,7 +3849,18 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
       if (normalizeTrackId(tip.trackId || 'thoroughbreds') !== trackId) continue;
       if (String(tip.member || '').toLowerCase() === member.toLowerCase() && tip.status !== 'removed') tip.paid = true;
     }
-    store.puntersClub.paymentAudit.push({ action: 'verify', trackId, paymentId: payment.id, member, amount, at: Date.now(), by: req.user.username });
+
+    const claimId = String(req.body?.claimId || '').trim();
+    if (claimId) {
+      const claim = (store.puntersClub?.claims || []).find((c) => String(c.id || '') === claimId);
+      if (claim) {
+        claim.status = 'paid';
+        claim.paidAt = Date.now();
+        claim.paidBy = req.user.username;
+      }
+    }
+
+    store.puntersClub.paymentAudit.push({ action: 'verify', trackId, paymentId: payment.id, member, amount, claimId: claimId || null, at: Date.now(), by: req.user.username });
     writeStore(store);
     return res.json({ ok: true, payment });
   });

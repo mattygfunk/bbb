@@ -931,14 +931,19 @@ async function refreshClaims(){
     if(!rows.length){ body.innerHTML = "<tr><td colspan='4' class='muted'>No pending claims.</td></tr>"; return; }
     rows.forEach((c)=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${esc(c.status||'pending')}</td><td><button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}'>Mark Paid</button></td>`;
+      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${esc(c.status||'pending')}</td><td><button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}'>Mark Paid</button></td>`;
       body.appendChild(tr);
     });
     body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
       btn.addEventListener('click', async ()=>{
         try {
-          await req(withTrack(API.puntersVerifyPayout), { method:'POST', body: JSON.stringify({ claimId: decodeURIComponent(btn.dataset.claimId || '') })});
-          $('punters-payment-msg').textContent = 'Claim marked as paid.';
+          const claimId = decodeURIComponent(btn.dataset.claimId || '');
+          const member = decodeURIComponent(btn.dataset.member || '');
+          const amount = Number(btn.dataset.amount || 0) || 20;
+          const reference = decodeURIComponent(btn.dataset.note || '');
+          await req(withTrack(API.puntersVerifyPayment), { method:'POST', body: JSON.stringify({ claimId, member, amount, reference, trackId: state.trackId })});
+          $('punters-payment-msg').textContent = 'Claim verified and jackpot eligibility updated.';
+          await refresh();
           await refreshClaims();
         } catch (err) { $('punters-payment-msg').textContent = err.message; }
       });
