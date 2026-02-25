@@ -1019,8 +1019,9 @@ async function hydrateNextTipCard(trackId){
     const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
     const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? 'Track' : (fallbackVenue || 'Track'));
     race.textContent = venue && venue !== 'Track' ? `${raceLabel} — ${venue}` : raceLabel;
-    const baseTrackType = String(d?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
-    const trackType = isBetweenRounds ? String(d?.nextMeet?.trackName || baseTrackType || 'Next track') : baseTrackType;
+    const activeTrackType = String(state.trackId || '').toLowerCase() === 'greyhounds' ? 'Greyhounds' : 'Thoroughbreds';
+    const baseTrackType = String(d?.trackName || '').trim() || activeTrackType;
+    const trackType = isBetweenRounds ? String(d?.nextMeet?.trackName || baseTrackType || 'Next track') : activeTrackType;
     context.textContent = venue && venue !== 'Track' ? `${trackType} • ${venue} meeting` : `${trackType} meeting`;
     const lockRef = Number(d?.lockTime || 0);
     const hardLocked = lockRef > 0 && now >= lockRef;
@@ -1122,7 +1123,7 @@ async function hydrateNextTipCard(trackId){
       const isBetweenRounds = String(lg?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS';
       const raceNum = Number(String(lg?.nextRace || '').replace('R',''));
       const raceLabel = Number.isFinite(raceNum) && raceNum > 0 ? `Race ${raceNum}` : (isBetweenRounds ? 'Next meet pending' : 'Race');
-      const trackType = String(lg?.trackName || '').toLowerCase().includes('grey') ? 'Greyhounds' : 'Thoroughbreds';
+      const trackType = String(state.trackId || '').toLowerCase() === 'greyhounds' ? 'Greyhounds' : 'Thoroughbreds';
       const apiVenue = String(lg?.venue || lg?.fixture?.track || lg?.fixture?.event || '').trim();
       const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
       const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? '' : (fallbackVenue || ''));
