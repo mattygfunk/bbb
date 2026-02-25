@@ -773,6 +773,10 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   flex-wrap: wrap;
 }
 .punters-promo__cta .btn { min-width: 180px; }
+#pricing-explainer-section[hidden],
+#punters-login-cta-wrap[hidden] {
+  display: none !important;
+}
 
 #race-market-card { border-color: rgba(120,140,180,.34); background: linear-gradient(180deg,#101b2f,#0c1524); }
 #race-market-top { margin:.3rem 0 .45rem; }

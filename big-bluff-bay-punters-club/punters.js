@@ -1396,7 +1396,12 @@ async function refresh(){
     const currentUser = String(state.user.username || '').toLowerCase();
     const mine=(allTipsRes.tips||[]).filter(t=>String(t.member||'').toLowerCase()===currentUser && t.status!=='removed');
     myTips = mine;
-    state.isJackpotEligible = mine.some((t)=>Boolean(t.paid));
+    const paidByTips = mine.some((t)=>Boolean(t.paid));
+    const paidByLadder = (Array.isArray(paidOverview?.ladder) ? paidOverview.ladder : [])
+      .some((r) => String(r?.member || '').toLowerCase() === currentUser && String(r?.tier || '').toUpperCase() === 'JACKPOT');
+    const paidByOverview = (Array.isArray(overviewData?.ladder) ? overviewData.ladder : [])
+      .some((r) => String(r?.member || '').toLowerCase() === currentUser && String(r?.tier || '').toUpperCase() === 'JACKPOT');
+    state.isJackpotEligible = paidByTips || paidByLadder || paidByOverview;
     const latestByRace=new Map();
     for(const t of mine){
       if(!latestByRace.has(t.race)) latestByRace.set(t.race,t);
