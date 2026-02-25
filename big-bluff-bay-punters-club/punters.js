@@ -91,6 +91,11 @@ function getProfile(){
   return state.user?.profile || { bio:'', profilePic:'', settings:{ emailNotifications:false, publicProfile:false, theme:'system' } };
 }
 
+function syncLoginCtaVisibility(){
+  const loginCtaWrap = $('punters-login-cta-wrap');
+  if (loginCtaWrap) loginCtaWrap.hidden = Boolean(state.user);
+}
+
 function renderProfileCard(){
   const form = $('profile-form');
   if(!form) return;
@@ -1461,8 +1466,7 @@ async function refresh(){
   $('auth-controls').innerHTML=state.user?`<span class='profile-chip'><img src='${esc(getProfile().profilePic || '/assets/default-avatar.svg')}' alt='' class='profile-chip-avatar'/> <a class='pill' href='/profile' style='text-decoration:none'>${esc(state.user.username)}</a><a class='menu-link' href='/profile#settings' aria-label='Settings' title='Settings'>⚙️</a></span><button class='btn btn-ghost' id='logout-btn'>Log Out</button>`:`<a class='menu-link' href='/punters.html#punters-login-gate'>Log in</a>`;
   const loginGate = $('punters-login-gate');
   if (loginGate) loginGate.hidden = Boolean(state.user);
-  const loginCtaWrap = $('punters-login-cta-wrap');
-  if (loginCtaWrap) loginCtaWrap.hidden = Boolean(state.user);
+  syncLoginCtaVisibility();
   const adminNav = $('admin-nav-link');
   if (adminNav) adminNav.style.display = state.user?.role === 'admin' ? 'inline-block' : 'none';
   const b=$('logout-btn'); if(b)b.onclick=logout;
@@ -1472,7 +1476,7 @@ async function refresh(){
   }
 }
 
-async function bootstrap(){if(!state.token)return;try{const me=await req(API.me);state.user=me.user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);} }
+async function bootstrap(){if(!state.token){ syncLoginCtaVisibility(); return; }try{const me=await req(API.me);state.user=me.user;}catch{state.token=null;state.user=null;localStorage.removeItem(tokenKey);} syncLoginCtaVisibility(); }
 
 const loginForm = $('login-form');
 if (loginForm) {
