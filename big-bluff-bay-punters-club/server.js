@@ -341,6 +341,11 @@ function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
       horseName = tokens.slice(0, -1).join(' ').trim();
     }
 
+    horseName = String(horseName || '')
+      .replace(/\s*\((\d{1,2})\)\s*$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     if (!horseName) continue;
 
     const isScratched = /\bSCR\b/i.test(tail);
