@@ -4185,7 +4185,6 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   app.get('/punters', (_req, res) => res.redirect(301, '/punters.html'));
   app.get('/winners', (_req, res) => res.redirect(301, '/winners.html'));
   app.get('/poker-schedule', (_req, res) => res.redirect(301, '/poker-schedule.html'));
-  app.get('/wheel/', (_req, res) => res.redirect(301, '/wheel'));
   app.get('/punters-club/greyhounds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/thoroughbreds', (_req, res) => res.sendFile(path.join(__dirname, 'punters-track.html')));
   app.get('/punters-club/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'punters-results.html')));
