@@ -303,30 +303,56 @@ function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
   const input = String(text || '')
     .replace(/\r\n?/g, ' ')
     .replace(/[–—]+/g, ' ')
-    .replace(/\.{3,}/g, ' ')
-    .replace(/\bSCR\s+SCR\s+SCR\s+SCR\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   if (!input) return [];
 
   const runners = [];
-  const pattern = /([A-Z][A-Z'\- ]*[A-Z])\s+([A-Z]{1,3}\s+[A-Za-z][A-Za-z'\-]*)\s+([0-9xX\-]{3,10})\s+(\d{1,3})\s+((?:\d+(?:\.\d+)?\s+){3}\d+(?:\.\d+)?|(?:SCR\s+){3}SCR)/g;
+  const coreRe = /([0-9xX\-]{3,10})\s+(\d{1,3})\s+((?:\d+(?:\.\d+)?\s+){3}\d+(?:\.\d+)?|(?:SCR\s+){3}SCR)\b/g;
+  let cursor = 0;
   let match;
-  while ((match = pattern.exec(input)) !== null) {
-    const horseName = String(match[1] || '').trim() || null;
-    const trainerRaw = String(match[2] || '').trim() || null;
-    const form = String(match[3] || '').trim() || null;
-    const rating = Number(match[4]);
-    const tail = String(match[5] || '').trim();
+
+  while ((match = coreRe.exec(input)) !== null) {
+    const form = String(match[1] || '').trim() || null;
+    const rating = Number(match[2]);
+    const tail = String(match[3] || '').trim();
+    const prefixRaw = input.slice(cursor, match.index).trim();
+    cursor = match.index + String(match[0] || '').length;
+
+    const cleanedPrefix = prefixRaw
+      .replace(/\.{3,}/g, ' ')
+      .replace(/^(?:\s*SCR\s+){3}SCR\s*/i, '')
+      .replace(/^[\s\-–—]+|[\s\-–—]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!cleanedPrefix) continue;
+
+    const tokens = cleanedPrefix.split(/\s+/).filter(Boolean);
+    if (tokens.length < 2) continue;
+
+    let trainerRaw = null;
+    let horseName = null;
+    if (tokens.length >= 3 && /^[A-Z]{1,3}$/.test(tokens[tokens.length - 2]) && /^[A-Za-z][A-Za-z'\-]*$/.test(tokens[tokens.length - 1])) {
+      trainerRaw = `${tokens[tokens.length - 2]} ${tokens[tokens.length - 1]}`;
+      horseName = tokens.slice(0, -2).join(' ').trim();
+    } else {
+      trainerRaw = tokens[tokens.length - 1] || null;
+      horseName = tokens.slice(0, -1).join(' ').trim();
+    }
+
+    if (!horseName) continue;
+
     const isScratched = /\bSCR\b/i.test(tail);
     const nums = (tail.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter((n) => Number.isFinite(n));
     const idx = runners.length;
+    const warnings = [];
+    if (!form) warnings.push('Missing form');
 
     runners.push({
       raceNumber: Number(raceNumber || 1),
       runnerNumber: idx + 1,
-      horseName,
       barrier: idx + 1,
+      horseName,
       jockeyRaw: null,
       trainerRaw,
       participantsRaw: trainerRaw,
@@ -337,9 +363,9 @@ function parseCompactGreyhoundRunners({ text = '', raceNumber = 1 }) {
         ? { win: null, place: null, alt1: null, alt2: null }
         : { win: nums[0] ?? null, place: nums[1] ?? null, alt1: nums[2] ?? null, alt2: nums[3] ?? null },
       isScratched,
-      warnings: [],
-      confidence: 'high',
-      rawBlock: String(match[0] || '').trim()
+      warnings,
+      confidence: horseName && (isScratched || (nums[0] != null && nums[1] != null)) ? 'high' : 'medium',
+      rawBlock: `${cleanedPrefix} ${form || ''} ${Number.isFinite(rating) ? rating : ''} ${tail}`.replace(/\s+/g, ' ').trim()
     });
   }
 
