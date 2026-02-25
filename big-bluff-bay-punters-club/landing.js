@@ -877,6 +877,17 @@ async function hydrateLandingCritical() {
     const heroProof3 = document.getElementById('hero-proof-3');
     const heroNewHere = document.getElementById('hero-new-here-copy');
     const heroCta = document.getElementById('hero-primary-cta');
+    let loggedIn = false;
+    const token = localStorage.getItem('bbb-token-v3');
+    if (token) {
+      try {
+        const meRes = await fetch('/api/me', { credentials: 'same-origin', headers: { Authorization: `Bearer ${token}` } });
+        loggedIn = meRes.ok;
+        if (!meRes.ok && meRes.status === 401) {
+          try { localStorage.removeItem('bbb-token-v3'); } catch {}
+        }
+      } catch {}
+    }
 
     if (betweenRounds) {
       if (heroKicker) heroKicker.textContent = 'Between rounds • archive + prep mode';
@@ -904,8 +915,8 @@ async function hydrateLandingCritical() {
       if (heroProof3) heroProof3.innerHTML = '<strong>Level up to poker:</strong> convert discipline into nightly and Sunday events.';
       if (heroNewHere) heroNewHere.innerHTML = 'New here? <a href="/winners.html">See recent winners, streaks, and payout history</a>.';
       if (heroCta) {
-        heroCta.textContent = 'Log In to Continue';
-        heroCta.href = '/punters.html#punters-login-gate';
+        heroCta.textContent = loggedIn ? 'Open Punters Dashboard' : 'Log In to Continue';
+        heroCta.href = loggedIn ? '/punters.html' : '/punters.html#punters-login-gate';
       }
       document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
       document.getElementById('status-meet').textContent = meet;
