@@ -580,17 +580,16 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
     }
 
     const now = Date.now();
+    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS'
+      || (String(d?.roundStatus || '').toUpperCase() === 'CLOSED' && !String(d?.raceNumber || '').trim());
     const toLock = Number(d?.lockTime || 0) - now;
     const toStart = Number(d?.startTime || 0) - now;
     const activeCountdown = [toLock, toStart].filter((n) => Number.isFinite(n) && n > 0).sort((a,b)=>a-b)[0] || 0;
-    const mm = String(Math.max(0, Math.floor(activeCountdown / 60000))).padStart(2, '0');
-    const ss = String(Math.max(0, Math.floor((activeCountdown % 60000) / 1000))).padStart(2, '0');
+    const countdownText = fmtHHMMSS(activeCountdown);
     const imminent = activeCountdown > 0 && activeCountdown < 60000;
-    countdownEl.style.display = activeCountdown > 0 ? '' : 'none';
-    countdownEl.textContent = activeCountdown > 0 ? `${mm}:${ss}` : '';
+    countdownEl.style.display = (activeCountdown > 0 && !isBetweenRounds) ? '' : 'none';
+    countdownEl.textContent = (activeCountdown > 0 && !isBetweenRounds) ? countdownText : '';
 
-    const isBetweenRounds = String(d?.roundPhase || '').toUpperCase() === 'BETWEEN_ROUNDS'
-      || (String(d?.roundStatus || '').toUpperCase() === 'CLOSED' && !String(d?.raceNumber || '').trim());
     const rawVenue = String(d?.venue || '').trim();
     const venue = (!isBetweenRounds && rawVenue && !/^venue\s*tba$/i.test(rawVenue)) ? rawVenue : '';
     const raceNum = Number(String(d?.raceNumber || '').replace('R',''));
@@ -615,7 +614,7 @@ async function hydrateNextTipHome(trackId = 'thoroughbreds') {
       contextEl.textContent = 'No meet published yet';
       setLockline('');
     } else if (lockRef > 0 && !hardLocked) {
-      contextEl.textContent = `Locks in ${mm}:${ss} (Melbourne)`;
+      contextEl.textContent = `Locks in ${countdownText} (Melbourne)`;
       setLockline('');
     } else if (lockRef > 0 && hardLocked) {
       contextEl.textContent = `Locked ${new Date(lockRef).toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })} (Melbourne)`;
@@ -848,7 +847,10 @@ async function hydrateLandingCritical() {
       document.getElementById('status-jackpot-label').textContent = 'Carryover ready';
       document.getElementById('status-meet').textContent = 'Awaiting next meet announcement';
       const lockNode = document.getElementById('status-lock');
-      if (lockNode) lockNode.textContent = 'Pending';
+      if (lockNode) {
+        lockNode.textContent = 'Pending';
+        lockNode.dataset.mode = 'pending';
+      }
     } else {
       if (heroKicker) heroKicker.textContent = 'Premium punters-to-poker ladder';
       if (heroSubline) heroSubline.textContent = 'Tip fast. Lock in. Win real. Verified results. Transparent payouts.';
@@ -862,6 +864,8 @@ async function hydrateLandingCritical() {
       }
       document.getElementById('status-jackpot-label').textContent = potValue > 0 ? 'Jackpot live' : 'Jackpot building';
       document.getElementById('status-meet').textContent = meet;
+      const lockNode = document.getElementById('status-lock');
+      if (lockNode) delete lockNode.dataset.mode;
     }
 
     document.getElementById('status-entries').textContent = betweenRounds ? 'Between rounds' : 'Live';
@@ -970,10 +974,9 @@ async function initLockCountdown() {
   } catch {}
 
   const tick = () => {
+    if (lockNode.dataset.mode === 'pending') return;
     const text = fmtCountdown(end - Date.now());
     lockNode.textContent = text;
-    const inlineLock = document.getElementById('next-tip-home-inline-lock');
-    if (inlineLock) inlineLock.textContent = `🔒 Lock: ${text}`;
   };
   tick();
   setInterval(tick, 1000);
