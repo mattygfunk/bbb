@@ -1,5 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const matrixState = { races: [], rows: [], sortKey: 'rank', dir: 'asc' };
+const trackKey = 'bbb-punters-track-v1';
 
 function esc(s){return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 
@@ -129,8 +130,35 @@ async function loadFallback(trackId) {
   return { races, rows, generatedAt: Date.now() };
 }
 
+async function resolveTrackId() {
+  const qs = new URLSearchParams(location.search);
+  const explicit = qs.get('trackId') || qs.get('track') || '';
+  if (explicit) return explicit;
+
+  const stored = localStorage.getItem(trackKey) || '';
+  const tracks = ['greyhounds', 'thoroughbreds'];
+  try {
+    const checks = await Promise.all(tracks.map(async (trackId) => {
+      try {
+        const res = await fetch(`/api/punters/overview?tier=free&trackId=${encodeURIComponent(trackId)}`, { credentials:'same-origin' });
+        const d = await res.json();
+        return { trackId, status: String(d?.round?.status || 'CLOSED').toUpperCase(), phase: String(d?.round?.phase || 'BETWEEN_ROUNDS').toUpperCase() };
+      } catch {
+        return { trackId, status: 'CLOSED', phase: 'BETWEEN_ROUNDS' };
+      }
+    }));
+    const open = checks.find((x) => x.status === 'OPEN' && x.phase !== 'BETWEEN_ROUNDS');
+    const pick = open || checks.find((x) => x.status === 'OPEN') || checks.find((x) => x.phase !== 'BETWEEN_ROUNDS');
+    const resolved = String(pick?.trackId || stored || 'thoroughbreds');
+    try { localStorage.setItem(trackKey, resolved); } catch {}
+    return resolved;
+  } catch {
+    return stored || 'thoroughbreds';
+  }
+}
+
 async function load() {
-  const trackId = new URLSearchParams(location.search).get('trackId') || 'thoroughbreds';
+  const trackId = await resolveTrackId();
   try {
     const res = await fetch(`/api/punters/entrant-matrix?trackId=${encodeURIComponent(trackId)}`, { credentials:'same-origin' });
     const contentType = String(res.headers.get('content-type') || '');
