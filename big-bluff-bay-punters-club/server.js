@@ -896,7 +896,11 @@ function getCurrentRound(store, { autoCreate = true, trackId = 'thoroughbreds' }
   ensurePuntersClubStore(store);
   const tId = normalizeTrackId(trackId);
   const rounds = store.puntersClub.rounds;
-  let open = rounds.find((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'open');
+  const openRounds = rounds
+    .filter((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'open')
+    .sort((a, b) => Number(b.createdAt || b.updatedAt || 0) - Number(a.createdAt || a.updatedAt || 0));
+  let open = openRounds[0] || null;
+
   if (!open && autoCreate) {
     const trackRounds = rounds.filter((r) => normalizeTrackId(r.trackId) === tId);
     open = {
@@ -934,7 +938,10 @@ function getDefaultNextRoundOpenAtMs(trackId = 'thoroughbreds', store = null) {
 
 function getNextScheduledMeet(store = null) {
   const candidates = Object.keys(TRACKS).map((trackId) => {
-    const openAt = getDefaultNextRoundOpenAtMs(trackId, store);
+    const configured = Number(store?.puntersClub?.settings?.[trackId]?.nextRoundOpensAt || 0);
+    const openAt = (Number.isFinite(configured) && configured > 0)
+      ? configured
+      : getDefaultNextRoundOpenAtMs(trackId, store);
     return { trackId, openAt };
   }).sort((a, b) => Number(a.openAt || 0) - Number(b.openAt || 0));
 
@@ -961,7 +968,9 @@ function getNextScheduledMeet(store = null) {
 
 function getLatestClosedRound(store, trackId = 'thoroughbreds') {
   const tId = normalizeTrackId(trackId);
-  return (store.puntersClub?.rounds || []).find((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'closed') || null;
+  return (store.puntersClub?.rounds || [])
+    .filter((r) => normalizeTrackId(r.trackId) === tId && String(r.status || '').toLowerCase() === 'closed')
+    .sort((a, b) => Number(b.closedAt || b.updatedAt || b.createdAt || 0) - Number(a.closedAt || a.updatedAt || a.createdAt || 0))[0] || null;
 }
 
 function pickLarrikinLine() {
@@ -3713,6 +3722,8 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const store = readStore();
     ensurePuntersClubStore(store);
     const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const existingOpen = getCurrentRound(store, { autoCreate: false, trackId });
+    if (existingOpen) return res.json({ ok: true, round: existingOpen, alreadyOpen: true });
     const count = (store.puntersClub.rounds || []).filter((r)=>normalizeTrackId(r.trackId)===trackId).length;
     const label = String(req.body?.label || '').trim() || `${TRACKS[trackId].name} Round ${count + 1}`;
     const round = { id: crypto.randomUUID(), trackId, label, status: 'open', createdAt: Date.now(), entryFee: Number(req.body?.entryFee || store.entryFee || 20), payments: [], entries: [], payouts: [] };
@@ -3728,7 +3739,17 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     if (!round) return res.status(404).json({ error: 'Round not found' });
     const status = String(req.body?.status || '').toLowerCase();
     if (!['open', 'closed', 'settled'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+    if (status === 'open') {
+      const trackId = normalizeTrackId(round.trackId);
+      const existingOpen = (store.puntersClub?.rounds || []).find((r) => String(r.id) !== id && normalizeTrackId(r.trackId) === trackId && String(r.status || '').toLowerCase() === 'open');
+      if (existingOpen) {
+        return res.status(409).json({ error: `Another OPEN round already exists for ${trackId}. Close it before reopening this round.`, existingOpenId: existingOpen.id });
+      }
+    }
+
     round.status = status;
+    if (status === 'closed' && !round.closedAt) round.closedAt = Date.now();
     round.updatedAt = Date.now();
     writeStore(store);
     return res.json({ ok: true, round });
