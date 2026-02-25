@@ -544,6 +544,8 @@ function renderTierStrip(overview){
 
 function renderUpgradeButtonState(){
   const btn = $('upgrade-tier-btn');
+  const section = $('pricing-explainer-section');
+  if (section) section.hidden = Boolean(state.isJackpotEligible);
   if(!btn) return;
   if(state.roundStatus !== 'OPEN'){
     btn.textContent = 'Round finished ✅';
