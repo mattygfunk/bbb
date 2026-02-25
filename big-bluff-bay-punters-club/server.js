@@ -1273,7 +1273,8 @@ function normalizeMilestoneRounds(store) {
           member: String(topWinner || '').trim() || null,
           payout
         },
-        label: r.label
+        label: r.label,
+        trackId: normalizeTrackId(r.trackId)
       };
     });
 
@@ -1287,8 +1288,10 @@ function normalizeMilestoneRounds(store) {
   }));
 }
 
-function computeMilestonesData(store) {
-  const rounds = normalizeMilestoneRounds(store);
+function computeMilestonesData(store, trackId = 'thoroughbreds') {
+  const tId = normalizeTrackId(trackId);
+  const rounds = normalizeMilestoneRounds(store)
+    .filter((round) => normalizeTrackId(round?.trackId || 'thoroughbreds') === tId);
   const streakThresholds = [4, 8, 12, 26, 52];
   const winThresholds = [3, 5, 10];
 
@@ -1317,7 +1320,12 @@ function computeMilestonesData(store) {
     if (winner) ensure(winner).totalWins += 1;
   }
 
-  const openParticipants = new Set((store.tips || []).filter((t) => t.status !== 'removed').map((t) => String(t.member || '').trim()).filter(Boolean));
+  const openParticipants = new Set(
+    (store.tips || [])
+      .filter((t) => t.status !== 'removed' && normalizeTrackId(t.trackId || 'thoroughbreds') === tId)
+      .map((t) => String(t.member || '').trim())
+      .filter(Boolean)
+  );
   if (openParticipants.size) {
     openParticipants.forEach((m) => ensure(m));
     for (const row of stats.values()) {
@@ -3336,9 +3344,10 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   });
 
 
-  app.get('/api/milestones', (_req, res) => {
+  app.get('/api/milestones', (req, res) => {
     const store = readStore();
-    return res.json(computeMilestonesData(store));
+    const trackId = normalizeTrackId(req.query.track || req.query.trackId);
+    return res.json({ trackId, ...computeMilestonesData(store, trackId) });
   });
 
   app.get('/api/jackpot', (req, res) => {
