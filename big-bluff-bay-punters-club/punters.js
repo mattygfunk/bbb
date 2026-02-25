@@ -406,9 +406,10 @@ function renderRaceInputs(count){
         const num = String(r?.runnerNumber || '').trim();
         const horse = String(r?.horseName || '').trim();
         const barrier = r?.barrier == null ? '' : ` (B${r.barrier})`;
+        const win = r?.prices?.win == null ? '' : ` • Win ${r.prices.win}`;
         const place = r?.prices?.place == null ? '' : ` • Plc ${r.prices.place}`;
         const labelCore = `${num || '?'} ${horse}`.trim();
-        const label = `${labelCore}${barrier}${place}`.trim();
+        const label = `${labelCore}${barrier}${win}${place}`.trim();
         const value = num || String(labelCore.match(/#?(\d{1,2})/)?.[1] || '');
         const disabled = r?.isScratched ? 'disabled' : '';
         const scr = r?.isScratched ? ' [SCR]' : '';
