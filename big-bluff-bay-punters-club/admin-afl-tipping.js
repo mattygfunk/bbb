@@ -804,21 +804,9 @@ function parseTabImport() {
       const year = new Date().getFullYear();
       const dateStr = `${dateMatch[2]} ${dateMatch[3]} ${year} ${dateMatch[4]}:00 GMT+1100`;
       kickoffMs = new Date(dateStr).getTime();
-
-      // Venue: the word(s) immediately after the time (no space between time and venue e.g. "19:30Fox")
-      // dateMatch[5] catches chars attached to the time (e.g. "Fox"), then grab the next word
-      const attached = dateMatch[5] || ''; // e.g. "Fox"
-      const afterDate = nextPart.slice(dateMatch[0].length).trim(); // e.g. "Footy Gold Coast v..."
-      if (attached || afterDate) {
-        // Grab words until we hit a team-name-like start or " v "
-        const venueRaw = (attached + ' ' + afterDate).trim();
-        const venueEnd = venueRaw.search(teamStartRe);
-        const venueStr = venueEnd > 0 ? venueRaw.slice(0, venueEnd).trim() : venueRaw.split(/\s{2,}/)[0].trim();
-        if (venueStr) venue = venueStr;
-      }
     }
 
-    games.push({ homeTeam, awayTeam, line, homeOdds, awayOdds, kickoffMs, venue });
+    games.push({ homeTeam, awayTeam, line, homeOdds, awayOdds, kickoffMs, venue: '' });
   }
 
   importedGames = games;
@@ -845,7 +833,6 @@ function parseTabImport() {
           <th>Line</th>
           <th>H2H (Home / Away)</th>
           <th>Kickoff (Melb)</th>
-          <th>Venue</th>
         </tr>
       </thead>
       <tbody>
@@ -857,7 +844,6 @@ function parseTabImport() {
             <td style="color:var(--afl-light);">${escHtml(g.line)}</td>
             <td style="color:var(--muted);">${g.homeOdds ? g.homeOdds + ' / ' + g.awayOdds : '—'}</td>
             <td>${g.kickoffMs ? fmtDate(g.kickoffMs) : '<span style="color:#ef4444;">⚠️ No date</span>'}</td>
-            <td style="color:var(--muted);font-size:.85em;">${escHtml(g.venue)}</td>
           </tr>
         `).join('')}
       </tbody>
