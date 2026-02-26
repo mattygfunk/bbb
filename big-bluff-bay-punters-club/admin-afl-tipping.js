@@ -39,6 +39,7 @@ function showMsg(id, msg, ok = true) {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
+// Used by admin-afl-tipping.html (standalone). admin.html uses aflShowTab (inline script).
 window.showTab = function (name) {
   document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
@@ -55,6 +56,11 @@ window.showTab = function (name) {
   if (name === 'email') loadRoundsForEmailSelectors();
   if (name === 'analytics') loadAnalytics();
 };
+
+// Auto-init on standalone page
+if (document.getElementById('admin-content')) {
+  // standalone admin-afl-tipping.html — auth handled separately above
+}
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 let adminToken = null;
@@ -380,7 +386,9 @@ window.lockRound = async function (roundId) {
 };
 
 window.goToResults = function (roundId) {
-  showTab('results');
+  // Works in both standalone (showTab) and embedded in admin.html (aflShowTab)
+  if (typeof window.aflShowTab === 'function') window.aflShowTab('results');
+  else showTab('results');
   document.getElementById('results-round-selector').value = roundId;
   loadRoundForResults();
 };
