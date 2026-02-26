@@ -50,17 +50,13 @@
             <a class="menu-link" href="/">🏠 Home</a>
             <a class="menu-link active" href="/afl-tipping">🏉 AFL Tipping</a>
             <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
-            <a class="menu-link" href="/poker-schedule.html">♠️ Poker</a>
-            <a class="menu-link" href="/alerts">🔔 Alerts</a>
-          </div>
-          <div id="auth-controls"></div>
-        </div>
+            <a class="menu-link" href="/poker-schedule.html">♠️ Poker</a></div>
+          <div id="auth-controls"></div></div>
       </nav>
       <div class="hero-body wrap">
         <div class="hero-kicker afl-hero-kicker">🏉 AFL Tipping</div>
         <h1 class="hero-title">Winners &amp; History</h1>
-        <p class="hero-sub">Weekly winners, jackpot trajectory, and season milestones.</p>
-      </div>
+        <p class="hero-sub">Weekly winners, jackpot trajectory, and season milestones.</p></div>
     </header>
 
     <main class="wrap" style="padding-top:1.5rem;padding-bottom:4rem;max-width:800px;">
@@ -71,7 +67,7 @@
         <a href="/afl-tipping/leaderboard">🏆 Leaderboard</a>
         <a href="/afl-tipping/results">📊 Results</a>
         <a href="/afl-tipping/rules">📋 Rules</a>
-        <a href="/afl-tipping/winners" class="active">🥇 Winners</a>
+        
       </nav>
 
       <!-- Season stats -->
@@ -81,9 +77,7 @@
           <div class="season-stat"><div class="big" id="stat-rounds-played">—</div><div class="label">Rounds played</div></div>
           <div class="season-stat"><div class="big" id="stat-weeks-won">—</div><div class="label">Jackpot weeks won</div></div>
           <div class="season-stat"><div class="big" id="stat-weeks-rolled">—</div><div class="label">Jackpot rollovers</div></div>
-          <div class="season-stat"><div class="big" id="stat-current-jackpot">$—</div><div class="label">Current jackpot</div></div>
-        </div>
-      </div>
+          <div class="season-stat"><div class="big" id="stat-current-jackpot">$—</div><div class="label">Current jackpot</div></div></div></div>
 
       <!-- Jackpot trajectory -->
       <div class="card" style="margin-bottom:1.5rem;">
@@ -95,42 +89,33 @@
           <div class="traj-dot traj-pending">Rnd 3</div>
           <div class="traj-dot traj-pending">Rnd 4</div>
           <div class="traj-dot traj-pending">Rnd 5</div>
-          <div class="traj-dot traj-pending">Rnd 6</div>
-        </div>
-        <p style="color:var(--muted);font-size:.85rem;" id="jackpot-traj-note">Loading jackpot history…</p>
-      </div>
+          <div class="traj-dot traj-pending">Rnd 6</div></div>
+        <p style="color:var(--muted);font-size:.85rem;" id="jackpot-traj-note">Loading jackpot history…</p></div>
 
       <!-- Season leader highlight -->
       <div class="card" style="margin-bottom:1.5rem;background:#0c1d3a;border-color:#1e40af;">
         <h2 style="color:#93c5fd;margin-top:0;">📈 Current Season Leader</h2>
         <div id="season-leader-area">
-          <p style="color:var(--muted);">Loading leaderboard…</p>
-        </div>
-      </div>
+          <p style="color:var(--muted);">Loading leaderboard…</p></div></div>
 
       <!-- Weekly winners table -->
       <div class="card" style="margin-bottom:1.5rem;">
         <h2 style="color:#93c5fd;margin-top:0;">🏆 Weekly Winners</h2>
         <p style="color:var(--muted);font-size:.85rem;">Orange rows = jackpot rolled over (tied week, no outright winner).</p>
         <div id="weekly-winners-area">
-          <div class="loading-msg">Loading weekly results…</div>
-        </div>
-      </div>
+          <div class="loading-msg">Loading weekly results…</div></div></div>
 
       <!-- Season ladder top 3 -->
       <div class="card" style="margin-bottom:1.5rem;">
         <h2 style="color:#93c5fd;margin-top:0;">🥇 Season Top 3</h2>
         <div id="top3-area">
-          <p style="color:var(--muted);">No completed rounds yet.</p>
-        </div>
-        <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="margin-top:1rem;display:inline-block;">View Full Leaderboard →</a>
-      </div>
+          <p style="color:var(--muted);">No completed rounds yet.</p></div>
+        <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="margin-top:1rem;display:inline-block;">View Full Leaderboard →</a></div>
 
       <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;">
         <a href="/afl-tipping" class="btn btn-ghost">← Back to Hub</a>
         <a href="/afl-tipping/results" class="btn btn-ghost">📊 Results Archive</a>
-        <a href="/afl-tipping/leaderboard" class="btn btn-primary">🏆 Full Leaderboard</a>
-      </div>
+        <a href="/afl-tipping/leaderboard" class="btn btn-primary">🏆 Full Leaderboard</a></div>
 
     </main>
 
@@ -213,9 +198,7 @@
                 <div>
                   <div style="font-size:1.3rem;font-weight:800;color:var(--text);">${escHtml(leader.member || leader.handle || 'Unknown')}</div>
                   <div style="color:#93c5fd;font-weight:700;font-size:1.1rem;">${leader.points || leader.seasonPoints || 0} pts</div>
-                  <div style="color:var(--muted);font-size:.85rem;">${leader.roundsPlayed || '—'} rounds tipped</div>
-                </div>
-              </div>`;
+                  <div style="color:var(--muted);font-size:.85rem;">${leader.roundsPlayed || '—'} rounds tipped</div></div></div>`;
           } else {
             leaderEl.innerHTML = '<p style="color:var(--muted);">No scores yet. Season starts with Round 1.</p>';
           }
@@ -233,11 +216,9 @@
               const payout = result.payout || result.jackpotAmount;
               html += `<div class="${rowClass}">
                 <div class="winner-round">${r.label || `Rnd ${r.roundNumber}`}</div>
-                <div class="winner-handle">${winnerName ? escHtml(winnerName) : '<span class="rollover-badge">ROLLOVER</span>'}
-                </div>
+                <div class="winner-handle">${winnerName ? escHtml(winnerName) : '<span class="rollover-badge">ROLLOVER</span>'}</div>
                 <div class="winner-score">${score} correct</div>
-                <div class="winner-payout">${hasWinner && payout ? `$${payout}` : hasWinner ? '$30' : '—'}</div>
-              </div>`;
+                <div class="winner-payout">${hasWinner && payout ? `$${payout}` : hasWinner ? '$30' : '—'}</div></div>`;
             }
             html += '</div>';
             winEl.innerHTML = html;
@@ -252,8 +233,7 @@
               html += `<div style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--line);">
                 <span style="font-size:1.5rem;">${medals[i]}</span>
                 <span style="flex:1;font-weight:600;">${escHtml(p.member || p.handle || 'Unknown')}</span>
-                <span style="color:#93c5fd;font-weight:700;">${p.points || p.seasonPoints || 0} pts</span>
-              </div>`;
+                <span style="color:#93c5fd;font-weight:700;">${p.points || p.seasonPoints || 0} pts</span></div>`;
             });
             top3El.innerHTML = html;
           }
