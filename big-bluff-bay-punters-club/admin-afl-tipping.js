@@ -148,17 +148,18 @@ if (_aflLogoutBtn) {
 async function loadAdminOverview() {
   try {
     const data = await apiReq('/afl-tipping/admin/overview');
-    setEl('ov-confirmed', data.confirmedCount ?? '—');
-    setEl('ov-pending', data.pendingCount ?? '—');
-    const pot = (data.confirmedCount || 0) * (data.season?.entryFee || 75);
+    const entries = data.entries || [];
+    const confirmedCount = entries.filter((e) => e.status === 'confirmed').length;
+    const pendingCount = entries.filter((e) => e.status === 'pending').length;
+    setEl('ov-confirmed', confirmedCount);
+    setEl('ov-pending', pendingCount);
+    const pot = confirmedCount * (data.season?.entryFee || 75);
     setEl('ov-pot', fmt$(pot));
     setEl('ov-rollover', fmt$(data.weeklyRollover || 0));
     const net = pot * 0.80;
     setEl('ov-prize-1', fmt$(net * 0.40));
     setEl('ov-prize-2', fmt$(net * 0.25));
     setEl('ov-prize-3', fmt$(net * 0.15));
-    // Clear any previous error
-    setEl('ov-error', '');
   } catch (err) {
     console.error('Overview load failed:', err.message);
     setEl('ov-confirmed', '❌');
@@ -663,7 +664,7 @@ async function loadAnalytics() {
     setEl('an-total-rounds', data.totalRounds ?? '—');
     setEl('an-scored-rounds', data.scoredRounds ?? '—');
     setEl('an-confirmed', data.confirmedCount ?? '—');
-    setEl('an-pending', data.pendingCount ?? '—');
+    setEl('an-pending', data.pendingCount ?? (data.confirmedCount != null ? '0' : '—'));
 
     // Render participation chart
     const canvas = document.getElementById('participation-chart');
