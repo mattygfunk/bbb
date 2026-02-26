@@ -59,16 +59,18 @@ window.showTab = function (name) {
   _aflLazyLoad(name);
 };
 
-// Embedded in admin.html
-window.aflShowTab = function (name) {
-  document.querySelectorAll('.afl-tab-pane').forEach((t) => t.classList.remove('active'));
-  document.querySelectorAll('.afl-tab-btn').forEach((b) => b.classList.remove('active'));
-  const tab = document.getElementById(`afl-tab-${name}`);
-  if (tab) tab.classList.add('active');
-  const btn = [...document.querySelectorAll('.afl-tab-btn')].find((b) => b.getAttribute('onclick') === `aflShowTab('${name}')`);
-  if (btn) btn.classList.add('active');
-  _aflLazyLoad(name);
-};
+// Embedded in admin.html — only define if not already defined by inline script
+if (!window.aflShowTab) {
+  window.aflShowTab = function (name) {
+    document.querySelectorAll('.afl-admin-tab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.afl-tab-btn').forEach((b) => b.classList.remove('active'));
+    const tab = document.getElementById(`afl-tab-${name}`);
+    if (tab) tab.classList.add('active');
+    const btn = [...document.querySelectorAll('.afl-tab-btn')].find((b) => b.getAttribute('onclick') === `aflShowTab('${name}')`);
+    if (btn) btn.classList.add('active');
+    _aflLazyLoad(name);
+  };
+}
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 let adminToken = null;
