@@ -3,14 +3,14 @@
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'bbb-token-v3';
-const API = '/api';
+const AFL_API = '/api';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem(TOKEN_KEY); }
 
 async function apiReq(path, opt = {}) {
   const token = getToken();
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${AFL_API}${path}`, {
     ...opt,
     credentials: 'same-origin',
     headers: {
