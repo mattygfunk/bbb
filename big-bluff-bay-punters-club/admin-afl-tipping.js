@@ -39,7 +39,16 @@ function showMsg(id, msg, ok = true) {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
-// Used by admin-afl-tipping.html (standalone). admin.html uses aflShowTab (inline script).
+function _aflLazyLoad(name) {
+  if (name === 'entries') loadEntries();
+  if (name === 'rounds') loadRounds();
+  if (name === 'results') loadRoundsForSelector();
+  if (name === 'payouts') { loadRoundsForSelector(); loadPayoutHistory(); }
+  if (name === 'email') loadRoundsForEmailSelectors();
+  if (name === 'analytics') loadAnalytics();
+}
+
+// Standalone page (admin-afl-tipping.html)
 window.showTab = function (name) {
   document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
@@ -47,50 +56,52 @@ window.showTab = function (name) {
   if (tab) tab.classList.add('active');
   const btn = [...document.querySelectorAll('.tab-btn')].find((b) => b.getAttribute('onclick') === `showTab('${name}')`);
   if (btn) btn.classList.add('active');
-
-  // Lazy-load tab data
-  if (name === 'entries') loadEntries();
-  if (name === 'rounds') loadRounds();
-  if (name === 'results') loadRoundsForSelector();
-  if (name === 'payouts') { loadRoundsForSelector(); loadPayoutHistory(); }
-  if (name === 'email') loadRoundsForEmailSelectors();
-  if (name === 'analytics') loadAnalytics();
+  _aflLazyLoad(name);
 };
 
-// Auto-init on standalone page
-if (document.getElementById('admin-content')) {
-  // standalone admin-afl-tipping.html — auth handled separately above
-}
+// Embedded in admin.html
+window.aflShowTab = function (name) {
+  document.querySelectorAll('.afl-tab-pane').forEach((t) => t.classList.remove('active'));
+  document.querySelectorAll('.afl-tab-btn').forEach((b) => b.classList.remove('active'));
+  const tab = document.getElementById(`afl-tab-${name}`);
+  if (tab) tab.classList.add('active');
+  const btn = [...document.querySelectorAll('.afl-tab-btn')].find((b) => b.getAttribute('onclick') === `aflShowTab('${name}')`);
+  if (btn) btn.classList.add('active');
+  _aflLazyLoad(name);
+};
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 let adminToken = null;
 
-document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('admin-username').value.trim();
-  const password = document.getElementById('admin-password').value;
-  const errEl = document.getElementById('login-error');
-  errEl.style.display = 'none';
-
-  try {
-    const data = await apiReq('/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password })
-    });
-    if (!data.token) throw new Error('No token returned');
-    if (data.user && data.user.role !== 'admin') throw new Error('Not an admin account');
-    localStorage.setItem(TOKEN_KEY, data.token);
-    adminToken = data.token;
-    showAdminUI(data.user);
-  } catch (err) {
-    errEl.textContent = err.message || 'Login failed';
-    errEl.style.display = 'block';
-  }
-});
+// Standalone login form (only exists on admin-afl-tipping.html, not when embedded)
+const _aflLoginForm = document.getElementById('admin-login-form');
+if (_aflLoginForm) {
+  _aflLoginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('admin-username').value.trim();
+    const password = document.getElementById('admin-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.style.display = 'none';
+    try {
+      const data = await apiReq('/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+      if (!data.token) throw new Error('No token returned');
+      if (data.user && data.user.role !== 'admin') throw new Error('Not an admin account');
+      localStorage.setItem(TOKEN_KEY, data.token);
+      adminToken = data.token;
+      showAdminUI(data.user);
+    } catch (err) {
+      errEl.textContent = err.message || 'Login failed';
+      errEl.style.display = 'block';
+    }
+  });
+}
 
 function showAdminUI(user) {
-  document.getElementById('login-gate').style.display = 'none';
-  document.getElementById('admin-content').style.display = 'block';
+  // Standalone mode: show/hide login gate
+  const loginGate = document.getElementById('login-gate');
+  const adminContent = document.getElementById('admin-content');
+  if (loginGate) loginGate.style.display = 'none';
+  if (adminContent) adminContent.style.display = 'block';
   const statusEl = document.getElementById('admin-status');
   if (statusEl) statusEl.textContent = `Logged in as ${user.username}`;
   const logoutBtn = document.getElementById('admin-logout-btn');
@@ -98,15 +109,28 @@ function showAdminUI(user) {
   loadAdminOverview();
 }
 
-document.getElementById('admin-logout-btn').addEventListener('click', () => {
-  localStorage.removeItem(TOKEN_KEY);
-  location.reload();
-});
+const _aflLogoutBtn = document.getElementById('admin-logout-btn');
+if (_aflLogoutBtn) {
+  _aflLogoutBtn.addEventListener('click', () => {
+    localStorage.removeItem(TOKEN_KEY);
+    location.reload();
+  });
+}
 
-// Auto-login if token exists
+// Auto-init: if token exists and we're embedded in admin.html (no login-gate),
+// just grab the token directly. If standalone, verify via /me first.
 (async function checkExistingSession() {
   const token = getToken();
   if (!token) return;
+
+  // Embedded mode: no login-gate means admin.html already authenticated us
+  if (!document.getElementById('login-gate')) {
+    adminToken = token;
+    loadAdminOverview();
+    return;
+  }
+
+  // Standalone mode: verify token
   try {
     const me = await apiReq('/me');
     if (me.user && me.user.role === 'admin') {
@@ -175,7 +199,7 @@ async function loadEntries() {
       `).join('')}
     `;
   } catch (err) {
-    if (loadEl) loadEl.textContent = 'Failed to load entries: ' + err.message;
+    if (loadEl) { loadEl.style.display = ''; loadEl.textContent = '❌ Failed to load entries: ' + err.message; }
   }
 }
 
