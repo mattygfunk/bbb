@@ -914,6 +914,21 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
     }
   });
 
+  // DELETE /api/afl-tipping/admin/rounds/:roundId
+  app.delete('/api/afl-tipping/admin/rounds/:roundId', auth, adminCheck, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const idx = at.rounds.findIndex((r) => r.id === req.params.roundId);
+      if (idx === -1) return res.status(404).json({ ok: false, error: 'Round not found' });
+      at.rounds.splice(idx, 1);
+      writeStore(store);
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   // POST /api/afl-tipping/admin/rounds/:roundId/result
   app.post('/api/afl-tipping/admin/rounds/:roundId/result', auth, adminCheck, (req, res) => {
     try {

@@ -376,7 +376,9 @@ async function loadRounds() {
     }
 
     const statusColor = { pending: '#fde68a', open: '#86efac', locked: '#93c5fd', scoring: '#f59e0b', scored: '#86efac' };
-    listEl.innerHTML = data.rounds.map((r) => `
+    listEl.innerHTML = data.rounds.map((r) => {
+    const hasZeroKickoffs = (r.games || []).some((g) => !g.kickoff || g.kickoff === 0);
+    return `
       <div class="round-row">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;flex-wrap:wrap;gap:.5rem;">
           <strong style="color:var(--afl-light);">${escHtml(r.label)}</strong>
@@ -387,18 +389,87 @@ async function loadRounds() {
           ${r.openAt ? ` &bull; Opens ${fmtDate(r.openAt)}` : ''}
           ${r.lockAt ? ` &bull; Locks ${fmtDate(r.lockAt)}` : ''}
         </div>
+        ${hasZeroKickoffs ? `<div style="color:#f59e0b;font-size:.85em;margin-bottom:.5rem;">⚠️ Some games have missing kickoff times — fix below before opening.</div>` : ''}
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
           ${r.status === 'pending' ? `<button class="btn btn-ghost" style="font-size:.85em;" onclick="openRound('${r.id}')">▶ Open for Tipping</button>` : ''}
           ${r.status === 'open' ? `<button class="btn btn-ghost" style="font-size:.85em;" onclick="lockRound('${r.id}')">🔒 Lock Round</button>` : ''}
           ${(r.status === 'locked' || r.status === 'open') ? `<button class="btn btn-primary" style="font-size:.85em;" onclick="goToResults('${r.id}')">📋 Set Results & Score</button>` : ''}
           ${r.status === 'scored' ? `<span style="color:#86efac;font-size:.85em;">✅ Scored</span>` : ''}
+          <button class="btn btn-ghost" style="font-size:.85em;" onclick="editRoundKickoffs('${r.id}')">✏️ Edit Kickoffs</button>
+          <button class="btn btn-danger" style="font-size:.85em;" onclick="deleteRound('${r.id}','${escHtml(r.label)}')">🗑 Delete</button>
         </div>
+        <div id="kickoff-editor-${r.id}" style="display:none;margin-top:.75rem;"></div>
       </div>
-    `).join('');
+    `;
+  }).join('');
   } catch (err) {
     if (loadEl) loadEl.textContent = 'Failed to load rounds: ' + err.message;
   }
 }
+
+window.deleteRound = async function (roundId, label) {
+  if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+  try {
+    await apiReq(`/afl-tipping/admin/rounds/${roundId}`, { method: 'DELETE' });
+    loadRounds();
+  } catch (err) { alert('Failed: ' + err.message); }
+};
+
+window.editRoundKickoffs = async function (roundId) {
+  const editorEl = document.getElementById(`kickoff-editor-${roundId}`);
+  if (!editorEl) return;
+  if (editorEl.style.display !== 'none') { editorEl.style.display = 'none'; return; }
+
+  try {
+    const data = await apiReq(`/afl-tipping/rounds/${roundId}`);
+    const games = data.round?.games || [];
+
+    editorEl.innerHTML = `
+      <div class="card" style="background:#0a1628;">
+        <h4 style="color:var(--afl-light);margin-top:0;">✏️ Edit Kickoff Times (Melbourne)</h4>
+        ${games.map((g) => {
+          const localVal = g.kickoff
+            ? new Date(g.kickoff).toLocaleString('sv-SE', { timeZone: 'Australia/Melbourne' }).slice(0, 16)
+            : '';
+          return `
+            <div style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center;margin-bottom:.5rem;">
+              <div style="font-size:.9em;"><strong>${escHtml(g.homeTeam)}</strong> vs <strong>${escHtml(g.awayTeam)}</strong></div>
+              <input type="datetime-local" class="form-input" id="ko-${g.id}" value="${localVal}" style="max-width:220px;" />
+            </div>
+          `;
+        }).join('')}
+        <div style="margin-top:.75rem;display:flex;gap:.5rem;">
+          <button class="btn btn-primary" style="font-size:.85em;" onclick="saveKickoffs('${roundId}')">💾 Save Kickoffs</button>
+          <button class="btn btn-ghost" style="font-size:.85em;" onclick="document.getElementById('kickoff-editor-${roundId}').style.display='none'">Cancel</button>
+          <span id="ko-save-msg-${roundId}" style="font-size:.85em;align-self:center;"></span>
+        </div>
+      </div>
+    `;
+    editorEl.style.display = '';
+  } catch (err) { alert('Failed to load round: ' + err.message); }
+};
+
+window.saveKickoffs = async function (roundId) {
+  const msgEl = document.getElementById(`ko-save-msg-${roundId}`);
+  try {
+    const data = await apiReq(`/afl-tipping/rounds/${roundId}`);
+    const games = data.round?.games || [];
+    const updatedGames = games.map((g) => {
+      const input = document.getElementById(`ko-${g.id}`);
+      const val = input ? input.value : '';
+      const kickoff = val ? new Date(val + ':00+11:00').getTime() : (g.kickoff || 0);
+      return { ...g, kickoff };
+    });
+    await apiReq(`/afl-tipping/admin/rounds/${roundId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ games: updatedGames })
+    });
+    if (msgEl) { msgEl.textContent = '✅ Saved!'; msgEl.style.color = 'var(--brand)'; }
+    loadRounds();
+  } catch (err) {
+    if (msgEl) { msgEl.textContent = '❌ ' + err.message; msgEl.style.color = '#ef4444'; }
+  }
+};
 
 window.openRound = async function (roundId) {
   try {
@@ -840,8 +911,11 @@ function parseTabImport() {
 
     if (dateMatch) {
       const year = new Date().getFullYear();
-      const dateStr = `${dateMatch[2]} ${dateMatch[3]} ${year} ${dateMatch[4]}:00 GMT+1100`;
-      kickoffMs = new Date(dateStr).getTime();
+      const months = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' };
+      const mm = months[dateMatch[3]] || '01';
+      const dd = String(dateMatch[2]).padStart(2, '0');
+      const isoStr = `${year}-${mm}-${dd}T${dateMatch[4]}:00+11:00`;
+      kickoffMs = new Date(isoStr).getTime();
     }
 
     games.push({ homeTeam, awayTeam, line, homeOdds, awayOdds, kickoffMs, venue: '' });
