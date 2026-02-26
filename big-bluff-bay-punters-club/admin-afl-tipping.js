@@ -754,29 +754,49 @@ function parseTabImport() {
     return;
   }
 
-  // Split on "Head To Head" — each segment before it is one game's betting block
+  // Split on "Head To Head" — segment[i] contains game[i]'s betting info (possibly
+  // prefixed with the previous game's date/venue) and segment[i+1] starts with game[i]'s date.
   const parts = text.split('Head To Head');
   const games = [];
 
-  for (let i = 0; i < parts.length - 1; i++) {
-    const gamePart = parts[i].trim();
-    const nextPart = (parts[i + 1] || '').trim();
+  // Build a regex that matches any known team name at the start of a "X v Y N Markets" block
+  const allTabTeams = Object.keys(TAB_TEAM_MAP).concat(AFL_TEAMS)
+    .map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .sort((a, b) => b.length - a.length); // longest first to avoid partial matches
+  const teamStartRe = new RegExp(`(${allTabTeams.join('|')})\\s+v\\s+`, 'i');
 
-    // Extract home vs away: "<Home> v <Away> 3 Markets ..."
-    const gameMatch = gamePart.match(/^(.+?)\s+v\s+(.+?)\s+\d+\s+Markets/i);
+  for (let i = 0; i < parts.length - 1; i++) {
+    let raw = parts[i].trim();
+
+    // For i > 0: raw starts with the previous game's date+venue text.
+    // Find where the actual "Team v Team N Markets" block starts.
+    if (i > 0) {
+      const m = raw.match(teamStartRe);
+      if (m) {
+        raw = raw.slice(raw.indexOf(m[0]));
+      } else {
+        continue; // can't find a team name — skip
+      }
+    }
+
+    // Extract home vs away: "<Home> v <Away> N Markets ..."
+    const gameMatch = raw.match(/^(.+?)\s+v\s+(.+?)\s+\d+\s+Markets/i);
     if (!gameMatch) continue;
 
     const homeTeam = mapTabTeam(gameMatch[1].trim());
     const awayTeam = mapTabTeam(gameMatch[2].trim());
 
     // Line: "Line (-22.5) 1.90 1.28 3.70 (+22.5) 1.90"
-    const lineMatch = gamePart.match(/Line\s+\(([^)]+)\)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i);
+    const lineMatch = raw.match(/Line\s+\(([^)]+)\)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i);
     const line = lineMatch ? lineMatch[1] : '';
     const homeOdds = lineMatch ? lineMatch[3] : '';
     const awayOdds = lineMatch ? lineMatch[4] : '';
 
-    // Date/time is at start of next segment: "Thu 5 Mar 19:30Fox Footy..."
-    const dateMatch = nextPart.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{2}:\d{2})(.*?)(?=Mon|Tue|Wed|Thu|Fri|Sat|Sun|$)/i);
+    // Date/time is at the START of parts[i+1]: e.g. "Thu 5 Mar 19:30Fox Footy Gold Coast v..."
+    const nextPart = (parts[i + 1] || '').trim();
+    const dateMatch = nextPart.match(
+      /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{2}:\d{2})(\S*)/i
+    );
     let kickoffMs = null;
     let venue = 'Fox Footy';
 
@@ -784,9 +804,18 @@ function parseTabImport() {
       const year = new Date().getFullYear();
       const dateStr = `${dateMatch[2]} ${dateMatch[3]} ${year} ${dateMatch[4]}:00 GMT+1100`;
       kickoffMs = new Date(dateStr).getTime();
-      // Venue is whatever follows the time (strip trailing whitespace/newlines)
-      const afterTime = dateMatch[5].trim();
-      if (afterTime) venue = afterTime.split(/\n/)[0].trim();
+
+      // Venue: the word(s) immediately after the time (no space between time and venue e.g. "19:30Fox")
+      // dateMatch[5] catches chars attached to the time (e.g. "Fox"), then grab the next word
+      const attached = dateMatch[5] || ''; // e.g. "Fox"
+      const afterDate = nextPart.slice(dateMatch[0].length).trim(); // e.g. "Footy Gold Coast v..."
+      if (attached || afterDate) {
+        // Grab words until we hit a team-name-like start or " v "
+        const venueRaw = (attached + ' ' + afterDate).trim();
+        const venueEnd = venueRaw.search(teamStartRe);
+        const venueStr = venueEnd > 0 ? venueRaw.slice(0, venueEnd).trim() : venueRaw.split(/\s{2,}/)[0].trim();
+        if (venueStr) venue = venueStr;
+      }
     }
 
     games.push({ homeTeam, awayTeam, line, homeOdds, awayOdds, kickoffMs, venue });
