@@ -10,9 +10,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css?v=20260226-1" />
-    <script defer src="analytics.js?v=20260226-1"></script>
+    <link rel="preload" href="/styles.css" as="style" />
+    <link rel="stylesheet" href="/styles.css?v=20260226-1" />
+    <script defer src="/analytics.js?v=20260226-1"></script>
+    <style>
+      .afl-subnav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+      .afl-subnav a { color:var(--muted); text-decoration:none; font-size:.9rem; padding:.3rem .65rem; border:1px solid var(--line); border-radius:999px; }
+      .afl-subnav a.active, .afl-subnav a:hover { color:#93c5fd; border-color:#1e40af; background:#0c1d3a; }
+    </style>
   </head>
   <body>
     <header class="hero premium-hero">
@@ -41,6 +46,14 @@
     </header>
 
     <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;">
+      <nav class="afl-subnav" aria-label="AFL Tipping navigation">
+        <a href="/afl-tipping">🏠 Hub</a>
+        <a href="/afl-tipping/submit">✏️ Submit Tips</a>
+        <a href="/afl-tipping/leaderboard" class="active">🏆 Leaderboard</a>
+        <a href="/afl-tipping/results">📊 Results</a>
+        <a href="/afl-tipping/rules">📋 Rules</a>
+        <a href="/afl-tipping/winners">🥇 Winners</a>
+      </nav>
 
       <!-- Stat cards -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;" class="responsive-4col" id="stat-cards">
@@ -96,7 +109,7 @@
       </section>
 
       <!-- Weekly breakdown -->
-      <section class="card" style="margin-bottom:1.5rem;" id="weekly-section" style="display:none;">
+      <section class="card" style="margin-bottom:1.5rem;display:none;" id="weekly-section">
         <h2 style="margin-top:0;color:var(--afl-light);">📊 Latest Round Breakdown</h2>
         <div id="weekly-round-label" style="color:var(--muted);margin-bottom:.75rem;"></div>
         <div id="weekly-loading" style="color:var(--muted);">Loading…</div>
@@ -152,7 +165,7 @@
       <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · AFL Tipping</p>
     </footer>
 
-    <script src="menu-auth.js?v=20260226-1"></script>
-    <script src="afl-tipping-leaderboard.js?v=20260226-1"></script>
+    <script src="/menu-auth.js?v=20260226-1"></script>
+    <script src="/afl-tipping-leaderboard.js?v=20260226-1"></script>
   </body>
 </html>

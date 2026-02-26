@@ -35,8 +35,10 @@
 
   window.setFilter = function setFilter(f) {
     currentFilter = f;
-    document.getElementById('filter-all').className = f === 'all' ? 'btn chip-btn' : 'btn btn-ghost';
-    document.getElementById('filter-paid').className = f === 'paid' ? 'btn chip-btn' : 'btn btn-ghost';
+    const allBtn = document.getElementById('filter-all');
+    const paidBtn = document.getElementById('filter-paid');
+    if (allBtn) allBtn.className = f === 'all' ? 'btn chip-btn' : 'btn btn-ghost';
+    if (paidBtn) paidBtn.className = f === 'paid' ? 'btn chip-btn' : 'btn btn-ghost';
     renderLadder();
   };
 
@@ -80,6 +82,7 @@
   }
 
   function renderWeeklyBreakdown(data) {
+    const sectionEl = document.getElementById('weekly-section');
     const loadingEl = document.getElementById('weekly-loading');
     const wrapEl = document.getElementById('weekly-wrap');
     const emptyEl = document.getElementById('weekly-empty');
@@ -87,6 +90,7 @@
     const body = document.getElementById('weekly-body');
 
     if (loadingEl) loadingEl.style.display = 'none';
+    if (sectionEl) sectionEl.style.display = '';
 
     if (data.latestRound && labelEl) {
       labelEl.textContent = data.latestRound.label;
@@ -122,6 +126,7 @@
       allLadder = data.ladder || [];
 
       if (loadingEl) loadingEl.style.display = 'none';
+      document.getElementById('weekly-loading') && (document.getElementById('weekly-loading').style.display = 'none');
 
       // Stat cards
       const prizes = data.prizes || {};

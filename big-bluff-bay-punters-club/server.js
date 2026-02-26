@@ -4390,6 +4390,8 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   app.get('/afl-tipping/submit', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-submit.html')));
   app.get('/afl-tipping/results', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-results.html')));
   app.get('/afl-tipping/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-results.html')));
+  app.get('/afl-tipping/rules', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-rules.html')));
+  app.get('/afl-tipping/winners', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-winners.html')));
   app.get('/admin/afl-tipping', (_req, res) => res.sendFile(path.join(__dirname, 'admin-afl-tipping.html')));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));

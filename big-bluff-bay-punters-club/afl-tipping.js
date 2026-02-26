@@ -182,21 +182,67 @@
     }
   }
 
-  function renderEntryStatus(data) {
+  function applyEntryState(entry) {
     const msgEl = document.getElementById('entry-status-msg');
-    const ctaArea = document.getElementById('entry-cta-area');
-    const paymentInstr = document.getElementById('payment-instructions');
     const enterBtn = document.getElementById('enter-btn');
+    const paymentInstr = document.getElementById('payment-instructions');
+    if (!msgEl || !enterBtn) return;
 
-    if (!currentUser) {
-      if (msgEl) { msgEl.style.display = ''; msgEl.textContent = 'Log in to register your entry.'; }
-      if (enterBtn) { enterBtn.textContent = 'Log In First'; enterBtn.onclick = () => window.location.href = '/'; }
+    msgEl.style.cssText = 'display:block;padding:.65rem .9rem;border-radius:var(--radius-md);border:1px solid;margin-bottom:.75rem;';
+
+    if (!entry) {
+      // No entry yet — default CTA
+      msgEl.style.display = 'none';
+      enterBtn.textContent = 'Register My Entry — $75';
+      enterBtn.onclick = () => doEnter();
       return;
     }
 
-    // Check if user has entry in the data
-    // We need to call /api/afl-tipping/my-tips or check the data - let's use a quick check
-    req('/api/afl-tipping/enter', { method: 'GET' }).catch(() => null);
+    if (entry.status === 'confirmed') {
+      msgEl.style.background = '#052e16';
+      msgEl.style.borderColor = '#166534';
+      msgEl.style.color = '#4ade80';
+      msgEl.textContent = '✅ Entry confirmed! You can submit tips each round.';
+      enterBtn.textContent = '🏉 Submit My Tips →';
+      enterBtn.onclick = () => { window.location.href = '/afl-tipping/submit'; };
+    } else {
+      msgEl.style.background = '#1a1000';
+      msgEl.style.borderColor = '#92400e';
+      msgEl.style.color = '#fbbf24';
+      msgEl.textContent = '⏳ Entry registered — awaiting payment confirmation from admin.';
+      if (paymentInstr) paymentInstr.style.display = '';
+      enterBtn.textContent = '💳 I\'ve Paid — Notify Admin';
+      enterBtn.onclick = async () => {
+        try {
+          await req('/api/afl-tipping/pay', { method: 'POST', body: JSON.stringify({ method: 'bsb' }) });
+          msgEl.textContent = '✅ Payment intent recorded. Admin will confirm shortly.';
+        } catch (e) {
+          msgEl.textContent = 'Error: ' + e.message;
+        }
+      };
+    }
+  }
+
+  async function doEnter() {
+    const enterBtn = document.getElementById('enter-btn');
+    const msgEl = document.getElementById('entry-status-msg');
+    if (!currentUser) { window.location.href = '/'; return; }
+    if (enterBtn) { enterBtn.disabled = true; enterBtn.textContent = 'Registering…'; }
+    try {
+      const data = await req('/api/afl-tipping/enter', {
+        method: 'POST',
+        body: JSON.stringify({ email: currentUser.profile?.email || '' })
+      });
+      applyEntryState(data.entry);
+    } catch (e) {
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = '#ef4444';
+        msgEl.textContent = 'Error: ' + e.message;
+      }
+    } finally {
+      if (enterBtn) enterBtn.disabled = false;
+    }
   }
 
   function escHtml(str) {
@@ -217,72 +263,62 @@
       renderJackpot(data.weeklyPot, data.rollover);
       renderPrizes(data.prizes);
       renderBanter(data.banter, data.currentRound ? data.currentRound.id : null);
+
+      // Load jackpot trajectory + last winner async (non-blocking)
+      loadWinnersInfo();
     } catch (err) {
       document.getElementById('afl-loading').innerHTML = `<p style="color:#ef4444;">Failed to load: ${escHtml(err.message)}</p>`;
     }
   }
 
-  async function checkEntryStatus() {
-    if (!currentUser) return;
+  async function loadWinnersInfo() {
     try {
-      // Try to see if user already has an entry via enter endpoint (GET not supported — infer from overview)
-      // We check the entries via my-tips — if error we can assume no entry
-      const msgEl = document.getElementById('entry-status-msg');
-      const enterBtn = document.getElementById('enter-btn');
+      const data = await req('/api/afl-tipping/winners');
+      renderJackpotTrajectory(data);
+    } catch { /* silent */ }
+  }
 
-      // Try a lightweight check by attempting enter (idempotent)
-      const data = await req(`${API}/enter`, {
-        method: 'POST',
-        body: JSON.stringify({ email: currentUser.email || '' })
-      });
-
-      if (data.entry) {
-        if (msgEl) {
-          msgEl.style.display = '';
-          if (data.entry.status === 'confirmed' && data.entry.paid) {
-            msgEl.style.background = '#052e16';
-            msgEl.style.borderColor = 'var(--brand)';
-            msgEl.style.color = '#4ade80';
-            msgEl.textContent = '✅ Entry confirmed and paid! You can submit tips.';
-          } else if (data.entry.status === 'confirmed') {
-            msgEl.style.background = '#052e16';
-            msgEl.style.borderColor = 'var(--brand)';
-            msgEl.style.color = '#4ade80';
-            msgEl.textContent = '✅ Entry confirmed! You can submit tips.';
-          } else {
-            msgEl.style.background = '#1a1000';
-            msgEl.style.borderColor = '#f59e0b';
-            msgEl.style.color = '#fbbf24';
-            msgEl.textContent = '⏳ Entry registered. Awaiting payment confirmation from admin.';
-            // Show payment instructions
-            const pi = document.getElementById('payment-instructions');
-            if (pi) pi.style.display = '';
-          }
-        }
-        if (enterBtn) {
-          enterBtn.textContent = data.entry.status === 'confirmed' ? '🏉 Submit Tips →' : '💳 I\'ve Paid — Notify Admin';
-          if (data.entry.status === 'confirmed') {
-            enterBtn.onclick = () => window.location.href = '/afl-tipping/submit';
-          } else {
-            enterBtn.onclick = async () => {
-              try {
-                await req(`${API}/pay`, { method: 'POST', body: JSON.stringify({ method: 'bsb' }) });
-                if (msgEl) msgEl.textContent = '✅ Payment intent recorded. Admin will confirm shortly.';
-              } catch (e) {
-                if (msgEl) msgEl.textContent = 'Error: ' + e.message;
-              }
-            };
-          }
-        }
-      }
-    } catch (err) {
-      // Entry registration failed — show error only if it's not "already registered"
-      const msgEl = document.getElementById('entry-status-msg');
-      if (msgEl && err.message && !err.message.includes('already')) {
-        msgEl.style.display = '';
-        msgEl.textContent = 'Error: ' + err.message;
-      }
+  function renderJackpotTrajectory(data) {
+    // Inject trajectory section if not already present
+    let section = document.getElementById('jackpot-traj-section');
+    if (!section) {
+      section = document.createElement('section');
+      section.id = 'jackpot-traj-section';
+      section.className = 'card';
+      section.style.cssText = 'margin-bottom:1.5rem;';
+      section.innerHTML = '<h3 style="margin-top:0;color:#93c5fd;">🎰 Jackpot Trajectory</h3>' +
+        '<p style="color:var(--muted);font-size:.85rem;margin-top:0;">Last rounds — 🟢 won · 🔄 rolled over</p>' +
+        '<div id="jackpot-traj-dots" style="display:flex;gap:.5rem;flex-wrap:wrap;"></div>' +
+        '<div style="margin-top:.5rem;">' +
+          '<a href="/afl-tipping/winners" class="btn btn-ghost" style="font-size:.85rem;padding:.4rem .7rem;">View All Winners →</a>' +
+        '</div>';
+      // Insert before first mini leaderboard/jackpot grid
+      const afl = document.getElementById('afl-content');
+      const grid = afl && afl.querySelector('.responsive-2col');
+      if (grid) afl.insertBefore(section, grid);
     }
+
+    const dotsEl = document.getElementById('jackpot-traj-dots');
+    if (!dotsEl) return;
+
+    const weeks = (data.weeklyWinners || []).slice(-8);
+    if (weeks.length === 0) {
+      dotsEl.innerHTML = '<span style="color:var(--muted);font-size:.85rem;">No completed rounds yet.</span>';
+      return;
+    }
+
+    dotsEl.innerHTML = weeks.map(w => {
+      const won = !w.rolledOver && w.winnerMember;
+      const bg = won ? '#052e16' : '#431407';
+      const border = won ? '#16a34a' : '#b45309';
+      const color = won ? '#4ade80' : '#fde68a';
+      const icon = won ? '✅' : '🔄';
+      return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:.5rem;padding:.4rem .75rem;font-size:.8rem;font-weight:700;color:' + color + ';text-align:center;min-width:72px;">' +
+        '<div>' + escHtml(w.label) + '</div>' +
+        '<div style="margin-top:.2rem;">' + icon + ' ' + (won ? escHtml(w.winnerMember) : 'Rolled') + '</div>' +
+        '<div style="font-size:.75rem;opacity:.85;">$' + (w.jackpotTotal || 30) + '</div>' +
+        '</div>';
+    }).join('');
   }
 
   async function init() {
@@ -298,7 +334,26 @@
     }
 
     await loadOverview();
-    if (currentUser) checkEntryStatus();
+    if (currentUser) {
+      // Load entry status without side effects
+      try {
+        const entryData = await req('/api/afl-tipping/my-entry');
+        applyEntryState(entryData.entry);
+      } catch {
+        // Not logged in or no token — default state
+        const enterBtn = document.getElementById('enter-btn');
+        if (enterBtn) {
+          enterBtn.textContent = 'Register My Entry — $75';
+          enterBtn.onclick = () => doEnter();
+        }
+      }
+    } else {
+      const enterBtn = document.getElementById('enter-btn');
+      if (enterBtn) {
+        enterBtn.textContent = 'Log In to Enter';
+        enterBtn.onclick = () => { window.location.href = '/'; };
+      }
+    }
 
     // Banter submit
     const banterSubmit = document.getElementById('banter-submit');
@@ -326,15 +381,6 @@
       banterInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); banterSubmit.click(); }
       });
-    }
-
-    // Enter btn default
-    const enterBtn = document.getElementById('enter-btn');
-    if (enterBtn && !enterBtn.onclick) {
-      if (!currentUser) {
-        enterBtn.textContent = 'Log In to Enter';
-        enterBtn.onclick = () => window.location.href = '/';
-      }
     }
 
     // Poll every 60s

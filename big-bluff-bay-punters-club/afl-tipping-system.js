@@ -153,7 +153,7 @@ function scoreRound(store, roundId) {
     scoredAt: Date.now()
   });
 
-  return { roundId, scores, weeklyWinner, payout, rolledOver };
+  return { roundId, scores, weeklyWinner, payout, rolledOver, newRollover: at.weeklyRollover };
 }
 
 // ── Season leaderboard ────────────────────────────────────────────────────────
@@ -588,6 +588,19 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
   });
 
   // ── AUTH REQUIRED ROUTES ──────────────────────────────────────────────────
+
+  // GET /api/afl-tipping/my-entry — check current user's entry status (no side effects)
+  app.get('/api/afl-tipping/my-entry', auth, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const userId = req.user.sub;
+      const entry = at.entries.find((e) => e.userId === userId && e.status !== 'withdrawn') || null;
+      res.json({ ok: true, entry });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
 
   // GET /api/afl-tipping/my-tips
   app.get('/api/afl-tipping/my-tips', auth, (req, res) => {
@@ -1070,6 +1083,114 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       if (!roundId) return res.status(400).json({ ok: false, error: 'roundId required' });
       const results = await sendResultsEmail(store, roundId, { getSmtpTransport, SMTP_FROM, ALERTS_BASE_URL });
       res.json({ ok: true, results });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // GET /api/afl-tipping/winners — weekly winners history with jackpot trajectory
+  app.get('/api/afl-tipping/winners', (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const scoredRounds = at.rounds.filter((r) => r.status === 'scored');
+
+      const weeklyWinners = scoredRounds.map((r) => {
+        const jk = r.weeklyJackpot || {};
+        return {
+          roundId: r.id,
+          roundNumber: r.roundNumber,
+          label: r.label || ('Round ' + r.roundNumber),
+          scoredAt: r.updatedAt,
+          jackpotTotal: jk.totalPot || at.season.weeklyPrizePot || 30,
+          rolledOver: jk.rolledOver || false,
+          winnerId: jk.rolledOver ? null : (jk.winnerId || null),
+          winnerMember: jk.rolledOver ? null : (jk.winnerMember || null),
+          winnerPayout: jk.rolledOver ? null : (jk.winnerPayout || null),
+          topScore: jk.rolledOver
+            ? (Object.values(r.scores || {}).sort((a, b) => b.correct - a.correct)[0] || {}).correct || 0
+            : (r.scores && jk.winnerId ? (r.scores[jk.winnerId] || {}).correct : null)
+        };
+      });
+
+      const ladder = buildSeasonLeaderboard(store);
+
+      res.json({
+        ok: true,
+        season: { name: at.season.name, year: at.season.year },
+        weeklyWinners,
+        currentJackpot: (at.season.weeklyPrizePot || 30) + (at.weeklyRollover || 0),
+        rollover: at.weeklyRollover || 0,
+        leaderboard: ladder.slice(0, 10),
+        roundsPlayed: scoredRounds.length
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // GET /api/afl/summary — fast cached summary for homepage block
+  let _summaryCache = null;
+  let _summaryCacheTs = 0;
+  const SUMMARY_TTL = 60000; // 60s cache
+
+  app.get('/api/afl/summary', (req, res) => {
+    try {
+      const now = Date.now();
+      if (_summaryCache && (now - _summaryCacheTs) < SUMMARY_TTL) {
+        return res.json(_summaryCache);
+      }
+
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
+      const pendingEntries = at.entries.filter((e) => e.status === 'pending');
+      const rollover = at.weeklyRollover || 0;
+      const weeklyPot = (at.season.weeklyPrizePot || 30) + rollover;
+
+      const activeRound = at.rounds.find((r) => r.status === 'open') ||
+        at.rounds.find((r) => r.status === 'locked') || null;
+
+      const ladder = buildSeasonLeaderboard(store);
+
+      // Next lockout game
+      let nextLockout = null;
+      if (activeRound && activeRound.games) {
+        const nowMs = Date.now();
+        const upcoming = activeRound.games
+          .filter((g) => !g.locked && g.kickoff && new Date(g.kickoff).getTime() > nowMs)
+          .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+        if (upcoming.length > 0) {
+          nextLockout = {
+            kickoff: upcoming[0].kickoff,
+            homeTeam: upcoming[0].homeTeam,
+            awayTeam: upcoming[0].awayTeam,
+            gameId: upcoming[0].id
+          };
+        }
+      }
+
+      // Last banter
+      let banter = [];
+      if (activeRound) banter = (activeRound.banter || []).slice(-3);
+
+      const summary = {
+        ok: true,
+        confirmedCount: confirmedEntries.length,
+        pendingCount: pendingEntries.length,
+        weeklyPot,
+        rollover,
+        nextLockout,
+        leaderboard: ladder.slice(0, 10),
+        roundLabel: activeRound ? (activeRound.label || ('Round ' + activeRound.roundNumber)) : null,
+        banter,
+        cachedAt: now
+      };
+
+      _summaryCache = summary;
+      _summaryCacheTs = now;
+
+      res.json(summary);
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }

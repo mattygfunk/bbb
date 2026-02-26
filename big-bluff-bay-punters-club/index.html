@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="styles.css?v=20260219-8" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="styles.css?v=20260219-8" /></noscript>
     <script defer src="analytics.js"></script>
+    <script defer src="/afl-home.js?v=20260226-2"></script>
   </head>
   <body class="landing-page">
     <header class="hero premium-hero">
@@ -55,6 +56,7 @@
         <div class="menu-links">
           <a class="menu-link active" href="/" aria-label="Home">🏠 Home</a>
           <a class="menu-link" href="/punters.html" aria-label="Punters Club">🏇 Punters Club</a>
+          <a class="menu-link" href="/afl-tipping" aria-label="AFL Tipping">🏉 AFL Tipping</a>
           <a class="menu-link" href="/poker-schedule.html" aria-label="Poker Tournaments">♠️ Poker Tournaments</a><a class="menu-link" href="/alerts">🔔 Alerts <span aria-hidden="true" style="color:#ef4444">●</span></a><a class="menu-link" href="/winners.html" aria-label="Winners Wall">🏆 Winners</a>
           <a class="menu-link" id="admin-nav-link" href="/admin.html" style="display:none">🛠️ Admin</a>
         </div>
@@ -183,6 +185,63 @@
             <p class="muted">This is where the club vibe comes alive — structured poker nights, sharp banter, and clear formats that reward discipline over chaos.</p>
             <p class="muted">If you want the full schedule and tournament structure, jump straight into Poker Tournaments.</p>
             <div class="row-actions"><a class="btn chip-btn" href="/poker.html">See Poker Club Nights</a></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- AFL Tipping Live Block -->
+      <section class="rail-section" id="afl-live-section" aria-labelledby="afl-live-heading">
+        <div class="section-head">
+          <h2 id="afl-live-heading">🏉 AFL Tipping — 2026 Season</h2>
+          <p class="muted">Tip fast. Lock in. Win real cash. <a href="/afl-tipping" style="color:#93c5fd;">Join the competition →</a></p>
+        </div>
+        <div class="split">
+          <article class="card" style="border-color:#1e40af;background:linear-gradient(180deg,#0a1628,#071020);">
+            <h3 style="color:#93c5fd;margin-top:0;">Live Stats</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+              <div>
+                <div style="color:var(--muted);font-size:.8rem;">Entrants</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#93c5fd;" id="afl-home-entrants">—</div>
+              </div>
+              <div>
+                <div style="color:var(--muted);font-size:.8rem;">Weekly Jackpot</div>
+                <div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="afl-home-jackpot">$30</div>
+              </div>
+              <div>
+                <div style="color:var(--muted);font-size:.8rem;">Next Lockout</div>
+                <div style="font-size:.95rem;font-weight:700;color:var(--text);" id="afl-home-lockout">—</div>
+              </div>
+              <div>
+                <div style="color:var(--muted);font-size:.8rem;">Season Leader</div>
+                <div style="font-size:.95rem;font-weight:700;color:var(--text);" id="afl-home-leader">—</div>
+              </div>
+            </div>
+            <div id="afl-home-rollover" style="display:none;background:#431407;border:1px solid #b45309;border-radius:.5rem;padding:.4rem .75rem;margin-bottom:.75rem;color:#fde68a;font-size:.85rem;font-weight:700;">
+              🔄 JACKPOT ROLLED OVER
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <a href="/afl-tipping/submit" class="btn btn-primary" style="font-size:.9rem;padding:.55rem .9rem;">✏️ Submit Tips</a>
+              <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;">🏆 Ladder</a>
+              <a href="/afl-tipping" class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;">🏉 Hub</a>
+            </div>
+          </article>
+          <article class="card" style="border-color:#1e40af;background:linear-gradient(180deg,#0a1628,#071020);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
+              <h3 style="color:#93c5fd;margin:0;">Top 10 Live</h3>
+              <span class="pill" style="font-size:.75rem;" id="afl-home-round-label">Season</span>
+            </div>
+            <table style="width:100%;font-size:.88rem;">
+              <thead><tr style="color:var(--muted);border-bottom:1px solid var(--line);">
+                <th style="text-align:left;padding:.25rem .35rem;font-weight:600;">#</th>
+                <th style="text-align:left;padding:.25rem .35rem;font-weight:600;">Handle</th>
+                <th style="text-align:right;padding:.25rem .35rem;font-weight:600;">Pts</th>
+                <th style="text-align:right;padding:.25rem .35rem;font-weight:600;">Wins</th>
+              </tr></thead>
+              <tbody id="afl-home-top10">
+                <tr><td colspan="4" style="color:var(--muted);padding:.5rem .35rem;">Loading…</td></tr>
+              </tbody>
+            </table>
+            <div id="afl-home-banter" style="margin-top:.75rem;padding-top:.6rem;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;font-style:italic;"></div>
           </article>
         </div>
       </section>
@@ -437,6 +496,7 @@
         <div>
           <h3 class="footer-heading">🧭 Navigate</h3>
           <p><a class="menu-link" href="/">🏠 Home</a> <a class="menu-link" href="/punters.html">🏇 Punters Club</a> <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a><a class="menu-link" href="/poker">📊 Poker Analytics</a></p>
+          <p><a class="menu-link" href="/afl-tipping">🏉 AFL Tipping</a> <a class="menu-link" href="/afl-tipping/submit">✏️ Submit Tips</a> <a class="menu-link" href="/afl-tipping/leaderboard">🏆 Leaderboard</a> <a class="menu-link" href="/afl-tipping/rules">📋 Rules</a></p>
         </div>
         <div>
           <h3 class="footer-heading">Legal</h3>

@@ -1246,3 +1246,76 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
   .game-vs { display: none; }
   .game-pick-btn { min-height: 48px; }
 }
+
+/* ── AFL / shared utility classes ───────────────────────────────────── */
+
+/* Hero body (AFL pages) */
+.hero-body { position: relative; padding: 1.8rem 0 1.6rem; }
+.hero-title { margin: .2rem 0 .4rem; font-size: clamp(1.9rem, 4.5vw, 3rem); letter-spacing: -.02em; }
+.hero-sub { margin: 0 0 .9rem; color: var(--muted); font-size: clamp(.95rem, 1.8vw, 1.1rem); }
+.hero-ctas { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .9rem; }
+.nav-right-stack { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+/* Shared stat display */
+.stat-label { font-size: .78rem; color: var(--muted); margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .04em; }
+.stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1.1; }
+
+/* Status pill (inline in strips) */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  border: 1px solid #2a3a50;
+  background: #0a1120;
+  color: var(--muted);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* Shared form input (results selector, etc.) */
+.form-input {
+  padding: .55rem .75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: .95em;
+  min-height: 40px;
+}
+.form-input:focus { outline: none; border-color: var(--afl-light, #60a5fa); }
+
+/* Responsive grid helpers */
+.responsive-2col { grid-template-columns: repeat(2, 1fr); }
+.responsive-3col { grid-template-columns: repeat(3, 1fr); }
+.responsive-4col { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 700px) {
+  .responsive-4col { grid-template-columns: 1fr 1fr !important; }
+  .responsive-3col { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 480px) {
+  .responsive-4col,
+  .responsive-3col,
+  .responsive-2col { grid-template-columns: 1fr !important; }
+}
+
+/* AFL leaderboard filter active state */
+#filter-all.btn.chip-btn,
+#filter-paid.btn.chip-btn {
+  background: #0c1d3a;
+  border-color: var(--afl-light);
+  color: var(--afl-light);
+  box-shadow: none;
+}
+
+/* Footer base (AFL pages use plain .footer.wrap) */
+.footer { padding: 1.5rem 0; border-top: 1px solid var(--line); }
+
+/* ── btn-primary (AFL blue CTA) ──────────────────────────────────────── */
+.btn-primary {
+  background: var(--afl, #0050a0);
+  color: #fff;
+  border-color: var(--afl, #0050a0);
+}
+.btn-primary:hover { background: var(--afl-2, #003d80); border-color: var(--afl-2, #003d80); }

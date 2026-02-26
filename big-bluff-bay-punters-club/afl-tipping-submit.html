@@ -10,9 +10,9 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="preload" href="styles.css" as="style" />
-    <link rel="stylesheet" href="styles.css?v=20260226-1" />
-    <script defer src="analytics.js?v=20260226-1"></script>
+    <link rel="preload" href="/styles.css" as="style" />
+    <link rel="stylesheet" href="/styles.css?v=20260226-1" />
+    <script defer src="/analytics.js?v=20260226-1"></script>
     <style>
       .game-tile {
         background: var(--surface);
@@ -79,6 +79,11 @@
         color: #f59e0b;
         font-weight: 600;
       }
+    </style>
+    <style>
+      .afl-subnav { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+      .afl-subnav a { color:var(--muted); text-decoration:none; font-size:.9rem; padding:.3rem .65rem; border:1px solid var(--line); border-radius:999px; }
+      .afl-subnav a.active, .afl-subnav a:hover { color:#93c5fd; border-color:#1e40af; background:#0c1d3a; }
     </style>
   </head>
   <body>
@@ -181,7 +186,7 @@
       <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · Individual game lockouts apply at kickoff.</p>
     </footer>
 
-    <script src="menu-auth.js?v=20260226-1"></script>
-    <script src="afl-tipping-submit.js?v=20260226-1"></script>
+    <script src="/menu-auth.js?v=20260226-1"></script>
+    <script src="/afl-tipping-submit.js?v=20260226-1"></script>
   </body>
 </html>

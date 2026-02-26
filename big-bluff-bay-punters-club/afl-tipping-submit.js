@@ -268,14 +268,11 @@
 
       currentRound = tipsData.round;
 
-      // Check entry status — try to enter (idempotent, returns existing entry)
+      // Check entry status — read-only, no side effects
       let entry = null;
       try {
-        const enterRes = await req(`${API}/enter`, {
-          method: 'POST',
-          body: JSON.stringify({ email: currentUser.email || '' })
-        });
-        entry = enterRes.entry;
+        const entryRes = await req(`${API}/my-entry`);
+        entry = entryRes.entry || null;
       } catch {
         entry = null;
       }
