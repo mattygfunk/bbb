@@ -153,13 +153,16 @@ async function loadAdminOverview() {
     const pot = (data.confirmedCount || 0) * (data.season?.entryFee || 75);
     setEl('ov-pot', fmt$(pot));
     setEl('ov-rollover', fmt$(data.weeklyRollover || 0));
-
     const net = pot * 0.80;
     setEl('ov-prize-1', fmt$(net * 0.40));
     setEl('ov-prize-2', fmt$(net * 0.25));
     setEl('ov-prize-3', fmt$(net * 0.15));
+    // Clear any previous error
+    setEl('ov-error', '');
   } catch (err) {
     console.error('Overview load failed:', err.message);
+    setEl('ov-confirmed', '❌');
+    setEl('ov-pending', err.message);
   }
 }
 
