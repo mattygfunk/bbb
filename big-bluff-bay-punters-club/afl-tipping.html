@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AFL 2026 Footy Tipping — $75 Entry • Big Bluff Bay</title>
+    <meta name="description" content="Enter the Big Bluff Bay AFL 2026 Footy Tipping competition. $75 entry, weekly jackpot, season prizes. Tip the winner of every AFL game each round." />
+    <meta name="robots" content="index,follow" />
+    <meta name="theme-color" content="#0f1418" />
+    <link rel="canonical" href="https://bigbluffbay.au/afl-tipping" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Big Bluff Bay" />
+    <meta property="og:title" content="AFL 2026 Footy Tipping — Big Bluff Bay" />
+    <meta property="og:description" content="Tip every AFL game, win weekly jackpots and season prizes." />
+    <meta property="og:url" content="https://bigbluffbay.au/afl-tipping" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="preload" href="styles.css" as="style" />
+    <link rel="stylesheet" href="styles.css?v=20260226-1" />
+    <script defer src="analytics.js?v=20260226-1"></script>
+  </head>
+  <body>
+    <header class="hero premium-hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap">
+        <a class="brand" href="/" style="text-decoration:none;color:inherit;" aria-label="Big Bluff Bay home">
+          <span class="badge">BBB</span>
+          <span><strong>Big Bluff Bay</strong><small>AFL Tipping</small></span>
+        </a>
+        <div class="nav-right-stack">
+          <div class="menu-links">
+            <a class="menu-link" href="/">🏠 Home</a>
+            <a class="menu-link active" href="/afl-tipping">🏉 AFL Tipping</a>
+            <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+            <a class="menu-link" href="/poker-schedule.html">♠️ Poker</a>
+            <a class="menu-link" href="/alerts">🔔 Alerts</a>
+          </div>
+          <div id="auth-controls"></div>
+        </div>
+      </nav>
+      <div class="hero-body wrap">
+        <div class="hero-kicker afl-hero-kicker">🏉 2026 AFL Season</div>
+        <h1 class="hero-title">AFL Footy Tipping</h1>
+        <p class="hero-sub">$75 Entry · Weekly Jackpot · Season Prizes</p>
+        <div id="hero-status-strip" class="status-strip">
+          <span class="status-pill" id="stat-entrants">— entrants</span>
+          <span class="status-pill" id="stat-weekly-pot">Weekly pot: $—</span>
+          <span class="status-pill" id="stat-rollover" style="display:none"></span>
+          <span class="status-pill" id="stat-round">Loading...</span>
+        </div>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="/afl-tipping/submit">🏉 Submit Tips</a>
+          <a class="btn btn-ghost" href="/afl-tipping/leaderboard">🏆 Leaderboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;">
+      <div id="afl-loading" class="card" style="text-align:center;padding:2rem;">
+        <p style="color:var(--muted);">Loading AFL Tipping data…</p>
+      </div>
+      <div id="afl-content" style="display:none;">
+
+        <!-- Entry card -->
+        <section id="enter-card" class="card" style="margin-bottom:1.5rem;">
+          <h2 style="color:var(--afl-light);margin-top:0;">🏉 Enter the Competition</h2>
+          <div id="entry-status-msg" style="display:none;" class="alert alert-info"></div>
+          <div id="entry-form-area">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;" class="responsive-2col">
+              <div>
+                <div class="stat-label">Entry Fee</div>
+                <div class="stat-value" style="color:var(--afl-light);">$75</div>
+                <div style="color:var(--muted);font-size:.9em;">One-off season entry</div>
+              </div>
+              <div>
+                <div class="stat-label">Payment</div>
+                <div style="font-size:.95em;margin-top:.25rem;">
+                  <strong>BSB Transfer</strong><br>
+                  <span style="color:var(--muted);">Details provided after registration</span>
+                </div>
+              </div>
+            </div>
+            <div id="payment-instructions" style="background:#0c1d3a;border:1px solid #1e40af;border-radius:var(--radius-md);padding:1rem;margin-bottom:1rem;display:none;">
+              <strong style="color:#93c5fd;">Payment Instructions</strong><br>
+              <p style="color:var(--muted);margin:.5rem 0 0;">Transfer $75 via BSB to the account provided by the organiser. Include your username as the reference. Once payment is confirmed, you'll be approved to tip.</p>
+            </div>
+            <div id="entry-cta-area">
+              <button id="enter-btn" class="btn btn-primary" style="min-width:200px;">Register My Entry</button>
+              <p style="color:var(--muted);font-size:.85em;margin:.75rem 0 0;">Must be logged in to enter. Tips require confirmed entry.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Current round card -->
+        <section id="current-round-card" class="card" style="margin-bottom:1.5rem;display:none;">
+          <h2 id="current-round-label" style="color:var(--afl-light);margin-top:0;">Current Round</h2>
+          <div id="round-status-badge" class="afl-badge" style="display:inline-block;padding:.25rem .75rem;border-radius:99px;border:1px solid;font-size:.85em;margin-bottom:1rem;"></div>
+          <div id="round-games-list"></div>
+          <div style="margin-top:1rem;">
+            <a id="submit-tips-btn" href="/afl-tipping/submit" class="btn btn-primary">🏉 Submit My Tips</a>
+          </div>
+        </section>
+
+        <!-- Mini leaderboard + jackpot side by side -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;" class="responsive-2col">
+          <!-- Mini leaderboard -->
+          <section class="card">
+            <h3 style="margin-top:0;color:var(--afl-light);">🏆 Season Ladder</h3>
+            <div id="mini-leaderboard">
+              <p style="color:var(--muted);">No scores yet.</p>
+            </div>
+            <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="margin-top:1rem;width:100%;display:block;text-align:center;">View Full Leaderboard</a>
+          </section>
+
+          <!-- Weekly jackpot card -->
+          <section class="card">
+            <h3 style="margin-top:0;color:var(--afl-light);">🎰 Weekly Jackpot</h3>
+            <div class="jackpot-amount" id="jackpot-amount">$30</div>
+            <div id="rollover-info" style="margin-top:.5rem;"></div>
+            <p style="color:var(--muted);font-size:.9em;margin-top:.75rem;">Outright weekly winner takes the pot. Ties roll over!</p>
+          </section>
+        </div>
+
+        <!-- Season prize structure -->
+        <section class="card" style="margin-bottom:1.5rem;">
+          <h3 style="margin-top:0;color:var(--afl-light);">🥇 Season Prize Structure</h3>
+          <div id="prize-structure-display" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;" class="responsive-3col">
+            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+              <div style="font-size:1.5em;">🥇</div>
+              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-1st">$—</div>
+              <div style="color:var(--muted);font-size:.85em;">1st Place (40%)</div>
+            </div>
+            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+              <div style="font-size:1.5em;">🥈</div>
+              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-2nd">$—</div>
+              <div style="color:var(--muted);font-size:.85em;">2nd Place (25%)</div>
+            </div>
+            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+              <div style="font-size:1.5em;">🥉</div>
+              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-3rd">$—</div>
+              <div style="color:var(--muted);font-size:.85em;">3rd Place (15%)</div>
+            </div>
+          </div>
+          <p style="color:var(--muted);font-size:.85em;margin-top:.75rem;">Prize pool = (entrants × $75) × 80%. Updates live as more people enter.</p>
+        </section>
+
+        <!-- How it works -->
+        <section class="card" style="margin-bottom:1.5rem;">
+          <h3 style="margin-top:0;color:var(--afl-light);">📖 How It Works</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;" class="responsive-3col">
+            <div>
+              <div style="font-size:2em;margin-bottom:.5rem;">1️⃣</div>
+              <strong>Register & Pay</strong>
+              <p style="color:var(--muted);font-size:.9em;margin-top:.25rem;">Pay $75 via BSB transfer. Admin confirms your entry.</p>
+            </div>
+            <div>
+              <div style="font-size:2em;margin-bottom:.5rem;">2️⃣</div>
+              <strong>Tip Each Round</strong>
+              <p style="color:var(--muted);font-size:.9em;margin-top:.25rem;">Pick the winner of every game before kickoff. Individual game lockouts apply.</p>
+            </div>
+            <div>
+              <div style="font-size:2em;margin-bottom:.5rem;">3️⃣</div>
+              <strong>Win Prizes</strong>
+              <p style="color:var(--muted);font-size:.9em;margin-top:.25rem;">Best weekly score wins the jackpot. Season-long totals determine 1st, 2nd, 3rd.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Banter board -->
+        <section class="card" id="banter-section" style="margin-bottom:1.5rem;display:none;">
+          <h3 style="margin-top:0;color:var(--afl-light);">💬 Round Banter</h3>
+          <div id="banter-list" style="max-height:300px;overflow-y:auto;margin-bottom:1rem;"></div>
+          <div id="banter-form-area" style="display:none;">
+            <div style="display:flex;gap:.5rem;">
+              <input id="banter-input" type="text" class="form-input" placeholder="Say something... (280 chars)" maxlength="280" style="flex:1;" />
+              <button id="banter-submit" class="btn btn-primary">Send</button>
+            </div>
+          </div>
+          <div id="banter-login-prompt" style="display:none;color:var(--muted);font-size:.9em;">
+            <a href="/" style="color:var(--afl-light);">Log in</a> to join the banter.
+          </div>
+        </section>
+
+        <!-- Nav links -->
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <a href="/afl-tipping/leaderboard" class="btn btn-ghost">🏆 Full Leaderboard</a>
+          <a href="/afl-tipping/submit" class="btn btn-primary">🏉 Submit Tips</a>
+          <a href="/afl-tipping/results" class="btn btn-ghost">📊 Results</a>
+        </div>
+
+      </div><!-- /afl-content -->
+    </main>
+
+    <footer class="footer wrap">
+      <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · AFL Tipping is a friendly competition for members.</p>
+    </footer>
+
+    <script src="menu-auth.js?v=20260226-1"></script>
+    <script src="afl-tipping.js?v=20260226-1"></script>
+  </body>
+</html>

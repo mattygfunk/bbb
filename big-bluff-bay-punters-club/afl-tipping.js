@@ -1,0 +1,347 @@
+(function () {
+  'use strict';
+
+  const TOKEN_KEY = 'bbb-token-v3';
+  const API = '/api/afl-tipping';
+
+  let currentUser = null;
+  let overviewData = null;
+  let pollTimer = null;
+
+  function token() { return localStorage.getItem(TOKEN_KEY); }
+
+  async function req(path, opts = {}) {
+    const t = token();
+    const res = await fetch(path, {
+      ...opts,
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        ...(opts.headers || {})
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    return data;
+  }
+
+  function fmtMoney(n) {
+    return '$' + Number(n || 0).toLocaleString('en-AU');
+  }
+
+  function fmtDate(ms) {
+    if (!ms) return '—';
+    return new Date(ms).toLocaleString('en-AU', {
+      weekday: 'short', day: 'numeric', month: 'short',
+      hour: '2-digit', minute: '2-digit', timeZone: 'Australia/Melbourne'
+    });
+  }
+
+  function statusLabel(status) {
+    const map = { pending: 'Upcoming', open: 'Open for Tips', locked: 'Locked', scoring: 'Scoring', scored: 'Scored' };
+    return map[status] || status;
+  }
+
+  function statusColor(status) {
+    const map = { pending: '#6b7280', open: '#22c55e', locked: '#ef4444', scoring: '#f59e0b', scored: '#60a5fa' };
+    return map[status] || '#6b7280';
+  }
+
+  function renderMiniLeaderboard(ladder) {
+    const el = document.getElementById('mini-leaderboard');
+    if (!el) return;
+    if (!ladder || !ladder.length) {
+      el.innerHTML = '<p style="color:var(--muted);">No scores yet.</p>';
+      return;
+    }
+    const rows = ladder.slice(0, 5).map((entry, i) => `
+      <tr class="${i === 0 ? 'afl-rank-1' : ''}">
+        <td style="padding:.5rem .75rem;font-weight:700;color:var(--afl-light);width:2rem;">${i + 1}</td>
+        <td style="padding:.5rem .75rem;">${escHtml(entry.member)}</td>
+        <td style="padding:.5rem .75rem;text-align:right;">${entry.totalCorrect} pts</td>
+        <td style="padding:.5rem .75rem;text-align:right;font-size:.8em;color:var(--muted);">${entry.thisWeek ? '+' + entry.thisWeek : ''}</td>
+      </tr>
+    `).join('');
+    el.innerHTML = `<table class="afl-ladder" style="width:100%;border-collapse:collapse;"><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderCurrentRound(round) {
+    const card = document.getElementById('current-round-card');
+    if (!round || !card) return;
+    card.style.display = '';
+
+    document.getElementById('current-round-label').textContent = round.label || 'Current Round';
+
+    const badge = document.getElementById('round-status-badge');
+    badge.textContent = statusLabel(round.status);
+    badge.style.color = statusColor(round.status);
+    badge.style.borderColor = statusColor(round.status);
+
+    const now = Date.now();
+    const games = round.games || [];
+    const list = document.getElementById('round-games-list');
+
+    if (!games.length) {
+      list.innerHTML = '<p style="color:var(--muted);">Games not yet scheduled.</p>';
+      return;
+    }
+
+    list.innerHTML = games.map((g) => {
+      const locked = now >= g.kickoff;
+      const result = g.result;
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem .75rem;background:#0c1d3a;border-radius:var(--radius-md);margin-bottom:.5rem;opacity:${locked ? '.7' : '1'}">
+          <div style="font-size:.9em;">
+            <strong>${escHtml(g.homeTeam)}</strong>
+            <span style="color:var(--muted);margin:0 .4rem;">vs</span>
+            <strong>${escHtml(g.awayTeam)}</strong>
+          </div>
+          <div style="font-size:.8em;color:var(--muted);text-align:right;">
+            ${result ? `<span style="color:var(--brand);">${escHtml(result.winner)}</span>` : ''}
+            ${locked && !result ? '<span style="color:#ef4444;">🔒 Locked</span>' : ''}
+            ${!locked ? `<span>${fmtDate(g.kickoff)}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderJackpot(weeklyPot, rollover) {
+    const amountEl = document.getElementById('jackpot-amount');
+    const rolloverEl = document.getElementById('rollover-info');
+    if (amountEl) amountEl.textContent = fmtMoney(weeklyPot);
+    if (rolloverEl) {
+      if (rollover > 0) {
+        rolloverEl.innerHTML = `<span class="rollover-pill" style="display:inline-block;padding:.25rem .75rem;border-radius:99px;border:1px solid;font-size:.85em;">🔄 Rollover: ${fmtMoney(rollover)} carried over</span>`;
+      } else {
+        rolloverEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">Base pot: $30/week from house</span>`;
+      }
+    }
+  }
+
+  function renderPrizes(prizes) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmtMoney(val); };
+    if (!prizes) return;
+    set('prize-1st', prizes.first);
+    set('prize-2nd', prizes.second);
+    set('prize-3rd', prizes.third);
+  }
+
+  function renderStatusStrip(data) {
+    const eEl = document.getElementById('stat-entrants');
+    const wEl = document.getElementById('stat-weekly-pot');
+    const rEl = document.getElementById('stat-rollover');
+    const roundEl = document.getElementById('stat-round');
+
+    if (eEl) eEl.textContent = `${data.confirmedCount || 0} entrant${data.confirmedCount === 1 ? '' : 's'}`;
+    if (wEl) wEl.textContent = `Weekly pot: ${fmtMoney(data.weeklyPot)}`;
+    if (rEl) {
+      if (data.rollover > 0) {
+        rEl.style.display = '';
+        rEl.textContent = `🔄 Rollover: ${fmtMoney(data.rollover)}`;
+      } else {
+        rEl.style.display = 'none';
+      }
+    }
+    if (roundEl && data.currentRound) {
+      roundEl.textContent = `${data.currentRound.label} — ${statusLabel(data.currentRound.status)}`;
+    } else if (roundEl) {
+      roundEl.textContent = 'No active round';
+    }
+  }
+
+  function renderBanter(banter, roundId) {
+    const section = document.getElementById('banter-section');
+    const list = document.getElementById('banter-list');
+    if (!section || !list || !roundId) return;
+    section.style.display = '';
+
+    if (!banter || !banter.length) {
+      list.innerHTML = '<p style="color:var(--muted);font-size:.9em;">No banter yet. Be first!</p>';
+    } else {
+      list.innerHTML = banter.map((b) => `
+        <div style="padding:.5rem;border-bottom:1px solid var(--line);">
+          <span style="font-weight:600;color:var(--afl-light);font-size:.9em;">${escHtml(b.member)}</span>
+          <span style="color:var(--muted);font-size:.8em;margin-left:.5rem;">${fmtDate(b.createdAt)}</span>
+          <div style="color:var(--text);margin-top:.2rem;font-size:.9em;">${escHtml(b.message)}</div>
+        </div>
+      `).join('');
+      list.scrollTop = list.scrollHeight;
+    }
+
+    // Show appropriate form or login prompt
+    const formArea = document.getElementById('banter-form-area');
+    const loginPrompt = document.getElementById('banter-login-prompt');
+    if (currentUser) {
+      if (formArea) formArea.style.display = '';
+      if (loginPrompt) loginPrompt.style.display = 'none';
+    } else {
+      if (formArea) formArea.style.display = 'none';
+      if (loginPrompt) loginPrompt.style.display = '';
+    }
+  }
+
+  function renderEntryStatus(data) {
+    const msgEl = document.getElementById('entry-status-msg');
+    const ctaArea = document.getElementById('entry-cta-area');
+    const paymentInstr = document.getElementById('payment-instructions');
+    const enterBtn = document.getElementById('enter-btn');
+
+    if (!currentUser) {
+      if (msgEl) { msgEl.style.display = ''; msgEl.textContent = 'Log in to register your entry.'; }
+      if (enterBtn) { enterBtn.textContent = 'Log In First'; enterBtn.onclick = () => window.location.href = '/'; }
+      return;
+    }
+
+    // Check if user has entry in the data
+    // We need to call /api/afl-tipping/my-tips or check the data - let's use a quick check
+    req('/api/afl-tipping/enter', { method: 'GET' }).catch(() => null);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadOverview() {
+    try {
+      const data = await req(`${API}/overview`);
+      overviewData = data;
+
+      document.getElementById('afl-loading').style.display = 'none';
+      document.getElementById('afl-content').style.display = '';
+
+      renderStatusStrip(data);
+      renderCurrentRound(data.currentRound);
+      renderMiniLeaderboard(data.leaderboard);
+      renderJackpot(data.weeklyPot, data.rollover);
+      renderPrizes(data.prizes);
+      renderBanter(data.banter, data.currentRound ? data.currentRound.id : null);
+    } catch (err) {
+      document.getElementById('afl-loading').innerHTML = `<p style="color:#ef4444;">Failed to load: ${escHtml(err.message)}</p>`;
+    }
+  }
+
+  async function checkEntryStatus() {
+    if (!currentUser) return;
+    try {
+      // Try to see if user already has an entry via enter endpoint (GET not supported — infer from overview)
+      // We check the entries via my-tips — if error we can assume no entry
+      const msgEl = document.getElementById('entry-status-msg');
+      const enterBtn = document.getElementById('enter-btn');
+
+      // Try a lightweight check by attempting enter (idempotent)
+      const data = await req(`${API}/enter`, {
+        method: 'POST',
+        body: JSON.stringify({ email: currentUser.email || '' })
+      });
+
+      if (data.entry) {
+        if (msgEl) {
+          msgEl.style.display = '';
+          if (data.entry.status === 'confirmed' && data.entry.paid) {
+            msgEl.style.background = '#052e16';
+            msgEl.style.borderColor = 'var(--brand)';
+            msgEl.style.color = '#4ade80';
+            msgEl.textContent = '✅ Entry confirmed and paid! You can submit tips.';
+          } else if (data.entry.status === 'confirmed') {
+            msgEl.style.background = '#052e16';
+            msgEl.style.borderColor = 'var(--brand)';
+            msgEl.style.color = '#4ade80';
+            msgEl.textContent = '✅ Entry confirmed! You can submit tips.';
+          } else {
+            msgEl.style.background = '#1a1000';
+            msgEl.style.borderColor = '#f59e0b';
+            msgEl.style.color = '#fbbf24';
+            msgEl.textContent = '⏳ Entry registered. Awaiting payment confirmation from admin.';
+            // Show payment instructions
+            const pi = document.getElementById('payment-instructions');
+            if (pi) pi.style.display = '';
+          }
+        }
+        if (enterBtn) {
+          enterBtn.textContent = data.entry.status === 'confirmed' ? '🏉 Submit Tips →' : '💳 I\'ve Paid — Notify Admin';
+          if (data.entry.status === 'confirmed') {
+            enterBtn.onclick = () => window.location.href = '/afl-tipping/submit';
+          } else {
+            enterBtn.onclick = async () => {
+              try {
+                await req(`${API}/pay`, { method: 'POST', body: JSON.stringify({ method: 'bsb' }) });
+                if (msgEl) msgEl.textContent = '✅ Payment intent recorded. Admin will confirm shortly.';
+              } catch (e) {
+                if (msgEl) msgEl.textContent = 'Error: ' + e.message;
+              }
+            };
+          }
+        }
+      }
+    } catch (err) {
+      // Entry registration failed — show error only if it's not "already registered"
+      const msgEl = document.getElementById('entry-status-msg');
+      if (msgEl && err.message && !err.message.includes('already')) {
+        msgEl.style.display = '';
+        msgEl.textContent = 'Error: ' + err.message;
+      }
+    }
+  }
+
+  async function init() {
+    // Check auth
+    if (token()) {
+      try {
+        const me = await req('/api/me');
+        currentUser = me.user || null;
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+        currentUser = null;
+      }
+    }
+
+    await loadOverview();
+    if (currentUser) checkEntryStatus();
+
+    // Banter submit
+    const banterSubmit = document.getElementById('banter-submit');
+    const banterInput = document.getElementById('banter-input');
+    if (banterSubmit && banterInput) {
+      banterSubmit.addEventListener('click', async () => {
+        const msg = banterInput.value.trim();
+        if (!msg || !overviewData || !overviewData.currentRound) return;
+        banterSubmit.disabled = true;
+        try {
+          await req(`${API}/banter`, {
+            method: 'POST',
+            body: JSON.stringify({ roundId: overviewData.currentRound.id, message: msg })
+          });
+          banterInput.value = '';
+          // Reload banter
+          const fresh = await req(`${API}/banter/${overviewData.currentRound.id}`);
+          renderBanter(fresh.banter, overviewData.currentRound.id);
+        } catch (e) {
+          alert('Could not send: ' + e.message);
+        } finally {
+          banterSubmit.disabled = false;
+        }
+      });
+      banterInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); banterSubmit.click(); }
+      });
+    }
+
+    // Enter btn default
+    const enterBtn = document.getElementById('enter-btn');
+    if (enterBtn && !enterBtn.onclick) {
+      if (!currentUser) {
+        enterBtn.textContent = 'Log In to Enter';
+        enterBtn.onclick = () => window.location.href = '/';
+      }
+    }
+
+    // Poll every 60s
+    pollTimer = setInterval(() => {
+      loadOverview();
+    }, 60000);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();

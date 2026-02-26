@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AFL Tipping Results — Big Bluff Bay</title>
+    <meta name="description" content="AFL footy tipping results, weekly scores, and jackpot winners for Big Bluff Bay 2026." />
+    <meta name="theme-color" content="#0f1418" />
+    <link rel="canonical" href="https://bigbluffbay.au/afl-tipping/results" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="preload" href="styles.css" as="style" />
+    <link rel="stylesheet" href="styles.css?v=20260226-1" />
+    <script defer src="analytics.js?v=20260226-1"></script>
+  </head>
+  <body>
+    <header class="hero premium-hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap">
+        <a class="brand" href="/afl-tipping" style="text-decoration:none;color:inherit;" aria-label="AFL Tipping">
+          <span class="badge">BBB</span>
+          <span><strong>Big Bluff Bay</strong><small>AFL Tipping</small></span>
+        </a>
+        <div class="nav-right-stack">
+          <div class="menu-links">
+            <a class="menu-link" href="/">🏠 Home</a>
+            <a class="menu-link active" href="/afl-tipping">🏉 AFL Tipping</a>
+            <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+            <a class="menu-link" href="/poker-schedule.html">♠️ Poker</a>
+            <a class="menu-link" href="/alerts">🔔 Alerts</a>
+          </div>
+          <div id="auth-controls"></div>
+        </div>
+      </nav>
+      <div class="hero-body wrap">
+        <div class="hero-kicker afl-hero-kicker">📊 Round Results</div>
+        <h1 class="hero-title">AFL Tipping Results</h1>
+        <p class="hero-sub" id="results-subtitle">Loading…</p>
+      </div>
+    </header>
+
+    <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;">
+
+      <!-- Loading -->
+      <div id="results-loading" class="card" style="text-align:center;">
+        <p style="color:var(--muted);">Loading results…</p>
+      </div>
+
+      <!-- No results yet -->
+      <div id="no-results-msg" class="card" style="display:none;text-align:center;">
+        <h2 style="color:var(--afl-light);">No Results Yet</h2>
+        <p style="color:var(--muted);">No rounds have been scored yet. Check back after the round is complete!</p>
+        <a href="/afl-tipping" class="btn btn-ghost" style="margin-top:1rem;">← Back to Hub</a>
+      </div>
+
+      <!-- Main results content -->
+      <div id="results-content" style="display:none;">
+
+        <!-- Round selector -->
+        <div class="card" style="margin-bottom:1.5rem;padding:.75rem 1rem;">
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <label style="font-weight:600;color:var(--afl-light);" for="round-selector">Round:</label>
+            <select id="round-selector" class="form-input" style="max-width:200px;"></select>
+          </div>
+        </div>
+
+        <!-- Weekly winner banner -->
+        <div id="jackpot-banner" class="card" style="margin-bottom:1.5rem;display:none;"></div>
+
+        <!-- Game results table -->
+        <section class="card" style="margin-bottom:1.5rem;">
+          <h2 style="margin-top:0;color:var(--afl-light);">🏈 Game Results</h2>
+          <div id="games-loading" style="color:var(--muted);">Loading…</div>
+          <div id="games-results-wrap" style="overflow-x:auto;display:none;">
+            <table style="width:100%;border-collapse:collapse;" id="games-table">
+              <thead>
+                <tr style="background:#0c1d3a;border-bottom:2px solid #1e40af;">
+                  <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">Home</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Score</th>
+                  <th style="padding:.6rem .75rem;text-align:right;color:#93c5fd;font-size:.85em;">Away</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Winner</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Your Tip</th>
+                </tr>
+              </thead>
+              <tbody id="games-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Round leaderboard -->
+        <section class="card" style="margin-bottom:1.5rem;">
+          <h2 style="margin-top:0;color:var(--afl-light);">🏆 Round Scores</h2>
+          <div id="scores-loading" style="color:var(--muted);">Loading…</div>
+          <div id="scores-wrap" style="overflow-x:auto;display:none;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#0c1d3a;border-bottom:2px solid #1e40af;">
+                  <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">#</th>
+                  <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">Player</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Correct</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Total</th>
+                  <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Perfect</th>
+                </tr>
+              </thead>
+              <tbody id="scores-tbody"></tbody>
+            </table>
+          </div>
+          <p id="scores-empty" style="color:var(--muted);display:none;">No scores recorded.</p>
+        </section>
+
+        <!-- Next round callout -->
+        <div id="next-round-callout" class="card" style="display:none;background:#0c1d3a;border-color:#1e40af;text-align:center;">
+          <h3 style="color:var(--afl-light);margin-top:0;">🏉 Next Round</h3>
+          <p id="next-round-label" style="color:var(--muted);"></p>
+          <a href="/afl-tipping/submit" class="btn btn-primary" style="margin-top:.5rem;">Submit Tips →</a>
+        </div>
+
+        <!-- Nav -->
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1.5rem;">
+          <a href="/afl-tipping" class="btn btn-ghost">← AFL Hub</a>
+          <a href="/afl-tipping/leaderboard" class="btn btn-primary">🏆 Full Leaderboard</a>
+          <a href="/afl-tipping/submit" class="btn btn-ghost">🏉 Submit Tips</a>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="footer wrap">
+      <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · AFL Tipping</p>
+    </footer>
+
+    <script src="menu-auth.js?v=20260226-1"></script>
+    <script src="afl-tipping-results.js?v=20260226-1"></script>
+  </body>
+</html>

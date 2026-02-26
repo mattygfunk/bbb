@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AFL Tipping Leaderboard — Big Bluff Bay</title>
+    <meta name="description" content="Season ladder and weekly scores for the Big Bluff Bay AFL 2026 Footy Tipping competition." />
+    <meta name="theme-color" content="#0f1418" />
+    <link rel="canonical" href="https://bigbluffbay.au/afl-tipping/leaderboard" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="preload" href="styles.css" as="style" />
+    <link rel="stylesheet" href="styles.css?v=20260226-1" />
+    <script defer src="analytics.js?v=20260226-1"></script>
+  </head>
+  <body>
+    <header class="hero premium-hero">
+      <div class="overlay"></div>
+      <nav class="nav wrap">
+        <a class="brand" href="/afl-tipping" style="text-decoration:none;color:inherit;" aria-label="AFL Tipping">
+          <span class="badge">BBB</span>
+          <span><strong>Big Bluff Bay</strong><small>AFL Tipping</small></span>
+        </a>
+        <div class="nav-right-stack">
+          <div class="menu-links">
+            <a class="menu-link" href="/">🏠 Home</a>
+            <a class="menu-link active" href="/afl-tipping">🏉 AFL Tipping</a>
+            <a class="menu-link" href="/punters.html">🏇 Punters Club</a>
+            <a class="menu-link" href="/poker-schedule.html">♠️ Poker</a>
+            <a class="menu-link" href="/alerts">🔔 Alerts</a>
+          </div>
+          <div id="auth-controls"></div>
+        </div>
+      </nav>
+      <div class="hero-body wrap">
+        <div class="hero-kicker afl-hero-kicker">🏆 Season Standings</div>
+        <h1 class="hero-title">AFL Tipping Leaderboard</h1>
+        <p class="hero-sub">2026 Season · Updated after each round</p>
+      </div>
+    </header>
+
+    <main class="wrap" style="padding-top:2rem;padding-bottom:4rem;">
+
+      <!-- Stat cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;" class="responsive-4col" id="stat-cards">
+        <div class="card" style="text-align:center;">
+          <div class="stat-label">Entrants</div>
+          <div class="stat-value" id="stat-entrants" style="color:var(--afl-light);">—</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="stat-label">Season Pot</div>
+          <div class="stat-value" id="stat-season-pot" style="color:var(--afl-light);">$—</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="stat-label">Weekly Pot</div>
+          <div class="stat-value" id="stat-weekly-pot" style="color:var(--afl-light);">$—</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="stat-label">Rollover</div>
+          <div class="stat-value" id="stat-rollover" style="color:#f59e0b;">$0</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <div style="display:flex;gap:.5rem;">
+          <button class="btn chip-btn" id="filter-all" onclick="setFilter('all')">All Entrants</button>
+          <button class="btn btn-ghost" id="filter-paid" onclick="setFilter('paid')">Paid Only</button>
+        </div>
+        <div style="display:flex;gap:.5rem;">
+          <a href="https://www.facebook.com/sharer/sharer.php?u=https://bigbluffbay.au/afl-tipping/leaderboard" target="_blank" rel="noopener" class="btn share-fb" style="font-size:.85em;">📘 Share</a>
+        </div>
+      </div>
+
+      <!-- Season ladder -->
+      <section class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;color:var(--afl-light);">🏆 Season Ladder</h2>
+        <div id="ladder-loading" style="color:var(--muted);padding:1rem;">Loading…</div>
+        <div id="ladder-wrap" style="overflow-x:auto;display:none;">
+          <table class="afl-ladder" style="width:100%;border-collapse:collapse;" id="ladder-table">
+            <thead>
+              <tr style="background:#0c1d3a;border-bottom:2px solid #1e40af;">
+                <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">#</th>
+                <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">Player</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Total</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Rounds</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">This Week</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="ladder-body"></tbody>
+          </table>
+        </div>
+        <p id="ladder-empty" style="color:var(--muted);display:none;">No scores yet this season.</p>
+      </section>
+
+      <!-- Weekly breakdown -->
+      <section class="card" style="margin-bottom:1.5rem;" id="weekly-section" style="display:none;">
+        <h2 style="margin-top:0;color:var(--afl-light);">📊 Latest Round Breakdown</h2>
+        <div id="weekly-round-label" style="color:var(--muted);margin-bottom:.75rem;"></div>
+        <div id="weekly-loading" style="color:var(--muted);">Loading…</div>
+        <div id="weekly-wrap" style="overflow-x:auto;display:none;">
+          <table style="width:100%;border-collapse:collapse;" id="weekly-table">
+            <thead>
+              <tr style="background:#0c1d3a;border-bottom:2px solid #1e40af;">
+                <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">#</th>
+                <th style="padding:.6rem .75rem;text-align:left;color:#93c5fd;font-size:.85em;">Player</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Correct</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Total</th>
+                <th style="padding:.6rem .75rem;text-align:center;color:#93c5fd;font-size:.85em;">Perfect?</th>
+              </tr>
+            </thead>
+            <tbody id="weekly-body"></tbody>
+          </table>
+        </div>
+        <p id="weekly-empty" style="color:var(--muted);display:none;">No scores recorded for this round.</p>
+      </section>
+
+      <!-- Prize projections -->
+      <section class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;color:var(--afl-light);">💰 Season Prize Projections</h2>
+        <p style="color:var(--muted);font-size:.9em;">Based on current confirmed entrants × $75 × 80% net pool.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;" class="responsive-3col" id="prize-cards">
+          <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1.25rem;">
+            <div style="font-size:1.5em;">🥇</div>
+            <div style="font-weight:700;color:var(--afl-light);font-size:1.4em;" id="prize-1st">$—</div>
+            <div style="color:var(--muted);font-size:.85em;">1st Place · 40%</div>
+          </div>
+          <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1.25rem;">
+            <div style="font-size:1.5em;">🥈</div>
+            <div style="font-weight:700;color:var(--afl-light);font-size:1.4em;" id="prize-2nd">$—</div>
+            <div style="color:var(--muted);font-size:.85em;">2nd Place · 25%</div>
+          </div>
+          <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1.25rem;">
+            <div style="font-size:1.5em;">🥉</div>
+            <div style="font-weight:700;color:var(--afl-light);font-size:1.4em;" id="prize-3rd">$—</div>
+            <div style="color:var(--muted);font-size:.85em;">3rd Place · 15%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Nav -->
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <a href="/afl-tipping" class="btn btn-ghost">← AFL Hub</a>
+        <a href="/afl-tipping/submit" class="btn btn-primary">🏉 Submit Tips</a>
+        <a href="/afl-tipping/results" class="btn btn-ghost">📊 Results</a>
+      </div>
+    </main>
+
+    <footer class="footer wrap">
+      <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · AFL Tipping</p>
+    </footer>
+
+    <script src="menu-auth.js?v=20260226-1"></script>
+    <script src="afl-tipping-leaderboard.js?v=20260226-1"></script>
+  </body>
+</html>

@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { registerPokerRoutes, ensurePokerV2Store } = require('./poker-system');
+const { registerAflTippingRoutes, ensureAflStore } = require('./afl-tipping-system');
 
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-change-me';
@@ -173,6 +174,7 @@ function ensureStore() {
   if (ensurePuntersClubStore(store)) {
     changed = true;
   }
+  ensureAflStore(store);
   // V6 migration: legacy pending tips become approved (auto-accept behavior)
   for (const tip of store.tips || []) {
     if (tip.status === 'pending') {
@@ -4094,6 +4096,7 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   });
 
   registerPokerRoutes(app, { readStore, writeStore, auth, adminOnly });
+  registerAflTippingRoutes(app, { readStore, writeStore, auth, adminOnly, JWT_SECRET, getSmtpTransport, SMTP_FROM, ALERTS_BASE_URL });
 
   app.get('/api/social-feed', async (_req, res) => {
     const store = readStore();
@@ -4379,6 +4382,15 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   app.get('/admin/wheel', (_req, res) => res.sendFile(path.join(__dirname, 'admin-wheel.html')));
   app.get(['/alerts/preview', '/alerts/preview/'], (_req, res) => res.sendFile(path.join(__dirname, 'alerts.html')));
   app.get('/punters/', (_req, res) => res.redirect(301, '/punters.html'));
+
+  // AFL Tipping routes
+  app.get('/afl-tipping', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping.html')));
+  app.get(['/afl-tipping/', '/afl-tipping/hub'], (_req, res) => res.redirect(301, '/afl-tipping'));
+  app.get('/afl-tipping/leaderboard', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-leaderboard.html')));
+  app.get('/afl-tipping/submit', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-submit.html')));
+  app.get('/afl-tipping/results', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-results.html')));
+  app.get('/afl-tipping/results/:roundId', (_req, res) => res.sendFile(path.join(__dirname, 'afl-tipping-results.html')));
+  app.get('/admin/afl-tipping', (_req, res) => res.sendFile(path.join(__dirname, 'admin-afl-tipping.html')));
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   return app;

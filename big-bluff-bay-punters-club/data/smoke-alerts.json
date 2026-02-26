@@ -1,0 +1,116 @@
+{
+  "users": [
+    {
+      "id": "8dd86058-b68d-481e-9692-bbd892934862",
+      "username": "admin",
+      "passwordHash": "$2a$10$woC9NcE21WvA6UGX3Gwl4.FbClpD7l26D7Xizg78cu8vhH6pVg1OW",
+      "role": "admin",
+      "createdAt": 1771910663327,
+      "profile": {
+        "bio": "",
+        "email": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
+    },
+    {
+      "id": "835a18e8-a946-4e9c-87cf-4d7ca3ab59bb",
+      "username": "matt",
+      "passwordHash": "$2a$10$XKut4SdXy3s020Uzi7twjuDB6FBTr8UlikzXrNJ/78wEaF5fX2wsi",
+      "recoveryCodeHash": null,
+      "role": "member",
+      "createdAt": 1771910663690,
+      "profile": {
+        "bio": "",
+        "email": "",
+        "profilePic": "",
+        "settings": {
+          "emailNotifications": false,
+          "publicProfile": false,
+          "theme": "system"
+        }
+      }
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "f1",
+      "date": "Sat 14 Feb, 3:19 PM",
+      "event": "Next Meet",
+      "track": "Pinjarra",
+      "raceCount": 12
+    }
+  ],
+  "raceResults": {},
+  "bossesBet": {
+    "title": "Bosses Multi",
+    "weekKey": "",
+    "meet": "",
+    "status": "live",
+    "freerollPrize": 0,
+    "eligibilityNote": "Eligible = all players who entered tips this week before lock.",
+    "lockTime": null,
+    "legItems": [],
+    "legs": [],
+    "selections": {},
+    "updatedAt": null,
+    "updatedBy": null
+  },
+  "buyInVotes": {},
+  "archiveRounds": [],
+  "tipEditDeadlineMs": null,
+  "entryFee": 20,
+  "jackpotCarry": 0,
+  "lastJackpotWinner": "",
+  "socialFeedCache": {
+    "updatedAt": 0,
+    "items": []
+  },
+  "pokerResults": [],
+  "pokerPlayers": [],
+  "tips": [
+    {
+      "id": "98b7f68d-3fa4-4b39-b08e-8dffafec25be",
+      "member": "Macca",
+      "race": "R3",
+      "selection": "Storm Ledger",
+      "status": "approved",
+      "paid": false,
+      "createdAt": 1771906008277
+    },
+    {
+      "id": "939235cd-9c64-4f27-bef7-d5ede274c840",
+      "member": "Jess",
+      "race": "R5",
+      "selection": "Bayline Belle",
+      "status": "approved",
+      "paid": false,
+      "createdAt": 1771907249914
+    },
+    {
+      "id": "289c3d83-069c-4068-898f-fbf55c8d447f",
+      "member": "Rico",
+      "race": "R7",
+      "selection": "Cash Cascade",
+      "status": "approved",
+      "paid": false,
+      "createdAt": 1771906667109
+    }
+  ],
+  "system": {
+    "alertsDeliveryLog": [
+      {
+        "at": 1771910663844,
+        "status": "failed",
+        "channel": "email",
+        "templateId": "queue-send-now",
+        "recipients": 0,
+        "note": "SMTP not configured"
+      }
+    ]
+  }
+}

@@ -1068,3 +1068,181 @@ body.track-thoroughbreds #track-hero { border-left-color: #eab308; }
   z-index: 1;
   background: #0f1c33;
 }
+
+
+/* ── AFL Tipping ────────────────────────────────────────────────────── */
+:root {
+  --afl: #0050a0;
+  --afl-2: #003d80;
+  --afl-light: #60a5fa;
+}
+
+.afl-hero-kicker { color: #93c5fd; font-weight: 700; margin: 0 0 .35rem; }
+.afl-badge { background: #0c1d3a; color: #93c5fd; border: 1px solid #1e40af; border-radius: .5rem; padding: .15rem .45rem; font-size: .75rem; font-weight: 800; }
+
+/* Status strip */
+.afl-status-strip {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: .6rem .9rem;
+  background: #0c1d3a;
+  border: 1px solid #1e40af;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+.afl-status-item { display: flex; flex-direction: column; gap: .1rem; }
+.afl-status-label { font-size: .72rem; color: #93c5fd; text-transform: uppercase; letter-spacing: .04em; }
+.afl-status-value { font-size: 1rem; font-weight: 700; color: var(--text); }
+
+/* Game tiles */
+.game-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: .85rem;
+  background: #0a1120;
+  margin-bottom: .75rem;
+}
+.game-tile-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: .5rem;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+.game-pick-btn {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: .6rem .5rem;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  text-align: center;
+}
+.game-pick-btn:hover:not(:disabled) { border-color: var(--afl-light); background: #0c1d3a; }
+.game-pick-btn:active:not(:disabled) { transform: scale(.97); }
+.game-pick-btn.selected { border-color: var(--afl-light); background: #0c1d3a; color: #fff; }
+.game-pick-btn.locked { opacity: .45; cursor: not-allowed; }
+.game-pick-btn.correct { border-color: var(--brand); background: #052e16; color: #86efac; }
+.game-pick-btn.incorrect { border-color: var(--danger); background: #2d0808; color: #fca5a5; }
+.game-vs { color: var(--muted); font-size: .85rem; font-weight: 700; text-align: center; }
+.game-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .78rem;
+  color: var(--muted);
+  margin-top: .35rem;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+.game-lock-badge {
+  font-size: .7rem;
+  padding: .15rem .45rem;
+  background: #1c1800;
+  color: #fde68a;
+  border: 1px solid #78350f;
+  border-radius: 999px;
+}
+.game-locked-overlay {
+  text-align: center;
+  color: var(--muted);
+  font-size: .85rem;
+  padding: .35rem 0;
+}
+
+/* Jackpot display */
+.jackpot-amount {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  color: var(--afl-light);
+  line-height: 1.1;
+}
+.rollover-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  background: #0c1d3a;
+  border: 1px solid #1e40af;
+  color: #93c5fd;
+  border-radius: 999px;
+  padding: .2rem .65rem;
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* AFL leaderboard */
+.afl-ladder th, .afl-ladder td { padding: .55rem .65rem; text-align: left; border-bottom: 1px solid var(--line); }
+.afl-ladder th { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.afl-ladder tr:last-child td { border-bottom: none; }
+.afl-rank-1 td { background: rgba(12,29,58,.5); }
+.afl-rank-2 td { background: rgba(12,29,58,.3); }
+.afl-rank-3 td { background: rgba(12,29,58,.15); }
+.afl-rank-num { font-weight: 800; color: var(--afl-light); }
+.afl-paid-badge {
+  font-size: .7rem;
+  padding: .1rem .4rem;
+  background: #0c1d3a;
+  color: var(--afl-light);
+  border: 1px solid #1e40af;
+  border-radius: 999px;
+}
+
+/* Prize structure */
+.prize-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem;
+  background: #0a1120;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.prize-medal { font-size: 1.4rem; }
+.prize-label { font-size: .8rem; color: var(--muted); }
+.prize-amount { font-size: 1.1rem; font-weight: 800; color: var(--afl-light); }
+
+/* Share buttons */
+.share-fb { background: #1877f2; color: #fff; border-color: #1877f2; }
+.share-fb:hover { background: #1565d6; border-color: #1565d6; }
+.share-messenger { background: #0084ff; color: #fff; border-color: #0084ff; }
+.share-messenger:hover { background: #0070d9; border-color: #0070d9; }
+
+/* Tip submit progress bar */
+.tips-progress-bar {
+  height: 5px;
+  background: var(--line);
+  border-radius: 999px;
+  margin: .75rem 0;
+  overflow: hidden;
+}
+.tips-progress-fill {
+  height: 100%;
+  background: var(--afl-light);
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+
+/* AFL banter board */
+.banter-item {
+  padding: .6rem .75rem;
+  background: #0a1120;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  margin-bottom: .5rem;
+}
+.banter-meta { font-size: .78rem; color: var(--muted); margin-bottom: .2rem; }
+.banter-msg { font-size: .92rem; }
+
+@media (max-width: 600px) {
+  .game-tile-teams { grid-template-columns: 1fr; gap: .35rem; }
+  .game-vs { display: none; }
+  .game-pick-btn { min-height: 48px; }
+}
