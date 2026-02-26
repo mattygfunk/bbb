@@ -703,6 +703,190 @@ async function loadAnalytics() {
   }
 }
 
+// ── TAB Import ────────────────────────────────────────────────────────────────
+
+const TAB_TEAM_MAP = {
+  'Sydney':            'Sydney Swans',
+  'Brisbane':          'Brisbane Lions',
+  'Wst Bulldogs':      'Western Bulldogs',
+  'West Bulldogs':     'Western Bulldogs',
+  'Western Bulldogs':  'Western Bulldogs',
+  'GWS':               'GWS Giants',
+  'Gold Coast':        'Gold Coast Suns',
+  'West Coast':        'West Coast Eagles',
+  'Wst Coast':         'West Coast Eagles',
+  'Adelaide':          'Adelaide',
+  'Carlton':           'Carlton',
+  'Collingwood':       'Collingwood',
+  'Essendon':          'Essendon',
+  'Fremantle':         'Fremantle',
+  'Geelong':           'Geelong',
+  'Hawthorn':          'Hawthorn',
+  'Melbourne':         'Melbourne',
+  'North Melbourne':   'North Melbourne',
+  'Port Adelaide':     'Port Adelaide',
+  'Richmond':          'Richmond',
+  'St Kilda':          'St Kilda',
+};
+
+function mapTabTeam(name) {
+  const clean = name.trim();
+  if (TAB_TEAM_MAP[clean]) return TAB_TEAM_MAP[clean];
+  // Fuzzy fallback — find AFL_TEAMS entry that starts with the clean name
+  const lower = clean.toLowerCase();
+  const match = AFL_TEAMS.find(
+    (t) => t.toLowerCase() === lower || t.toLowerCase().startsWith(lower) || lower.startsWith(t.toLowerCase().split(' ')[0])
+  );
+  return match || clean;
+}
+
+let importedGames = [];
+
+function parseTabImport() {
+  const text = document.getElementById('import-paste').value;
+  const msgEl = document.getElementById('import-parse-msg');
+  const previewEl = document.getElementById('import-preview');
+  msgEl.textContent = '';
+
+  if (!text.trim()) {
+    msgEl.textContent = '⚠️ Paste some data first';
+    msgEl.style.color = '#f59e0b';
+    return;
+  }
+
+  // Split on "Head To Head" — each segment before it is one game's betting block
+  const parts = text.split('Head To Head');
+  const games = [];
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    const gamePart = parts[i].trim();
+    const nextPart = (parts[i + 1] || '').trim();
+
+    // Extract home vs away: "<Home> v <Away> 3 Markets ..."
+    const gameMatch = gamePart.match(/^(.+?)\s+v\s+(.+?)\s+\d+\s+Markets/i);
+    if (!gameMatch) continue;
+
+    const homeTeam = mapTabTeam(gameMatch[1].trim());
+    const awayTeam = mapTabTeam(gameMatch[2].trim());
+
+    // Line: "Line (-22.5) 1.90 1.28 3.70 (+22.5) 1.90"
+    const lineMatch = gamePart.match(/Line\s+\(([^)]+)\)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i);
+    const line = lineMatch ? lineMatch[1] : '';
+    const homeOdds = lineMatch ? lineMatch[3] : '';
+    const awayOdds = lineMatch ? lineMatch[4] : '';
+
+    // Date/time is at start of next segment: "Thu 5 Mar 19:30Fox Footy..."
+    const dateMatch = nextPart.match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{2}:\d{2})(.*?)(?=Mon|Tue|Wed|Thu|Fri|Sat|Sun|$)/i);
+    let kickoffMs = null;
+    let venue = 'Fox Footy';
+
+    if (dateMatch) {
+      const year = new Date().getFullYear();
+      const dateStr = `${dateMatch[2]} ${dateMatch[3]} ${year} ${dateMatch[4]}:00 GMT+1100`;
+      kickoffMs = new Date(dateStr).getTime();
+      // Venue is whatever follows the time (strip trailing whitespace/newlines)
+      const afterTime = dateMatch[5].trim();
+      if (afterTime) venue = afterTime.split(/\n/)[0].trim();
+    }
+
+    games.push({ homeTeam, awayTeam, line, homeOdds, awayOdds, kickoffMs, venue });
+  }
+
+  importedGames = games;
+
+  if (!games.length) {
+    msgEl.textContent = '❌ No games found — check the pasted data format';
+    msgEl.style.color = '#ef4444';
+    previewEl.style.display = 'none';
+    return;
+  }
+
+  msgEl.textContent = `✅ Found ${games.length} game${games.length !== 1 ? 's' : ''}`;
+  msgEl.style.color = 'var(--brand)';
+
+  // Render preview table
+  const tableEl = document.getElementById('import-games-table');
+  tableEl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:.9em;">
+      <thead>
+        <tr style="color:var(--muted);text-align:left;border-bottom:2px solid var(--line);">
+          <th style="padding:.5rem;">#</th>
+          <th>Home</th>
+          <th>Away</th>
+          <th>Line</th>
+          <th>H2H (Home / Away)</th>
+          <th>Kickoff (Melb)</th>
+          <th>Venue</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${games.map((g, idx) => `
+          <tr style="border-bottom:1px solid var(--line);">
+            <td style="padding:.5rem;color:var(--muted);">${idx + 1}</td>
+            <td style="font-weight:600;">${escHtml(g.homeTeam)}</td>
+            <td style="font-weight:600;">${escHtml(g.awayTeam)}</td>
+            <td style="color:var(--afl-light);">${escHtml(g.line)}</td>
+            <td style="color:var(--muted);">${g.homeOdds ? g.homeOdds + ' / ' + g.awayOdds : '—'}</td>
+            <td>${g.kickoffMs ? fmtDate(g.kickoffMs) : '<span style="color:#ef4444;">⚠️ No date</span>'}</td>
+            <td style="color:var(--muted);font-size:.85em;">${escHtml(g.venue)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  previewEl.style.display = 'block';
+}
+
+window.clearImport = function () {
+  document.getElementById('import-paste').value = '';
+  document.getElementById('import-parse-msg').textContent = '';
+  document.getElementById('import-preview').style.display = 'none';
+  importedGames = [];
+};
+
+window.createRoundFromImport = async function () {
+  const msgEl = document.getElementById('import-create-msg');
+  if (!importedGames.length) {
+    msgEl.textContent = '⚠️ Parse some games first';
+    msgEl.style.color = '#f59e0b';
+    return;
+  }
+
+  const roundNumber = parseInt(document.getElementById('import-round-number').value, 10);
+  const labelInput = document.getElementById('import-round-label').value.trim();
+  if (!roundNumber) { msgEl.textContent = '⚠️ Enter a round number'; msgEl.style.color = '#f59e0b'; return; }
+  const label = labelInput || `Round ${roundNumber}`;
+
+  const games = importedGames.map((g) => ({
+    homeTeam: g.homeTeam,
+    awayTeam: g.awayTeam,
+    venue: g.venue,
+    kickoff: g.kickoffMs
+  }));
+
+  msgEl.textContent = 'Creating…';
+  msgEl.style.color = 'var(--muted)';
+
+  try {
+    await apiReq('/afl-tipping/admin/rounds', {
+      method: 'POST',
+      body: JSON.stringify({ roundNumber, label, games })
+    });
+    msgEl.textContent = '✅ Round created! Go to the Rounds tab to open it.';
+    msgEl.style.color = 'var(--brand)';
+    importedGames = [];
+    document.getElementById('import-preview').style.display = 'none';
+    document.getElementById('import-paste').value = '';
+    document.getElementById('import-parse-msg').textContent = '';
+    loadRounds();
+    loadRoundsForSelector();
+  } catch (err) {
+    msgEl.textContent = '❌ ' + err.message;
+    msgEl.style.color = '#ef4444';
+  }
+};
+
 // ── CSS helpers (form inputs use existing styles + these inline additions) ────
 (function injectFormStyles() {
   if (document.getElementById('afl-admin-form-styles')) return;
