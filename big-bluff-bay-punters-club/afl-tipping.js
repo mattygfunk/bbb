@@ -506,7 +506,7 @@
         <div class="card" style="flex:1;min-width:280px;">
           <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
             <h4 style="margin:0;color:#ef4444;">${escHtml(ko.name)}</h4>
-            <span class="pill" style="background:#3f1d1d;color:#fca5a5;border:1px solid #ef4444;">${ko.status === 'completed' ? 'Completed' : 'Active'}</span>
+            <span class="pill" style="background:${ko.status === 'completed' ? '#3f1d1d' : ko.status === 'pending' ? '#1a1a2e' : '#1a2e1a'};color:${ko.status === 'completed' ? '#fca5a5' : ko.status === 'pending' ? '#93c5fd' : '#4ade80'};border:1px solid ${ko.status === 'completed' ? '#ef4444' : ko.status === 'pending' ? '#3b82f6' : '#22c55e'};">${ko.status === 'completed' ? 'Completed' : ko.status === 'pending' ? `Starts Rd ${ko.startRound || '?'}` : 'Active'}</span>
             <span class="pill" style="background:#1a1000;color:#fbbf24;border:1px solid #f59e0b;margin-left:auto;">Prize: ${fmtMoney(koPrizeEach)}</span>
           </div>
           <p style="color:var(--muted);font-size:.82em;margin:-.25rem 0 .75rem;">

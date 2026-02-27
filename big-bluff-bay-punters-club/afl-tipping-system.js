@@ -74,6 +74,12 @@ function processKnockoutEliminations(store, roundId) {
     const correctPick = koGame.result.winner;
     const roundLabel = round.label || 'Round';
 
+    // Skip if this KO comp hasn't started yet (startRound not reached)
+    if (ko.status === 'pending' && ko.startRound && round.number < ko.startRound) {
+      results.push({ id: ko.id, name: ko.name, status: 'pending', reason: `Starts round ${ko.startRound}` });
+      continue;
+    }
+
     // Initialize active players from confirmed entries if it's the first round of eliminations
     if (ko.status === 'pending') {
       const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
@@ -167,8 +173,8 @@ function ensureAflStore(store) {
       weeklyRollover: 0,
       analytics: { weeklyEngagement: [] },
       knockout: [
-        { id: 1, name: "KO Comp 1", status: 'pending', activePlayers: [], eliminated: [], winner: null },
-        { id: 2, name: "KO Comp 2", status: 'pending', activePlayers: [], eliminated: [], winner: null }
+        { id: 1, name: "KO Comp 1", startRound: 1,  status: 'pending', activePlayers: [], eliminated: [], winner: null },
+        { id: 2, name: "KO Comp 2", startRound: 13, status: 'pending', activePlayers: [], eliminated: [], winner: null }
       ]
     };
   }
@@ -183,8 +189,8 @@ function ensureAflStore(store) {
   
   if (!Array.isArray(at.knockout) || at.knockout.length !== 2) {
     at.knockout = [
-      { id: 1, name: "KO Comp 1", status: 'pending', activePlayers: [], eliminated: [], winner: null },
-      { id: 2, name: "KO Comp 2", status: 'pending', activePlayers: [], eliminated: [], winner: null }
+      { id: 1, name: "KO Comp 1", startRound: 1,  status: 'pending', activePlayers: [], eliminated: [], winner: null },
+      { id: 2, name: "KO Comp 2", startRound: 13, status: 'pending', activePlayers: [], eliminated: [], winner: null }
     ];
   }
   
@@ -419,6 +425,9 @@ function calcSeasonPrizes(store) {
   const knockoutPool = gross * (ps.knockout || 0.075);
   const weeklyPool = gross * (ps.weeklyPot || 0.23);
 
+  // Fixed $75 prize per KO competition if set in season config, otherwise derive from pool
+  const knockoutEach = at.season.knockoutPrizeFixed || (knockoutPool / 2);
+
   return {
     confirmedCount,
     gross,
@@ -429,7 +438,7 @@ function calcSeasonPrizes(store) {
     second: seasonLeaderboardPool * lp.second,
     third: seasonLeaderboardPool * lp.third,
     knockoutTotal: knockoutPool,
-    knockoutEach: knockoutPool / 2
+    knockoutEach
   };
 }
 
@@ -610,14 +619,23 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
 
       // KO competition status (with fallbacks)
       const koArray = Array.isArray(at.knockout) ? at.knockout : [];
-      const koStatus = koArray.map(ko => ({
-        id: ko.id,
-        name: ko.name,
-        status: ko.status || 'pending',
-        activePlayers: ko.activePlayers ? ko.activePlayers.length : 0,
-        totalEliminated: ko.eliminated ? ko.eliminated.length : 0,
-        winner: ko.winner || null
-      }));
+      const koStatus = koArray.map(ko => {
+        // Resolve userId list to member name objects for display
+        const activePlayerIds = Array.isArray(ko.activePlayers) ? ko.activePlayers : [];
+        const activePlayers = activePlayerIds.map(uid => {
+          const e = at.entries.find(e => e.userId === uid);
+          return { userId: uid, member: e ? e.member : uid };
+        });
+        return {
+          id: ko.id,
+          name: ko.name,
+          startRound: ko.startRound || null,
+          status: ko.status || 'pending',
+          activePlayers,
+          totalEliminated: ko.eliminated ? ko.eliminated.length : 0,
+          winner: ko.winner || null
+        };
+      });
 
       res.json({
         ok: true,
