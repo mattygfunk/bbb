@@ -122,7 +122,12 @@
 
   function renderPrizes(prizes) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmtMoney(val); };
-    if (!prizes) return;
+    if (!prizes) {
+      set('prize-1st', 0);
+      set('prize-2nd', 0);
+      set('prize-3rd', 0);
+      return;
+    }
     set('prize-1st', prizes.first || 0);
     set('prize-2nd', prizes.second || 0);
     set('prize-3rd', prizes.third || 0);

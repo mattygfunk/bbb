@@ -137,10 +137,13 @@
       // Stat cards
       const prizes = data.prizes || {};
       const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      
       setText('stat-entrants', prizes.confirmedCount || 0);
       setText('stat-season-pot', fmtMoney(prizes.seasonLeaderboardPool || 0));
-      setText('stat-weekly-pot', fmtMoney(data.weeklyPot || 0));
+      setText('stat-weekly-pot', fmtMoney(data.weeklyPot || (prizes.confirmedCount || 0) * 1)); // Use data.weeklyPot or calculate from users
       setText('stat-rollover', fmtMoney(data.rollover || 0));
+      
+      // Correctly display top-heavy prizes
       setText('prize-1st', fmtMoney(prizes.first || 0));
       setText('prize-2nd', fmtMoney(prizes.second || 0));
       setText('prize-3rd', fmtMoney(prizes.third || 0));
