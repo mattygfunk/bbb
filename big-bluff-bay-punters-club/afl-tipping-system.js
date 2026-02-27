@@ -54,73 +54,90 @@ function processKnockoutEliminations(store, roundId) {
   const round = at.rounds.find((r) => r.id === roundId);
   if (!round || round.status !== 'scored' || !round.games.length) return;
 
-  // Skip if KO already completed
-  if (at.knockout.status === 'completed') return;
+  const results = [];
 
-  const firstGame = round.games[0];
-  if (!firstGame.result || !firstGame.result.winner) return;
-
-  const correctPick = firstGame.result.winner;
-  const roundLabel = round.label || 'Round';
-
-  // Get current active players (initialize from confirmed entries if first round)
-  if (!at.knockout.activePlayers.length) {
-    const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
-    at.knockout.activePlayers = confirmedEntries.map((e) => e.userId);
-  }
-
-  const newEliminations = [];
-  const remainingPlayers = [];
-
-  for (const userId of at.knockout.activePlayers) {
-    const userTips = round.tips[userId] || [];
-    const firstGameTip = userTips.find((tip) => tip.gameId === firstGame.id);
-    
-    if (!firstGameTip || firstGameTip.pick !== correctPick) {
-      // Player is eliminated
-      const entry = at.entries.find((e) => e.userId === userId);
-      newEliminations.push({
-        userId,
-        member: entry ? entry.member : 'Unknown',
-        roundId,
-        roundLabel,
-        eliminatedAt: Date.now(),
-        incorrectPick: firstGameTip ? firstGameTip.pick : null,
-        correctPick
-      });
-    } else {
-      // Player survives
-      remainingPlayers.push(userId);
+  for (const ko of at.knockout) {
+    // Skip if KO already completed
+    if (ko.status === 'completed') {
+      results.push({ id: ko.id, name: ko.name, status: 'completed' });
+      continue;
     }
-  }
 
-  // Update knockout state
-  at.knockout.eliminated.push(...newEliminations);
-  at.knockout.activePlayers = remainingPlayers;
+    // Determine which game to use for elimination (1st game for KO 1, 2nd game for KO 2)
+    const gameIndex = ko.id === 1 ? 0 : 1;
+    const koGame = round.games[gameIndex];
+    if (!koGame || !koGame.result || !koGame.result.winner) {
+      results.push({ id: ko.id, name: ko.name, status: 'skipped' });
+      continue;
+    }
 
-  // Check if we have a winner
-  if (remainingPlayers.length === 1) {
-    const winnerId = remainingPlayers[0];
-    const winnerEntry = at.entries.find((e) => e.userId === winnerId);
-    const prizes = calcSeasonPrizes(store);
+    const correctPick = koGame.result.winner;
+    const roundLabel = round.label || 'Round';
+
+    // Initialize active players from confirmed entries if it's the first round of eliminations
+    if (ko.status === 'pending') {
+      const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
+      ko.activePlayers = confirmedEntries.map((e) => e.userId);
+      ko.status = 'active';
+    }
+
+    const newEliminations = [];
+    const remainingPlayers = [];
+
+    for (const userId of ko.activePlayers) {
+      const userTips = round.tips[userId] || [];
+      const gameTip = userTips.find((tip) => tip.gameId === koGame.id);
+      
+      if (!gameTip || gameTip.pick !== correctPick) {
+        // Player is eliminated
+        const entry = at.entries.find((e) => e.userId === userId);
+        newEliminations.push({
+          userId,
+          member: entry ? entry.member : 'Unknown',
+          roundId,
+          roundLabel,
+          eliminatedAt: Date.now(),
+          incorrectPick: gameTip ? gameTip.pick : null,
+          correctPick
+        });
+      } else {
+        // Player survives
+        remainingPlayers.push(userId);
+      }
+    }
+
+    // Update knockout state
+    ko.eliminated.push(...newEliminations);
+    ko.activePlayers = remainingPlayers;
+
+    // Check for a winner
+    if (remainingPlayers.length === 1) {
+      const winnerId = remainingPlayers[0];
+      const winnerEntry = at.entries.find((e) => e.userId === winnerId);
+      const prizes = calcSeasonPrizes(store);
+      
+      ko.winner = {
+        userId: winnerId,
+        member: winnerEntry ? winnerEntry.member : 'Unknown',
+        wonAt: Date.now(),
+        prize: prizes.knockoutEach
+      };
+      ko.status = 'completed';
+    } else if (remainingPlayers.length === 0) {
+      // No survivors
+      ko.status = 'completed';
+    }
     
-    at.knockout.winner = {
-      userId: winnerId,
-      member: winnerEntry ? winnerEntry.member : 'Unknown',
-      wonAt: Date.now(),
-      prize: prizes.knockout
-    };
-    at.knockout.status = 'completed';
-  } else if (remainingPlayers.length === 0) {
-    // No survivors (shouldn't happen, but handle it)
-    at.knockout.status = 'completed';
+    results.push({ 
+      id: ko.id,
+      name: ko.name,
+      eliminated: newEliminations.length,
+      remaining: remainingPlayers.length,
+      winner: ko.winner 
+    });
   }
-
-  return {
-    eliminated: newEliminations.length,
-    remaining: remainingPlayers.length,
-    winner: at.knockout.winner
-  };
+  
+  return results;
 }
 
 // ── Store bootstrap ───────────────────────────────────────────────────────────
@@ -132,10 +149,15 @@ function ensureAflStore(store) {
         id: crypto.randomUUID(),
         name: '2026 AFL Season',
         year: 2026,
-        entryFee: 75,
-        weeklyPrizePot: 30,
+        entryFee: 100,
+        weeklyPrizePerUser: 1,
         status: 'open',
-        prizeStructure: { first: 0.40, second: 0.25, third: 0.15, knockout: 0.05, house: 0.20 },
+        prizeStructure: { 
+          seasonLeaderboard: 0.695, // 69.5%
+          knockout: 0.075,          // 7.5%
+          weeklyPot: 0.23,           // 23%
+          leaderboardPayout: { first: 0.50, second: 0.30, third: 0.20 } 
+        },
         createdAt: Date.now()
       },
       rounds: [],
@@ -144,13 +166,10 @@ function ensureAflStore(store) {
       payoutAudit: [],
       weeklyRollover: 0,
       analytics: { weeklyEngagement: [] },
-      knockout: {
-        status: 'active', // 'active' | 'completed'
-        activePlayers: [], // userIds still in competition
-        eliminated: [], // { userId, member, roundId, roundLabel, eliminatedAt }
-        winner: null, // { userId, member, wonAt, prize }
-        startedAt: Date.now()
-      }
+      knockout: [
+        { id: 1, name: "KO Comp 1", status: 'pending', activePlayers: [], eliminated: [], winner: null },
+        { id: 2, name: "KO Comp 2", status: 'pending', activePlayers: [], eliminated: [], winner: null }
+      ]
     };
   }
   const at = store.aflTipping;
@@ -161,15 +180,14 @@ function ensureAflStore(store) {
   if (typeof at.weeklyRollover !== 'number') at.weeklyRollover = 0;
   if (!at.analytics || typeof at.analytics !== 'object') at.analytics = { weeklyEngagement: [] };
   if (!Array.isArray(at.analytics.weeklyEngagement)) at.analytics.weeklyEngagement = [];
-  if (!at.knockout || typeof at.knockout !== 'object') {
-    at.knockout = {
-      status: 'active',
-      activePlayers: [],
-      eliminated: [],
-      winner: null,
-      startedAt: Date.now()
-    };
+  
+  if (!Array.isArray(at.knockout) || at.knockout.length !== 2) {
+    at.knockout = [
+      { id: 1, name: "KO Comp 1", status: 'pending', activePlayers: [], eliminated: [], winner: null },
+      { id: 2, name: "KO Comp 2", status: 'pending', activePlayers: [], eliminated: [], winner: null }
+    ];
   }
+  
   return at;
 }
 
@@ -247,7 +265,8 @@ function scoreRound(store, roundId) {
   let payout = null;
 
   const rolloverIn = at.weeklyRollover;
-  const basePot = at.season.weeklyPrizePot || 30;
+  const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
+  const basePot = confirmedCount * (at.season.weeklyPrizePerUser || 1);
   const totalPot = basePot + rolloverIn;
 
   round.weeklyJackpot = round.weeklyJackpot || {};
@@ -392,23 +411,24 @@ function buildSeasonLeaderboard(store) {
 function calcSeasonPrizes(store) {
   const at = ensureAflStore(store);
   const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
-  const gross = confirmedCount * (at.season.entryFee || 75);
+  const gross = confirmedCount * (at.season.entryFee || 100);
   const ps = at.season.prizeStructure;
-  
-  // Calculate allocation percentages
-  const knockoutPrize = Math.round(gross * ps.knockout);
-  const housePortion = Math.round(gross * ps.house);
-  const seasonNet = gross - knockoutPrize - housePortion; // 75% for season prizes
-  
+
+  const seasonLeaderboardPool = gross * ps.seasonLeaderboard;
+  const knockoutPool = gross * ps.knockout;
+  const weeklyPool = gross * ps.weeklyPot;
+
   return {
     confirmedCount,
     gross,
-    seasonNet,
-    first: Math.round(seasonNet * ps.first),
-    second: Math.round(seasonNet * ps.second),
-    third: Math.round(seasonNet * ps.third),
-    knockout: knockoutPrize,
-    house: housePortion
+    seasonLeaderboardPool,
+    knockoutPool,
+    weeklyPool,
+    first: seasonLeaderboardPool * ps.leaderboardPayout.first,
+    second: seasonLeaderboardPool * ps.leaderboardPayout.second,
+    third: seasonLeaderboardPool * ps.leaderboardPayout.third,
+    knockoutTotal: knockoutPool, // For two comps
+    knockoutEach: knockoutPool / 2
   };
 }
 
