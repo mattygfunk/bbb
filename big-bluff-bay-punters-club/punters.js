@@ -28,8 +28,8 @@ function getRunnerNameByRaceSelection(race='R1', selection='') {
   return String(hit?.horseName || '').trim();
 }
 
-function formatSelectionText(race='R1', selection='—', runnerName='') {
-  const sel = String(selection || '—');
+function formatSelectionText(race='R1', selection='-', runnerName='') {
+  const sel = String(selection || '-');
   const name = String(runnerName || getRunnerNameByRaceSelection(race, sel) || '').trim();
   return name ? `#${sel} • ${name}` : `#${sel}`;
 }
@@ -135,7 +135,7 @@ function renderLeaderboard(rows){
     const tierBadge = String(r.tier || '').toUpperCase() === 'JACKPOT'
       ? " <span class='pill'>💰 Jackpot Eligible</span>"
       : '';
-    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button>${tierBadge}</td><td>${r.points == null ? '—' : r.points}</td><td>${(r.winners ?? r.correct) == null ? '—' : (r.winners ?? r.correct)}</td>`;
+    tr.innerHTML=`<td>${r.rank}</td><td><button class='btn btn-ghost' type='button' data-member='${encodeURIComponent(String(r.member || ''))}'>${esc(r.member)}</button>${tierBadge}</td><td>${r.points == null ? '-' : r.points}</td><td>${(r.winners ?? r.correct) == null ? '-' : (r.winners ?? r.correct)}</td>`;
     body.appendChild(tr);
   });
   if(!(rows||[]).length){
@@ -172,7 +172,7 @@ function renderMilestones(data){
     if (Number.isFinite(ts) && ts > 0) {
       return new Date(ts).toLocaleDateString('en-AU', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
     }
-    return String(row?.weekLabel || 'Round —');
+    return String(row?.weekLabel || 'Round -');
   };
 
   const snapshotHref = (row) => {
@@ -188,7 +188,7 @@ function renderMilestones(data){
   } else {
     const label = formatRoundLabel(featured);
     const isRollover = Boolean(featured.rolledOver);
-    const winnerName = isRollover ? 'No outright winner' : String(featured.member || '—');
+    const winnerName = isRollover ? 'No outright winner' : String(featured.member || '-');
     const points = Number(featured.points || 0);
     const winners = Number(featured.winners || 0);
     const prize = Number(featured.prize ?? featured.points ?? 0);
@@ -212,7 +212,7 @@ function renderMilestones(data){
       <article class='card winners-rollover-card'>
         <p class='next-tip-kicker'>Rollover Round ⚠️</p>
         <h4>${esc(formatRoundLabel(recentRollover))}</h4>
-        <p class='muted'>No outright winner — jackpot rolls over</p>
+        <p class='muted'>No outright winner - jackpot rolls over</p>
         <p class='winners-feature-prize'>${money.format(Number(recentRollover.prize ?? 0))}</p>
         <div class='row-actions'>
           <span class='pill chip-red'>Rollover</span>
@@ -255,9 +255,9 @@ function renderMilestones(data){
   if (promoRolloverRate) promoRolloverRate.textContent = `${rolloverRate}%`;
   if (promoUniqueWinners) promoUniqueWinners.textContent = `${uniqueWinners.size}`;
   if (promoLatestWinner) {
-    const latestName = String(latestWinnerRow?.member || '').trim() || '—';
+    const latestName = String(latestWinnerRow?.member || '').trim() || '-';
     const latestPrize = Number(latestWinnerRow?.prize ?? 0);
-    promoLatestWinner.textContent = latestName === '—' ? '—' : `${latestName} (${money.format(latestPrize)})`;
+    promoLatestWinner.textContent = latestName === '-' ? '-' : `${latestName} (${money.format(latestPrize)})`;
   }
 
   winnerHistory.innerHTML='';
@@ -278,7 +278,7 @@ function renderMilestones(data){
   (data?.streakLeaderboard || []).slice(0,10).forEach((row)=>{
     const badgeText = (row.badges || []).slice(0,2).join(' • ');
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${row.rank}</td><td>${esc(row.member || '-')}</td><td>${Number(row.currentStreak || 0)}</td><td>${Number(row.bestStreak || 0)}</td><td>${Number(row.totalWins || 0)}</td><td class='muted'>${esc(badgeText || '—')}</td>`;
+    tr.innerHTML=`<td>${row.rank}</td><td>${esc(row.member || '-')}</td><td>${Number(row.currentStreak || 0)}</td><td>${Number(row.bestStreak || 0)}</td><td>${Number(row.totalWins || 0)}</td><td class='muted'>${esc(badgeText || '-')}</td>`;
     streakBody.appendChild(tr);
   });
   if(!(data?.streakLeaderboard || []).length){
@@ -322,11 +322,11 @@ function renderBossesBet(bb){
       <article class='card'><h3>${esc(String(data.weekKey || 'Current round'))}</h3><p class='muted'>${esc(String(data.title || 'Bosses Multi'))}</p></article>
       <article class='card'><h3>${esc(String(data.meet || 'Track TBA'))}</h3><p class='muted'>Current tipping track</p></article>
       <article class='card'><h3>PLACE</h3><p class='muted'>Bet type (all legs)</p></article>
-      <article class='card'><h3>${esc(String(data.stake || '—'))}</h3><p class='muted'>Stake</p></article>
-      <article class='card'><h3>${esc(String(data.potentialReturn || '—'))}</h3><p class='muted'>Potential return</p></article>
+      <article class='card'><h3>${esc(String(data.stake || '-'))}</h3><p class='muted'>Stake</p></article>
+      <article class='card'><h3>${esc(String(data.potentialReturn || '-'))}</h3><p class='muted'>Potential return</p></article>
       <article class='card'><h3>${esc(freerollText)}</h3><p class='muted'>Freeroll Prize</p></article>
-      <article class='card'><h3>${lockTime>0?esc(new Date(lockTime).toLocaleString('en-AU',{timeZone:'Australia/Melbourne', dateStyle:'medium', timeStyle:'short'})):'—'}</h3><p class='muted'>Lock (Melbourne)</p></article>
-      <article class='card'><h3>${updatedAt>0?esc(new Date(updatedAt).toLocaleTimeString('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit'})):'—'}</h3><p class='muted'>Last updated (Melbourne)</p></article>
+      <article class='card'><h3>${lockTime>0?esc(new Date(lockTime).toLocaleString('en-AU',{timeZone:'Australia/Melbourne', dateStyle:'medium', timeStyle:'short'})):'-'}</h3><p class='muted'>Lock (Melbourne)</p></article>
+      <article class='card'><h3>${updatedAt>0?esc(new Date(updatedAt).toLocaleTimeString('en-AU',{timeZone:'Australia/Melbourne',hour:'2-digit',minute:'2-digit'})):'-'}</h3><p class='muted'>Last updated (Melbourne)</p></article>
     `;
   }
 
@@ -352,9 +352,9 @@ function renderBossesBet(bb){
     const raceRows = state.raceRunners?.[raceKey]?.runners || [];
     const hit = raceRows.find((r)=> String(r?.runnerNumber || '') === String(selNo));
     const runnerName = String(hit?.horseName || '').trim();
-    const selectionText = runnerName ? `${selRaw || `#${selNo}`} • ${runnerName}` : (selRaw || '—');
-    const oddsText = String(leg.odds || '').trim() || (hit?.prices?.place != null ? String(hit.prices.place) : (hit?.prices?.win != null ? String(hit.prices.win) : '—'));
-    const legRace = `Leg ${Number(leg.legNumber || idx + 1)} · ${esc(leg.race || 'Race —')}`;
+    const selectionText = runnerName ? `${selRaw || `#${selNo}`} • ${runnerName}` : (selRaw || '-');
+    const oddsText = String(leg.odds || '').trim() || (hit?.prices?.place != null ? String(hit.prices.place) : (hit?.prices?.win != null ? String(hit.prices.win) : '-'));
+    const legRace = `Leg ${Number(leg.legNumber || idx + 1)} · ${esc(leg.race || 'Race -')}`;
     tr.innerHTML = `<td>${legRace}</td><td>${esc(selectionText)}</td><td>${esc(oddsText)}</td><td><span class='pill ${result==='LOST'?'chip-red':''}'>${esc(result)}</span></td>`;
     wrap.appendChild(tr);
   });
@@ -371,7 +371,7 @@ async function loadMemberBreakdown(member, scrollToSection = true){
     const r = await req(API.ladderMember(member));
     const b = r.breakdown || { races: [], totalPoints: 0, winners: 0 };
     state.selectedBreakdownMember = member;
-    title.textContent = `${member} — ${b.totalPoints} points • ${b.winners} winners`;
+    title.textContent = `${member} - ${b.totalPoints} points • ${b.winners} winners`;
     body.innerHTML = '';
     if(!(b.races||[]).length){
       body.innerHTML = `<tr><td colspan='4' class='muted'>No scored races yet for ${esc(member)}.</td></tr>`;
@@ -405,7 +405,7 @@ function renderRaceInputs(count){
     row.className='row';
 
     const imported = state.raceRunners?.[race]?.runners || [];
-    const opts=['<option value="">—</option>'];
+    const opts=['<option value="">-</option>'];
     if (imported.length) {
       imported.forEach((r) => {
         const num = String(r?.runnerNumber || '').trim();
@@ -449,7 +449,7 @@ function renderRaceMarket(race = state.nextTipRace || 'R1') {
   raceTag.textContent = raceId;
   const imported = state.raceRunners?.[raceId]?.runners || [];
   if (!imported.length) {
-    top.textContent = 'Top of market: —';
+    top.textContent = 'Top of market: -';
     body.innerHTML = "<tr><td colspan='5' class='muted'>No imported runners for this race yet.</td></tr>";
     return;
   }
@@ -473,7 +473,7 @@ function renderRaceMarket(race = state.nextTipRace || 'R1') {
     const scr = Boolean(r?.isScratched);
     const isFav = favs.some((f)=>f.horseName===r.horseName);
     tr.className = `${scr?'scr-row':''} ${isFav?'fav-row':''}`.trim();
-    tr.innerHTML = `<td>${esc(`${r?.runnerNumber || idx+1}. ${r?.horseName || '—'}`)}</td><td>${r?.barrier ?? '—'}</td><td>${r?.prices?.win ?? '—'}</td><td>${r?.prices?.place ?? '—'}</td><td><span class='pill ${scr?'chip-red':''}'>${scr?'SCR':'Active'}</span></td>`;
+    tr.innerHTML = `<td>${esc(`${r?.runnerNumber || idx+1}. ${r?.horseName || '-'}`)}</td><td>${r?.barrier ?? '-'}</td><td>${r?.prices?.win ?? '-'}</td><td>${r?.prices?.place ?? '-'}</td><td><span class='pill ${scr?'chip-red':''}'>${scr?'SCR':'Active'}</span></td>`;
     body.appendChild(tr);
   });
 }
@@ -511,7 +511,7 @@ function renderNextTipInlineStatus(overviewData, tipDeadlineRes, fixtures) {
   jackpotEl.textContent = betweenRounds
     ? '💰 Jackpot: Pending next round'
     : `💰 Jackpot live: $${Number(overviewData?.jackpot?.totalPot || 0).toFixed(0)}`;
-  const meet = betweenRounds ? '—' : String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '—');
+  const meet = betweenRounds ? '-' : String((fixtures?.[0]?.track || fixtures?.[0]?.event || '').trim() || '-');
   meetEl.textContent = `🏁 Meet: ${meet}`;
 
   const lockAt = Number(tipDeadlineRes?.effectiveDeadlineMs || tipDeadlineRes?.lockAtMs || 0);
@@ -554,7 +554,7 @@ function renderUpgradeButtonState(){
     return;
   }
   if(state.isJackpotEligible){
-    btn.textContent = 'You’re in ✅';
+    btn.textContent = 'You're in ✅';
     btn.disabled = true;
     btn.classList.add('btn-ghost');
     return;
@@ -618,7 +618,7 @@ function renderRoundMeta(overview){
     if (!rounds.length){
       past.innerHTML = ``;
     } else {
-      past.innerHTML = rounds.map((r)=>`<a class='menu-link' href='/punters-club/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} — Winner: ${esc(r.winner || '—')}</a>`).join('');
+      past.innerHTML = rounds.map((r)=>`<a class='menu-link' href='/punters-club/results/${encodeURIComponent(r.id)}'>${esc(r.label || r.id)} - Winner: ${esc(r.winner || '-')}</a>`).join('');
     }
   }
 }
@@ -629,38 +629,114 @@ function getCurrentRoundPoolText() {
   return `Current round prize pool (incl. jackpot): $${Math.round(pot)}`;
 }
 
-function generateWinningScenarios({ userRank, userPoints, leaderPoints, gapToFirst, remainingRaces, nextUserPick, ladderRows }) {
-  const lines = [];
-  const safeGap = Number.isFinite(gapToFirst) ? gapToFirst : null;
-  const safeRemaining = Number.isFinite(remainingRaces) ? remainingRaces : null;
-  const clustered = Array.isArray(ladderRows) && Number.isFinite(userPoints)
-    ? ladderRows.filter((r) => Math.abs(Number(r?.points || 0) - userPoints) <= 2).length >= 4
-    : false;
+function generateWinningScenarios({ userName, userPoints, ladderRows, tipsFeed, raceResults, raceCount }) {
+  const items = []; // { text, type: 'good'|'warn'|'bad'|'info' }
 
-  if (safeGap != null && safeGap <= 0) {
-    lines.push('You’re leading. A clean finish keeps pressure on the chasers.');
-  } else if (safeGap != null && safeGap <= 1) {
-    lines.push('You’re within striking distance of 1st — one result could swing the lead.');
-  } else if (safeGap != null && safeGap <= 3) {
-    lines.push(`You’re ${safeGap} pts off top. One strong race likely pulls you right back in.`);
-  } else if (safeGap != null) {
-    lines.push(`You’re ${safeGap} pts behind 1st. You’ll need a sharp final run to challenge.`);
+  const allRaces = [];
+  for (let i = 1; i <= (raceCount || 12); i++) allRaces.push(`R${i}`);
+
+  const settled = new Set(
+    Object.entries(raceResults || {})
+      .filter(([, rr]) => (rr?.first?.length || rr?.second?.length || rr?.third?.length))
+      .map(([r]) => String(r).toUpperCase())
+  );
+  const remaining = allRaces.filter(r => !settled.has(r));
+  const maxPerRace = 3;
+  const maxGain = remaining.length * maxPerRace;
+
+  // Build picks map: member -> race -> selection
+  const picks = {};
+  for (const tip of (tipsFeed || [])) {
+    const m = String(tip.member || '').trim();
+    const r = String(tip.race || '').toUpperCase();
+    if (!m || !r) continue;
+    if (!picks[m]) picks[m] = {};
+    picks[m][r] = String(tip.selection || '').trim();
   }
 
-  if (safeRemaining != null && safeRemaining <= 2) {
-    lines.push('Final stretch: with 2 or fewer races left, every place result is critical.');
+  const me = String(userName || '').toLowerCase();
+  const myPicks = Object.fromEntries(
+    Object.entries(picks).find(([k]) => k.toLowerCase() === me)?.[1] || []
+  );
+
+  const ladder = (ladderRows || []).map(r => ({ ...r, pts: Number(r.points || 0) }));
+  const myRow = ladder.find(r => String(r.member || '').toLowerCase() === me);
+  const myPts = myRow ? myRow.pts : Number(userPoints || 0);
+  const myMaxTotal = myPts + maxGain;
+
+  // — Position summary —
+  if (!myRow) {
+    items.push({ text: 'Submit tips to join the leaderboard.', type: 'info' });
+    return items;
   }
 
-  if (clustered) {
-    lines.push('Tight ladder: multiple punters are clustered within 1–2 points.');
+  const leaderPts = ladder[0]?.pts ?? myPts;
+  const gap = leaderPts - myPts;
+  const rank = myRow.rank || '?';
+
+  if (gap <= 0) {
+    items.push({ text: `You're leading with ${myPts} pts — hold the line.`, type: 'good' });
+  } else if (myMaxTotal < leaderPts) {
+    items.push({ text: `Eliminated — even with ${maxGain} pts perfect remaining you can't reach the leader (${leaderPts} pts).`, type: 'bad' });
+  } else if (myMaxTotal === leaderPts) {
+    items.push({ text: `Can tie for 1st but can't win outright — you need ${gap} pts but leader has more wins as a tiebreaker.`, type: 'warn' });
+  } else {
+    items.push({ text: `Rank ${rank} · ${myPts} pts · ${gap} pts off the lead · ${remaining.length} races to go.`, type: gap <= 3 ? 'good' : 'warn' });
   }
 
-  if (nextUserPick) {
-    lines.push(`Your next pick (${nextUserPick}) is a key swing spot for your ladder position.`);
+  // — Race-by-race remaining analysis —
+  for (const race of remaining.slice(0, 4)) {
+    const myPick = myPicks[race];
+    if (!myPick) {
+      items.push({ text: `${race}: no pick submitted — you'll get 0 pts regardless.`, type: 'bad' });
+      continue;
+    }
+    // How many others picked the same runner?
+    const samePickMembers = ladder
+      .filter(r => String(r.member || '').toLowerCase() !== me)
+      .filter(r => picks[r.member]?.[race] === myPick)
+      .map(r => r.member);
+
+    // How many leaders picked differently — meaning this race could close the gap
+    const leadersWithDiffPick = ladder.slice(0, 3)
+      .filter(r => String(r.member || '').toLowerCase() !== me)
+      .filter(r => picks[r.member]?.[race] && picks[r.member][race] !== myPick);
+
+    if (leadersWithDiffPick.length > 0 && samePickMembers.length === 0) {
+      items.push({ text: `${race} #${myPick}: your pick differs from the top 3 — a win here swings the gap in your favour.`, type: 'good' });
+    } else if (samePickMembers.length >= 3) {
+      items.push({ text: `${race} #${myPick}: shared with ${samePickMembers.length} others — no ladder movement regardless of result.`, type: 'info' });
+    } else if (samePickMembers.length > 0) {
+      items.push({ text: `${race} #${myPick}: shared with ${samePickMembers.map(m => m).join(', ')} — gap locked with them this race.`, type: 'info' });
+    } else {
+      items.push({ text: `${race} #${myPick}: unique pick among the field — full swing potential.`, type: 'good' });
+    }
   }
 
-  if (!lines.length) lines.push('You’re still live. Watch the next race and ladder movement for opportunities.');
-  return lines.slice(0, 4);
+  // — Who else is in danger / eliminated —
+  const eliminated = ladder.filter(r => {
+    const theirPts = r.pts;
+    return theirPts + maxGain < leaderPts && String(r.member || '').toLowerCase() !== me;
+  });
+  const canOnlyTie = ladder.filter(r => {
+    const theirPts = r.pts;
+    return theirPts + maxGain === leaderPts && String(r.member || '').toLowerCase() !== me && r.rank > 1;
+  });
+
+  if (eliminated.length > 0) {
+    items.push({ text: `Mathematically eliminated: ${eliminated.map(r => r.member).join(', ')} — can't catch the leader.`, type: 'info' });
+  }
+  if (canOnlyTie.length > 0) {
+    items.push({ text: `Can only tie (not win outright): ${canOnlyTie.map(r => r.member).join(', ')}.`, type: 'info' });
+  }
+
+  // — Tight cluster warning —
+  const within2 = ladder.filter(r => Math.abs(r.pts - myPts) <= 2 && String(r.member || '').toLowerCase() !== me);
+  if (within2.length >= 3) {
+    items.push({ text: `${within2.length} players within 2 pts of you — every race counts.`, type: 'warn' });
+  }
+
+  return items.slice(0, 8);
 }
 
 function renderMemberCockpit(data = {}) {
@@ -685,10 +761,10 @@ function renderMemberCockpit(data = {}) {
   const points = Number(data.userPoints || 0);
   const gap = Number(data.gapToFirst);
 
-  setText('mc-rank', rank > 0 ? `#${rank}` : '—');
-  setText('mc-points', Number.isFinite(points) ? `${points} pts` : '—');
-  setText('mc-gap', !Number.isFinite(gap) ? '—' : gap <= 0 ? (rank === 1 ? 'Leading' : 'Tied for 1st') : `-${gap} pts`);
-  setText('mc-remaining', Number.isFinite(data.remainingRaces) ? `${Math.max(0, data.remainingRaces)} left` : '—');
+  setText('mc-rank', rank > 0 ? `#${rank}` : '-');
+  setText('mc-points', Number.isFinite(points) ? `${points} pts` : '-');
+  setText('mc-gap', !Number.isFinite(gap) ? '-' : gap <= 0 ? (rank === 1 ? 'Leading' : 'Tied for 1st') : `-${gap} pts`);
+  setText('mc-remaining', Number.isFinite(data.remainingRaces) ? `${Math.max(0, data.remainingRaces)} left` : '-');
 
   const jackpotChip = $('mc-jackpot-chip');
   if (jackpotChip) {
@@ -699,7 +775,7 @@ function renderMemberCockpit(data = {}) {
 
   const bossesChip = $('mc-bosses-chip');
   if (bossesChip) {
-    bossesChip.textContent = data.bossesStatus || '—';
+    bossesChip.textContent = data.bossesStatus || '-';
     bossesChip.classList.toggle('chip-red', String(data.bossesStatus || '').toLowerCase().includes('not'));
   }
 
@@ -714,11 +790,17 @@ function renderMemberCockpit(data = {}) {
   const list = $('member-scenarios-list');
   if (list) {
     const scenarios = generateWinningScenarios(data);
+    const colours = { good: '#4ade80', warn: '#fbbf24', bad: '#f87171', info: '#93c5fd' };
+    const icons   = { good: '✅', warn: '⚠️', bad: '❌', info: 'ℹ️' };
     list.innerHTML = '';
-    scenarios.forEach((line) => {
+    if (!scenarios.length) {
+      list.innerHTML = '<li style="color:#9ca3af;font-size:.85rem;">No scenario data yet — check back after race results are posted.</li>';
+      return;
+    }
+    scenarios.forEach(({ text, type }) => {
       const li = document.createElement('li');
-      li.className = 'member-cockpit__scenario';
-      li.textContent = line;
+      li.style.cssText = `list-style:none;display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .75rem;border-radius:.5rem;margin-bottom:.4rem;font-size:.86rem;background:${type==='bad'?'#2a0a0a':type==='warn'?'#1a1200':type==='good'?'#071810':'#07111f'};border:1px solid ${type==='bad'?'#7f1d1d':type==='warn'?'#78350f':type==='good'?'#14532d':'#1e3a5f'};`;
+      li.innerHTML = `<span style="flex-shrink:0;line-height:1.4;">${icons[type]||'•'}</span><span style="color:${colours[type]||'#e5e7eb'};line-height:1.5;">${escHtml(text)}</span>`;
       list.appendChild(li);
     });
   }
@@ -775,7 +857,7 @@ function renderPuntersViewState() {
   if (!title || !copy || !cta) return;
 
   if (!state.user) {
-    title.textContent = 'Join this week’s round';
+    title.textContent = 'Join this week's round';
     copy.textContent = 'Register or log in once, then submit tips and track your leaderboard position.';
     cta.textContent = 'Register / Log In';
     cta.href = '/punters.html#punters-login-gate';
@@ -793,7 +875,7 @@ function renderPuntersViewState() {
   }
 
   if (state.existingByRace.size === 0) {
-    title.textContent = 'You’re in — now enter your tips';
+    title.textContent = 'You're in - now enter your tips';
     copy.textContent = 'Round is live and you have no saved tips yet. Enter now before lock.';
     cta.textContent = 'Enter Tips';
     cta.href = '/punters.html#tip-form';
@@ -801,8 +883,8 @@ function renderPuntersViewState() {
     return;
   }
 
-  title.textContent = 'Round live — tips submitted';
-  copy.textContent = `You’ve entered ${state.existingByRace.size} race${state.existingByRace.size===1?'':'s'}. Track ladder and lock timer below.`;
+  title.textContent = 'Round live - tips submitted';
+  copy.textContent = `You've entered ${state.existingByRace.size} race${state.existingByRace.size===1?'':'s'}. Track ladder and lock timer below.`;
   cta.textContent = 'View Live Leaderboard';
   cta.href = '/punters.html#leaderboard';
   applyPuntersStateVisibility('live-entered');
@@ -934,7 +1016,7 @@ async function hydrateNextTipCard(trackId){
   badge.textContent = 'MEMBER PREVIEW';
   race.textContent = 'Loading your next race tip…';
   context.textContent = 'Punters Club • Member card';
-  pick.textContent = '#—';
+  pick.textContent = '#-';
   setLockline('');
   setSocial('Syncing your member card…');
   countdown.style.display = 'none';
@@ -1018,7 +1100,7 @@ async function hydrateNextTipCard(trackId){
     const apiVenue = String(d?.venue || '').trim();
     const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
     const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? 'Track' : (fallbackVenue || 'Track'));
-    race.textContent = venue && venue !== 'Track' ? `${raceLabel} — ${venue}` : raceLabel;
+    race.textContent = venue && venue !== 'Track' ? `${raceLabel} - ${venue}` : raceLabel;
     const activeTrackType = String(state.trackId || '').toLowerCase() === 'greyhounds' ? 'Greyhounds' : 'Thoroughbreds';
     const baseTrackType = String(d?.trackName || '').trim() || activeTrackType;
     const trackType = isBetweenRounds ? String(d?.nextMeet?.trackName || baseTrackType || 'Next track') : activeTrackType;
@@ -1060,7 +1142,7 @@ async function hydrateNextTipCard(trackId){
         secondary.href = '/punters.html#proof-archive';
       } else {
         badge.textContent = 'ROUND COMPLETE';
-        pick.textContent = '#—';
+        pick.textContent = '#-';
         setSocial('Next round opens soon.');
         primary.textContent = 'View Results';
         primary.href = '/punters.html#leaderboard';
@@ -1073,10 +1155,10 @@ async function hydrateNextTipCard(trackId){
       card.className = `card next-tip-card ${imminent ? 'next-tip-card--imminent' : 'next-tip-card--missing'}`;
       if (imminent) card.classList.add('countdown-pulse');
       badge.textContent = imminent ? 'LOCK IMMINENT' : (canEditEffective ? 'NO TIP ENTERED' : 'LOCKED');
-      pick.textContent = '#—';
+      pick.textContent = '#-';
       const others = Number(d?.othersCount || 0);
       const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
-        ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+        ? `You're in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
         : '';
       setSocial(positionText || (others <= 0 ? `No tips locked yet` : `${others} punter${others===1?'':'s'} locked`));
       primary.textContent = canEditEffective ? 'Add Tip Now' : 'Full Card';
@@ -1084,14 +1166,14 @@ async function hydrateNextTipCard(trackId){
       return;
     }
 
-    pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(d?.userPick?.selection || '—'), String(d?.userPick?.runnerName || d?.userPick?.horse || ''))}`;
+    pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(d?.userPick?.selection || '-'), String(d?.userPick?.runnerName || d?.userPick?.horse || ''))}`;
     const others = Number(d?.othersCount || 0);
     const settledCount = Object.keys(state?.lastOverview?.raceResults || {}).length;
     const hasScoredRace = settledCount > 0;
     const positionText = d?.ladderRankAvailable && d?.ladderRank && d?.ladderSize
-      ? `You’re in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
+      ? `You're in position ${d.ladderRank} of ${d.ladderSize} on the leaderboard`
       : '';
-    social.textContent = positionText || (others <= 0 ? (hasScoredRace ? `You’re first on the card` : 'Tip locked — waiting for first result') : `You + ${others} others locked`);
+    social.textContent = positionText || (others <= 0 ? (hasScoredRace ? `You're first on the card` : 'Tip locked - waiting for first result') : `You + ${others} others locked`);
 
     if(imminent && canEditEffective){
       card.className = 'card next-tip-card next-tip-card--imminent';
@@ -1127,7 +1209,7 @@ async function hydrateNextTipCard(trackId){
       const apiVenue = String(lg?.venue || lg?.fixture?.track || lg?.fixture?.event || '').trim();
       const fallbackVenue = String(state?.lastOverview?.fixtures?.[0]?.track || state?.fixture?.track || '').trim();
       const venue = (!isBetweenRounds && apiVenue && !/^venue\s*tba$/i.test(apiVenue)) ? apiVenue : (isBetweenRounds ? '' : (fallbackVenue || ''));
-      race.textContent = venue ? `${raceLabel} — ${venue}` : raceLabel;
+      race.textContent = venue ? `${raceLabel} - ${venue}` : raceLabel;
       context.textContent = isBetweenRounds ? `${trackType} • Between rounds` : (venue ? `${trackType} • ${venue} meeting` : `${trackType} meeting`);
       const ms = Math.max(0, Number(lg?.countdownToMs || 0) - Date.now());
       const mm = String(Math.floor(ms/60000)).padStart(2,'0');
@@ -1148,11 +1230,11 @@ async function hydrateNextTipCard(trackId){
       } else if (lg?.hasTip) {
         card.className = `card next-tip-card ${lg?.editable ? 'next-tip-card--warn' : 'next-tip-card--highlight'}`;
         badge.textContent = lg?.editable ? 'EDITABLE' : 'LOCKED IN';
-        pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '—'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
+        pick.textContent = `Your Selection: ${formatSelectionText(state.nextTipRace || 'R1', String(lg?.tip?.selection || '-'), String(lg?.tip?.runnerName || lg?.tip?.horse || ''))}`;
         const others = Number(lg?.othersCount || 0);
         const settledCount = Object.keys(state?.lastOverview?.raceResults || {}).length;
         const hasScoredRace = settledCount > 0;
-        social.textContent = others <= 0 ? (hasScoredRace ? 'You’re first on the card' : 'Tip locked — waiting for first result') : `You + ${others} others locked`;
+        social.textContent = others <= 0 ? (hasScoredRace ? 'You're first on the card' : 'Tip locked - waiting for first result') : `You + ${others} others locked`;
         primary.textContent = 'Full Card';
         primary.href = '/punters.html#leaderboard';
       }
@@ -1168,7 +1250,7 @@ function renderBanterWall(items=[]){
   const locked = !state.tipsEditableNow || state.roundStatus === 'CLOSED';
   if (status) {
     status.textContent = locked
-      ? 'Lock is in — drop your recap + brag rights below.'
+      ? 'Lock is in - drop your recap + brag rights below.'
       : 'Wall opens after lock. Get your tip in first.';
   }
   if (submitBtn) submitBtn.disabled = !locked || !state.user;
@@ -1244,8 +1326,8 @@ async function refresh(){
       const msg = String(err?.message || 'Request failed');
       const tipMsg = $('tip-msg');
       if (tipMsg) tipMsg.textContent = msg.includes('(404)')
-        ? 'Live round sync in progress — refresh in a moment.'
-        : 'Live data unavailable right now — refresh in a moment.';
+        ? 'Live round sync in progress - refresh in a moment.'
+        : 'Live data unavailable right now - refresh in a moment.';
       const ladderFallback = $('ladder-fallback');
       if (ladderFallback) {
         ladderFallback.hidden = false;
@@ -1306,8 +1388,8 @@ async function refresh(){
     } else {
       ladderFallback.hidden = false;
       ladderFallback.textContent = state.roundStatus === 'CLOSED'
-        ? 'Round complete — results below. Next venue announced Friday arvo.'
-        : 'Leaderboard is warming up — results will appear after races are scored.';
+        ? 'Round complete - results below. Next venue announced Friday arvo.'
+        : 'Leaderboard is warming up - results will appear after races are scored.';
     }
   }
   const status = $('leaderboard-status');
@@ -1377,8 +1459,8 @@ async function refresh(){
   const archivedRounds = Array.isArray(overviewData?.pastRounds) && overviewData.pastRounds.length
     ? overviewData.pastRounds.length
     : payoutHistory.length;
-  if (pcWeeks) pcWeeks.textContent = String(archivedRounds || '—');
-  if (pcEntries) pcEntries.textContent = String(byPunter.size || '—');
+  if (pcWeeks) pcWeeks.textContent = String(archivedRounds || '-');
+  if (pcEntries) pcEntries.textContent = String(byPunter.size || '-');
   if (pcPaid) pcPaid.textContent = `$${recentPayoutTotal.toFixed(2)}`;
   const communityTipsCard = $('community-tips-card');
   if (communityTipsCard) {
@@ -1424,8 +1506,8 @@ async function refresh(){
   const pokerLiveNudge = $('poker-live-nudge');
   if (pokerLiveNudge) {
     pokerLiveNudge.textContent = myTipCount > 0
-      ? 'You tipped this week — tonight’s poker seat is live.'
-      : 'Lock your tips first, then jump into tonight’s poker seat when you’re ready.';
+      ? 'You tipped this week - tonight's poker seat is live.'
+      : 'Lock your tips first, then jump into tonight's poker seat when you're ready.';
   }
 
   const userKey = String(state.user?.username || '').toLowerCase();
@@ -1464,6 +1546,10 @@ async function refresh(){
     bossesStatus,
     nextUserPick: nextUserPick ? `${focusRace || 'Next'} #${nextUserPick}` : '',
     ladderRows: personalLadderRows,
+    userName: state.user?.username || '',
+    tipsFeed: overviewData?.tipsFeed || [],
+    raceResults: overviewData?.raceResults || {},
+    raceCount: state.raceCount || 12,
     submittedAtText,
     roundLabel: String(nextMeet?.track || overviewData?.round?.label || '')
   });
