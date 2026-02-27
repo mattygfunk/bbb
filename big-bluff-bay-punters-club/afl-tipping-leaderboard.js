@@ -26,7 +26,7 @@
   }
 
   function fmtMoney(n) {
-    return '$' + Number(n || 0).toLocaleString('en-AU');
+    return '$' + Number(n || 0).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   function escHtml(str) {
