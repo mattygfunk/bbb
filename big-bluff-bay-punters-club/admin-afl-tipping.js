@@ -1039,4 +1039,24 @@ window.createRoundFromImport = async function () {
     }
   `;
   document.head.appendChild(style);
+
+  // Expose grantSeasonToolbox globally for inline onclick
+  window.grantSeasonToolbox = async function () {
+    const btn = document.getElementById('grant-toolbox-btn');
+    const msg = document.getElementById('grant-toolbox-msg');
+    if (btn) { btn.disabled = true; btn.textContent = 'Granting…'; }
+    if (msg) { msg.style.display = 'none'; }
+    try {
+      const data = await apiReq('/afl-tipping/admin/season/grant-toolbox', { method: 'POST' });
+      if (msg) {
+        msg.style.display = '';
+        msg.style.color = '#4ade80';
+        msg.textContent = data.message || 'Done!';
+      }
+    } catch (e) {
+      if (msg) { msg.style.display = ''; msg.style.color = '#ef4444'; msg.textContent = 'Error: ' + e.message; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🧰 Grant Season Toolbox to All'; }
+    }
+  };
 })();

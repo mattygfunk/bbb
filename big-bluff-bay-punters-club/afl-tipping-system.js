@@ -20,6 +20,32 @@ const AFL_TEAM_ABBR = {
   'Sydney Swans': 'SYD', 'West Coast Eagles': 'WCE', 'Western Bulldogs': 'WBD'
 };
 
+// ── Toolbox helpers ───────────────────────────────────────────────────────────
+
+/**
+ * Ensure an entry has a season-scoped Toolbox with 2 Double Points tokens.
+ * Idempotent: never overwrites an already-granted toolbox for the same season.
+ */
+function ensureToolbox(entry, seasonYear) {
+  const year = seasonYear || new Date().getFullYear();
+  if (!entry.toolbox || entry.toolbox.season !== year) {
+    entry.toolbox = {
+      season: year,
+      doublePointsRemaining: 2,
+      doublePointsActiveRounds: []
+    };
+  } else {
+    // Ensure sub-fields exist (forward compat)
+    if (typeof entry.toolbox.doublePointsRemaining !== 'number') {
+      entry.toolbox.doublePointsRemaining = 2;
+    }
+    if (!Array.isArray(entry.toolbox.doublePointsActiveRounds)) {
+      entry.toolbox.doublePointsActiveRounds = [];
+    }
+  }
+  return entry.toolbox;
+}
+
 // ── Store bootstrap ───────────────────────────────────────────────────────────
 
 function ensureAflStore(store) {
@@ -84,8 +110,20 @@ function scoreRound(store, roundId) {
 
     const perfect = total === gamesWithResults.length && correct === gamesWithResults.length;
     // +2 bonus for perfect round
-    const points = correct + (perfect ? 2 : 0);
-    scores[userId] = { correct, total, perfect, points, member: entry.member };
+    let points = correct + (perfect ? 2 : 0);
+
+    // Double Points toolbox multiplier
+    const tb = entry.toolbox || {};
+    const dpActive = Array.isArray(tb.doublePointsActiveRounds) &&
+      tb.doublePointsActiveRounds.includes(roundId);
+    if (dpActive) points *= 2;
+
+    scores[userId] = { correct, total, perfect, points, member: entry.member, doublePointsUsed: dpActive };
+
+    // Consume the token once scoring is finalised (idempotent — only consume if still listed as remaining)
+    if (dpActive && typeof tb.doublePointsRemaining === 'number' && tb.doublePointsRemaining > 0) {
+      // Token was already deducted at activation time; no double-deduct here
+    }
   }
 
   round.scores = scores;
@@ -589,6 +627,114 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
 
   // ── AUTH REQUIRED ROUTES ──────────────────────────────────────────────────
 
+  // ── TOOLBOX ROUTES ────────────────────────────────────────────────────────
+
+  // GET /api/afl-tipping/my-toolbox
+  app.get('/api/afl-tipping/my-toolbox', auth, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const userId = req.user.sub;
+      const entry = at.entries.find((e) => e.userId === userId && e.status !== 'withdrawn');
+      if (!entry) return res.json({ ok: true, toolbox: null });
+      const tb = ensureToolbox(entry, at.season.year || new Date().getFullYear());
+      res.json({ ok: true, toolbox: tb });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // POST /api/afl-tipping/toolbox/activate  { roundId }
+  app.post('/api/afl-tipping/toolbox/activate', auth, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const userId = req.user.sub;
+      const { roundId } = req.body || {};
+      if (!roundId) return res.status(400).json({ ok: false, error: 'roundId required' });
+
+      const entry = at.entries.find((e) => e.userId === userId && e.status === 'confirmed');
+      if (!entry) return res.status(403).json({ ok: false, error: 'Confirmed entry required' });
+
+      const round = at.rounds.find((r) => r.id === roundId);
+      if (!round) return res.status(404).json({ ok: false, error: 'Round not found' });
+
+      // Cannot activate after round locks
+      const now = Date.now();
+      const lockAt = round.lockAt || null;
+      if (round.status === 'locked' || round.status === 'scored' || round.status === 'scoring') {
+        return res.status(400).json({ ok: false, error: 'Round is locked — cannot activate Double Points' });
+      }
+      if (lockAt && now >= lockAt) {
+        return res.status(400).json({ ok: false, error: 'Round lockout has passed — cannot activate Double Points' });
+      }
+
+      const tb = ensureToolbox(entry, at.season.year || new Date().getFullYear());
+
+      // Already active for this round
+      if (tb.doublePointsActiveRounds.includes(roundId)) {
+        return res.json({ ok: true, toolbox: tb, message: 'Already active for this round' });
+      }
+
+      if (tb.doublePointsRemaining <= 0) {
+        return res.status(400).json({ ok: false, error: 'No Double Points tokens remaining' });
+      }
+
+      // Cannot have more than one activation per round (enforced by design — it's per-user per-round)
+      tb.doublePointsActiveRounds.push(roundId);
+      tb.doublePointsRemaining = Math.max(0, tb.doublePointsRemaining - 1);
+
+      writeStore(store);
+      res.json({ ok: true, toolbox: tb });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // POST /api/afl-tipping/toolbox/deactivate  { roundId }
+  app.post('/api/afl-tipping/toolbox/deactivate', auth, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const userId = req.user.sub;
+      const { roundId } = req.body || {};
+      if (!roundId) return res.status(400).json({ ok: false, error: 'roundId required' });
+
+      const entry = at.entries.find((e) => e.userId === userId && e.status === 'confirmed');
+      if (!entry) return res.status(403).json({ ok: false, error: 'Confirmed entry required' });
+
+      const round = at.rounds.find((r) => r.id === roundId);
+      if (!round) return res.status(404).json({ ok: false, error: 'Round not found' });
+
+      // Cannot deactivate after round locks
+      const now = Date.now();
+      const lockAt = round.lockAt || null;
+      if (round.status === 'locked' || round.status === 'scored' || round.status === 'scoring') {
+        return res.status(400).json({ ok: false, error: 'Round is locked — cannot deactivate Double Points' });
+      }
+      if (lockAt && now >= lockAt) {
+        return res.status(400).json({ ok: false, error: 'Round lockout has passed — cannot deactivate Double Points' });
+      }
+
+      const tb = ensureToolbox(entry, at.season.year || new Date().getFullYear());
+
+      const idx = tb.doublePointsActiveRounds.indexOf(roundId);
+      if (idx === -1) {
+        return res.json({ ok: true, toolbox: tb, message: 'Not active for this round' });
+      }
+
+      tb.doublePointsActiveRounds.splice(idx, 1);
+      tb.doublePointsRemaining = Math.min(2, tb.doublePointsRemaining + 1);
+
+      writeStore(store);
+      res.json({ ok: true, toolbox: tb });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // ── AUTH REQUIRED ROUTES ──────────────────────────────────────────────────
+
   // GET /api/afl-tipping/my-entry — check current user's entry status (no side effects)
   app.get('/api/afl-tipping/my-entry', auth, (req, res) => {
     try {
@@ -719,6 +865,9 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         notes: '',
         createdAt: Date.now()
       };
+
+      // Grant season toolbox (2× Double Points) at join time
+      ensureToolbox(entry, at.season.year || new Date().getFullYear());
 
       at.entries.push(entry);
       writeStore(store);
@@ -1044,6 +1193,28 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
 
       writeStore(store);
       res.json({ ok: true, entry });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // POST /api/afl-tipping/admin/season/grant-toolbox — grant 2× DP tokens to all confirmed entries (idempotent)
+  app.post('/api/afl-tipping/admin/season/grant-toolbox', auth, adminCheck, (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const seasonYear = at.season.year || new Date().getFullYear();
+      let granted = 0;
+      let skipped = 0;
+      for (const entry of at.entries) {
+        if (entry.status === 'withdrawn') continue;
+        const before = entry.toolbox;
+        ensureToolbox(entry, seasonYear);
+        if (!before || before.season !== seasonYear) granted++;
+        else skipped++;
+      }
+      writeStore(store);
+      res.json({ ok: true, granted, skipped, message: `Toolbox granted to ${granted} entries (${skipped} already had one).` });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }

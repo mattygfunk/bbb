@@ -73,7 +73,12 @@
             <div style="text-align:center;">🥇 <strong id="ov-prize-1">$—</strong><br><span style="color:var(--muted);font-size:.85em;">1st (40%)</span></div>
             <div style="text-align:center;">🥈 <strong id="ov-prize-2">$—</strong><br><span style="color:var(--muted);font-size:.85em;">2nd (25%)</span></div>
             <div style="text-align:center;">🥉 <strong id="ov-prize-3">$—</strong><br><span style="color:var(--muted);font-size:.85em;">3rd (15%)</span></div></div></div>
-        <button class="btn btn-ghost" onclick="loadAdminOverview()">🔄 Refresh</button></div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;">
+          <button class="btn btn-ghost" onclick="loadAdminOverview()">🔄 Refresh</button>
+          <button class="btn btn-primary" id="grant-toolbox-btn" onclick="grantSeasonToolbox()">🧰 Grant Season Toolbox to All</button>
+        </div>
+        <p id="grant-toolbox-msg" style="font-size:.88em;color:var(--muted);margin-top:.5rem;display:none;"></p>
+      </div>
 
       <!-- ENTRIES TAB -->
       <div id="tab-entries" class="admin-tab">

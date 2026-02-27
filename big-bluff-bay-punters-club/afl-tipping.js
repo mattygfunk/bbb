@@ -321,6 +321,88 @@
     }).join('');
   }
 
+  function renderToolbox(toolbox, currentRound) {
+    const card = document.getElementById('toolbox-card');
+    if (!card || !toolbox) return;
+    card.style.display = '';
+
+    const remaining = toolbox.doublePointsRemaining || 0;
+    const activeRounds = toolbox.doublePointsActiveRounds || [];
+
+    const badge = document.getElementById('toolbox-dp-badge');
+    const countEl = document.getElementById('toolbox-dp-count');
+    const pluralEl = document.getElementById('toolbox-dp-plural');
+    const statusEl = document.getElementById('toolbox-round-status');
+
+    if (badge) badge.textContent = `${remaining} Double Point${remaining !== 1 ? 's' : ''} remaining`;
+    if (countEl) countEl.textContent = remaining;
+    if (pluralEl) pluralEl.textContent = remaining !== 1 ? 's' : '';
+
+    if (!statusEl) return;
+
+    if (!currentRound) {
+      statusEl.innerHTML = '';
+      return;
+    }
+
+    const roundId = currentRound.id;
+    const isActive = activeRounds.includes(roundId);
+    const now = Date.now();
+    const lockAt = currentRound.lockAt || null;
+    const isLocked = currentRound.status === 'locked' || currentRound.status === 'scored' ||
+      currentRound.status === 'scoring' || (lockAt && now >= lockAt);
+
+    if (isActive && isLocked) {
+      statusEl.innerHTML = `<span style="color:#4ade80;font-weight:700;">🟢 Double Points Active ✅ for ${escHtml(currentRound.label)} (locked in)</span>`;
+    } else if (isActive) {
+      statusEl.innerHTML = `
+        <span style="color:#4ade80;font-weight:700;">🟢 Double Points Active ✅ for ${escHtml(currentRound.label)}</span>
+        <button id="toolbox-deactivate-btn" class="btn btn-ghost" style="margin-left:.75rem;font-size:.82em;padding:.3rem .7rem;">Deactivate</button>
+      `;
+      const deactivateBtn = document.getElementById('toolbox-deactivate-btn');
+      if (deactivateBtn) {
+        deactivateBtn.addEventListener('click', async () => {
+          deactivateBtn.disabled = true;
+          deactivateBtn.textContent = '…';
+          try {
+            const res = await req(`${API}/toolbox/deactivate`, { method: 'POST', body: JSON.stringify({ roundId }) });
+            renderToolbox(res.toolbox, currentRound);
+          } catch (e) {
+            deactivateBtn.disabled = false;
+            deactivateBtn.textContent = 'Deactivate';
+            alert('Error: ' + e.message);
+          }
+        });
+      }
+    } else if (!isLocked && remaining > 0) {
+      statusEl.innerHTML = `
+        <button id="toolbox-activate-btn" class="btn btn-primary" style="font-size:.9em;padding:.4rem .9rem;">
+          ⚡ Activate Double Points for ${escHtml(currentRound.label)}
+        </button>
+      `;
+      const activateBtn = document.getElementById('toolbox-activate-btn');
+      if (activateBtn) {
+        activateBtn.addEventListener('click', async () => {
+          activateBtn.disabled = true;
+          activateBtn.textContent = '…';
+          try {
+            const res = await req(`${API}/toolbox/activate`, { method: 'POST', body: JSON.stringify({ roundId }) });
+            renderToolbox(res.toolbox, currentRound);
+          } catch (e) {
+            activateBtn.disabled = false;
+            activateBtn.textContent = `⚡ Activate Double Points for ${currentRound.label}`;
+            alert('Error: ' + e.message);
+          }
+        });
+      }
+    } else if (remaining === 0) {
+      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">No activations remaining.</span>`;
+    } else {
+      // Locked round, not active
+      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">Round locked — Double Points not activated for this round.</span>`;
+    }
+  }
+
   async function init() {
     // Check auth
     if (token()) {
@@ -339,6 +421,10 @@
       try {
         const entryData = await req('/api/afl-tipping/my-entry');
         applyEntryState(entryData.entry);
+        // Show toolbox for confirmed entries
+        if (entryData.entry && entryData.entry.status === 'confirmed' && entryData.entry.toolbox) {
+          renderToolbox(entryData.entry.toolbox, overviewData && overviewData.currentRound);
+        }
       } catch {
         // Not logged in or no token — default state
         const enterBtn = document.getElementById('enter-btn');

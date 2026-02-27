@@ -84,6 +84,43 @@
               <p style="color:var(--muted);font-size:.85em;margin:.75rem 0 0;">Must be logged in to enter. Tips require confirmed entry.</p></div></div>
         </section>
 
+        <!-- Toolbox card (shown when user has a confirmed entry) -->
+        <section id="toolbox-card" class="card" style="margin-bottom:1.5rem;display:none;border-color:#1e40af;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;">
+            <h2 style="color:#93c5fd;margin:0;">🧰 Toolbox <span style="font-size:.7em;font-weight:400;color:var(--muted);">New Season Bonus</span></h2>
+            <span id="toolbox-dp-badge" style="display:inline-block;padding:.2rem .7rem;border-radius:99px;background:#0c1d3a;border:1px solid #1e40af;font-size:.82em;font-weight:700;color:#93c5fd;">2 Double Points remaining</span>
+          </div>
+          <p style="color:var(--muted);font-size:.93em;margin:.25rem 0 .75rem;">
+            Start the season strong — every tipper gets <strong style="color:#fff;">2× Double Points rounds</strong>.
+            Activate Double Points on any round before lockout to double your score.
+            You have <span id="toolbox-dp-count" style="color:#93c5fd;font-weight:700;">2</span> activation<span id="toolbox-dp-plural">s</span> for the season.
+          </p>
+          <div id="toolbox-round-status" style="font-size:.9em;"></div>
+
+          <!-- FAQ accordion -->
+          <details style="margin-top:1rem;border-top:1px solid var(--line);padding-top:.75rem;">
+            <summary style="cursor:pointer;color:#93c5fd;font-weight:600;font-size:.9em;list-style:none;">❓ Double Points FAQ</summary>
+            <div style="margin-top:.75rem;display:grid;gap:.6rem;">
+              <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
+                <strong style="font-size:.88em;color:var(--text);">When do I receive Double Points?</strong>
+                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">At season start (Round 1), and when you join mid-season — you'll never miss out.</p>
+              </div>
+              <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
+                <strong style="font-size:.88em;color:var(--text);">Can I use both in the same round?</strong>
+                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">No — one activation per round. Each activation doubles that round's total score.</p>
+              </div>
+              <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
+                <strong style="font-size:.88em;color:var(--text);">Can I undo it?</strong>
+                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">Yes — you can toggle it off before lockout. After lockout it's locked in and consumed.</p>
+              </div>
+              <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
+                <strong style="font-size:.88em;color:var(--text);">Do I lose them if I don't use them?</strong>
+                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">Unused activations expire at the end of the season.</p>
+              </div>
+            </div>
+          </details>
+        </section>
+
         <!-- Current round card -->
         <section id="current-round-card" class="card" style="margin-bottom:1.5rem;display:none;">
           <h2 id="current-round-label" style="color:var(--afl-light);margin-top:0;">Current Round</h2>

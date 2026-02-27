@@ -9,6 +9,7 @@
   let existingTips = {};  // { gameId: pick }
   let selections = {};    // { gameId: pick } — current session picks
   let countdownTimers = [];
+  let currentToolbox = null;
 
   function token() { return localStorage.getItem(TOKEN_KEY); }
 
@@ -198,6 +199,74 @@
     updateSubmitButton();
   }
 
+  function renderToolboxPanel(toolbox, round) {
+    currentToolbox = toolbox;
+    const panel = document.getElementById('toolbox-panel');
+    if (!panel || !toolbox || !round) return;
+    panel.style.display = '';
+
+    const remaining = toolbox.doublePointsRemaining || 0;
+    const activeRounds = toolbox.doublePointsActiveRounds || [];
+    const roundId = round.id;
+
+    const badge = document.getElementById('tb-remaining-badge');
+    if (badge) badge.textContent = `${remaining} activation${remaining !== 1 ? 's' : ''} remaining`;
+
+    const statusEl = document.getElementById('tb-round-status');
+    if (!statusEl) return;
+
+    const now = Date.now();
+    const lockAt = round.lockAt || null;
+    const isLocked = round.status === 'locked' || round.status === 'scored' || round.status === 'scoring' ||
+      (lockAt && now >= lockAt);
+    const isActive = activeRounds.includes(roundId);
+
+    if (isActive && isLocked) {
+      statusEl.innerHTML = `<strong style="color:#4ade80;">⚡ Double Points Active ✅</strong> <span style="color:var(--muted);font-size:.88em;">(locked in for ${escHtml(round.label)})</span>`;
+    } else if (isActive) {
+      statusEl.innerHTML = `
+        <strong style="color:#4ade80;">⚡ Double Points Active ✅</strong>
+        <span style="color:var(--muted);font-size:.88em;"> — this round's score will be doubled.</span>
+        <div style="margin-top:.4rem;">
+          <button id="tb-deactivate-btn" class="btn btn-ghost" style="font-size:.82em;padding:.3rem .65rem;">Deactivate before lockout</button>
+        </div>
+      `;
+      document.getElementById('tb-deactivate-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('tb-deactivate-btn');
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
+        try {
+          const res = await req(`${API}/toolbox/deactivate`, { method: 'POST', body: JSON.stringify({ roundId }) });
+          renderToolboxPanel(res.toolbox, round);
+        } catch (e) {
+          alert('Error: ' + e.message);
+          if (btn) { btn.disabled = false; btn.textContent = 'Deactivate before lockout'; }
+        }
+      });
+    } else if (!isLocked && remaining > 0) {
+      statusEl.innerHTML = `
+        <span style="color:var(--muted);font-size:.9em;">Double your score for this round — use one of your ${remaining} remaining activation${remaining !== 1 ? 's' : ''}.</span>
+        <div style="margin-top:.4rem;">
+          <button id="tb-activate-btn" class="btn btn-primary" style="font-size:.9em;padding:.4rem .85rem;">⚡ Activate Double Points for ${escHtml(round.label)}</button>
+        </div>
+      `;
+      document.getElementById('tb-activate-btn').addEventListener('click', async () => {
+        const btn = document.getElementById('tb-activate-btn');
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
+        try {
+          const res = await req(`${API}/toolbox/activate`, { method: 'POST', body: JSON.stringify({ roundId }) });
+          renderToolboxPanel(res.toolbox, round);
+        } catch (e) {
+          alert('Error: ' + e.message);
+          if (btn) { btn.disabled = false; btn.textContent = `⚡ Activate Double Points for ${round.label}`; }
+        }
+      });
+    } else if (remaining === 0) {
+      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">0 activations remaining — all used for this season.</span>`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">Round is locked — Double Points not activated.</span>`;
+    }
+  }
+
   async function submitTips() {
     const btn = document.getElementById('submit-all-btn');
     if (!btn || !currentRound) return;
@@ -285,6 +354,11 @@
 
       // All good — show the form
       hide('submit-loading');
+
+      // Load toolbox (non-blocking)
+      req(`${API}/my-toolbox`).then((tb) => {
+        if (tb.toolbox) renderToolboxPanel(tb.toolbox, currentRound);
+      }).catch(() => {});
 
       const roundLabel = document.getElementById('form-round-label');
       const roundSubtitle = document.getElementById('round-subtitle');
