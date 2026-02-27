@@ -12,6 +12,59 @@
   const colors = ['#2563eb','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2','#4f46e5','#be123c'];
 
   const token = localStorage.getItem('bbb-token-v3') || '';
+
+  // ── Presence ───────────────────────────────────────────────────────────────
+  const _presenceId = (() => {
+    let id = sessionStorage.getItem('bbb-presence-id');
+    if (!id) { id = (crypto?.randomUUID?.() || (Date.now() + '-' + Math.random())); sessionStorage.setItem('bbb-presence-id', id); }
+    return id;
+  })();
+
+  async function pingPresence() {
+    try {
+      await fetch('/api/presence/ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ clientId: _presenceId, page: 'wheel' })
+      });
+    } catch { /* silent */ }
+  }
+
+  async function loadPresence() {
+    try {
+      const r = await fetch('/api/presence?page=wheel');
+      const d = await r.json();
+      if (!d.ok) return;
+
+      const totalEl = document.getElementById('presence-total');
+      const liEl = document.getElementById('presence-logged-in');
+      const anonEl = document.getElementById('presence-anon');
+
+      if (totalEl) totalEl.textContent = `${d.total} viewer${d.total !== 1 ? 's' : ''}`;
+
+      if (liEl) {
+        if (d.loggedIn.length > 0) {
+          const MAX = 6;
+          const shown = d.loggedIn.slice(0, MAX);
+          const overflow = d.loggedIn.length - MAX;
+          const names = shown.map((u) => `<span style="display:inline-block;padding:.15rem .5rem;background:#0f2a50;border:1px solid #1e40af;border-radius:99px;color:#93c5fd;font-weight:600;">${u.replace(/[<>&"]/g, (c) => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}</span>`).join(' ');
+          liEl.innerHTML = `${names}${overflow > 0 ? ` <span style="color:var(--muted);">+${overflow} more</span>` : ''}`;
+        } else {
+          liEl.innerHTML = '';
+        }
+      }
+
+      if (anonEl) {
+        anonEl.textContent = d.anonymous > 0 ? `· ${d.anonymous} anonymous` : '';
+      }
+    } catch { /* silent */ }
+  }
+
+  // Ping immediately + every 30s; poll presence every 15s
+  pingPresence();
+  loadPresence();
+  setInterval(pingPresence, 30000);
+  setInterval(loadPresence, 15000);
   const state = { session: null, spin: null, prize: null, rotation: 0, spinning: false };
 
   function drawWheel() {

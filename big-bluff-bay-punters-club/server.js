@@ -2042,6 +2042,36 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   });
 
 
+  // ── Presence system (in-memory, no persistence needed) ──────────────────────
+  const _presence = new Map(); // key: clientId → { username|null, page, seenAt }
+  const PRESENCE_TTL = 90000; // 90s
+
+  function presenceSweep() {
+    const cutoff = Date.now() - PRESENCE_TTL;
+    for (const [k, v] of _presence) { if (v.seenAt < cutoff) _presence.delete(k); }
+  }
+
+  // POST /api/presence/ping  { clientId, page }  (auth optional)
+  app.post('/api/presence/ping', (req, res) => {
+    presenceSweep();
+    const caller = (() => { try { const jwt = require('jsonwebtoken'); const t = (req.headers.authorization||'').startsWith('Bearer ') ? req.headers.authorization.slice(7) : null; return t ? jwt.verify(t, JWT_SECRET) : null; } catch { return null; } })();
+    const clientId = String(req.body?.clientId || '').slice(0, 64) || null;
+    if (!clientId) return res.status(400).json({ ok: false, error: 'clientId required' });
+    const page = String(req.body?.page || 'unknown').slice(0, 64);
+    _presence.set(clientId, { username: caller?.username || null, page, seenAt: Date.now() });
+    res.json({ ok: true });
+  });
+
+  // GET /api/presence?page=wheel
+  app.get('/api/presence', (req, res) => {
+    presenceSweep();
+    const page = req.query.page || null;
+    const entries = [..._presence.values()].filter((v) => !page || v.page === page);
+    const loggedIn = [...new Set(entries.filter((v) => v.username).map((v) => v.username))];
+    const anonymous = entries.filter((v) => !v.username).length;
+    res.json({ ok: true, loggedIn, anonymous, total: loggedIn.length + anonymous });
+  });
+
   app.get('/api/wheel/current', (_req, res) => {
     const store = readStore();
     const wheel = ensureWheelStore(store);
