@@ -108,62 +108,58 @@
           <div id="auth-controls"></div></div>
       </nav>
     </header>
-    <main class="wrap">
-      <section class="card" id="punters-login-gate" aria-labelledby="punters-login-heading" hidden>
-        <h2 id="punters-login-heading">Log in to continue</h2>
-        <p class="muted">Log in first to enter tips, view your full card, and track your weekly position.</p>
+    <main class="wrap" style="padding-top:1.5rem;">
+
+      <!-- Login gate -->
+      <section style="background:#0b1221;border:1px solid #1e3a5f;border-radius:1rem;padding:1.5rem;margin-bottom:1.5rem;max-width:560px;" id="punters-login-gate" aria-labelledby="punters-login-heading" hidden>
+        <h2 id="punters-login-heading" style="margin:0 0 .5rem;font-size:1.2rem;">Log in to continue</h2>
+        <p style="color:#9ca3af;font-size:.88rem;margin:0 0 1rem;">Log in first to enter tips, view your full card, and track your weekly position.</p>
         <form id="login-form" class="stack" style="max-width:460px">
-          <label>Username
-            <input name="member" type="text" autocomplete="username" required />
-          </label>
-          <label>Password / PIN
-            <input name="pin" type="password" autocomplete="current-password" required />
-          </label>
-          <label>Recovery code (set on registration)
-            <input name="recoveryCode" type="text" autocomplete="off" placeholder="Required for password recovery" />
-          </label>
+          <label>Username<input name="member" type="text" autocomplete="username" required /></label>
+          <label>Password / PIN<input name="pin" type="password" autocomplete="current-password" required /></label>
+          <label>Recovery code<input name="recoveryCode" type="text" autocomplete="off" placeholder="Required for password recovery" /></label>
           <div class="row-actions">
             <button class="btn" type="submit" data-mode="login">Log In</button>
-            <button class="btn btn-ghost" type="submit" data-mode="register">Register + Log In</button></div>
+            <button class="btn btn-ghost" type="submit" data-mode="register">Register + Log In</button>
+          </div>
           <p id="login-msg" class="muted" aria-live="polite"></p>
         </form>
-
-        <details class="card" style="margin-top:.6rem;max-width:460px">
-          <summary>Forgot password?</summary>
+        <details style="margin-top:.75rem;background:#071020;border:1px solid #1e3a5f;border-radius:.6rem;padding:.75rem;">
+          <summary style="cursor:pointer;color:#9ca3af;font-size:.88rem;">Forgot password?</summary>
           <form id="forgot-form" class="stack" style="margin-top:.6rem">
-            <label>Registered email
-              <input name="email" type="email" required placeholder="you@example.com" />
-            </label>
+            <label>Registered email<input name="email" type="email" required placeholder="you@example.com" /></label>
             <button class="btn" type="submit">Send password reset link</button>
             <p id="forgot-msg" class="muted" aria-live="polite"></p>
           </form>
           <form id="reset-link-form" class="stack" style="margin-top:.75rem" hidden>
-            <label>New password
-              <input name="newPassword" type="password" minlength="6" required />
-            </label>
+            <label>New password<input name="newPassword" type="password" minlength="6" required /></label>
             <button class="btn" type="submit">Set new password</button>
             <p id="reset-link-msg" class="muted" aria-live="polite"></p>
           </form>
         </details>
       </section>
 
-      <h1>Punters Club Leaderboard & Tips</h1>
-      <p class="muted"><strong>G’day legends</strong> — lock your tips, stay disciplined, and let the points do the talking.</p>
-      <section class="card" id="punters-state-shell" aria-live="polite">
-        <h2 id="punters-state-title">Getting set…</h2>
-        <p class="muted" id="punters-state-copy">Loading your current round state.</p>
+      <!-- Page header -->
+      <div style="margin-bottom:1.5rem;">
+        <p style="margin:0 0 .25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#fbbf24;font-weight:700;">Weekly Racing Tips</p>
+        <h1 style="margin:0 0 .3rem;font-size:clamp(1.5rem,3.5vw,2rem);">🏇 Punters Club</h1>
+        <p style="color:#9ca3af;margin:0;font-size:.9rem;"><strong style="color:#e5e7eb;">G'day legends</strong> - lock your tips, stay disciplined, and let the points do the talking.</p>
+      </div>
+
+      <!-- State shell -->
+      <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;margin-bottom:1rem;" id="punters-state-shell" aria-live="polite">
+        <h2 id="punters-state-title" style="margin:0 0 .35rem;font-size:1.1rem;">Getting set…</h2>
+        <p style="color:#9ca3af;font-size:.88rem;margin:0 0 .75rem;" id="punters-state-copy">Loading your current round state.</p>
         <div class="row-actions">
-          <a class="btn chip-btn" id="punters-state-cta" href="/punters.html#punters-login-gate">Log In / Register</a></div>
+          <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;" id="punters-state-cta" href="/punters.html#punters-login-gate">Log In / Register</a>
+        </div>
       </section>
-      <div class="card" style="border-color:rgba(234,179,8,.45);background:linear-gradient(180deg,#171407,#0c1424);margin:.55rem 0 .7rem">
-        <div class="row-actions" style="justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
-          <p class="muted" style="margin:0"><strong>Entrants Matrix:</strong> full table of every entrant, jackpot status, race-by-race selections and points.</p>
-          <a class="btn chip-btn" href="/punters-entrant-matrix.html">Open Entrants Matrix</a></div></div>
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span>›</span>
-        <span aria-current="page">🏇 Punters Club</span>
-      </nav>
+
+      <!-- Entrants matrix banner -->
+      <div style="background:linear-gradient(135deg,#171407,#0c1424);border:1px solid rgba(234,179,8,.35);border-radius:.85rem;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+        <p style="margin:0;color:#9ca3af;font-size:.88rem;"><strong style="color:#fde68a;">Entrants Matrix:</strong> full table of every entrant, jackpot status, race-by-race selections and points.</p>
+        <a class="btn" style="background:#78350f;border-color:#92400e;font-size:.88rem;padding:.5rem .9rem;" href="/punters-entrant-matrix.html">Open Matrix →</a>
+      </div>
 
       <div class="split" id="next-tip-entry-split">
         <section class="card next-tip-card next-tip-card--tease" id="next-tip-punters-card" aria-labelledby="next-tip-punters-heading">
@@ -171,15 +167,15 @@
           <div class="row-actions" style="justify-content:space-between;align-items:center">
             <p class="next-tip-kicker" id="next-tip-punters-badge">LOCKED IN</p>
             <p class="next-tip-countdown" id="next-tip-punters-countdown">--:--</p></div>
-          <h3 id="next-tip-punters-race">Race —</h3>
+          <h3 id="next-tip-punters-race">Race -</h3>
           <div class="row-actions" id="next-tip-inline-status" style="margin:.2rem 0 .25rem">
             <span class="pill" id="next-tip-inline-state">🟢 Open now</span>
             <span class="pill" id="next-tip-inline-jackpot">💰 Jackpot live: $0</span>
-            <span class="pill" id="next-tip-inline-meet">🏁 Meet: —</span>
+            <span class="pill" id="next-tip-inline-meet">🏁 Meet: -</span>
             <span class="pill chip-red" id="next-tip-inline-lock">🔒 Lock: --:--:--</span></div>
           <p class="muted" id="next-tip-punters-context">Track Type • Locks in --:-- (Melbourne)</p>
-          <p class="next-tip-runner" id="next-tip-punters-pick">#—</p>
-          <p class="muted" id="next-tip-punters-social">You’re first on the card</p>
+          <p class="next-tip-runner" id="next-tip-punters-pick">#-</p>
+          <p class="muted" id="next-tip-punters-social">You're first on the card</p>
           <div class="row-actions">
             <a class="btn chip-btn" id="next-tip-punters-primary" href="/punters.html#punters-login-gate">Log In</a></div>
         </section>
@@ -194,14 +190,14 @@
           <form id="tip-form" class="stack" hidden style="display:none">
             <p class="muted">Choose a runner number for each race you want to tip, then submit once.</p>
             <div class="quick-grid" id="quick-race-list"></div>
-            <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Enter This Week’s Tips</button>
+            <button class="btn" type="submit" data-cta="submit-selected-tips" data-sem="conversion">Enter This Week's Tips</button>
           </form>
           <p id="tip-msg" class="muted"></p>
         </section></div>
 
       <section class="card" id="race-market-card" aria-labelledby="race-market-heading" hidden style="display:none">
-        <div class="section-head"><h2 id="race-market-heading">Race Market Board</h2><span class="pill" id="race-market-race">Race —</span></div>
-        <p class="muted" id="race-market-top">Top of market: —</p>
+        <div class="section-head"><h2 id="race-market-heading">Race Market Board</h2><span class="pill" id="race-market-race">Race -</span></div>
+        <p class="muted" id="race-market-top">Top of market: -</p>
         <div class="row-actions">
           <label for="race-market-sort" class="muted">Sort by</label>
           <select id="race-market-sort" aria-label="Sort race runners">
@@ -217,191 +213,278 @@
           </table></div>
       </section>
 
-      <section class="card member-cockpit" id="member-cockpit" hidden aria-labelledby="member-cockpit-heading">
-        <h2 id="member-cockpit-heading">Your Round Snapshot</h2>
-        <p class="muted" id="member-round-meta">Loading your round…</p>
-        <div class="member-cockpit__stats" id="member-cockpit-stats">
-          <article class="member-cockpit__stat"><p class="muted">Your Rank</p><h3 id="mc-rank">—</h3></article>
-          <article class="member-cockpit__stat"><p class="muted">Your Points</p><h3 id="mc-points">—</h3></article>
-          <article class="member-cockpit__stat"><p class="muted">Gap to 1st</p><h3 id="mc-gap">—</h3></article>
-          <article class="member-cockpit__stat"><p class="muted">Remaining Races</p><h3 id="mc-remaining">—</h3></article>
-          <article class="member-cockpit__stat"><p class="muted">Jackpot Status</p><p id="mc-jackpot-chip" class="pill member-cockpit__chip">—</p></article>
-          <article class="member-cockpit__stat"><p class="muted">Bosses Multi</p><p id="mc-bosses-chip" class="pill member-cockpit__chip">—</p></article></div>
+      <!-- Member cockpit -->
+      <section style="background:linear-gradient(135deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.25rem;margin:1rem 0;" id="member-cockpit" hidden aria-labelledby="member-cockpit-heading">
+        <h2 id="member-cockpit-heading" style="margin:0 0 .25rem;font-size:1.05rem;color:#4ade80;">Your Round Snapshot</h2>
+        <p style="color:#9ca3af;font-size:.82rem;margin:0 0 1rem;" id="member-round-meta">Loading your round…</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;" id="member-cockpit-stats">
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Your Rank</div><div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="mc-rank">—</div></article>
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Your Points</div><div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="mc-points">—</div></article>
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Gap to 1st</div><div style="font-size:1.4rem;font-weight:800;color:#fbbf24;" id="mc-gap">—</div></article>
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Remaining</div><div style="font-size:1.4rem;font-weight:800;color:#e5e7eb;" id="mc-remaining">—</div></article>
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Jackpot</div><p id="mc-jackpot-chip" class="pill member-cockpit__chip" style="margin:.25rem auto 0;display:inline-block;">—</p></article>
+          <article style="background:#071810;border:1px solid #166534;border-radius:.6rem;padding:.75rem;text-align:center;"><div style="color:#6b7280;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Bosses Multi</div><p id="mc-bosses-chip" class="pill member-cockpit__chip" style="margin:.25rem auto 0;display:inline-block;">—</p></article>
+        </div>
       </section>
 
-      <section class="card member-cockpit member-cockpit__scenarios" id="member-scenarios" hidden aria-labelledby="member-scenarios-heading">
-        <h2 id="member-scenarios-heading">What You Need to Win</h2>
-        <p class="muted">Live scenario guide based on current ladder and races remaining.</p>
-        <ul id="member-scenarios-list" class="member-cockpit__scenario-list">
+      <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;margin:1rem 0;" id="member-scenarios" hidden aria-labelledby="member-scenarios-heading">
+        <h2 id="member-scenarios-heading" style="margin:0 0 .3rem;font-size:1rem;color:#93c5fd;">What You Need to Win</h2>
+        <p style="color:#9ca3af;font-size:.85rem;margin:0 0 .75rem;">Live scenario guide based on current ladder and races remaining.</p>
+        <ul id="member-scenarios-list" class="member-cockpit__scenario-list" style="color:#9ca3af;padding-left:1.2rem;font-size:.88rem;line-height:1.8;margin:0;">
           <li class="member-cockpit__scenario">Loading your scenario…</li>
         </ul>
       </section>
 
-      <section class="card" id="winner-banner" hidden>
-        <h2>🏆 Round Winner: <span id="winner-banner-name">tofu</span></h2>
-        <p class="muted" id="winner-banner-range">Round date range</p>
-        <p class="muted" id="winner-banner-pot">Final pot: $0</p>
-        <p class="muted" id="winner-banner-line"></p>
+      <!-- Winner banner -->
+      <section style="background:linear-gradient(135deg,#052e16,#031a0e);border:1px solid #22c55e;border-radius:1rem;padding:1.5rem;margin:1rem 0;" id="winner-banner" hidden>
+        <div style="font-size:1.8em;margin-bottom:.4rem;">🏆</div>
+        <h2 style="margin:0 0 .35rem;color:#4ade80;">Round Winner: <span id="winner-banner-name">—</span></h2>
+        <p style="color:#9ca3af;font-size:.88rem;margin:.2rem 0;" id="winner-banner-range">Round date range</p>
+        <p style="color:#9ca3af;font-size:.88rem;margin:.2rem 0;" id="winner-banner-pot">Final pot: $0</p>
+        <p style="color:#9ca3af;font-size:.88rem;margin:.2rem 0;" id="winner-banner-line"></p>
       </section>
-      <section class="card" id="round-recap" hidden>
-        <h2>Round Recap</h2>
-        <p class="muted" id="round-recap-summary">Next round opens Friday afternoon</p>
+      <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;margin:1rem 0;" id="round-recap" hidden>
+        <h2 style="margin:0 0 .5rem;font-size:1rem;">Round Recap</h2>
+        <p style="color:#9ca3af;font-size:.85rem;margin:0 0 .75rem;" id="round-recap-summary">Next round opens Friday afternoon</p>
         <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th></tr></thead><tbody id="round-recap-top3"><tr><td colspan="3" class="muted">No recap yet.</td></tr></tbody></table></div>
       </section>
 
-      <section class="punters-promo" aria-label="Punters extras">
-        <div class="punters-promo__wrap card">
-
-          <div class="punters-promo__teasers">
-            <article class="punters-promo__stats card">
-              <h3>Stats Preview</h3>
-              <p class="muted">Top streak: <strong id="promo-top-streak">Loading…</strong></p>
-              <p class="muted">Rounds archived: <strong id="promo-stat-rounds">—</strong> • Recent payouts: <strong id="promo-stat-paid">$0.00</strong></p>
-              <p class="muted">Biggest single payout: <strong id="promo-biggest-payout">$0.00</strong></p>
-              <p class="muted">Rollover rate: <strong id="promo-rollover-rate">0%</strong> • Unique winners: <strong id="promo-unique-winners">0</strong></p>
-              <p class="muted">Latest winner: <strong id="promo-latest-winner">—</strong></p>
-            </article>
-            <article class="punters-promo__social card" id="banter-wall">
-              <h3>Banter Wall</h3>
-              <p class="muted" id="banter-wall-status">Share your tip and brag rights after lock.</p>
-              <form id="banter-form" class="stack" style="margin-top:.4rem">
-                <input type="text" name="tip" maxlength="140" placeholder="Your tip recap (optional)" />
-                <textarea name="brag" rows="2" maxlength="280" placeholder="Brag rights line (optional)"></textarea>
-                <div class="row-actions" style="margin-top:.2rem">
-                  <button class="btn btn-ghost" type="submit" id="banter-submit-btn">Post to Banter Wall</button></div>
-                <p class="muted" id="banter-form-msg"></p>
-              </form>
-              <div class="banter-wall-list" id="banter-list" aria-live="polite">
-                <p class="muted">No banter yet. Wall opens after lock.</p></div>
-            </article></div>
-
-          <article class="punters-promo__upgrade card" id="pricing-explainer-section">
-            <div>
-              <h3>FREE vs Jackpot Eligible ($20)</h3>
-              <p class="muted">Everyone can tip for FREE. Upgrade to <strong>Jackpot Eligible</strong> for $20 to unlock full ladder visibility and jackpot payout eligibility.</p></div>
-            <div class="punters-promo__upgrade-cols">
-              <div class="card">
-                <p class="pill">FREE</p>
-                <p class="muted">Tip entry + basic view.</p></div>
-              <div class="card">
-                <p class="pill">Recommended</p>
-                <p class="muted"><strong>Jackpot Eligible:</strong> full ladder visibility + jackpot eligibility.</p></div></div>
-            <div class="row-actions" style="margin-top:.45rem">
-              <button class="btn" id="upgrade-tier-btn" type="button">Upgrade to Jackpot Eligible</button></div>
+      <!-- Stats + banter + upgrade -->
+      <section aria-label="Punters extras" style="margin:1rem 0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;" id="">
+            <h3 style="margin:0 0 .75rem;font-size:1rem;color:#e5e7eb;">📊 Stats Preview</h3>
+            <div style="display:grid;gap:.4rem;font-size:.85rem;color:#9ca3af;">
+              <p style="margin:0;">Top streak: <strong style="color:#fbbf24;" id="promo-top-streak">Loading…</strong></p>
+              <p style="margin:0;">Rounds archived: <strong id="promo-stat-rounds">—</strong> · Payouts: <strong id="promo-stat-paid">$0.00</strong></p>
+              <p style="margin:0;">Biggest payout: <strong id="promo-biggest-payout">$0.00</strong></p>
+              <p style="margin:0;">Rollover rate: <strong id="promo-rollover-rate">0%</strong> · Unique winners: <strong id="promo-unique-winners">0</strong></p>
+              <p style="margin:0;">Latest winner: <strong style="color:#4ade80;" id="promo-latest-winner">—</strong></p>
+            </div>
           </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;" id="banter-wall">
+            <h3 style="margin:0 0 .5rem;font-size:1rem;color:#e5e7eb;">💬 Banter Wall</h3>
+            <p style="color:#9ca3af;font-size:.82rem;margin:0 0 .6rem;" id="banter-wall-status">Share your tip and brag rights after lock.</p>
+            <form id="banter-form" class="stack" style="margin-top:.4rem">
+              <input type="text" name="tip" maxlength="140" placeholder="Your tip recap (optional)" style="font-size:.85rem;" />
+              <textarea name="brag" rows="2" maxlength="280" placeholder="Brag rights line (optional)" style="font-size:.85rem;"></textarea>
+              <button class="btn btn-ghost" type="submit" id="banter-submit-btn" style="font-size:.85rem;">Post to Banter Wall</button>
+              <p class="muted" id="banter-form-msg"></p>
+            </form>
+            <div id="banter-list" aria-live="polite" style="margin-top:.5rem;font-size:.83rem;color:#9ca3af;">
+              <p style="margin:0;">No banter yet. Wall opens after lock.</p>
+            </div>
+          </article>
+        </div>
 
-          <div class="punters-promo__cta" id="punters-login-cta-wrap" hidden>
-            <a class="btn chip-btn" href="/punters.html#punters-login-gate">Log In to Continue</a></div></div>
+        <!-- Upgrade card -->
+        <article style="background:linear-gradient(135deg,#1a0f00,#120a00);border:1px solid #92400e;border-radius:1rem;padding:1.25rem;" id="pricing-explainer-section">
+          <h3 style="margin:0 0 .5rem;font-size:1rem;color:#fbbf24;">💸 FREE vs Jackpot Eligible ($20)</h3>
+          <p style="color:#9ca3af;font-size:.85rem;margin:0 0 .9rem;">Everyone can tip for FREE. Pay $20 to unlock full ladder visibility and jackpot payout eligibility.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.9rem;">
+            <div style="background:#0f0700;border:1px solid #451a03;border-radius:.6rem;padding:.9rem;">
+              <div style="color:#9ca3af;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">FREE</div>
+              <div style="color:#e5e7eb;font-size:.88rem;">Tip entry + basic view.</div>
+            </div>
+            <div style="background:#0f0700;border:2px solid #92400e;border-radius:.6rem;padding:.9rem;position:relative;">
+              <div style="position:absolute;top:-.5rem;left:.75rem;background:#92400e;color:#fde68a;font-size:.68rem;font-weight:700;padding:.1rem .5rem;border-radius:99px;">RECOMMENDED</div>
+              <div style="color:#fbbf24;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Jackpot Eligible</div>
+              <div style="color:#e5e7eb;font-size:.88rem;">Full ladder + jackpot eligibility.</div>
+            </div>
+          </div>
+          <button class="btn" style="background:#92400e;border-color:#92400e;" id="upgrade-tier-btn" type="button">Upgrade to Jackpot Eligible — $20</button>
+        </article>
+
+        <div id="punters-login-cta-wrap" hidden style="margin-top:1rem;text-align:center;">
+          <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;" href="/punters.html#punters-login-gate">Log In to Continue</a>
+        </div>
       </section>
-      <div class="split promo-split">
-        <section class="card" id="leaderboard">
-          <div class="section-head" style="margin-bottom:.45rem"><h2>Next Meet + Live Leaderboard <span class="pill" id="leaderboard-status">Live</span></h2></div>
-          <p class="muted" id="final-results-label" hidden>Final results (Round closed)</p>
+
+      <!-- Leaderboard + Rules -->
+      <div class="split promo-split" style="margin:1.5rem 0;">
+        <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;" id="leaderboard">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.9rem;">
+            <h2 style="margin:0;font-size:1.05rem;">Next Meet + Live Leaderboard <span style="background:#052e16;color:#4ade80;border:1px solid #166534;border-radius:99px;padding:.15rem .55rem;font-size:.72rem;font-weight:700;" id="leaderboard-status">Live</span></h2>
+          </div>
+          <p style="color:#9ca3af;font-size:.82rem;margin:0 0 .6rem;" id="final-results-label" hidden>Final results (Round closed)</p>
           <div class="grid three" id="fixtures-list"></div>
-          <div class="row-actions" style="margin:.55rem 0">
-            <button class="btn btn-ghost tier-tab active" type="button" data-tier-view="free">FREE View</button>
-            <button class="btn btn-ghost tier-tab" type="button" data-tier-view="paid">Jackpot Eligible View</button></div>
-          <div class="table-wrap" style="margin-top:.6rem"><table><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"><tr><td colspan="4" class="muted">Loading leaderboard…</td></tr></tbody></table></div>
-          <div class="card" id="leaderboard-fallback-card" hidden style="margin-top:.6rem;padding:.75rem">
-            <strong>Leaderboard temporarily unavailable</strong>
-            <p class="muted" id="leaderboard-fallback-copy" style="margin:.3rem 0 0">Showing last known values where available.</p></div>
-          <p class="muted" id="ladder-fallback" hidden>Leaderboard data unavailable. Showing last known values.</p>
-
-          <div class="card" id="points-breakdown" style="margin-top:.7rem">
-            <h3>Points Breakdown by Race</h3>
-            <p class="muted" id="breakdown-title">Tap a punter name in the leaderboard to view race-by-race points.</p>
-            <div class="table-wrap"><table><thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead><tbody id="breakdown-body"><tr><td colspan="4" class="muted">No punter selected yet.</td></tr></tbody></table></div></div>
-
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.7rem 0;">
+            <button class="btn btn-ghost tier-tab active" type="button" data-tier-view="free" style="font-size:.83rem;padding:.4rem .8rem;min-height:36px;">FREE View</button>
+            <button class="btn btn-ghost tier-tab" type="button" data-tier-view="paid" style="font-size:.83rem;padding:.4rem .8rem;min-height:36px;">Jackpot Eligible View</button>
+          </div>
+          <div class="table-wrap"><table style="font-size:.88rem;"><thead><tr><th>Rank</th><th>Punter</th><th>Points</th><th>Winners</th></tr></thead><tbody id="leaderboard-body"><tr><td colspan="4" class="muted">Loading leaderboard…</td></tr></tbody></table></div>
+          <div style="background:#0f1729;border:1px solid #1e3a5f;border-radius:.6rem;padding:.75rem;margin-top:.75rem;display:none;" id="leaderboard-fallback-card">
+            <strong style="color:#e5e7eb;font-size:.88rem;">Leaderboard temporarily unavailable</strong>
+            <p style="color:#9ca3af;font-size:.82rem;margin:.3rem 0 0;" id="leaderboard-fallback-copy">Showing last known values where available.</p>
+          </div>
+          <p style="color:#9ca3af;font-size:.82rem;" id="ladder-fallback" hidden>Leaderboard data unavailable.</p>
+          <div style="background:#07111f;border:1px solid #1e3a5f;border-radius:.75rem;padding:1rem;margin-top:.9rem;" id="points-breakdown">
+            <h3 style="margin:0 0 .35rem;font-size:.9rem;color:#93c5fd;">Points Breakdown by Race</h3>
+            <p style="color:#9ca3af;font-size:.8rem;margin:0 0 .6rem;" id="breakdown-title">Tap a punter name in the leaderboard to view race-by-race points.</p>
+            <div class="table-wrap"><table style="font-size:.85rem;"><thead><tr><th>Race</th><th>Pick</th><th>Result</th><th>Points</th></tr></thead><tbody id="breakdown-body"><tr><td colspan="4" class="muted">No punter selected yet.</td></tr></tbody></table></div>
+          </div>
           <p id="share-punters-msg" class="muted"></p>
-          <div class="row-actions" style="margin-top:.45rem">
-            <a class="btn btn-ghost" href="/punters-entrant-matrix.html">View Full Entrant Matrix</a></div>
+          <div style="margin-top:.75rem;">
+            <a class="btn btn-ghost" style="font-size:.85rem;" href="/punters-entrant-matrix.html">View Full Entrant Matrix →</a>
+          </div>
         </section>
-        <section class="card"><h2>Rules <span class="pill">Jackpot live: <strong id="rules-jackpot-value">$0</strong></span></h2>
-          <div class="stack">
-            <p class="muted"><strong>Jackpot eligible fee (live now):</strong> Fixed <strong>$20 per player</strong>, effective immediately.</p>
-            <p class="muted">Simple setup, bigger pools, cleaner payouts — no voting required. Full details in <a href="/punters-rules.html">Punters Rules</a> and <a href="/promo-terms.html">Promo Terms</a>.</p>
-            <p class="muted">• 1st = <strong>3 pts</strong>, 2nd = <strong>2 pts</strong>, 3rd = <strong>1 pt</strong>.</p>
-            <p class="muted">• Winner must be <strong>outright</strong>; tie = <strong>jackpot rolls over</strong>.</p>
-            <p class="muted">• If the <strong>Bosses Multi lands</strong>, eligible players score a <strong>next-day Poker Freeroll</strong> worth <strong id="rules-bosses-freeroll">TBA</strong>.</p>
-            <p class="muted">• If your runner is scratched and a substitute is declared, your tip automatically moves to that substitute.</p></div>
-        </section></div>
-      <section class="card bosses-v2-card bosses-spotlight" id="bosses-bet-card" aria-labelledby="bosses-v2-heading">
-        <div class="section-head" style="margin-bottom:.4rem">
-          <h2 id="bosses-v2-heading">Bosses Multi Spotlight</h2>
-          <span class="pill" id="bosses-overall">LIVE</span></div>
-        <p class="muted" id="bosses-description">One featured <strong>PLACE multi</strong> on the live tipping track. If it lands, eligible punters hit a next-day Poker Freeroll worth <strong id="bosses-freeroll-value">TBA</strong>.</p>
 
+        <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.9rem;">
+            <h2 style="margin:0;font-size:1.05rem;">Rules</h2>
+            <span style="background:#1a1000;color:#fbbf24;border:1px solid #78350f;border-radius:99px;padding:.2rem .6rem;font-size:.78rem;">Jackpot live: <strong id="rules-jackpot-value">$0</strong></span>
+          </div>
+          <div style="display:grid;gap:.6rem;font-size:.85rem;color:#9ca3af;">
+            <p style="margin:0;"><strong style="color:#fde68a;">Jackpot eligible fee:</strong> Fixed <strong>$20 per player</strong> per track.</p>
+            <p style="margin:0;">Full details in <a href="/punters-rules.html" style="color:#60a5fa;">Punters Rules</a> and <a href="/promo-terms.html" style="color:#60a5fa;">Promo Terms</a>.</p>
+            <div style="background:#07111f;border-radius:.5rem;padding:.75rem;border:1px solid #1e3a5f;line-height:1.8;">
+              <div>🥇 1st = <strong style="color:#fbbf24;">3 pts</strong></div>
+              <div>🥈 2nd = <strong style="color:#d1d5db;">2 pts</strong></div>
+              <div>🥉 3rd = <strong style="color:#cd7c3a;">1 pt</strong></div>
+            </div>
+            <p style="margin:0;">• Winner must be <strong style="color:#e5e7eb;">outright</strong> — ties roll over.</p>
+            <p style="margin:0;">• <strong style="color:#c084fc;">Bosses Multi lands</strong> → next-day Poker Freeroll worth <strong id="rules-bosses-freeroll">TBA</strong>.</p>
+            <p style="margin:0;">• Scratched runner → tip moves to declared substitute.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bosses Multi -->
+      <section style="background:linear-gradient(135deg,#0f0a1e,#09061a);border:1px solid #4c1d95;border-radius:1rem;padding:1.25rem;margin:1.5rem 0;" id="bosses-bet-card" aria-labelledby="bosses-v2-heading">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;">
+          <h2 id="bosses-v2-heading" style="margin:0;font-size:1.05rem;color:#c084fc;">♠️ Bosses Multi Spotlight</h2>
+          <span style="background:#2d1b69;color:#c4b5fd;border:1px solid #4c1d95;border-radius:99px;padding:.2rem .65rem;font-size:.75rem;font-weight:700;" id="bosses-overall">LIVE</span>
+        </div>
+        <p style="color:#9ca3af;font-size:.85rem;margin:0 0 .9rem;" id="bosses-description">One featured <strong>PLACE multi</strong> on the live tipping track. If it lands, eligible punters hit a next-day Poker Freeroll worth <strong id="bosses-freeroll-value">TBA</strong>.</p>
         <div class="stats-grid bosses-meta-grid" id="bosses-summary" role="group" aria-label="Bosses Multi summary"></div>
-
-        <div class="table-wrap" aria-label="Bosses Multi legs table">
-          <table>
-            <caption>Bosses Multi legs</caption>
-            <thead>
-              <tr>
-                <th scope="col">Leg / Race</th>
-                <th scope="col">Selection</th>
-                <th scope="col">Odds</th>
-                <th scope="col">Result</th>
-              </tr>
-            </thead>
+        <div class="table-wrap" style="margin-top:.75rem;">
+          <table style="font-size:.88rem;">
+            <caption style="display:none;">Bosses Multi legs</caption>
+            <thead><tr style="color:#6b7280;border-bottom:1px solid #2d1b69;">
+              <th scope="col" style="text-align:left;padding:.4rem .6rem;">Leg / Race</th>
+              <th scope="col" style="text-align:left;padding:.4rem .6rem;">Selection</th>
+              <th scope="col" style="text-align:left;padding:.4rem .6rem;">Odds</th>
+              <th scope="col" style="text-align:left;padding:.4rem .6rem;">Result</th>
+            </tr></thead>
             <tbody id="bosses-progress"></tbody>
-          </table></div>
-
-        <p class="muted" id="bosses-eligibility-note">Eligible = all players who entered tips this week before lock.</p>
+          </table>
+        </div>
+        <p style="color:#9ca3af;font-size:.8rem;margin:.75rem 0 0;" id="bosses-eligibility-note">Eligible = all players who entered tips this week before lock.</p>
       </section>
 
-
-      <div class="split">
-        <section class="card winners-proof-module" id="winners-wall-proof">
-          <h2>Winners Wall</h2>
-          <p class="muted muted-strong">Proof-of-Performance. No stories. Just results.</p>
-          <p class="muted">Every round is archived with the winner, payout, and a frozen snapshot of the final ladder.</p>
-
-          <div id="weekly-winner-card" class="stack winners-feature-wrap"><p class="muted">No weekly winner recorded yet.</p></div>
-
-          <div class="stats-grid winners-proof-stats" id="winners-proof-stats">
-            <article class="card"><h3 id="proof-stat-rounds">—</h3><p class="muted">Rounds archived</p></article>
-            <article class="card"><h3 id="proof-stat-paid">$0.00</h3><p class="muted">Paid recently</p></article>
-            <article class="card"><h3 id="proof-stat-rollovers">—</h3><p class="muted">Rollovers recorded</p></article></div>
-
-          <div class="stack" id="past-rounds-list" style="margin-top:.45rem"><p class="muted">No archived rounds yet.</p></div>
-
-          <div class="table-wrap winners-archive-table-wrap" style="margin-top:.6rem">
-            <table class="winners-archive-table">
-              <thead><tr><th>Round Date</th><th>Winner</th><th>Outcome</th><th>Prize (A$)</th><th>Snapshot</th></tr></thead>
-              <tbody id="winner-history-body"><tr><td colspan="5" class="muted">Loading history…</td></tr></tbody>
-            </table></div>
+      <!-- Winners Wall + Streaks -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;">
+        <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;" id="winners-wall-proof">
+          <p style="margin:0 0 .2rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:#4ade80;font-weight:700;">Proof of Performance</p>
+          <h2 style="margin:0 0 .6rem;font-size:1.05rem;">🏆 Winners Wall</h2>
+          <div id="weekly-winner-card" class="stack winners-feature-wrap"><p style="color:#9ca3af;font-size:.85rem;">No weekly winner recorded yet.</p></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:.9rem 0;" id="winners-proof-stats">
+            <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.65rem;text-align:center;">
+              <div style="font-size:1.2rem;font-weight:800;color:#4ade80;" id="proof-stat-rounds">—</div>
+              <div style="color:#6b7280;font-size:.7rem;">Rounds archived</div>
+            </article>
+            <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.65rem;text-align:center;">
+              <div style="font-size:1.2rem;font-weight:800;color:#fbbf24;" id="proof-stat-paid">$0</div>
+              <div style="color:#6b7280;font-size:.7rem;">Paid recently</div>
+            </article>
+            <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.65rem;text-align:center;">
+              <div style="font-size:1.2rem;font-weight:800;color:#60a5fa;" id="proof-stat-rollovers">—</div>
+              <div style="color:#6b7280;font-size:.7rem;">Rollovers</div>
+            </article>
+          </div>
+          <div id="past-rounds-list" style="margin-top:.5rem;"><p style="color:#9ca3af;font-size:.85rem;">No archived rounds yet.</p></div>
+          <div class="table-wrap" style="margin-top:.75rem;">
+            <table style="font-size:.82rem;">
+              <thead><tr style="color:#6b7280;border-bottom:1px solid #1f2937;">
+                <th style="text-align:left;padding:.35rem .5rem;">Date</th>
+                <th style="text-align:left;padding:.35rem .5rem;">Winner</th>
+                <th style="text-align:left;padding:.35rem .5rem;">Outcome</th>
+                <th style="text-align:right;padding:.35rem .5rem;">Prize</th>
+                <th style="text-align:left;padding:.35rem .5rem;">📸</th>
+              </tr></thead>
+              <tbody id="winner-history-body"><tr><td colspan="5" style="color:#6b7280;padding:.5rem;">Loading history…</td></tr></tbody>
+            </table>
+          </div>
         </section>
-        <section class="card"><h2>Consecutive Weeks Milestones</h2><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Punter</th><th>Current Streak</th><th>Best</th><th>Wins</th><th>Badges</th></tr></thead><tbody id="streak-body"><tr><td colspan="6" class="muted">Loading milestones…</td></tr></tbody></table></div></section></div>
-      <section class="card promo-proof-strip" id="punters-live-snapshot">
-        <h2>Live Club Snapshot</h2>
-        <div class="stats-grid">
-          <article class="card"><h3 id="pc-stat-weeks">—</h3><p class="muted">Punters rounds archived</p></article>
-          <article class="card"><h3 id="pc-stat-entries">—</h3><p class="muted">This week’s tip entries</p></article>
-          <article class="card"><h3 id="pc-stat-paid">$0</h3><p class="muted">Recent payouts total</p></article></div>
-        <p class="muted">Updated live in Melbourne time. Private. Transparent. Running every Wednesday and Saturday.</p>
+        <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;">
+          <h2 style="margin:0 0 .75rem;font-size:1.05rem;">🔥 Consecutive Weeks Milestones</h2>
+          <div class="table-wrap">
+            <table style="font-size:.85rem;">
+              <thead><tr style="color:#6b7280;border-bottom:1px solid #1f2937;">
+                <th style="text-align:left;padding:.35rem .5rem;">Rank</th>
+                <th style="text-align:left;padding:.35rem .5rem;">Punter</th>
+                <th style="text-align:right;padding:.35rem .5rem;">Streak</th>
+                <th style="text-align:right;padding:.35rem .5rem;">Best</th>
+                <th style="text-align:right;padding:.35rem .5rem;">Wins</th>
+                <th style="text-align:left;padding:.35rem .5rem;">Badges</th>
+              </tr></thead>
+              <tbody id="streak-body"><tr><td colspan="6" style="color:#6b7280;padding:.5rem;">Loading milestones…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- Live snapshot -->
+      <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;margin:1rem 0;" id="punters-live-snapshot">
+        <h2 style="margin:0 0 .9rem;font-size:1.05rem;">⚡ Live Club Snapshot</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:.75rem;">
+          <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.85rem;text-align:center;">
+            <div style="font-size:1.5rem;font-weight:800;color:#4ade80;" id="pc-stat-weeks">—</div>
+            <div style="color:#6b7280;font-size:.75rem;margin-top:.2rem;">Rounds archived</div>
+          </article>
+          <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.85rem;text-align:center;">
+            <div style="font-size:1.5rem;font-weight:800;color:#60a5fa;" id="pc-stat-entries">—</div>
+            <div style="color:#6b7280;font-size:.75rem;margin-top:.2rem;">Tips this week</div>
+          </article>
+          <article style="background:#07111f;border:1px solid #1e3a5f;border-radius:.6rem;padding:.85rem;text-align:center;">
+            <div style="font-size:1.5rem;font-weight:800;color:#fbbf24;" id="pc-stat-paid">$0</div>
+            <div style="color:#6b7280;font-size:.75rem;margin-top:.2rem;">Recent payouts</div>
+          </article>
+        </div>
+        <p style="color:#6b7280;font-size:.82rem;margin:0;">Updated live · Melbourne time · Private · Wed &amp; Sat</p>
       </section>
 
-      <section class="card promo-cta-band" aria-label="Punters Club call to action">
-        <h2>Ready to get on the card?</h2>
-        <p class="muted">Edits allowed until lock. One clean entry before cutoff.</p>
+      <!-- Next round teaser -->
+      <section style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;padding:1.25rem;margin:1rem 0;display:none;" id="next-round-teaser">
+        <h2 style="margin:0 0 .4rem;font-size:1rem;">Next Round Teaser</h2>
+        <p style="color:#9ca3af;font-size:.85rem;margin:0;" id="next-round-teaser-text">Next Punters Club opens Friday afternoon</p>
+        <p style="color:#9ca3af;font-size:.85rem;margin:.2rem 0 0;" id="next-round-teaser-venue">Venue TBA</p>
       </section>
-      <!-- points-breakdown moved into leaderboard card -->
-      
-      <!-- poker quick-jump removed per request -->
-      <section class="card" id="next-round-teaser" hidden><h2>Next Round Teaser</h2><p class="muted" id="next-round-teaser-text">Next Punters Club opens Friday afternoon</p><p class="muted" id="next-round-teaser-venue">Venue TBA</p></section>
-      <!-- Live This Week section removed per UX simplification request -->
-      <section class="card" id="punters-how-it-works">
-        <h2>How It Works</h2>
-        <div class="steps-grid">
-          <article class="card step-tile"><h3>🔒 Lock Picks</h3><p class="muted">Public countdown • No late edits • Same lock for everyone.</p></article>
-          <article class="card step-tile"><h3>📊 Score Points</h3><p class="muted">3 = 1st • 2 = 2nd • 1 = 3rd • Live ladder updates.</p></article>
-          <article class="card step-tile"><h3>💰 Win Jackpot</h3><p class="muted">Highest total wins • Ties roll over • Separate Dogs/Galls jackpots.</p></article></div>
-        <details style="margin-top:.65rem">
-          <summary><strong>Rules, Promo Terms & FAQ</strong></summary>
-          <p class="muted" style="margin-top:.45rem"><a class="menu-link" href="/punters-rules.html">Punters Rules</a> • <a class="menu-link" href="/promo-terms.html">Promo Terms</a> • <a class="menu-link" href="/punters-faq.html">Punters FAQ</a></p>
+
+      <!-- How it works -->
+      <section style="margin:2rem 0;" id="punters-how-it-works">
+        <h2 style="margin:0 0 1rem;font-size:1.3rem;">How It Works</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;">
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:1.8em;margin-bottom:.4rem;">🔒</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#4ade80;">Lock Picks</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Public countdown · No late edits · Same lock for everyone.</p>
+          </article>
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:1.8em;margin-bottom:.4rem;">📊</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#4ade80;">Score Points</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">3 = 1st · 2 = 2nd · 1 = 3rd · Live ladder updates.</p>
+          </article>
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:1.8em;margin-bottom:.4rem;">💰</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#4ade80;">Win Jackpot</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Highest total wins · Ties roll over · Separate Dogs/Galls jackpots.</p>
+          </article>
+        </div>
+        <details style="margin-top:1rem;background:#0b1221;border:1px solid #1f2937;border-radius:.75rem;overflow:hidden;">
+          <summary style="padding:.85rem 1.1rem;cursor:pointer;font-weight:600;color:#e5e7eb;list-style:none;">📋 Rules, Promo Terms &amp; FAQ</summary>
+          <div style="padding:.5rem 1.1rem 1rem;border-top:1px solid #1f2937;display:flex;gap:.75rem;flex-wrap:wrap;">
+            <a href="/punters-rules.html" style="color:#60a5fa;font-size:.88rem;">Punters Rules</a>
+            <a href="/promo-terms.html" style="color:#60a5fa;font-size:.88rem;">Promo Terms</a>
+            <a href="/punters-faq.html" style="color:#60a5fa;font-size:.88rem;">Punters FAQ</a>
+          </div>
         </details>
       </section>
+
+      <!-- Final CTA -->
+      <div style="text-align:center;padding:2rem 0 1rem;">
+        <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;font-size:1rem;padding:.8rem 2.5rem;">Submit This Week's Tips →</a>
+      </div>
 
     </main>
 
@@ -420,27 +503,57 @@
         </label>
         <p class="muted" id="claim-ref-hint">Recommended reference: <strong id="claim-ref-format">BBB-username</strong></p>
         <div class="row-actions">
-          <button class="btn" type="submit" id="claim-submit-btn">I’ve paid $20</button>
+          <button class="btn" type="submit" id="claim-submit-btn">I've paid $20</button>
           <button class="btn btn-ghost" type="button" id="close-claim-modal-btn">Cancel</button></div>
         <p class="muted" id="claim-msg"></p>
       </form>
     </dialog>
-    <footer class="wrap footer enhanced-footer muted">
-      <div class="footer-grid">
-        <div>
-          <strong>Big Bluff Bay Punters Club</strong>
-          <p class="muted">Fixed $20 weekly jackpot eligible fee live now. Consistency, points pressure, and jackpot upside.</p></div>
-        <div>
-          <h3 class="footer-heading">Navigate</h3>
-          <p><a class="menu-link" href="/">Home</a> <a class="menu-link" href="/punters.html#leaderboard">Leaderboard</a> <a class="menu-link" href="/punters.html">Tips Entry</a> <a class="menu-link" href="/punters-faq.html">Punters FAQ</a> <a class="menu-link" href="/punters-rules.html">Rules</a></p></div>
-        <div>
-          <h3 class="footer-heading">Legal</h3>
-          <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p></div>
-        <div>
-          <h4>🌐 Social</h4>
-          <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" /></a></p></div></div>
-      <p class="muted footer-note"><strong>18+ only • Gamble responsibly.</strong> Private social club format. Not a bookmaker. No financial advice.</p>
-      <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
+    <footer style="background:#050912;border-top:1px solid #111827;padding:3rem 0 1.5rem;margin-top:1rem;">
+      <div class="wrap">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem;">
+          <div>
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+              <span style="width:2.2rem;height:2.2rem;border-radius:.5rem;display:grid;place-items:center;font-size:.75rem;font-weight:800;background:#052e16;color:#86efac;border:1px solid #14532d;">BBB</span>
+              <strong style="font-size:1rem;color:#e5e7eb;">Big Bluff Bay Punters Club</strong>
+            </div>
+            <p style="color:#6b7280;font-size:.85rem;line-height:1.6;margin:0 0 1rem;max-width:28ch;">Fixed $20 weekly jackpot fee. Consistency, points pressure, and jackpot upside.</p>
+            <div style="display:flex;gap:.5rem;">
+              <a href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" style="width:2rem;height:2rem;background:#1f2937;border:1px solid #374151;border-radius:.4rem;display:grid;place-items:center;" aria-label="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" width="14" height="14" loading="lazy" /></a>
+              <a href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" style="width:2rem;height:2rem;background:#1f2937;border:1px solid #374151;border-radius:.4rem;display:grid;place-items:center;" aria-label="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" width="14" height="14" loading="lazy" /></a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">Punters Club</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/punters.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">✏️ Enter Tips</a>
+              <a href="/punters.html#leaderboard" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏆 Leaderboard</a>
+              <a href="/punters-entrant-matrix.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">📊 Entrant Matrix</a>
+              <a href="/punters-faq.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">❓ Punters FAQ</a>
+              <a href="/punters-rules.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">📋 Rules</a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">More</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏠 Home</a>
+              <a href="/afl-tipping" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏉 AFL Tipping</a>
+              <a href="/poker-schedule.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">♠️ Poker</a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">Legal</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/privacy.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Privacy Policy</a>
+              <a href="/terms.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Terms of Use</a>
+              <a href="/promo-terms.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Promo Terms</a>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #111827;padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+          <p style="color:#4b5563;font-size:.78rem;margin:0;"><strong>18+ only · Gamble responsibly.</strong> Private social club — not a bookmaker. No financial advice.</p>
+          <p style="color:#4b5563;font-size:.78rem;margin:0;">© 2026 Big Bluff Bay. All rights reserved.</p>
+        </div>
+      </div>
     </footer>
     <script defer src="punters.js?v=20260225-track-label-fix"></script>
   </body>
