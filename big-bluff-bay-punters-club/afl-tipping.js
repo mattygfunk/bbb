@@ -460,8 +460,6 @@
   }
 
   function renderKnockout(knockoutData) {
-    if (!knockoutData) return;
-    
     const statusBadge = document.getElementById('ko-status-badge');
     const prizeBadge = document.getElementById('ko-prize-badge');
     const activeCount = document.getElementById('ko-active-count');
@@ -472,20 +470,31 @@
     const winnerName = document.getElementById('ko-winner-name');
     const winnerPrize = document.getElementById('ko-winner-prize');
     
+    if (!knockoutData) {
+      // Fallback display when no data
+      if (statusBadge) statusBadge.textContent = 'Loading...';
+      if (prizeBadge) prizeBadge.textContent = 'Prize: $75';
+      if (activeCount) activeCount.textContent = '—';
+      if (eliminatedCount) eliminatedCount.textContent = '—';
+      if (activeNames) activeNames.textContent = 'Loading...';
+      if (recentEliminations) recentEliminations.textContent = 'No data yet';
+      return;
+    }
+    
     if (statusBadge) statusBadge.textContent = knockoutData.status === 'completed' ? 'Completed' : 'Active';
     if (prizeBadge) prizeBadge.textContent = `Prize: $${knockoutData.prizePot || 75}`;
     
-    if (activeCount) activeCount.textContent = knockoutData.activePlayers.length;
-    if (eliminatedCount) eliminatedCount.textContent = knockoutData.totalEliminated;
+    if (activeCount) activeCount.textContent = knockoutData.activePlayers ? knockoutData.activePlayers.length : 0;
+    if (eliminatedCount) eliminatedCount.textContent = knockoutData.totalEliminated || 0;
     
     if (activeNames) {
       const players = knockoutData.activePlayers || [];
       if (players.length === 0) {
-        activeNames.textContent = 'Competition over';
+        activeNames.textContent = knockoutData.status === 'completed' ? 'Competition over' : 'Starting soon...';
       } else if (players.length <= 6) {
-        activeNames.innerHTML = players.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
+        activeNames.innerHTML = players.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member || 'Unknown')}</span>`).join(', ');
       } else {
-        const shown = players.slice(0, 5).map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
+        const shown = players.slice(0, 5).map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member || 'Unknown')}</span>`).join(', ');
         activeNames.innerHTML = `${shown} <span style="color:var(--muted);">+${players.length - 5} more</span>`;
       }
     }
@@ -496,7 +505,7 @@
         recentEliminations.textContent = 'No eliminations yet';
       } else {
         const items = recent.slice(0, 3).map(e => 
-          `${escHtml(e.member)} (${e.roundLabel})`
+          `${escHtml(e.member || 'Unknown')} (${escHtml(e.roundLabel || 'Unknown round')})`
         ).join(', ');
         recentEliminations.innerHTML = items;
       }
@@ -505,8 +514,10 @@
     // Show winner if competition is complete
     if (knockoutData.winner && winnerSection && winnerName && winnerPrize) {
       winnerSection.style.display = '';
-      winnerName.textContent = knockoutData.winner.member;
-      winnerPrize.textContent = `Prize: $${knockoutData.winner.prize}`;
+      winnerName.textContent = knockoutData.winner.member || 'Unknown';
+      winnerPrize.textContent = `Prize: $${knockoutData.winner.prize || knockoutData.prizePot || 75}`;
+    } else if (winnerSection) {
+      winnerSection.style.display = 'none';
     }
   }
 

@@ -161,6 +161,15 @@ function ensureAflStore(store) {
   if (typeof at.weeklyRollover !== 'number') at.weeklyRollover = 0;
   if (!at.analytics || typeof at.analytics !== 'object') at.analytics = { weeklyEngagement: [] };
   if (!Array.isArray(at.analytics.weeklyEngagement)) at.analytics.weeklyEngagement = [];
+  if (!at.knockout || typeof at.knockout !== 'object') {
+    at.knockout = {
+      status: 'active',
+      activePlayers: [],
+      eliminated: [],
+      winner: null,
+      startedAt: Date.now()
+    };
+  }
   return at;
 }
 
@@ -577,13 +586,14 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         }
       }
 
-      // KO competition status
+      // KO competition status (with fallbacks)
+      const ko = at.knockout || {};
       const koStatus = {
-        status: at.knockout.status,
-        activePlayers: at.knockout.activePlayers.length,
-        totalEliminated: at.knockout.eliminated.length,
-        prizePot: prizes.knockout,
-        winner: at.knockout.winner
+        status: ko.status || 'active',
+        activePlayers: ko.activePlayers ? ko.activePlayers.length : 0,
+        totalEliminated: ko.eliminated ? ko.eliminated.length : 0,
+        prizePot: prizes.knockout || 75,
+        winner: ko.winner || null
       };
 
       res.json({
@@ -776,8 +786,11 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const caller = tryDecodeToken(req, JWT_SECRET);
       const prizes = calcSeasonPrizes(store);
       
+      // Ensure knockout object exists
+      const ko = at.knockout || {};
+      
       // Get active player details
-      const activePlayerDetails = at.knockout.activePlayers.map(userId => {
+      const activePlayerDetails = (ko.activePlayers || []).map(userId => {
         const entry = at.entries.find(e => e.userId === userId);
         return {
           userId: caller ? userId : null, // Hide userIds from non-logged-in users
@@ -786,25 +799,25 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       });
 
       // Get recent eliminations (last 5)
-      const recentEliminations = at.knockout.eliminated
+      const recentEliminations = (ko.eliminated || [])
         .slice(-5)
         .reverse()
         .map(elim => ({
-          member: elim.member,
-          roundLabel: elim.roundLabel,
-          incorrectPick: elim.incorrectPick,
-          correctPick: elim.correctPick
+          member: elim.member || 'Unknown',
+          roundLabel: elim.roundLabel || 'Unknown',
+          incorrectPick: elim.incorrectPick || null,
+          correctPick: elim.correctPick || null
         }));
 
       res.json({
         ok: true,
-        status: at.knockout.status,
+        status: ko.status || 'active',
         activePlayers: activePlayerDetails,
-        totalEliminated: at.knockout.eliminated.length,
+        totalEliminated: ko.eliminated ? ko.eliminated.length : 0,
         recentEliminations,
-        prizePot: prizes.knockout,
-        winner: at.knockout.winner,
-        startedAt: at.knockout.startedAt
+        prizePot: prizes.knockout || 75,
+        winner: ko.winner || null,
+        startedAt: ko.startedAt || Date.now()
       });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
