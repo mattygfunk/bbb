@@ -4007,12 +4007,17 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const member = String(req.body?.member || '').trim();
     if (!member) return res.status(400).json({ error: 'member is required' });
 
-    // Remove tips for this track
+    // Remove only tips for this track submitted during the current open round
+    const roundOpenedAt = Number(round?.createdAt || 0);
     let tipsRemoved = 0;
     for (const tip of store.tips || []) {
       if (normalizeTrackId(tip.trackId || 'thoroughbreds') !== trackId) continue;
       if (String(tip.member || '').toLowerCase() !== member.toLowerCase()) continue;
-      if (tip.status !== 'removed') { tip.status = 'removed'; tipsRemoved++; }
+      if (tip.status === 'removed') continue;
+      // Only remove tips from this round (created after the round opened)
+      if (roundOpenedAt && Number(tip.createdAt || 0) < roundOpenedAt) continue;
+      tip.status = 'removed';
+      tipsRemoved++;
     }
 
     // Remove payment from the current open round
