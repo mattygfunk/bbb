@@ -412,11 +412,12 @@ function calcSeasonPrizes(store) {
   const at = ensureAflStore(store);
   const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
   const gross = confirmedCount * (at.season.entryFee || 100);
-  const ps = at.season.prizeStructure;
+  const ps = at.season.prizeStructure || {};
+  const lp = ps.leaderboardPayout || { first: 0.50, second: 0.30, third: 0.20 };
 
-  const seasonLeaderboardPool = gross * ps.seasonLeaderboard;
-  const knockoutPool = gross * ps.knockout;
-  const weeklyPool = gross * ps.weeklyPot;
+  const seasonLeaderboardPool = gross * (ps.seasonLeaderboard || 0.695);
+  const knockoutPool = gross * (ps.knockout || 0.075);
+  const weeklyPool = gross * (ps.weeklyPot || 0.23);
 
   return {
     confirmedCount,
@@ -424,10 +425,10 @@ function calcSeasonPrizes(store) {
     seasonLeaderboardPool,
     knockoutPool,
     weeklyPool,
-    first: seasonLeaderboardPool * ps.leaderboardPayout.first,
-    second: seasonLeaderboardPool * ps.leaderboardPayout.second,
-    third: seasonLeaderboardPool * ps.leaderboardPayout.third,
-    knockoutTotal: knockoutPool, // For two comps
+    first: seasonLeaderboardPool * lp.first,
+    second: seasonLeaderboardPool * lp.second,
+    third: seasonLeaderboardPool * lp.third,
+    knockoutTotal: knockoutPool,
     knockoutEach: knockoutPool / 2
   };
 }
