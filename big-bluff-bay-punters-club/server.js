@@ -4020,9 +4020,14 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     }
 
     // Index existing claims for this round by member (lower-cased)
+    // Only include claims that belong to the current open round
     const existingClaims = (store.puntersClub?.claims || []).filter((c) => {
       if (normalizeTrackId(c.trackId) !== trackId) return false;
-      if (currentRoundId && c.roundId && c.roundId !== currentRoundId) return false;
+      // If there's a current round, require the claim to match it (or have no roundId only if very recent — same session)
+      if (currentRoundId) {
+        if (c.roundId && c.roundId !== currentRoundId) return false;
+        if (!c.roundId) return false; // old claim with no roundId — exclude
+      }
       return true;
     });
     const claimsByMember = new Map();
