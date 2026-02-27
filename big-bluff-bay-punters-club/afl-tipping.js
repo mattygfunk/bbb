@@ -120,17 +120,38 @@
     }
   }
 
-  function renderPrizes(prizes) {
+  function renderPrizes(prizes, rollover) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmtMoney(val); };
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     if (!prizes) {
-      set('prize-1st', 0);
-      set('prize-2nd', 0);
-      set('prize-3rd', 0);
+      set('prize-1st', 0); set('prize-2nd', 0); set('prize-3rd', 0);
       return;
     }
+    // Season leaderboard
     set('prize-1st', prizes.first || 0);
     set('prize-2nd', prizes.second || 0);
     set('prize-3rd', prizes.third || 0);
+    // Weekly jackpot
+    set('prize-weekly-base', prizes.weeklyBase || 0);
+    const rolloverEl = document.getElementById('prize-weekly-rollover');
+    if (rolloverEl) {
+      const ro = rollover || 0;
+      rolloverEl.style.display = ro > 0 ? '' : 'none';
+      rolloverEl.textContent = ro > 0 ? `🔄 +${fmtMoney(ro)} rollover this week` : '';
+    }
+    // KO competitions
+    set('prize-ko-each', prizes.knockoutEach || 0);
+    // Summary line
+    const n = prizes.confirmedCount || 0;
+    const fee = prizes.entryFee || 75;
+    const summaryEl = document.getElementById('prize-pool-summary');
+    if (summaryEl) {
+      summaryEl.textContent = `${n} confirmed ${n === 1 ? 'entry' : 'entries'} × $${fee} = ${fmtMoney(prizes.gross || 0)} gross pool — split across season leaderboard, weekly jackpots, and 2 KO competitions.`;
+    }
+    // Total
+    set('prize-total', prizes.totalPrizePool || prizes.gross || 0);
+    const totalEntrantsEl = document.getElementById('prize-total-entrants');
+    if (totalEntrantsEl) totalEntrantsEl.textContent = n > 0 ? `across ${n} ${n === 1 ? 'entrant' : 'entrants'}` : '';
   }
 
   function renderStatusStrip(data) {
@@ -266,7 +287,7 @@
       renderCurrentRound(data.currentRound);
       renderMiniLeaderboard(data.leaderboard);
       renderJackpot(data.weeklyPot, data.rollover);
-      renderPrizes(data.prizes);
+      renderPrizes(data.prizes, data.rollover);
       renderKnockout(data.knockout, data.prizes);
       renderBanter(data.banter, data.currentRound ? data.currentRound.id : null);
 

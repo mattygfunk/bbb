@@ -149,23 +149,57 @@
             <p style="color:var(--muted);font-size:.9em;margin-top:.75rem;">Outright weekly winner takes the pot. Ties roll over!</p>
           </section></div>
 
-        <!-- Season prize structure -->
+        <!-- Prize breakdown -->
         <section class="card" style="margin-bottom:1.5rem;">
-          <h3 style="margin-top:0;color:var(--afl-light);">🥇 Season Prize Structure</h3>
-          <div id="prize-structure-display" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;" class="responsive-3col">
-            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
-              <div style="font-size:1.5em;">🥇</div>
-              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-1st">$—</div>
-              <div style="color:var(--muted);font-size:.85em;">1st Place (50%)</div></div>
-            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
-              <div style="font-size:1.5em;">🥈</div>
-              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-2nd">$—</div>
-              <div style="color:var(--muted);font-size:.85em;">2nd Place (30%)</div></div>
-            <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
-              <div style="font-size:1.5em;">🥉</div>
-              <div style="font-weight:700;color:var(--afl-light);font-size:1.2em;" id="prize-3rd">$—</div>
-              <div style="color:var(--muted);font-size:.85em;">3rd Place (20%)</div></div></div>
-          <p style="color:var(--muted);font-size:.85em;margin-top:.75rem;">Prize pool based on $100 entry fee. See rules for full breakdown. Updates live as more people enter.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+            <h3 style="margin:0;color:var(--afl-light);">🏆 Where Does Your Entry Fee Go?</h3>
+            <span style="background:#052e16;color:#4ade80;border:1px solid #22c55e;border-radius:99px;padding:.3rem .9rem;font-size:.82em;font-weight:700;">✅ 100% back to players</span>
+          </div>
+          <p style="color:var(--muted);font-size:.85em;margin:0 0 1.25rem;" id="prize-pool-summary">Loading…</p>
+
+          <!-- Season leaderboard -->
+          <div style="margin-bottom:1.1rem;">
+            <div style="color:var(--muted);text-transform:uppercase;font-size:.72rem;letter-spacing:.05em;margin-bottom:.6rem;">🏅 Season Leaderboard</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;" class="responsive-3col">
+              <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+                <div style="font-size:1.3em;">🥇</div>
+                <div style="font-weight:700;color:#fbbf24;font-size:1.2em;" id="prize-1st">$—</div>
+                <div style="color:var(--muted);font-size:.8em;margin-top:.2rem;">1st Place</div>
+              </div>
+              <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+                <div style="font-size:1.3em;">🥈</div>
+                <div style="font-weight:700;color:#d1d5db;font-size:1.2em;" id="prize-2nd">$—</div>
+                <div style="color:var(--muted);font-size:.8em;margin-top:.2rem;">2nd Place</div>
+              </div>
+              <div style="text-align:center;background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+                <div style="font-size:1.3em;">🥉</div>
+                <div style="font-weight:700;color:#cd7c3a;font-size:1.2em;" id="prize-3rd">$—</div>
+                <div style="color:var(--muted);font-size:.8em;margin-top:.2rem;">3rd Place</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly jackpot + KO side by side -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.1rem;" class="responsive-2col">
+            <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+              <div style="color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;margin-bottom:.5rem;">⚡ Weekly Jackpot</div>
+              <div style="font-weight:700;color:#a78bfa;font-size:1.15em;" id="prize-weekly-base">$—</div>
+              <div style="color:var(--muted);font-size:.8em;margin-top:.25rem;">per round · rolls over on no winner</div>
+              <div style="margin-top:.5rem;font-size:.8em;color:#c4b5fd;" id="prize-weekly-rollover"></div>
+            </div>
+            <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:1rem;">
+              <div style="color:var(--muted);text-transform:uppercase;font-size:.7rem;letter-spacing:.05em;margin-bottom:.5rem;">🥊 KO Competitions</div>
+              <div style="font-weight:700;color:#f87171;font-size:1.15em;" id="prize-ko-each">$—</div>
+              <div style="color:var(--muted);font-size:.8em;margin-top:.25rem;">per comp · 2 comps this season</div>
+              <div style="color:var(--muted);font-size:.8em;margin-top:.2rem;">Comp 1 from Rd 1 · Comp 2 from Rd 13</div>
+            </div>
+          </div>
+
+          <!-- Total bar -->
+          <div style="border-top:1px solid var(--border);padding-top:.9rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+            <div style="color:var(--muted);font-size:.85em;">Total prize pool <span style="color:#4ade80;font-weight:600;" id="prize-total-entrants"></span></div>
+            <div style="font-size:1.15em;font-weight:800;color:#4ade80;" id="prize-total">$—</div>
+          </div>
         </section>
 
         <!-- How it works -->
