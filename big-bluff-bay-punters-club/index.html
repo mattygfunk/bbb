@@ -38,6 +38,15 @@
       .pill{border:1px solid #334155;border-radius:999px;padding:.2rem .55rem;color:var(--muted);font-size:.78rem}.chip-red{color:#fecaca;border-color:#7f1d1d;background:#3a1010}#status-lock{display:inline-block;min-width:88px;font-variant-numeric:tabular-nums}
       .card{background:linear-gradient(180deg,#0b1221 0%,#0b1220 100%);border:1px solid var(--line);border-radius:1rem;padding:1rem}.login-card{width:min(560px,100%)}main{padding:1.1rem 0 2.4rem;display:grid;gap:1rem}
       @media (min-width:980px){.hero-layout{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);gap:1.2rem}}
+      @media (max-width:700px){
+        #afl-live-section>div:last-child,#lobby>div:last-child,#club-banner>div:last-child{grid-template-columns:1fr!important}
+        #lifecycle-modules>div:last-child{grid-template-columns:1fr 1fr!important}
+        #how-it-works>div:last-child{grid-template-columns:1fr 1fr!important}
+        #why-join>div:nth-child(2){grid-template-columns:1fr!important}
+        [aria-labelledby="proof-heading"]>div:nth-child(2){grid-template-columns:1fr!important}
+        [aria-labelledby="strategy-heading"]>div:last-child{grid-template-columns:1fr!important}
+        footer [style*="grid-template-columns:2fr"]{grid-template-columns:1fr 1fr!important}
+      }
     </style>
     <link rel="preload" href="styles.css?v=20260219-8" as="style" />
     <link rel="stylesheet" href="styles.css?v=20260219-8" media="print" onload="this.media='all'" />
@@ -152,326 +161,428 @@
     </header>
 
     <main class="wrap premium-main">
-      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span>›</span>
-        <span aria-current="page">🏁 Big Bluff Bay</span>
-      </nav>
-      <section class="rail-section" id="club-banner" aria-labelledby="club-banner-heading">
-        <div class="section-head">
-          <h2 id="club-banner-heading">♠️ Poker Club</h2>
-          <p class="muted">Structured nights. Real cash. Proper tournament format. <a href="/poker-schedule.html" style="color:#c084fc;">See schedule →</a></p>
-        </div>
-        <div class="split">
-          <article class="card banner-photo-card" style="border-color:#6b21a8;background:linear-gradient(180deg,#0f0a1e,#09061a);">
-            <h3 style="color:#c084fc;margin-top:0;">Clubroom Snapshot</h3>
-            <img class="club-banner-photo" src="/assets/theme-banner-768.jpg" alt="Big Bluff Bay Poker Club banner with players in the clubhouse" loading="lazy" fetchpriority="low" decoding="async" width="768" height="386" onerror="this.onerror=null;this.src='/assets/theme-banner.jpg';" />
-            <p class="muted">Real clubhouse energy: country pub feel, cards on the table, proper tournament nights.</p>
-          </article>
-          <article class="card" style="border-color:#6b21a8;background:linear-gradient(180deg,#0f0a1e,#09061a);">
-            <h3 style="color:#c084fc;margin-top:0;">From track rail reads to card table pressure</h3>
-            <p class="muted">Structured poker nights, sharp banter, and clear formats that reward discipline over chaos.</p>
-            <p class="muted">Full schedule, tournament structure, and buy-in details - all in the Poker hub.</p>
-            <div class="row-actions">
-              <a class="btn btn-primary" style="font-size:.9rem;padding:.55rem .9rem;background:#6b21a8;border-color:#6b21a8;" href="/poker-schedule.html">♠️ Tournament Schedule</a>
-              <a class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;" href="/poker.html">Poker Hub</a>
-            </div>
-          </article>
-        </div>
-      </section>
 
-      <!-- AFL Tipping Live Block -->
-      <section class="rail-section" id="afl-live-section" aria-labelledby="afl-live-heading">
-        <div class="section-head">
-          <h2 id="afl-live-heading">🏉 AFL Tipping - 2026 Season</h2>
-          <p class="muted">Tip fast. Lock in. Win real cash. <a href="/afl-tipping" style="color:#93c5fd;">Join the competition →</a></p></div>
-        <div class="split">
-          <article class="card" style="border-color:#1e40af;background:linear-gradient(180deg,#0a1628,#071020);">
-            <h3 style="color:#93c5fd;margin-top:0;">Live Stats</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
-              <div>
-                <div style="color:var(--muted);font-size:.8rem;">Entrants</div>
-                <div style="font-size:1.4rem;font-weight:800;color:#93c5fd;" id="afl-home-entrants">-</div></div>
-              <div>
-                <div style="color:var(--muted);font-size:.8rem;">Weekly Jackpot</div>
-                <div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="afl-home-jackpot">$30</div></div>
-              <div>
-                <div style="color:var(--muted);font-size:.8rem;">Next Lockout</div>
-                <div style="font-size:.95rem;font-weight:700;color:var(--text);" id="afl-home-lockout">-</div></div>
-              <div>
-                <div style="color:var(--muted);font-size:.8rem;">Season Leader</div>
-                <div style="font-size:.95rem;font-weight:700;color:var(--text);" id="afl-home-leader">-</div></div></div>
-            <div id="afl-home-rollover" style="display:none;background:#431407;border:1px solid #b45309;border-radius:.5rem;padding:.4rem .75rem;margin-bottom:.75rem;color:#fde68a;font-size:.85rem;font-weight:700;">
-              🔄 JACKPOT ROLLED OVER</div>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-              <a href="/afl-tipping/submit" class="btn btn-primary" style="font-size:.9rem;padding:.55rem .9rem;">✏️ Submit Tips</a>
-              <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;">🏆 Ladder</a>
-              <a href="/afl-tipping" class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;">🏉 Hub</a></div>
-          </article>
-          <article class="card" style="border-color:#1e40af;background:linear-gradient(180deg,#0a1628,#071020);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;">
-              <h3 style="color:#93c5fd;margin:0;">Top 10 Live</h3>
-              <span class="pill" style="font-size:.75rem;" id="afl-home-round-label">Season</span></div>
-            <table style="width:100%;font-size:.88rem;">
-              <thead><tr style="color:var(--muted);border-bottom:1px solid var(--line);">
-                <th style="text-align:left;padding:.25rem .35rem;font-weight:600;">#</th>
-                <th style="text-align:left;padding:.25rem .35rem;font-weight:600;">Handle</th>
-                <th style="text-align:right;padding:.25rem .35rem;font-weight:600;">Pts</th>
-                <th style="text-align:right;padding:.25rem .35rem;font-weight:600;">Wins</th>
-              </tr></thead>
-              <tbody id="afl-home-top10">
-                <tr><td colspan="4" style="color:var(--muted);padding:.5rem .35rem;">Loading…</td></tr>
-              </tbody>
-            </table>
-            <div id="afl-home-banter" style="margin-top:.75rem;padding-top:.6rem;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;font-style:italic;"></div>
-          </article></div>
-      </section>
-
-      <section class="rail-section" id="lobby" aria-labelledby="lobby-heading">
-        <div class="section-head">
-          <h2 id="lobby-heading">🏇 Punters Club — Live</h2>
-          <p class="muted">Weekly racing tips. Real jackpot. Transparent scoring. <a href="/punters.html" style="color:#fbbf24;">Join this week →</a></p>
+      <!-- ── AFL Tipping ─────────────────────────────────────────────── -->
+      <section style="margin:2rem 0;" id="afl-live-section" aria-labelledby="afl-live-heading">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;">
+          <div>
+            <p style="margin:0 0 .2rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#60a5fa;font-weight:700;">2026 Season</p>
+            <h2 id="afl-live-heading" style="margin:0;font-size:1.5rem;color:#fff;">🏉 AFL Tipping</h2>
+          </div>
+          <a href="/afl-tipping" style="color:#93c5fd;font-size:.88rem;text-decoration:none;border:1px solid #1e3a5f;border-radius:99px;padding:.3rem .8rem;background:#0a1628;">Join the comp →</a>
         </div>
-        <div class="split">
-          <article class="card jackpot-card" style="border-color:#92400e;background:linear-gradient(180deg,#1a0f00,#120a00);">
-            <h3 style="color:#fbbf24;margin-top:0;">Current Pot</h3>
-            <p class="jackpot-value" id="jackpot-value">$0</p>
-            <p class="muted">Growth this round: <strong id="jackpot-growth">+$0</strong> • Last winner: <strong id="jackpot-last-winner">No winner yet</strong></p>
-            <p class="muted">Rollover rule active on tied first place.</p>
-            <p class="muted"><strong>Freeroll bonus:</strong> if the Bosses Multi lands, all that week's Punters Club players get a next-day Poker freeroll.</p>
-            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;">
-              <a href="/punters.html" class="btn btn-primary" style="font-size:.9rem;padding:.55rem .9rem;background:#92400e;border-color:#92400e;">✏️ Enter Tips</a>
-              <a href="/punters.html#leaderboard" class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;">🏆 Ladder</a>
-            </div>
-          </article>
-          <article class="card" style="border-color:#92400e;background:linear-gradient(180deg,#1a0f00,#120a00);">
-            <div class="section-head" style="margin-bottom:.45rem">
-              <h3 style="margin:0;color:#fbbf24;">Top 10 <span class="pill" id="ladder-after-race">Live</span></h3>
-              <div class="row-actions">
-                <button class="btn btn-ghost" type="button" id="share-leaderboard-btn">Share</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <article style="background:linear-gradient(135deg,#0a1628 0%,#071020 100%);border:1px solid #1e3a8a;border-radius:1rem;padding:1.25rem;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.1rem;">
+              <div style="background:#071020;border-radius:.6rem;padding:.75rem;">
+                <div style="color:#60a5fa;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Entrants</div>
+                <div style="font-size:1.6rem;font-weight:800;color:#93c5fd;line-height:1;" id="afl-home-entrants">-</div>
+              </div>
+              <div style="background:#071020;border-radius:.6rem;padding:.75rem;">
+                <div style="color:#16a34a;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Weekly Jackpot</div>
+                <div style="font-size:1.6rem;font-weight:800;color:#4ade80;line-height:1;" id="afl-home-jackpot">$30</div>
+              </div>
+              <div style="background:#071020;border-radius:.6rem;padding:.75rem;">
+                <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Next Lockout</div>
+                <div style="font-size:.9rem;font-weight:700;color:#e5e7eb;" id="afl-home-lockout">-</div>
+              </div>
+              <div style="background:#071020;border-radius:.6rem;padding:.75rem;">
+                <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Season Leader</div>
+                <div style="font-size:.9rem;font-weight:700;color:#fbbf24;" id="afl-home-leader">-</div>
               </div>
             </div>
-            <table>
-              <caption>Live Punters Club top 10 ladder</caption>
-              <thead><tr><th scope="col">#</th><th scope="col">Handle</th><th scope="col">Pts</th><th scope="col">Wins</th></tr></thead>
+            <div id="afl-home-rollover" style="display:none;background:#431407;border:1px solid #b45309;border-radius:.5rem;padding:.4rem .75rem;margin-bottom:.75rem;color:#fde68a;font-size:.82rem;font-weight:700;">🔄 JACKPOT ROLLED OVER</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <a href="/afl-tipping/submit" class="btn" style="font-size:.88rem;padding:.55rem .9rem;background:#1d4ed8;border-color:#1d4ed8;">✏️ Submit Tips</a>
+              <a href="/afl-tipping/leaderboard" class="btn btn-ghost" style="font-size:.88rem;padding:.55rem .9rem;">🏆 Ladder</a>
+              <a href="/afl-tipping" class="btn btn-ghost" style="font-size:.88rem;padding:.55rem .9rem;">🏉 Hub</a>
+            </div>
+          </article>
+          <article style="background:linear-gradient(135deg,#0a1628 0%,#071020 100%);border:1px solid #1e3a8a;border-radius:1rem;padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+              <h3 style="color:#93c5fd;margin:0;font-size:1rem;">Top 10 Live</h3>
+              <span style="background:#0f2040;color:#60a5fa;border:1px solid #1e3a8a;border-radius:99px;padding:.2rem .6rem;font-size:.72rem;" id="afl-home-round-label">Season</span>
+            </div>
+            <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
+              <thead><tr style="color:#6b7280;border-bottom:1px solid #1e3a5f;">
+                <th style="text-align:left;padding:.3rem .4rem;font-weight:600;">#</th>
+                <th style="text-align:left;padding:.3rem .4rem;font-weight:600;">Handle</th>
+                <th style="text-align:right;padding:.3rem .4rem;font-weight:600;">Pts</th>
+                <th style="text-align:right;padding:.3rem .4rem;font-weight:600;">Wins</th>
+              </tr></thead>
+              <tbody id="afl-home-top10">
+                <tr><td colspan="4" style="color:#6b7280;padding:.5rem .4rem;font-size:.82rem;">Loading…</td></tr>
+              </tbody>
+            </table>
+            <div id="afl-home-banter" style="margin-top:.75rem;padding-top:.6rem;border-top:1px solid #1e3a5f;color:#6b7280;font-size:.82rem;font-style:italic;"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── Punters Club Live ───────────────────────────────────────── -->
+      <section style="margin:2rem 0;" id="lobby" aria-labelledby="lobby-heading">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;">
+          <div>
+            <p style="margin:0 0 .2rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#fbbf24;font-weight:700;">Weekly Racing</p>
+            <h2 id="lobby-heading" style="margin:0;font-size:1.5rem;color:#fff;">🏇 Punters Club — Live</h2>
+          </div>
+          <a href="/punters.html" style="color:#fbbf24;font-size:.88rem;text-decoration:none;border:1px solid #78350f;border-radius:99px;padding:.3rem .8rem;background:#1a0f00;">Join this week →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <article style="background:linear-gradient(135deg,#1a0f00 0%,#120a00 100%);border:1px solid #92400e;border-radius:1rem;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+            <div>
+              <div style="color:#92400e;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem;">Current Pot</div>
+              <div style="font-size:2.4rem;font-weight:900;color:#fbbf24;line-height:1;" id="jackpot-value">$0</div>
+              <p style="color:#9ca3af;font-size:.82rem;margin:.4rem 0 0;">This round: <strong style="color:#fde68a;" id="jackpot-growth">+$0</strong> &nbsp;·&nbsp; Last winner: <strong style="color:#fde68a;" id="jackpot-last-winner">TBA</strong></p>
+            </div>
+            <div style="background:#0f0700;border-radius:.6rem;padding:.6rem .75rem;font-size:.82rem;color:#9ca3af;border:1px solid #451a03;">
+              🃏 <strong style="color:#fde68a;">Bosses Multi bonus:</strong> if it lands, all that week's Punters Club players get a next-day Poker freeroll.
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:auto;">
+              <a href="/punters.html" class="btn" style="font-size:.88rem;padding:.55rem .9rem;background:#92400e;border-color:#92400e;">✏️ Enter Tips</a>
+              <a href="/punters.html#leaderboard" class="btn btn-ghost" style="font-size:.88rem;padding:.55rem .9rem;">🏆 Ladder</a>
+            </div>
+          </article>
+          <article style="background:linear-gradient(135deg,#1a0f00 0%,#120a00 100%);border:1px solid #92400e;border-radius:1rem;padding:1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+              <h3 style="margin:0;color:#fbbf24;font-size:1rem;">Top 10 <span style="background:#0f0700;color:#fbbf24;border:1px solid #78350f;border-radius:99px;padding:.15rem .5rem;font-size:.72rem;font-weight:600;" id="ladder-after-race">Live</span></h3>
+              <button class="btn btn-ghost" type="button" id="share-leaderboard-btn" style="font-size:.8rem;padding:.3rem .65rem;min-height:36px;">Share</button>
+            </div>
+            <table style="width:100%;font-size:.85rem;border-collapse:collapse;">
+              <caption style="display:none;">Live Punters Club top 10 ladder</caption>
+              <thead><tr style="color:#6b7280;border-bottom:1px solid #451a03;">
+                <th scope="col" style="text-align:left;padding:.3rem .4rem;font-weight:600;">#</th>
+                <th scope="col" style="text-align:left;padding:.3rem .4rem;font-weight:600;">Handle</th>
+                <th scope="col" style="text-align:right;padding:.3rem .4rem;font-weight:600;">Pts</th>
+                <th scope="col" style="text-align:right;padding:.3rem .4rem;font-weight:600;">Wins</th>
+              </tr></thead>
               <tbody id="ladder-preview"></tbody>
             </table>
-            <p class="muted ticker" style="margin-top:.5rem;">Last week: <span id="payout-ticker">Refreshes after settlement.</span></p>
-            <p class="muted" id="share-leaderboard-msg"></p>
+            <p style="color:#6b7280;font-size:.8rem;margin:.6rem 0 0;">Last week: <span id="payout-ticker">Refreshes after settlement.</span></p>
+            <p style="color:#6b7280;font-size:.8rem;margin:.25rem 0 0;" id="share-leaderboard-msg"></p>
           </article>
         </div>
       </section>
 
-      <section class="rail-section" id="lifecycle-modules" aria-labelledby="lifecycle-heading">
-        <div class="section-head"><h2 id="lifecycle-heading">Live Club Pulse</h2></div>
-        <div class="stats-grid">
-          <article class="card" style="border-color:#374151;background:linear-gradient(180deg,#0f1418,#0b1014);"><h3>🏆 Last Winner</h3><p class="muted" id="life-last-winner">Updating…</p></article>
-          <article class="card" style="border-color:#374151;background:linear-gradient(180deg,#0f1418,#0b1014);"><h3>🔥 Hot Player</h3><p class="muted" id="life-hot-player">Updating…</p></article>
-          <article class="card" style="border-color:#374151;background:linear-gradient(180deg,#0f1418,#0b1014);"><h3>💰 Biggest Score</h3><p class="muted" id="life-biggest-score">Updating…</p></article>
-          <article class="card" style="border-color:#374151;background:linear-gradient(180deg,#0f1418,#0b1014);"><h3>⏭️ Next Round</h3><p class="muted" id="life-next-round">Updating…</p></article>
+      <!-- ── Live Club Pulse ────────────────────────────────────────── -->
+      <section style="margin:2rem 0;" id="lifecycle-modules" aria-labelledby="lifecycle-heading">
+        <h2 id="lifecycle-heading" style="font-size:1.1rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin:0 0 .9rem;font-weight:700;">⚡ Live Club Pulse</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;">
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;">
+            <div style="font-size:1.3em;margin-bottom:.35rem;">🏆</div>
+            <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Last Winner</div>
+            <div style="color:#e5e7eb;font-size:.9rem;font-weight:600;" id="life-last-winner">Updating…</div>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;">
+            <div style="font-size:1.3em;margin-bottom:.35rem;">🔥</div>
+            <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Hot Player</div>
+            <div style="color:#e5e7eb;font-size:.9rem;font-weight:600;" id="life-hot-player">Updating…</div>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;">
+            <div style="font-size:1.3em;margin-bottom:.35rem;">💰</div>
+            <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Biggest Score</div>
+            <div style="color:#e5e7eb;font-size:.9rem;font-weight:600;" id="life-biggest-score">Updating…</div>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;">
+            <div style="font-size:1.3em;margin-bottom:.35rem;">⏭️</div>
+            <div style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Next Round</div>
+            <div style="color:#e5e7eb;font-size:.9rem;font-weight:600;" id="life-next-round">Updating…</div>
+          </article>
         </div>
       </section>
 
-      <section class="rail-section why-join-pro" id="why-join" aria-labelledby="why-join-heading">
-        <div class="section-head">
-          <h2 id="why-join-heading">Why Join Big Bluff Bay?</h2>
-          <p class="muted muted-strong">Private. Transparent. Properly Run.</p></div>
-        <div class="why-join-grid" role="list">
-          <article class="card why-join-card" role="listitem">
-            <h3>📅 Clear Weekly Format</h3>
-            <ul class="why-join-list muted">
-              <li>Wednesday → Greyhounds</li>
-              <li>Saturday → Thoroughbreds</li>
-              <li>Visible lock time</li>
-              <li>Live pot display</li>
-              <li>Immediate results posting</li>
-            </ul>
+      <!-- ── How It Works ───────────────────────────────────────────── -->
+      <section style="margin:2.5rem 0;" id="how-it-works" aria-labelledby="how-heading">
+        <h2 id="how-heading" style="margin:0 0 1.1rem;font-size:1.4rem;">How it works</h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;">
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:2em;margin-bottom:.5rem;">📝</div>
+            <h3 style="margin:0 0 .4rem;font-size:.95rem;color:#4ade80;">Tip</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">One account, one clean entry flow. Fast picks, no fluff.</p>
           </article>
-          <article class="card why-join-card" role="listitem">
-            <h3>🔒 Simple Lock Rules</h3>
-            <ul class="why-join-list muted">
-              <li>Countdown timer visible</li>
-              <li>No late edits</li>
-              <li>No backdating</li>
-              <li>Same clock for everyone</li>
-            </ul>
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:2em;margin-bottom:.5rem;">🔒</div>
+            <h3 style="margin:0 0 .4rem;font-size:.95rem;color:#4ade80;">Lock</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Edits stay open until lock. After lock, all picks are frozen.</p>
           </article>
-          <article class="card why-join-card" role="listitem">
-            <h3>📊 Visible Scoring</h3>
-            <ul class="why-join-list muted">
-              <li>Live points</li>
-              <li>Instant leaderboard updates</li>
-              <li>Clear final table markers</li>
-              <li>No hidden formulas</li>
-            </ul>
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:2em;margin-bottom:.5rem;">📊</div>
+            <h3 style="margin:0 0 .4rem;font-size:.95rem;color:#4ade80;">Ladder</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Transparent scoring with weekly jackpot and rollover rules.</p>
           </article>
-          <article class="card why-join-card" role="listitem">
-            <h3>🧭 No Confusing Edge Cases</h3>
-            <ul class="why-join-list muted">
-              <li>Clearly defined ties</li>
-              <li>Transparent rollover</li>
-              <li>Separate jackpots for Dogs &amp; Galls</li>
-            </ul>
+          <article style="background:linear-gradient(180deg,#0d1f12,#0a1810);border:1px solid #14532d;border-radius:1rem;padding:1.1rem;text-align:center;">
+            <div style="font-size:2em;margin-bottom:.5rem;">♠️</div>
+            <h3 style="margin:0 0 .4rem;font-size:.95rem;color:#4ade80;">Poker</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Discipline carries into poker nights and Bosses Multi freerolls.</p>
           </article>
-          <article class="card why-join-card" role="listitem">
-            <h3>🗂️ Proper Results Archive</h3>
-            <ul class="why-join-list muted">
-              <li>Winners saved</li>
-              <li>Pots recorded</li>
-              <li>Full leaderboard snapshots</li>
-              <li>Historical access</li>
-            </ul>
-          </article>
-          <article class="card why-join-card" role="listitem">
-            <h3>💸 Free to Track. $20 to Win.</h3>
-            <ul class="why-join-list muted">
-              <li>Free = points only</li>
-              <li>$20 = jackpot eligible (per track)</li>
-              <li>Simple pay-in structure</li>
-            </ul>
-          </article></div>
-        <div class="row-actions" style="margin-top:.8rem">
-          <a class="btn chip-btn major-btn" href="/punters.html">Join This Week's Round</a></div>
+        </div>
       </section>
 
-
-      <section class="rail-section" id="home-fixtures" aria-labelledby="fixtures-heading">
-        <div class="section-head"><h2 id="fixtures-heading">📅 Upcoming Fixtures</h2></div>
-        <article class="card next-event-hero" id="next-event-hero" style="border-color:#374151;background:linear-gradient(180deg,#0f1418,#0b1014);">
-          <p class="pill" id="next-track-accent">🐎 Thoroughbreds Track</p>
-          <h3 id="next-event-title">Next Up: Saturday Thoroughbreds</h3>
-          <div class="next-event-meta" id="next-event-meta">
+      <!-- ── Upcoming Fixture ───────────────────────────────────────── -->
+      <section style="margin:2rem 0;" id="home-fixtures" aria-labelledby="fixtures-heading">
+        <h2 id="fixtures-heading" style="margin:0 0 1rem;font-size:1.4rem;">📅 Next Event</h2>
+        <article id="next-event-hero" style="background:linear-gradient(135deg,#0f1418,#0b1014);border:1px solid #1f2937;border-radius:1rem;padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.9rem;flex-wrap:wrap;">
+            <span style="background:#1a1000;color:#fbbf24;border:1px solid #78350f;border-radius:99px;padding:.3rem .75rem;font-size:.8rem;font-weight:700;" id="next-track-accent">🐎 Thoroughbreds</span>
+            <h3 id="next-event-title" style="margin:0;font-size:1.15rem;color:#fff;">Next Up: Saturday Thoroughbreds</h3>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;" id="next-event-meta">
             <span class="pill">Venue: <strong id="next-venue">TBA</strong></span>
             <span class="pill">Date: <strong id="next-date">TBA</strong></span>
             <span class="pill">First race: <strong id="next-first-race">TBA</strong></span>
             <span class="pill">Races: <strong id="next-races">--</strong></span>
             <span class="pill">Lock: <strong id="next-lock">Updating…</strong></span>
             <span class="pill">Jackpot: <strong id="next-pot">$0</strong></span>
-            <span class="pill">Entries: <strong id="next-entries">0</strong> • Paid: <strong id="next-paid">0</strong></span></div>
-          <div class="row-actions">
-            <a class="btn chip-btn" href="/punters.html">Enter Tips</a>
-            <a class="btn btn-ghost" href="/punters.html">Upgrade $20</a></div>
-          <p class="muted" id="next-event-fallback" hidden>Next Round Opens soon • Last winner: <span id="next-last-winner">TBA</span></p>
+            <span class="pill">Entries: <strong id="next-entries">0</strong> · Paid: <strong id="next-paid">0</strong></span>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;font-size:.9rem;padding:.55rem 1.1rem;" href="/punters.html">✏️ Enter Tips</a>
+            <a class="btn btn-ghost" style="font-size:.9rem;padding:.55rem .9rem;" href="/punters.html">Upgrade $20</a>
+          </div>
+          <p class="muted" id="next-event-fallback" hidden>Next Round Opens soon · Last winner: <span id="next-last-winner">TBA</span></p>
         </article>
       </section>
 
-
-      <section class="rail-section" id="how-it-works" aria-labelledby="how-heading">
-        <div class="section-head">
-          <h2 id="how-heading">How it works</h2></div>
-        <div class="steps-grid how-it-works-grid">
-          <article class="card step-tile"><h3>📝 Tip</h3><p class="muted">One account, one clean entry flow. Fast picks, no fluff.</p></article>
-          <article class="card step-tile"><h3>🔒 Lock</h3><p class="muted">Edits stay open until lock. After lock, all picks are frozen.</p></article>
-          <article class="card step-tile"><h3>📊 Ladder</h3><p class="muted">Transparent scoring updates with weekly jackpot and rollover rules.</p></article>
-          <article class="card step-tile"><h3>♠️ Poker</h3><p class="muted">Top discipline carries into poker nights and Bosses Multi freeroll chances.</p></article></div>
-      </section>
-
-      <section class="rail-section" aria-labelledby="home-poker-legends-heading">
-        <div class="section-head"><h2 id="home-poker-legends-heading">From Punters Club to Poker Legends</h2></div>
-        <div class="split">
-          <article class="card poker-major-card">
-            <p class="muted"><strong>Last week's big-event winner:</strong> <strong>Sylvia</strong> 🔥</p>
-            <p class="muted"><strong>$2,500 holiday package events</strong> are in rotation for major weeks.</p>
-            <p class="muted"><strong>Sunday Main:</strong> 6:00 PM - $1,300 GTD</p>
-            <p class="muted"><strong>Nightly:</strong> 8:00 PM - $500 GTD + Ticket • 10:00 PM - $700 GTD</p>
-            <div class="row-actions"><a class="btn chip-btn" href="/poker-schedule.html">Play Poker Tournaments</a></div>
+      <!-- ── Why Join ───────────────────────────────────────────────── -->
+      <section style="margin:2.5rem 0;padding:2rem;background:linear-gradient(135deg,#070d1a,#050a13);border:1px solid #1e3a5f;border-radius:1.25rem;" id="why-join" aria-labelledby="why-join-heading">
+        <div style="margin-bottom:1.5rem;">
+          <p style="margin:0 0 .3rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#60a5fa;font-weight:700;">Private. Transparent. Properly Run.</p>
+          <h2 id="why-join-heading" style="margin:0;font-size:1.5rem;">Why Join Big Bluff Bay?</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;" role="list">
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">📅 Clear Weekly Format</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Wednesday → Greyhounds</li>
+              <li>Saturday → Thoroughbreds</li>
+              <li>Visible lock time + live pot</li>
+              <li>Immediate results posting</li>
+            </ul>
           </article>
-          <article class="card poker-sunday-main">
-            <h3>Sunday Main Event</h3>
-            <p class="muted"><strong>6:00 PM - $1,300 GTD</strong></p>
-            <p class="muted">Prime weekly spot. Structured fields, cleaner edges, bigger upside.</p>
-          </article></div>
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">🔒 Simple Lock Rules</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Countdown timer always visible</li>
+              <li>No late edits or backdating</li>
+              <li>Same clock for everyone</li>
+            </ul>
+          </article>
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">📊 Visible Scoring</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Live points + instant leaderboard</li>
+              <li>Clear final table markers</li>
+              <li>No hidden formulas</li>
+            </ul>
+          </article>
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">🗂️ Proper Archive</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Winners + pots recorded</li>
+              <li>Full leaderboard snapshots</li>
+              <li>Historical access</li>
+            </ul>
+          </article>
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">🧭 No Edge Cases</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Clearly defined ties</li>
+              <li>Transparent rollover rules</li>
+              <li>Separate jackpots per track</li>
+            </ul>
+          </article>
+          <article style="background:#0b1525;border:1px solid #1e3a5f;border-radius:.85rem;padding:1.1rem;" role="listitem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem;color:#93c5fd;">💸 Free to Track. $20 to Win.</h3>
+            <ul style="color:#6b7280;font-size:.83rem;margin:0;padding-left:1.1rem;line-height:1.8;">
+              <li>Free = points only</li>
+              <li>$20 = jackpot eligible per track</li>
+              <li>Simple pay-in structure</li>
+            </ul>
+          </article>
+        </div>
+        <div style="margin-top:1.5rem;text-align:center;">
+          <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;font-size:1rem;padding:.75rem 2rem;" href="/punters.html">Join This Week's Round →</a>
+        </div>
       </section>
 
-      <section class="rail-section" aria-labelledby="strategy-heading">
-        <div class="section-head">
-          <h2 id="strategy-heading">Play With an Edge</h2>
-          <p class="muted muted-strong">This isn't spray-and-pray racing. It's disciplined decision-making under pressure.</p></div>
-        <div class="steps-grid">
-          <article class="card"><h3>🎯 Pick Your Spots</h3><p class="muted">Select edges. Ignore noise. Force fewer, better decisions.</p></article>
-          <article class="card"><h3>📈 Build Weekly Pressure</h3><p class="muted">Consistency over hero picks. Points compound. Ladder moves.</p></article>
-          <article class="card"><h3>🛡️ Think Like a Bankroll</h3><p class="muted">Control downside first. Then scale upside with discipline.</p></article></div>
+      <!-- ── Poker ──────────────────────────────────────────────────── -->
+      <section style="margin:2rem 0;" id="club-banner" aria-labelledby="club-banner-heading">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;">
+          <div>
+            <p style="margin:0 0 .2rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#c084fc;font-weight:700;">Card Table</p>
+            <h2 id="club-banner-heading" style="margin:0;font-size:1.5rem;color:#fff;">♠️ Poker Club</h2>
+          </div>
+          <a href="/poker-schedule.html" style="color:#c084fc;font-size:.88rem;text-decoration:none;border:1px solid #4c1d95;border-radius:99px;padding:.3rem .8rem;background:#0f0a1e;">See schedule →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <article style="background:linear-gradient(135deg,#0f0a1e,#09061a);border:1px solid #4c1d95;border-radius:1rem;overflow:hidden;">
+            <img src="/assets/theme-banner-768.jpg" alt="Big Bluff Bay Poker Club" loading="lazy" decoding="async" width="768" height="386" style="width:100%;height:180px;object-fit:cover;display:block;" onerror="this.style.display='none'" />
+            <div style="padding:1.1rem;">
+              <p style="color:#9ca3af;font-size:.85rem;margin:0;">Real clubhouse energy: country pub feel, cards on the table, proper tournament nights.</p>
+            </div>
+          </article>
+          <article style="background:linear-gradient(135deg,#0f0a1e,#09061a);border:1px solid #4c1d95;border-radius:1rem;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+            <div>
+              <h3 style="color:#c084fc;margin:0 0 .5rem;font-size:1rem;">From track rail to card table pressure</h3>
+              <p style="color:#9ca3af;font-size:.85rem;margin:0 0 .4rem;">Structured poker nights, sharp banter, and clear formats that reward discipline over chaos.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.75rem 0;font-size:.83rem;">
+                <div style="background:#09061a;border-radius:.5rem;padding:.6rem .75rem;border:1px solid #3b0764;">
+                  <div style="color:#7c3aed;font-size:.7rem;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.05em;">Sunday Main</div>
+                  <div style="color:#e5e7eb;font-weight:700;">6:00 PM · $1,300 GTD</div>
+                </div>
+                <div style="background:#09061a;border-radius:.5rem;padding:.6rem .75rem;border:1px solid #3b0764;">
+                  <div style="color:#7c3aed;font-size:.7rem;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.05em;">Nightly</div>
+                  <div style="color:#e5e7eb;font-weight:700;">8 PM · $500 GTD</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:auto;">
+              <a class="btn" style="background:#6b21a8;border-color:#6b21a8;font-size:.88rem;padding:.55rem .9rem;" href="/poker-schedule.html">♠️ Tournament Schedule</a>
+              <a class="btn btn-ghost" style="font-size:.88rem;padding:.55rem .9rem;" href="/poker.html">Poker Hub</a>
+            </div>
+          </article>
+        </div>
       </section>
 
-      <section class="rail-section" aria-labelledby="proof-heading">
-        <div class="section-head">
-          <h2 id="proof-heading">Winners Wall</h2>
-          <p class="muted muted-strong">Proof-of-Performance. No stories. Just results.</p></div>
-        <p class="muted">Every round is archived with winner, payout, and final-ladder snapshot context.</p>
-
-        <div class="stats-grid winners-proof-inline" role="group" aria-label="Winners Wall snapshot stats">
-          <article class="card"><h3 id="stat-weeks">-</h3><p class="muted">Punters rounds archived</p></article>
-          <article class="card"><h3 id="stat-entries">-</h3><p class="muted">This week's tip entries</p></article>
-          <article class="card"><h3 id="stat-paid">$0</h3><p class="muted">Recent payouts total</p></article></div>
-
-        <div class="row-actions" style="margin:.45rem 0 .2rem">
-          <span class="pill">📸 Snapshot-first archive</span>
-          <span class="pill">🏇 Wednesday + Saturday rounds</span>
-          <span class="pill">✅ Transparent rollover handling</span></div>
-
-        <article class="card" style="margin:.55rem 0 .65rem">
-          <h3>How to read this wall like a sharp</h3>
-          <p class="muted">Don't chase one hot week. Track repeat winners, payout consistency, and rollover frequency.</p>
-          <div class="row-actions">
-            <span class="pill">Consistency &gt; lucky spike</span>
-            <span class="pill">Rollover = bigger next-round pressure</span>
-            <span class="pill">Snapshots lock accountability</span></div>
-        </article>
-
-        <div class="table-wrap winners-preview-table-wrap">
-          <table>
-            <caption>Recent verified results (Punters Club + Poker)</caption>
+      <!-- ── Winners Wall ───────────────────────────────────────────── -->
+      <section style="margin:2.5rem 0;" aria-labelledby="proof-heading">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.1rem;">
+          <div>
+            <p style="margin:0 0 .2rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#4ade80;font-weight:700;">Proof of Performance</p>
+            <h2 id="proof-heading" style="margin:0;font-size:1.5rem;">🏆 Winners Wall</h2>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.1rem;" role="group" aria-label="Stats">
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#4ade80;" id="stat-weeks">-</div>
+            <div style="color:#6b7280;font-size:.8rem;margin-top:.2rem;">Rounds archived</div>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#60a5fa;" id="stat-entries">-</div>
+            <div style="color:#6b7280;font-size:.8rem;margin-top:.2rem;">Tips this week</div>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1rem;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:800;color:#fbbf24;" id="stat-paid">$0</div>
+            <div style="color:#6b7280;font-size:.8rem;margin-top:.2rem;">Recent payouts</div>
+          </article>
+        </div>
+        <div style="background:#0b1221;border:1px solid #1f2937;border-radius:1rem;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
+            <caption style="display:none;">Recent verified results</caption>
             <thead>
-              <tr><th scope="col">Track</th><th scope="col">Winner</th><th scope="col">Round/Event</th><th scope="col">Payout</th></tr>
+              <tr style="background:#0f1729;border-bottom:1px solid #1f2937;">
+                <th scope="col" style="text-align:left;padding:.75rem 1rem;color:#6b7280;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Track</th>
+                <th scope="col" style="text-align:left;padding:.75rem 1rem;color:#6b7280;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Winner</th>
+                <th scope="col" style="text-align:left;padding:.75rem 1rem;color:#6b7280;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Round / Event</th>
+                <th scope="col" style="text-align:right;padding:.75rem 1rem;color:#6b7280;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Payout</th>
+              </tr>
             </thead>
             <tbody id="recent-results-body">
-              <tr><td colspan="4" class="muted">Loading recent results…</td></tr>
+              <tr><td colspan="4" style="color:#6b7280;padding:.75rem 1rem;font-size:.85rem;">Loading recent results…</td></tr>
             </tbody>
-          </table></div>
-        <div class="row-actions" style="margin-top:.55rem"></div>
-
-        <div class="winners-strip winners-wall-grid" id="winners-strip"></div>
+          </table>
+        </div>
+        <div style="margin-top:.75rem;" id="winners-strip"></div>
       </section>
 
-      <section class="rail-section" id="resources" aria-labelledby="resources-heading">
-        <p class="muted"><strong>Start with Poker Guides:</strong> <a href="/poker-guides.html">Poker Guides Index</a> · <a href="/poker-guide-bankroll-and-volume.html">Bankroll + Volume</a></p>
-        <div class="section-head"><h2 id="resources-heading">Guides, Rules & FAQs</h2></div>
-        <div class="steps-grid">
-          <article class="card"><h3>Punters FAQ</h3><p class="muted">40 practical answers on scoring, lock times, payments, and jackpots.</p><a class="menu-link" href="/punters-faq.html">Open Punters FAQ</a></article>
-          <article class="card"><h3>Poker FAQ</h3><p><a class="menu-link" href="/poker-guides.html">Poker Guides</a></p><p><a class="menu-link" href="/australia-poker-options.html">Poker in Australia overview</a></p><p class="muted">40 answers on schedule, GTDs, tickets, and fair play.</p><a class="menu-link" href="/poker-faq.html">Open Poker FAQ</a><p><a class="menu-link" href="/melbourne-poker-options.html">Melbourne</a> <a class="menu-link" href="/sydney-poker-options.html">Sydney</a> <a class="menu-link" href="/brisbane-poker-options.html">Brisbane</a> <a class="menu-link" href="/perth-poker-options.html">Perth</a> <a class="menu-link" href="/adelaide-poker-options.html">Adelaide</a></p></article>
-          <article class="card"><h3>Winners Hub</h3><p class="muted">Track weekly winners and streak milestones.</p></article>
-          <article class="card"><h3>How It Works</h3><p class="muted">Read the punters + poker operating guides and rules pages.</p><p><a class="menu-link" href="/how-punters-works.html">Punters Guide</a> <a class="menu-link" href="/how-poker-works.html">Poker Guide</a></p></article></div>
+      <!-- ── Play With an Edge ──────────────────────────────────────── -->
+      <section style="margin:2rem 0;" aria-labelledby="strategy-heading">
+        <h2 id="strategy-heading" style="margin:0 0 .4rem;font-size:1.4rem;">Play With an Edge</h2>
+        <p style="color:#6b7280;font-size:.9rem;margin:0 0 1.1rem;">This isn't spray-and-pray racing. It's disciplined decision-making under pressure.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;">
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1.1rem;">
+            <div style="font-size:1.5em;margin-bottom:.4rem;">🎯</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#e5e7eb;">Pick Your Spots</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Select edges. Ignore noise. Force fewer, better decisions.</p>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1.1rem;">
+            <div style="font-size:1.5em;margin-bottom:.4rem;">📈</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#e5e7eb;">Build Weekly Pressure</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Consistency over hero picks. Points compound. Ladder moves.</p>
+          </article>
+          <article style="background:#0b1221;border:1px solid #1f2937;border-radius:.85rem;padding:1.1rem;">
+            <div style="font-size:1.5em;margin-bottom:.4rem;">🛡️</div>
+            <h3 style="margin:0 0 .35rem;font-size:.95rem;color:#e5e7eb;">Think Like a Bankroll</h3>
+            <p style="color:#6b7280;font-size:.82rem;margin:0;">Control downside first. Then scale upside with discipline.</p>
+          </article>
+        </div>
       </section>
 
-      <section class="rail-section" id="rules-faq" aria-labelledby="faq-heading">
-        <div class="section-head"><h2 id="faq-heading">Rules at a glance</h2></div>
-        <details class="card"><summary>Tip edits + lock rules</summary><p class="muted">Edits are allowed until lock. Once lock hits, all tips are frozen.</p></details>
-        <details class="card"><summary>One entry flow</summary><p class="muted">One account, one clear entry flow each round. No duplicate entry path.</p></details>
-        <details class="card"><summary>Transparent scoring updates</summary><p class="muted">Ladder updates follow visible rules: 3 points for 1st, 2 for 2nd, 1 for 3rd.</p></details>
-        <details class="card"><summary>Bosses Multi freeroll eligibility</summary><p class="muted">If Bosses Multi lands, that week's eligible Punters Club players get a next-day Poker freeroll for the full amount.</p></details>
-
-        <div class="final-cta">
-          <a class="btn chip-btn major-btn" href="/punters.html">Submit This Week's Tips</a></div>
+      <!-- ── FAQ / Rules ────────────────────────────────────────────── -->
+      <section style="margin:2.5rem 0;" id="rules-faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading" style="margin:0 0 1rem;font-size:1.4rem;">Rules at a glance</h2>
+        <div style="display:grid;gap:.5rem;">
+          <details style="background:#0b1221;border:1px solid #1f2937;border-radius:.75rem;padding:0;overflow:hidden;">
+            <summary style="padding:.85rem 1.1rem;cursor:pointer;font-weight:600;color:#e5e7eb;list-style:none;display:flex;justify-content:space-between;align-items:center;">Tip edits + lock rules <span style="color:#6b7280;font-size:.9em;">▾</span></summary>
+            <p style="padding:.5rem 1.1rem 1rem;color:#9ca3af;margin:0;font-size:.88rem;border-top:1px solid #1f2937;">Edits are allowed until lock. Once lock hits, all tips are frozen.</p>
+          </details>
+          <details style="background:#0b1221;border:1px solid #1f2937;border-radius:.75rem;padding:0;overflow:hidden;">
+            <summary style="padding:.85rem 1.1rem;cursor:pointer;font-weight:600;color:#e5e7eb;list-style:none;display:flex;justify-content:space-between;align-items:center;">One entry flow <span style="color:#6b7280;font-size:.9em;">▾</span></summary>
+            <p style="padding:.5rem 1.1rem 1rem;color:#9ca3af;margin:0;font-size:.88rem;border-top:1px solid #1f2937;">One account, one clear entry flow each round. No duplicate entry path.</p>
+          </details>
+          <details style="background:#0b1221;border:1px solid #1f2937;border-radius:.75rem;padding:0;overflow:hidden;">
+            <summary style="padding:.85rem 1.1rem;cursor:pointer;font-weight:600;color:#e5e7eb;list-style:none;display:flex;justify-content:space-between;align-items:center;">Transparent scoring <span style="color:#6b7280;font-size:.9em;">▾</span></summary>
+            <p style="padding:.5rem 1.1rem 1rem;color:#9ca3af;margin:0;font-size:.88rem;border-top:1px solid #1f2937;">3 pts for 1st, 2 for 2nd, 1 for 3rd. Ladder updates follow visible rules.</p>
+          </details>
+          <details style="background:#0b1221;border:1px solid #1f2937;border-radius:.75rem;padding:0;overflow:hidden;">
+            <summary style="padding:.85rem 1.1rem;cursor:pointer;font-weight:600;color:#e5e7eb;list-style:none;display:flex;justify-content:space-between;align-items:center;">Bosses Multi freeroll eligibility <span style="color:#6b7280;font-size:.9em;">▾</span></summary>
+            <p style="padding:.5rem 1.1rem 1rem;color:#9ca3af;margin:0;font-size:.88rem;border-top:1px solid #1f2937;">If Bosses Multi lands, that week's eligible Punters Club players get a next-day Poker freeroll for the full amount.</p>
+          </details>
+        </div>
+        <div style="text-align:center;margin-top:2rem;">
+          <a class="btn" style="background:#22c55e;border-color:#22c55e;color:#052e16;font-size:1rem;padding:.8rem 2.5rem;" href="/punters.html">Submit This Week's Tips →</a>
+        </div>
       </section>
+
     </main>
 
-    <footer class="wrap footer enhanced-footer muted">
-      <div class="footer-grid">
-        <div>
-          <strong>Big Bluff Bay</strong>
-          <p class="muted">Track rail × card table. Weekly tips, live leaderboard, and poker nights.</p></div>
-        <div>
-          <h3 class="footer-heading">🧭 Navigate</h3>
-          <p><a class="menu-link" href="/">🏠 Home</a> <a class="menu-link" href="/punters.html">🏇 Punters Club</a> <a class="menu-link" href="/poker-schedule.html">♠️ Poker Tournaments</a><a class="menu-link" href="/poker">📊 Poker Analytics</a></p>
-          <p><a class="menu-link" href="/afl-tipping">🏉 AFL Tipping</a> <a class="menu-link" href="/afl-tipping/submit">✏️ Submit Tips</a> <a class="menu-link" href="/afl-tipping/leaderboard">🏆 Leaderboard</a> <a class="menu-link" href="/afl-tipping/rules">📋 Rules</a></p></div>
-        <div>
-          <h3 class="footer-heading">Legal</h3>
-          <p><a class="menu-link" href="/privacy.html">Privacy</a> <a class="menu-link" href="/terms.html">Terms</a></p></div>
-        <div>
-          <h3 class="footer-heading">Social</h3>
-          <p><a class="menu-link" href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a> <a class="menu-link" href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" class="social-logo" loading="lazy" decoding="async" width="14" height="14" /></a></p></div></div>
-      <p class="muted footer-note">18+ only. Gamble responsibly. This is a private social club. Not a bookmaker. No financial advice.</p>
-      <p class="muted footer-bottom">© 2026 Big Bluff Bay. All rights reserved.</p>
+    <footer style="background:#050912;border-top:1px solid #111827;margin-top:1rem;padding:3rem 0 1.5rem;">
+      <div class="wrap">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem;flex-wrap:wrap;">
+          <div>
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+              <span style="width:2.2rem;height:2.2rem;border-radius:.5rem;display:grid;place-items:center;font-size:.75rem;font-weight:800;background:#052e16;color:#86efac;border:1px solid #14532d;">BBB</span>
+              <strong style="font-size:1rem;color:#e5e7eb;">Big Bluff Bay</strong>
+            </div>
+            <p style="color:#6b7280;font-size:.85rem;line-height:1.6;margin:0 0 1rem;max-width:28ch;">Track rail × card table. Weekly tips, live leaderboard, and poker nights.</p>
+            <div style="display:flex;gap:.5rem;">
+              <a href="https://www.facebook.com/profile.php?id=61566153111980" target="_blank" rel="noopener noreferrer" style="width:2rem;height:2rem;background:#1f2937;border:1px solid #374151;border-radius:.4rem;display:grid;place-items:center;" aria-label="Facebook"><img src="/assets/facebook-logo.svg" alt="Facebook" width="14" height="14" loading="lazy" /></a>
+              <a href="https://www.instagram.com/bigbluffbay/" target="_blank" rel="noopener noreferrer" style="width:2rem;height:2rem;background:#1f2937;border:1px solid #374151;border-radius:.4rem;display:grid;place-items:center;" aria-label="Instagram"><img src="/assets/instagram-logo.svg" alt="Instagram" width="14" height="14" loading="lazy" /></a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">Racing</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/punters.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏇 Punters Club</a>
+              <a href="/punters.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">✏️ Enter Tips</a>
+              <a href="/punters.html#leaderboard" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏆 Ladder</a>
+              <a href="/how-punters-works.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">📖 How it Works</a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">AFL & Poker</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/afl-tipping" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">🏉 AFL Tipping</a>
+              <a href="/afl-tipping/submit" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">✏️ Submit Tips</a>
+              <a href="/poker-schedule.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">♠️ Poker Schedule</a>
+              <a href="/poker.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">📊 Poker Hub</a>
+            </div>
+          </div>
+          <div>
+            <h3 style="margin:0 0 .85rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;font-weight:700;">Legal</h3>
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
+              <a href="/privacy.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Privacy Policy</a>
+              <a href="/terms.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Terms of Use</a>
+              <a href="/punters-faq.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Punters FAQ</a>
+              <a href="/poker-faq.html" style="color:#9ca3af;font-size:.88rem;text-decoration:none;">Poker FAQ</a>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #111827;padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+          <p style="color:#4b5563;font-size:.78rem;margin:0;">18+ only. Gamble responsibly. Private social club — not a bookmaker. No financial advice.</p>
+          <p style="color:#4b5563;font-size:.78rem;margin:0;">© 2026 Big Bluff Bay. All rights reserved.</p>
+        </div>
+      </div>
     </footer>
 
     <div class="mobile-sticky-cta" role="group" aria-label="Quick actions">
