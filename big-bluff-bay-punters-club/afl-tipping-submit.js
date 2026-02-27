@@ -10,6 +10,7 @@
   let selections = {};    // { gameId: pick } — current session picks
   let countdownTimers = [];
   let currentToolbox = null;
+  let marginPrediction = 0; // Predicted margin for first game
 
   function token() { return localStorage.getItem(TOKEN_KEY); }
 
@@ -80,13 +81,62 @@
     }
   }
 
-  function renderGames(games, existingTipsArr) {
+  function renderMarginSection(games, existingMargin = 0) {
+    const section = document.getElementById('margin-section');
+    const teamsEl = document.getElementById('margin-game-teams');
+    const timeEl = document.getElementById('margin-game-time');
+    const inputEl = document.getElementById('margin-input');
+    const statusEl = document.getElementById('margin-status');
+    
+    if (!games || !games.length || !section) {
+      if (section) section.style.display = 'none';
+      return;
+    }
+    
+    const firstGame = games[0]; // First game of the round
+    const now = Date.now();
+    const locked = now >= firstGame.kickoff;
+    
+    section.style.display = '';
+    
+    if (teamsEl) teamsEl.textContent = `${firstGame.homeTeam} vs ${firstGame.awayTeam}`;
+    if (timeEl) timeEl.textContent = `Kickoff: ${fmtDate(firstGame.kickoff)}`;
+    
+    if (inputEl) {
+      inputEl.value = existingMargin || marginPrediction || '';
+      inputEl.disabled = locked;
+      marginPrediction = Number(inputEl.value) || 0;
+      
+      inputEl.addEventListener('input', (e) => {
+        marginPrediction = Number(e.target.value) || 0;
+        if (statusEl) {
+          statusEl.textContent = marginPrediction > 0 ? `Predicting ${marginPrediction}-point win` : 'No prediction set';
+          statusEl.style.color = marginPrediction > 0 ? '#22c55e' : 'var(--muted)';
+        }
+      });
+    }
+    
+    if (statusEl) {
+      if (locked) {
+        statusEl.textContent = existingMargin ? `Locked: ${existingMargin} points` : 'Locked: No prediction';
+        statusEl.style.color = '#ef4444';
+      } else {
+        statusEl.textContent = marginPrediction > 0 ? `Predicting ${marginPrediction}-point win` : 'No prediction set';
+        statusEl.style.color = marginPrediction > 0 ? '#22c55e' : 'var(--muted)';
+      }
+    }
+  }
+
+  function renderGames(games, existingTipsArr, existingMargin = 0) {
     // Build existing tips map
     for (const t of (existingTipsArr || [])) {
       existingTips[t.gameId] = t.pick;
     }
     // Pre-populate selections from existing tips
     Object.assign(selections, existingTips);
+    
+    // Show margin prediction section
+    renderMarginSection(games, existingMargin);
 
     const container = document.getElementById('games-container');
     if (!container) return;
@@ -210,7 +260,7 @@
     const roundId = round.id;
 
     const badge = document.getElementById('tb-remaining-badge');
-    if (badge) badge.textContent = `${remaining} activation${remaining !== 1 ? 's' : ''} remaining`;
+    if (badge) badge.textContent = `${remaining} remaining`;
 
     const statusEl = document.getElementById('tb-round-status');
     if (!statusEl) return;
@@ -244,7 +294,7 @@
       });
     } else if (!isLocked && remaining > 0) {
       statusEl.innerHTML = `
-        <span style="color:var(--muted);font-size:.9em;">Double your score for this round — use one of your ${remaining} remaining activation${remaining !== 1 ? 's' : ''}.</span>
+        <span style="color:var(--muted);font-size:.9em;">Double your score for this round — use your remaining activation.</span>
         <div style="margin-top:.4rem;">
           <button id="tb-activate-btn" class="btn btn-primary" style="font-size:.9em;padding:.4rem .85rem;">⚡ Activate Double Points for ${escHtml(round.label)}</button>
         </div>
@@ -261,7 +311,7 @@
         }
       });
     } else if (remaining === 0) {
-      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">0 activations remaining — all used for this season.</span>`;
+      statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">0 remaining — used for this season.</span>`;
     } else {
       statusEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">Round is locked — Double Points not activated.</span>`;
     }
@@ -285,7 +335,11 @@
     try {
       await req(`${API}/tips`, {
         method: 'POST',
-        body: JSON.stringify({ roundId: currentRound.id, tips })
+        body: JSON.stringify({ 
+          roundId: currentRound.id, 
+          tips,
+          marginPrediction: marginPrediction || 0
+        })
       });
 
       hide('tips-form-area');
@@ -373,7 +427,8 @@
       }
 
       show('tips-form-area');
-      renderGames(currentRound.games, tipsData.tips);
+      marginPrediction = tipsData.marginPrediction || 0;
+      renderGames(currentRound.games, tipsData.tips, marginPrediction);
 
       // Submit button listener
       const submitBtn = document.getElementById('submit-all-btn');

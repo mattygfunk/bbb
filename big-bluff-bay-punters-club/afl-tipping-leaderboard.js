@@ -68,6 +68,11 @@
       const statusBadge = entry.paid
         ? '<span style="background:#052e16;color:#4ade80;border-radius:99px;padding:.15rem .5rem;font-size:.75em;border:1px solid #22c55e;">Paid</span>'
         : '<span style="background:#1a1000;color:#fbbf24;border-radius:99px;padding:.15rem .5rem;font-size:.75em;border:1px solid #f59e0b;">Pending</span>';
+      
+      const doublePointsBadge = entry.doublePointsUsed 
+        ? '<span style="background:#431407;color:#fde68a;border-radius:99px;padding:.15rem .4rem;font-size:.75em;border:1px solid #b45309;" title="Double Points used">Used</span>'
+        : '<span style="background:#052e16;color:#4ade80;border-radius:99px;padding:.15rem .4rem;font-size:.75em;border:1px solid #22c55e;" title="Double Points available">Ready</span>';
+      
       return `
         <tr class="${rank === 1 ? 'afl-rank-1' : ''}" style="border-bottom:1px solid var(--line);">
           <td style="padding:.6rem .75rem;font-weight:700;color:var(--afl-light);">${medalStr}${rank}</td>
@@ -75,6 +80,7 @@
           <td style="padding:.6rem .75rem;text-align:center;font-weight:700;color:var(--afl-light);">${entry.totalPoints || entry.totalCorrect}</td>
           <td style="padding:.6rem .75rem;text-align:center;color:var(--muted);">${entry.roundsPlayed}</td>
           <td style="padding:.6rem .75rem;text-align:center;color:${entry.thisWeek > 0 ? 'var(--brand)' : 'var(--muted)'};">${entry.thisWeek > 0 ? '+' + entry.thisWeek : '—'}</td>
+          <td style="padding:.6rem .75rem;text-align:center;">${doublePointsBadge}</td>
           <td style="padding:.6rem .75rem;text-align:center;">${statusBadge}</td>
         </tr>
       `;

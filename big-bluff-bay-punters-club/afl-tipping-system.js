@@ -118,7 +118,24 @@ function scoreRound(store, roundId) {
       tb.doublePointsActiveRounds.includes(roundId);
     if (dpActive) points *= 2;
 
-    scores[userId] = { correct, total, perfect, points, member: entry.member, doublePointsUsed: dpActive };
+    // Margin tiebreaker (based on first game)
+    let marginAccuracy = null;
+    const firstGame = round.games[0];
+    if (firstGame && firstGame.result && typeof firstGame.result.homeScore === 'number' && typeof firstGame.result.awayScore === 'number') {
+      const actualMargin = Math.abs(firstGame.result.homeScore - firstGame.result.awayScore);
+      const userMargin = round.margins && round.margins[userId] ? round.margins[userId].prediction : 0;
+      marginAccuracy = Math.abs(actualMargin - userMargin); // Lower is better
+    }
+
+    scores[userId] = { 
+      correct, 
+      total, 
+      perfect, 
+      points, 
+      member: entry.member, 
+      doublePointsUsed: dpActive,
+      marginAccuracy
+    };
 
     // Consume the token once scoring is finalised (idempotent — only consume if still listed as remaining)
     if (dpActive && typeof tb.doublePointsRemaining === 'number' && tb.doublePointsRemaining > 0) {
@@ -207,6 +224,10 @@ function buildSeasonLeaderboard(store) {
 
   // Initialize ladder for all entries
   for (const entry of allEntries) {
+    const tb = entry.toolbox || {};
+    const dpRemaining = tb.doublePointsRemaining || 0;
+    const dpUsed = 1 - dpRemaining; // Originally had 1, now has X remaining
+    
     ladder[entry.userId] = {
       userId: entry.userId,
       member: entry.member,
@@ -216,7 +237,9 @@ function buildSeasonLeaderboard(store) {
       totalPoints: 0,
       roundsPlayed: 0,
       perfectRounds: 0,
-      thisWeek: 0
+      thisWeek: 0,
+      doublePointsUsed: dpUsed > 0,
+      doublePointsRemaining: dpRemaining
     };
   }
 
@@ -234,7 +257,9 @@ function buildSeasonLeaderboard(store) {
           totalPoints: 0,
           roundsPlayed: 0,
           perfectRounds: 0,
-          thisWeek: 0
+          thisWeek: 0,
+          doublePointsUsed: false,
+          doublePointsRemaining: 1
         };
       }
       ladder[userId].totalCorrect += score.correct || 0;
@@ -243,12 +268,27 @@ function buildSeasonLeaderboard(store) {
       if (score.perfect) ladder[userId].perfectRounds++;
       if (latestRound && round.id === latestRound.id) {
         ladder[userId].thisWeek = score.correct || 0;
+        // Store margin accuracy from latest round for tiebreaker
+        if (typeof score.marginAccuracy === 'number') {
+          ladder[userId].latestMarginAccuracy = score.marginAccuracy;
+        }
       }
     }
   }
 
   return Object.values(ladder)
-    .sort((a, b) => b.totalPoints - a.totalPoints || b.totalCorrect - a.totalCorrect);
+    .sort((a, b) => {
+      // Primary: total points
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      
+      // Secondary: total correct
+      if (b.totalCorrect !== a.totalCorrect) return b.totalCorrect - a.totalCorrect;
+      
+      // Tiebreaker: latest round margin accuracy (lower is better)
+      const aMargin = typeof a.latestMarginAccuracy === 'number' ? a.latestMarginAccuracy : 999;
+      const bMargin = typeof b.latestMarginAccuracy === 'number' ? b.latestMarginAccuracy : 999;
+      return aMargin - bMargin;
+    });
 }
 
 // ── Season prize projections ──────────────────────────────────────────────────
@@ -758,9 +798,10 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const activeRound = at.rounds.find((r) => r.status === 'open') ||
         at.rounds.find((r) => r.status === 'locked') || null;
 
-      if (!activeRound) return res.json({ ok: true, tips: [], round: null });
+      if (!activeRound) return res.json({ ok: true, tips: [], round: null, marginPrediction: 0 });
       const tips = activeRound.tips[userId] || [];
-      res.json({ ok: true, tips, round: { id: activeRound.id, label: activeRound.label, games: activeRound.games } });
+      const marginPrediction = activeRound.margins && activeRound.margins[userId] ? activeRound.margins[userId].prediction : 0;
+      res.json({ ok: true, tips, round: { id: activeRound.id, label: activeRound.label, games: activeRound.games }, marginPrediction });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
@@ -775,7 +816,8 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const round = at.rounds.find((r) => r.id === req.params.roundId);
       if (!round) return res.status(404).json({ ok: false, error: 'Round not found' });
       const tips = round.tips[userId] || [];
-      res.json({ ok: true, tips, round: { id: round.id, label: round.label, games: round.games } });
+      const marginPrediction = round.margins && round.margins[userId] ? round.margins[userId].prediction : 0;
+      res.json({ ok: true, tips, round: { id: round.id, label: round.label, games: round.games }, marginPrediction });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
@@ -793,7 +835,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const entry = at.entries.find((e) => e.userId === userId && e.status === 'confirmed');
       if (!entry) return res.status(403).json({ ok: false, error: 'You must have a confirmed entry to submit tips. Please register and pay.' });
 
-      const { roundId, tips } = req.body || {};
+      const { roundId, tips, marginPrediction } = req.body || {};
       if (!roundId || !Array.isArray(tips)) {
         return res.status(400).json({ ok: false, error: 'roundId and tips[] required' });
       }
@@ -829,10 +871,28 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const preserved = existingTips.filter((t) => lockedGameIds.includes(t.gameId));
       const merged = [...preserved, ...validatedTips];
       round.tips[userId] = merged;
+
+      // Store margin prediction (only if round not locked yet)
+      const firstGame = round.games[0];
+      const roundLocked = firstGame && now >= firstGame.kickoff;
+      
+      if (!roundLocked && typeof marginPrediction === 'number' && marginPrediction >= 0) {
+        if (!round.margins) round.margins = {};
+        round.margins[userId] = {
+          prediction: marginPrediction,
+          submittedAt: now
+        };
+      }
+
       round.updatedAt = now;
 
       writeStore(store);
-      res.json({ ok: true, tips: merged, submittedCount: validatedTips.length });
+      res.json({ 
+        ok: true, 
+        tips: merged, 
+        submittedCount: validatedTips.length,
+        marginPrediction: round.margins && round.margins[userId] ? round.margins[userId].prediction : 0
+      });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }

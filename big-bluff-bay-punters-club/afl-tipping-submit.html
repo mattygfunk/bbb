@@ -150,9 +150,31 @@
           <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
             <span style="font-size:1.1em;">🧰</span>
             <strong style="color:#93c5fd;">Toolbox</strong>
-            <span id="tb-remaining-badge" style="padding:.15rem .6rem;border-radius:99px;background:#0c1d3a;border:1px solid #1e40af;font-size:.8em;font-weight:700;color:#93c5fd;">2 remaining</span>
+            <span id="tb-remaining-badge" style="padding:.15rem .6rem;border-radius:99px;background:#0c1d3a;border:1px solid #1e40af;font-size:.8em;font-weight:700;color:#93c5fd;">1 remaining</span>
           </div>
           <div id="tb-round-status" style="margin-top:.6rem;font-size:.92em;"></div>
+        </div>
+
+        <!-- Margin prediction for first game -->
+        <div id="margin-section" class="card" style="margin-bottom:1.25rem;border-color:#22c55e;display:none;">
+          <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.75rem;">
+            <span style="font-size:1.1em;">🎯</span>
+            <strong style="color:#22c55e;">Margin Prediction</strong>
+            <span style="font-size:.8em;color:var(--muted);">(Tiebreaker)</span>
+          </div>
+          <div id="margin-game-info" style="margin-bottom:.75rem;">
+            <div style="font-weight:600;color:var(--text);" id="margin-game-teams">Loading first game...</div>
+            <div style="color:var(--muted);font-size:.85em;margin-top:.25rem;" id="margin-game-time">Kickoff time loading...</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:.5rem;">
+              <span style="color:var(--muted);font-size:.9em;">Winning margin:</span>
+              <input type="number" id="margin-input" class="form-input" placeholder="e.g. 12" min="0" max="200" style="width:80px;text-align:center;" />
+              <span style="color:var(--muted);font-size:.85em;">points</span>
+            </label>
+            <span id="margin-status" style="font-size:.85em;color:var(--muted);"></span>
+          </div>
+          <p style="color:var(--muted);font-size:.85em;margin:.5rem 0 0;">Predict how many points the winner will win by. Used to break ties in weekly and season standings.</p>
         </div>
 
         <div id="games-container"></div>
