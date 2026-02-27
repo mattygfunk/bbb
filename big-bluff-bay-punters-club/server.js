@@ -4000,19 +4000,26 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);
 
-    // Only include members who have actually submitted at least one tip for this track
-    const tippedMembers = new Set(
+    // Only show claimants who have tipped in the current open round
+    const openRound = getCurrentRound(store, { autoCreate: false, trackId });
+    const currentRoundId = openRound?.id || null;
+
+    const tippedThisRound = new Set(
       getTipsForTrack(store, trackId, { includeRemoved: false })
         .filter((t) => String(t.status || '') !== 'removed')
+        .filter((t) => !currentRoundId || String(t.roundId || t.weekRoundId || '') === currentRoundId ||
+          // Tips may not carry a roundId — fall back to all current-track tips if round has no roundId scoping
+          !t.roundId)
         .map((t) => String(t.member || '').trim().toLowerCase())
         .filter(Boolean)
     );
 
     const claims = (store.puntersClub?.claims || []).filter((c) => {
       if (normalizeTrackId(c.trackId) !== trackId) return false;
-      // Admin-injected claims (no member) always show
-      if (!c.member) return true;
-      return tippedMembers.has(String(c.member || '').trim().toLowerCase());
+      if (!c.member) return true; // admin-injected
+      // Must match the current round (if claim has roundId) and must have tipped
+      if (currentRoundId && c.roundId && c.roundId !== currentRoundId) return false;
+      return tippedThisRound.has(String(c.member || '').trim().toLowerCase());
     });
 
     return res.json({ trackId, claims });
