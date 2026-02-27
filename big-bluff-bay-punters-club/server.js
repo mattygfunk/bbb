@@ -4000,6 +4000,51 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     return res.status(201).json({ ok: true, claim });
   });
 
+  // DELETE /api/punters/member — remove a member's tips and payment for the current round
+  app.delete('/api/punters/member', auth, adminOnly, (req, res) => {
+    const store = readStore();
+    const trackId = normalizeTrackId(req.body?.trackId || req.query.track || req.query.trackId);
+    const member = String(req.body?.member || '').trim();
+    if (!member) return res.status(400).json({ error: 'member is required' });
+
+    // Remove tips for this track
+    let tipsRemoved = 0;
+    for (const tip of store.tips || []) {
+      if (normalizeTrackId(tip.trackId || 'thoroughbreds') !== trackId) continue;
+      if (String(tip.member || '').toLowerCase() !== member.toLowerCase()) continue;
+      if (tip.status !== 'removed') { tip.status = 'removed'; tipsRemoved++; }
+    }
+
+    // Remove payment from the current open round
+    const round = getCurrentRound(store, { autoCreate: false, trackId });
+    let paymentRemoved = 0;
+    if (round) {
+      const before = (round.payments || []).length;
+      round.payments = (round.payments || []).filter(
+        (p) => String(p.member || '').toLowerCase() !== member.toLowerCase()
+      );
+      paymentRemoved = before - round.payments.length;
+      // Reset entry tier back to FREE
+      round.entries = (round.entries || []).map((e) =>
+        String(e.member || '').toLowerCase() === member.toLowerCase()
+          ? { ...e, tier: 'FREE', paid: false }
+          : e
+      );
+    }
+
+    // Void any claims for this member in the current round
+    const currentRoundId = round?.id || null;
+    for (const c of store.puntersClub?.claims || []) {
+      if (String(c.member || '').toLowerCase() !== member.toLowerCase()) continue;
+      if (currentRoundId && c.roundId && c.roundId !== currentRoundId) continue;
+      c.status = 'voided';
+    }
+
+    store.puntersClub.paymentAudit.push({ action: 'remove-member', trackId, member, tipsRemoved, paymentRemoved, at: Date.now(), by: req.user.username });
+    writeStore(store);
+    return res.json({ ok: true, member, tipsRemoved, paymentRemoved });
+  });
+
   app.get('/api/punters/claims', auth, adminOnly, (req, res) => {
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);

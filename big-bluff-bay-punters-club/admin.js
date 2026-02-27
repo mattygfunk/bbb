@@ -1,5 +1,5 @@
 const API_ROOTS=['/api'];
-const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateLogicById:(id)=>`/alerts/templates/logic/${encodeURIComponent(id)}`,alertsTemplateDelete:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsQueueSendNow:'/alerts/queue/send-now',alertsOverlaySendNow:'/alerts/templates/overlay/send-now',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
+const API={tips:'/tips',fixtures:'/fixtures',results:'/results',raceRunners:'/race-runners',raceRunnersParse:'/race-runners/parse',bossesBet:'/bosses-bet',bossesBetResults:'/bosses-bet/results',archiveRound:'/archive-round',unlockSatNoon:'/tips/unlock-saturday-noon',tipEditDeadline:'/tips/edit-deadline',jackpot:'/jackpot',puntersClaims:'/punters/claims',puntersRemoveMember:'/punters/member',puntersVerifyPayment:'/punters/payments/verify',puntersVerifyPayout:'/punters/payouts/verify',puntersRounds:'/punters/rounds',deleteRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}`,publishWinner:(id)=>`/punters/rounds/${encodeURIComponent(id)}/publish-winner`,closeRound:(id)=>`/punters/rounds/${encodeURIComponent(id)}/close`,recomputeSnapshot:(id)=>`/punters/rounds/${encodeURIComponent(id)}/recompute-snapshot`,openNextRound:'/punters/rounds/open-next',puntersSettings:'/punters/settings',pokerResults:'/poker-results',pokerLeaderboard:'/poker-leaderboard',pokerPlayers:'/poker-players',pokerPlayersImport:'/poker-players/import',users:'/users',alertsMonitor:'/alerts/monitor',alertsEvents:'/alerts/events',alertsTemplateLogic:'/alerts/templates/logic',alertsTemplateLogicById:(id)=>`/alerts/templates/logic/${encodeURIComponent(id)}`,alertsTemplateDelete:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsTemplateUpdate:(id)=>`/alerts/templates/${encodeURIComponent(id)}`,alertsQueueSendNow:'/alerts/queue/send-now',alertsOverlaySendNow:'/alerts/templates/overlay/send-now',alertsTemplateTest:'/alerts/templates/test',userRole:(id)=>`/users/${id}/role`,userVerify:(id)=>`/users/${id}/verify`,login:'/login',logout:'/logout',me:'/me',updateFixture:id=>`/fixtures/${id}`,updateResult:race=>`/results/${race}`,clearResult:race=>`/results/${race}`,saveRaceRunners:race=>`/race-runners/${race}`,updateTip:(id)=>`/tips/${id}`};
 const tokenKey='bbb-token-v3';
 const trackKey='bbb-admin-track-v1';
 const state={token:localStorage.getItem(tokenKey)||null,user:null,raceCount:12,fixtureId:'f1',raceResults:{},raceRunners:{},parsedRunners:[],bossesBet:{legs:['R9','R10','R11','R12'],selections:{},legItems:[],status:'live',title:'Bosses Multi',eligibilityNote:'Eligible = all players who entered tips this week before lock.',freerollPrize:0},bossesDraft:null,tipsAll:[],popularByRace:{},rolloverAppliedFromQuery:false,trackId:localStorage.getItem(trackKey)||'thoroughbreds',summary:{tipUsers:0,paidUsers:0,pokerEvents:0,loggedInUsers:0,loggedInNames:'—'}};
@@ -938,11 +938,12 @@ async function refreshClaims(){
         : isNotClaimed
           ? `<span style="color:#6b7280;">— no claim</span>`
           : `<span style="color:#fbbf24;">⏳ pending</span>`;
-      const actionBtn = isPaid
+      const payBtn = isPaid
         ? `<span style="color:var(--muted);font-size:.85em;">Done</span>`
         : `<button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}' data-admin-create='${isNotClaimed ? '1' : ''}'>Mark Paid</button>`;
+      const removeBtn = `<button class='btn btn-ghost' style="color:#ef4444;border-color:#ef4444;" data-remove-member='${encodeURIComponent(String(c.member||''))}'>🗑 Remove</button>`;
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${statusPill}</td><td>${actionBtn}</td>`;
+      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${statusPill}</td><td style="display:flex;gap:.4rem;flex-wrap:wrap;">${payBtn}${removeBtn}</td>`;
       body.appendChild(tr);
     });
     body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
@@ -959,6 +960,19 @@ async function refreshClaims(){
           }
           await req(withTrack(API.puntersVerifyPayment), { method:'POST', body: JSON.stringify({ claimId, member, amount, reference, trackId: state.trackId })});
           $('punters-payment-msg').textContent = 'Claim verified and jackpot eligibility updated.';
+          await refresh();
+          await refreshClaims();
+        } catch (err) { $('punters-payment-msg').textContent = err.message; }
+      });
+    });
+    body.querySelectorAll('button[data-remove-member]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const member = decodeURIComponent(btn.dataset.removeMember || '');
+        if (!member) return;
+        if (!confirm(`Remove all tips and payment for ${member} this round?`)) return;
+        try {
+          await req(withTrack(API.puntersRemoveMember), { method: 'DELETE', body: JSON.stringify({ member, trackId: state.trackId }) });
+          $('punters-payment-msg').textContent = `${member} removed — tips and payment cleared.`;
           await refresh();
           await refreshClaims();
         } catch (err) { $('punters-payment-msg').textContent = err.message; }
