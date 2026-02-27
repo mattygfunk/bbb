@@ -123,9 +123,9 @@
   function renderPrizes(prizes) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmtMoney(val); };
     if (!prizes) return;
-    set('prize-1st', prizes.first);
-    set('prize-2nd', prizes.second);
-    set('prize-3rd', prizes.third);
+    set('prize-1st', prizes.first || 0);
+    set('prize-2nd', prizes.second || 0);
+    set('prize-3rd', prizes.third || 0);
   }
 
   function renderStatusStrip(data) {
