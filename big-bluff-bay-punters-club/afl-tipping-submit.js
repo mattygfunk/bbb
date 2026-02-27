@@ -151,7 +151,19 @@
     Object.assign(selections, existingTips);
     
     // Show margin prediction section
+    console.log('About to call renderMarginSection with:', games?.length, 'games');
     renderMarginSection(games, existingMargin);
+    
+    // Force show margin section for debugging
+    const marginSection = document.getElementById('margin-section');
+    if (marginSection && games?.length > 0) {
+      console.log('Forcing margin section to show');
+      marginSection.style.display = '';
+      const teamsEl = document.getElementById('margin-game-teams');
+      if (teamsEl && games[0]) {
+        teamsEl.textContent = `${games[0].homeTeam || 'Team A'} vs ${games[0].awayTeam || 'Team B'}`;
+      }
+    }
 
     const container = document.getElementById('games-container');
     if (!container) return;
