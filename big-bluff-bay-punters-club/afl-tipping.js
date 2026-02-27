@@ -338,6 +338,9 @@
     if (countEl) countEl.textContent = remaining;
     if (pluralEl) pluralEl.textContent = remaining !== 1 ? 's' : '';
 
+    // Show enhanced toolbox status
+    renderToolboxUsage(toolbox);
+
     if (!statusEl) return;
 
     if (!currentRound) {
@@ -403,6 +406,58 @@
     }
   }
 
+  function renderToolboxUsage(toolbox) {
+    const detailsEl = document.getElementById('toolbox-usage-details');
+    const noEntryEl = document.getElementById('toolbox-no-entry');
+    
+    if (!toolbox) {
+      if (detailsEl) detailsEl.style.display = 'none';
+      if (noEntryEl) noEntryEl.style.display = '';
+      return;
+    }
+    
+    if (detailsEl) detailsEl.style.display = '';
+    if (noEntryEl) noEntryEl.style.display = 'none';
+
+    const remainingEl = document.getElementById('toolbox-dp-remaining');
+    const seasonEl = document.getElementById('toolbox-season-year');
+    const historyEl = document.getElementById('toolbox-usage-history');
+
+    if (remainingEl) remainingEl.textContent = toolbox.doublePointsRemaining || 0;
+    if (seasonEl) seasonEl.textContent = toolbox.season || new Date().getFullYear();
+
+    if (historyEl) {
+      const activeRounds = toolbox.doublePointsActiveRounds || [];
+      const used = 1 - (toolbox.doublePointsRemaining || 0); // Originally had 1, now has X remaining
+      
+      if (activeRounds.length > 0) {
+        historyEl.innerHTML = `
+          <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.75rem;">
+            <div style="color:#93c5fd;font-size:.85em;font-weight:600;margin-bottom:.5rem;">✅ Double Points Usage</div>
+            <div style="color:var(--muted);font-size:.85em;">
+              Active rounds: <strong style="color:#fff;">${activeRounds.length}</strong>
+              ${activeRounds.length > 0 ? '<br>Round IDs: <code style="color:#60a5fa;">' + activeRounds.slice(0, 2).map(id => id.slice(-6)).join(', ') + '</code>' : ''}
+            </div>
+          </div>
+        `;
+      } else if (used > 0) {
+        historyEl.innerHTML = `
+          <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.75rem;">
+            <div style="color:#93c5fd;font-size:.85em;font-weight:600;margin-bottom:.5rem;">📊 Usage History</div>
+            <div style="color:var(--muted);font-size:.85em;">Used ${used} of 1 activation${used !== 1 ? 's' : ''} this season</div>
+          </div>
+        `;
+      } else {
+        historyEl.innerHTML = `
+          <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.75rem;">
+            <div style="color:#93c5fd;font-size:.85em;font-weight:600;margin-bottom:.5rem;">💎 Fresh Toolbox</div>
+            <div style="color:var(--muted);font-size:.85em;">Your Double Points activation is ready to use!</div>
+          </div>
+        `;
+      }
+    }
+  }
+
   async function init() {
     // Check auth
     if (token()) {
@@ -424,6 +479,9 @@
         // Show toolbox for confirmed entries
         if (entryData.entry && entryData.entry.status === 'confirmed' && entryData.entry.toolbox) {
           renderToolbox(entryData.entry.toolbox, overviewData && overviewData.currentRound);
+        } else {
+          // Show empty toolbox usage section for unconfirmed entries
+          renderToolboxUsage(null);
         }
       } catch {
         // Not logged in or no token — default state

@@ -31,13 +31,13 @@ function ensureToolbox(entry, seasonYear) {
   if (!entry.toolbox || entry.toolbox.season !== year) {
     entry.toolbox = {
       season: year,
-      doublePointsRemaining: 2,
+      doublePointsRemaining: 1,
       doublePointsActiveRounds: []
     };
   } else {
     // Ensure sub-fields exist (forward compat)
     if (typeof entry.toolbox.doublePointsRemaining !== 'number') {
-      entry.toolbox.doublePointsRemaining = 2;
+      entry.toolbox.doublePointsRemaining = 1;
     }
     if (!Array.isArray(entry.toolbox.doublePointsActiveRounds)) {
       entry.toolbox.doublePointsActiveRounds = [];
@@ -109,8 +109,8 @@ function scoreRound(store, roundId) {
     }
 
     const perfect = total === gamesWithResults.length && correct === gamesWithResults.length;
-    // +2 bonus for perfect round
-    let points = correct + (perfect ? 2 : 0);
+    // +1 bonus for perfect round
+    let points = correct + (perfect ? 1 : 0);
 
     // Double Points toolbox multiplier
     const tb = entry.toolbox || {};
@@ -724,7 +724,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       }
 
       tb.doublePointsActiveRounds.splice(idx, 1);
-      tb.doublePointsRemaining = Math.min(2, tb.doublePointsRemaining + 1);
+      tb.doublePointsRemaining = Math.min(1, tb.doublePointsRemaining + 1);
 
       writeStore(store);
       res.json({ ok: true, toolbox: tb });

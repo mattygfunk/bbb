@@ -89,12 +89,12 @@
         <section id="toolbox-card" class="card" style="margin-bottom:1.5rem;display:none;border-color:#1e40af;">
           <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;">
             <h2 style="color:#93c5fd;margin:0;">🧰 Toolbox <span style="font-size:.7em;font-weight:400;color:var(--muted);">New Season Bonus</span></h2>
-            <span id="toolbox-dp-badge" style="display:inline-block;padding:.2rem .7rem;border-radius:99px;background:#0c1d3a;border:1px solid #1e40af;font-size:.82em;font-weight:700;color:#93c5fd;">2 Double Points remaining</span>
+            <span id="toolbox-dp-badge" style="display:inline-block;padding:.2rem .7rem;border-radius:99px;background:#0c1d3a;border:1px solid #1e40af;font-size:.82em;font-weight:700;color:#93c5fd;">1 Double Points remaining</span>
           </div>
           <p style="color:var(--muted);font-size:.93em;margin:.25rem 0 .75rem;">
-            Start the season strong — every tipper gets <strong style="color:#fff;">2× Double Points rounds</strong>.
+            Start the season strong — every tipper gets <strong style="color:#fff;">1× Double Points round</strong>.
             Activate Double Points on any round before lockout to double your score.
-            You have <span id="toolbox-dp-count" style="color:#93c5fd;font-weight:700;">2</span> activation<span id="toolbox-dp-plural">s</span> for the season.
+            You have <span id="toolbox-dp-count" style="color:#93c5fd;font-weight:700;">1</span> activation for the season.
           </p>
           <div id="toolbox-round-status" style="font-size:.9em;"></div>
 
@@ -104,7 +104,7 @@
             <div style="margin-top:.75rem;display:grid;gap:.6rem;">
               <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
                 <strong style="font-size:.88em;color:var(--text);">When do I receive Double Points?</strong>
-                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">At season start (Round 1), and when you join mid-season — you'll never miss out.</p>
+                <p style="color:var(--muted);font-size:.85em;margin:.25rem 0 0;">At season start (Round 1), and when you join mid-season — you get 1 activation per season.</p>
               </div>
               <div style="background:#0c1d3a;border-radius:var(--radius-md);padding:.65rem .9rem;">
                 <strong style="font-size:.88em;color:var(--text);">Can I use both in the same round?</strong>
@@ -196,6 +196,81 @@
               <button id="banter-submit" class="btn btn-primary">Send</button></div></div>
           <div id="banter-login-prompt" style="display:none;color:var(--muted);font-size:.9em;">
             <a href="/" style="color:var(--afl-light);">Log in</a> to join the banter.</div>
+        </section>
+
+        <!-- Rules section -->
+        <section class="card" style="margin-bottom:1.5rem;">
+          <h3 style="margin-top:0;color:var(--afl-light);">📖 How AFL Tipping Works</h3>
+          
+          <div style="display:grid;gap:1rem;" class="responsive-2col">
+            <div>
+              <h4 style="color:var(--text);margin-bottom:.5rem;">🎯 Scoring System</h4>
+              <ul style="color:var(--muted);font-size:.9em;margin:0;padding-left:1.2rem;">
+                <li><strong>1 point</strong> per correct tip</li>
+                <li><strong>+1 bonus point</strong> for perfect round (all tips correct)</li>
+                <li><strong>Double Points</strong> multiplies your round score by 2</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 style="color:var(--text);margin-bottom:.5rem;">⚡ Double Points Rules</h4>
+              <ul style="color:var(--muted);font-size:.9em;margin:0;padding-left:1.2rem;">
+                <li><strong>1 activation</strong> per season (changed from 2)</li>
+                <li>Activate before round lockout</li>
+                <li>Can toggle off before lockout</li>
+                <li>Expires at season end if unused</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 style="color:var(--text);margin-bottom:.5rem;">🏁 Tiebreaker</h4>
+              <ul style="color:var(--muted);font-size:.9em;margin:0;padding-left:1.2rem;">
+                <li><strong>Margin prediction</strong> on first game of round</li>
+                <li>Closest to actual margin wins ties</li>
+                <li>Submitted with your tips</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 style="color:var(--text);margin-bottom:.5rem;">🔒 Lock Rules</h4>
+              <ul style="color:var(--muted);font-size:.9em;margin:0;padding-left:1.2rem;">
+                <li>Individual game lockouts at kickoff</li>
+                <li>No tips or changes after lockout</li>
+                <li>Double Points locks with round</li>
+              </ul>
+            </div>
+          </div>
+          
+          <details style="margin-top:1rem;border-top:1px solid var(--line);padding-top:.75rem;">
+            <summary style="cursor:pointer;color:#93c5fd;font-weight:600;font-size:.9em;">📋 Full Rules & FAQ</summary>
+            <div style="margin-top:.75rem;">
+              <p style="color:var(--muted);font-size:.9em;">For complete rules, payment info, and frequently asked questions:</p>
+              <div style="margin-top:.5rem;">
+                <a href="/afl-tipping/rules" class="btn btn-ghost" style="font-size:.85em;padding:.4rem .8rem;">📋 Complete Rules</a>
+              </div>
+            </div>
+          </details>
+          
+          <!-- Enhanced toolbox status -->
+          <div id="toolbox-usage" style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--line);">
+            <h4 style="color:#93c5fd;margin:0 0 .5rem;font-size:.95em;">🧰 Your Toolbox Status</h4>
+            <div id="toolbox-usage-details" style="display:none;">
+              <div style="display:grid;gap:.75rem;" class="responsive-2col">
+                <div style="background:#0f2a50;border:1px solid #1e40af;border-radius:var(--radius-md);padding:.75rem;">
+                  <div style="font-size:.8em;color:#93c5fd;margin-bottom:.25rem;">Double Points Remaining</div>
+                  <div style="font-size:1.4em;font-weight:800;color:#fff;" id="toolbox-dp-remaining">1</div>
+                </div>
+                <div style="background:#0f2a50;border:1px solid #1e40af;border-radius:var(--radius-md);padding:.75rem;">
+                  <div style="font-size:.8em;color:#93c5fd;margin-bottom:.25rem;">This Season</div>
+                  <div style="font-size:1.4em;font-weight:800;color:#fff;" id="toolbox-season-year">2026</div>
+                </div>
+              </div>
+              <div id="toolbox-usage-history" style="margin-top:.75rem;"></div>
+            </div>
+            <div id="toolbox-no-entry" style="color:var(--muted);font-size:.9em;">
+              <a href="#enter-card" style="color:#93c5fd;">Register and confirm your entry</a> to access your toolbox.
+            </div>
+          </div>
         </section>
 
         <!-- Nav links -->
