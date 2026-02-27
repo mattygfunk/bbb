@@ -4000,27 +4000,58 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);
 
-    // Only show claimants who have tipped in the current open round
     const openRound = getCurrentRound(store, { autoCreate: false, trackId });
     const currentRoundId = openRound?.id || null;
+    const roundEntryFee = Number(openRound?.entryFee || store.entryFee || 20);
 
-    const tippedThisRound = new Set(
-      getTipsForTrack(store, trackId, { includeRemoved: false })
-        .filter((t) => String(t.status || '') !== 'removed')
-        .filter((t) => !currentRoundId || String(t.roundId || t.weekRoundId || '') === currentRoundId ||
-          // Tips may not carry a roundId — fall back to all current-track tips if round has no roundId scoping
-          !t.roundId)
-        .map((t) => String(t.member || '').trim().toLowerCase())
-        .filter(Boolean)
-    );
+    // Build the full list of this week's tippers
+    const tipsThisRound = getTipsForTrack(store, trackId, { includeRemoved: false })
+      .filter((t) => String(t.status || '') !== 'removed');
 
-    const claims = (store.puntersClub?.claims || []).filter((c) => {
+    // Deduplicate by member (one row per tipper)
+    const tippersMap = new Map();
+    for (const t of tipsThisRound) {
+      const key = String(t.member || '').trim().toLowerCase();
+      if (key && !tippersMap.has(key)) tippersMap.set(key, String(t.member || '').trim());
+    }
+
+    // Index existing claims for this round by member (lower-cased)
+    const existingClaims = (store.puntersClub?.claims || []).filter((c) => {
       if (normalizeTrackId(c.trackId) !== trackId) return false;
-      if (!c.member) return true; // admin-injected
-      // Must match the current round (if claim has roundId) and must have tipped
       if (currentRoundId && c.roundId && c.roundId !== currentRoundId) return false;
-      return tippedThisRound.has(String(c.member || '').trim().toLowerCase());
+      return true;
     });
+    const claimsByMember = new Map();
+    for (const c of existingClaims) {
+      const key = String(c.member || '').trim().toLowerCase();
+      if (!claimsByMember.has(key)) claimsByMember.set(key, []);
+      claimsByMember.get(key).push(c);
+    }
+
+    // Merge: every tipper gets at least one row; use their claim if it exists, else synthetic pending row
+    const claims = [];
+    for (const [key, member] of tippersMap) {
+      if (claimsByMember.has(key)) {
+        claims.push(...claimsByMember.get(key));
+      } else {
+        // Synthetic row — no claim submitted yet
+        claims.push({
+          id: null,
+          member,
+          trackId,
+          roundId: currentRoundId,
+          amount: roundEntryFee,
+          status: 'not-claimed',
+          note: '',
+          createdAt: null
+        });
+      }
+    }
+
+    // Also include any admin-injected claims (no member field)
+    for (const c of existingClaims.filter((c) => !c.member)) claims.push(c);
+
+    claims.sort((a, b) => String(a.member || '').localeCompare(String(b.member || '')));
 
     return res.json({ trackId, claims });
   });

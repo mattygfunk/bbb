@@ -926,12 +926,25 @@ async function refreshClaims(){
   if(!body || !isAdmin()) return;
   try {
     const out = await req(withTrack(API.puntersClaims));
-    const rows = (out.claims || []).filter((c)=>String(c.status||'pending')==='pending');
+    const rows = (out.claims || []);
     body.innerHTML = '';
-    if(!rows.length){ body.innerHTML = "<tr><td colspan='4' class='muted'>No pending claims.</td></tr>"; return; }
+    if(!rows.length){ body.innerHTML = "<tr><td colspan='4' class='muted'>No tippers this round.</td></tr>"; return; }
     rows.forEach((c)=>{
+      const status = String(c.status || 'pending');
+      const isPaid = status === 'paid';
+      const isNotClaimed = status === 'not-claimed';
+      const statusPill = isPaid
+        ? `<span style="color:#4ade80;">✅ paid</span>`
+        : isNotClaimed
+          ? `<span style="color:#6b7280;">— no claim</span>`
+          : `<span style="color:#fbbf24;">⏳ pending</span>`;
+      const actionBtn = isPaid
+        ? `<span style="color:var(--muted);font-size:.85em;">Done</span>`
+        : isNotClaimed
+          ? `<button class='btn btn-ghost' style="opacity:.5;" disabled>No claim</button>`
+          : `<button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}'>Mark Paid</button>`;
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${esc(c.status||'pending')}</td><td><button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}'>Mark Paid</button></td>`;
+      tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${statusPill}</td><td>${actionBtn}</td>`;
       body.appendChild(tr);
     });
     body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
