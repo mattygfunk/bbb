@@ -63,7 +63,7 @@
           }
         }
       },
-      "lastSeenAt": 1772213653135
+      "lastSeenAt": 1772214316295
     },
     {
       "id": "17243c09-e78e-47ab-b799-bb87bf69ba9c",
@@ -9983,7 +9983,7 @@
     "Drizzla",
     "DropDeadFred",
     "Dusty_Goat",
-    "\uff24\u039e\uff36\uff29\u039b\uff2e\u03a4",
+    "ＤΞＶＩΛＮΤ",
     "EmJay12",
     "Ewater33",
     "farmilut.",
@@ -10468,8 +10468,8 @@
       },
       {
         "id": "49e0a4b5-9017-43b0-8fa7-d799838870e5",
-        "displayName": "\uff24\u039e\uff36\uff29\u039b\uff2e\u03a4",
-        "canonicalName": "\uff44\u03be\uff56\uff49\u03bb\uff4e\u03c4",
+        "displayName": "ＤΞＶＩΛＮΤ",
+        "canonicalName": "ｄξｖｉλｎτ",
         "deletedAt": null,
         "createdAt": 1771286032053,
         "updatedAt": 1771286032053
@@ -12282,7 +12282,7 @@
       {
         "id": "b57ff76b-650b-4196-8099-6bb291c40d43",
         "playerId": "49e0a4b5-9017-43b0-8fa7-d799838870e5",
-        "alias": "\uff24\u039e\uff36\uff29\u039b\uff2e\u03a4",
+        "alias": "ＤΞＶＩΛＮΤ",
         "source": "legacy-pool",
         "createdAt": 1771286032053
       },
@@ -28033,7 +28033,7 @@
         "winner": {
           "member": "farmilut",
           "payout": 20,
-          "notes": "That was a proper clinic \u2014 shout the winner a snag.",
+          "notes": "That was a proper clinic — shout the winner a snag.",
           "publishedAt": 1772018660035,
           "publishedBy": "farmilut"
         },
@@ -28889,7 +28889,7 @@
           "winner": {
             "member": "farmilut",
             "payout": 20,
-            "notes": "That was a proper clinic \u2014 shout the winner a snag."
+            "notes": "That was a proper clinic — shout the winner a snag."
           }
         }
       },
@@ -31226,14 +31226,14 @@
           "winner": {
             "member": "ak47unort",
             "payout": 320,
-            "notes": "That was a proper clinic \u2014 shout the winner a snag."
+            "notes": "That was a proper clinic — shout the winner a snag."
           }
         },
         "updatedAt": 1771724028858,
         "winner": {
           "member": "ak47unort",
           "payout": 320,
-          "notes": "That was a proper clinic \u2014 shout the winner a snag."
+          "notes": "That was a proper clinic — shout the winner a snag."
         },
         "closedAt": 1771724030314,
         "nextRoundOpensAt": 1771894800000
@@ -33548,7 +33548,7 @@
                   "Missing form"
                 ],
                 "confidence": "medium",
-                "rawBlock": "CYCLOTRON (7)\nJH CoffeyTTony & C McEvoy\n\u2013\t57\t\u2013\n14.00\n3.30\n61.50\n32.50"
+                "rawBlock": "CYCLOTRON (7)\nJH CoffeyTTony & C McEvoy\n–\t57\t–\n14.00\n3.30\n61.50\n32.50"
               },
               {
                 "raceNumber": 1,
@@ -33572,7 +33572,7 @@
                   "Missing form"
                 ],
                 "confidence": "medium",
-                "rawBlock": "SUPERWILL (9)\nJB AllenTL & T Corstens & W Larkin\n\u2013\t57\t\u2013\n34.00\n6.00\n16.70\n4.00"
+                "rawBlock": "SUPERWILL (9)\nJB AllenTL & T Corstens & W Larkin\n–\t57\t–\n34.00\n6.00\n16.70\n4.00"
               },
               {
                 "raceNumber": 1,
@@ -33596,7 +33596,7 @@
                   "Missing form"
                 ],
                 "confidence": "medium",
-                "rawBlock": "THE TROUBLESHOOTER (8)\nJJ McNeilTJ Sadler\n\u2013\t57\t\u2013\n21.00\n4.40\n0.00\n0.00"
+                "rawBlock": "THE TROUBLESHOOTER (8)\nJJ McNeilTJ Sadler\n–\t57\t–\n21.00\n4.40\n0.00\n0.00"
               },
               {
                 "raceNumber": 1,
@@ -33708,7 +33708,7 @@
                   "Missing form"
                 ],
                 "confidence": "medium",
-                "rawBlock": "NIKITRIA (3)\nJJ ChildsTC McDonald\n\u2013\t55\t\u2013\n8.00\n2.30\n46.10\n10.80"
+                "rawBlock": "NIKITRIA (3)\nJJ ChildsTC McDonald\n–\t55\t–\n8.00\n2.30\n46.10\n10.80"
               }
             ]
           },
@@ -36071,7 +36071,7 @@
             "Missing form"
           ],
           "confidence": "medium",
-          "rawBlock": "CYCLOTRON (7)\nJH CoffeyTTony & C McEvoy\n\u2013\t57\t\u2013\n14.00\n3.30\n61.50\n32.50"
+          "rawBlock": "CYCLOTRON (7)\nJH CoffeyTTony & C McEvoy\n–\t57\t–\n14.00\n3.30\n61.50\n32.50"
         },
         {
           "raceNumber": 1,
@@ -36095,7 +36095,7 @@
             "Missing form"
           ],
           "confidence": "medium",
-          "rawBlock": "SUPERWILL (9)\nJB AllenTL & T Corstens & W Larkin\n\u2013\t57\t\u2013\n34.00\n6.00\n16.70\n4.00"
+          "rawBlock": "SUPERWILL (9)\nJB AllenTL & T Corstens & W Larkin\n–\t57\t–\n34.00\n6.00\n16.70\n4.00"
         },
         {
           "raceNumber": 1,
@@ -36119,7 +36119,7 @@
             "Missing form"
           ],
           "confidence": "medium",
-          "rawBlock": "THE TROUBLESHOOTER (8)\nJJ McNeilTJ Sadler\n\u2013\t57\t\u2013\n21.00\n4.40\n0.00\n0.00"
+          "rawBlock": "THE TROUBLESHOOTER (8)\nJJ McNeilTJ Sadler\n–\t57\t–\n21.00\n4.40\n0.00\n0.00"
         },
         {
           "raceNumber": 1,
@@ -36231,7 +36231,7 @@
             "Missing form"
           ],
           "confidence": "medium",
-          "rawBlock": "NIKITRIA (3)\nJJ ChildsTC McDonald\n\u2013\t55\t\u2013\n8.00\n2.30\n46.10\n10.80"
+          "rawBlock": "NIKITRIA (3)\nJJ ChildsTC McDonald\n–\t55\t–\n8.00\n2.30\n46.10\n10.80"
         }
       ]
     },
@@ -39091,19 +39091,19 @@
       "lateReg": {
         "subject": "Late reg closing soon: {eventTitle}",
         "bodyPreview": "Late registration window is closing. Enter now if you want in.",
-        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">\u231b Late reg closing: <span style=\"color:#fbbf24\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Late registration window is usually closing around this stage.</p><p style=\"margin:0;color:#c7d6e4;\">If you want in, now is the time to jump in.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You\u2019re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> \u2022 <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> \u2022 <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
+        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">⌛ Late reg closing: <span style=\"color:#fbbf24\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Late registration window is usually closing around this stage.</p><p style=\"margin:0;color:#c7d6e4;\">If you want in, now is the time to jump in.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> • <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> • <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
         "updatedAt": 1771893575948
       },
       "startingSoon": {
         "subject": "Starting soon: {eventTitle}",
         "bodyPreview": "Your selected tournament starts in ~10 minutes. Join now to secure entry.",
-        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">\u23f0 Starting soon: <span style=\"color:#86efac\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Your selected tournament starts in <strong>~10 minutes</strong>.</p><p style=\"margin:0;color:#c7d6e4;\">Join now to secure entry and avoid missing first hand.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You\u2019re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> \u2022 <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> \u2022 <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
+        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">⏰ Starting soon: <span style=\"color:#86efac\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Your selected tournament starts in <strong>~10 minutes</strong>.</p><p style=\"margin:0;color:#c7d6e4;\">Join now to secure entry and avoid missing first hand.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> • <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> • <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
         "updatedAt": 1771901569109
       },
       "overlayWatch": {
         "subject": "Overlay watch: {eventTitle}",
         "bodyPreview": "Overlay conditions detected. Value spot may be live.",
-        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">\ud83d\udcc9 Overlay watch: <span style=\"color:#38bdf8\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Overlay conditions detected before shuffle.</p><p style=\"margin:0;color:#c7d6e4;\">This may be a value spot \u2014 keep it on your radar.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You\u2019re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> \u2022 <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> \u2022 <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
+        "html": "<div style=\"font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:#0b1219;padding:24px;color:#eaf2f8;line-height:1.5;\"><div style=\"max-width:560px;margin:0 auto;background:#11161b;border:1px solid #253240;border-radius:14px;padding:22px;\"><img src=\"https://bigbluffbay.au/assets/theme-banner-768.jpg\" alt=\"Big Bluff Bay clubhouse\" style=\"display:block;width:100%;height:auto;border-radius:10px;border:1px solid #2a3a50;margin:0 0 14px\" /><p style=\"margin:0 0 10px;opacity:.9;letter-spacing:.02em\">Big Bluff Bay</p><h2 style=\"margin:0 0 12px;font-size:22px;color:#f8fafc;\">📉 Overlay watch: <span style=\"color:#38bdf8\">{eventTitle}</span></h2><p style=\"margin:0 0 14px;color:#c7d6e4;\">Overlay conditions detected before shuffle.</p><p style=\"margin:0;color:#c7d6e4;\">This may be a value spot — keep it on your radar.</p><div style=\"margin:12px 0 0;padding:10px 12px;border:1px solid #2a3a50;border-radius:10px;background:#0d1728;color:#c7d6e4;font-size:13px\"><div><strong>Start:</strong> {startTime}</div>{buyInLine}{rebuysLine}{stackLine}{blindsLine}{refundsLine}</div><p style=\"margin:18px 0 0\"><a href=\"https://bigbluffbay.au/poker-schedule.html\" style=\"display:inline-block;background:linear-gradient(180deg,#1f9f5a,#148a4c);border:1px solid #2cd07a;color:#08150d;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:10px;\">Open Poker Tournaments</a></p><p style=\"margin:16px 0 0;color:#9fb0bf;font-size:12px\">You’re receiving this because alerts are enabled for your Big Bluff Bay account.<br /><a href=\"https://bigbluffbay.au/alerts.html\" style=\"color:#93c5fd\">Unsubscribe / manage alerts</a> • <a href=\"https://bigbluffbay.au/terms.html\" style=\"color:#93c5fd\">T&amp;Cs</a> • <a href=\"https://bigbluffbay.au/privacy.html\" style=\"color:#93c5fd\">Privacy</a></p></div></div>",
         "updatedAt": 1771904473747
       }
     },

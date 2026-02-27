@@ -3999,7 +3999,22 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
   app.get('/api/punters/claims', auth, adminOnly, (req, res) => {
     const store = readStore();
     const trackId = normalizeTrackId(req.query.track || req.query.trackId);
-    const claims = (store.puntersClub?.claims || []).filter((c) => normalizeTrackId(c.trackId) === trackId);
+
+    // Only include members who have actually submitted at least one tip for this track
+    const tippedMembers = new Set(
+      getTipsForTrack(store, trackId, { includeRemoved: false })
+        .filter((t) => String(t.status || '') !== 'removed')
+        .map((t) => String(t.member || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    const claims = (store.puntersClub?.claims || []).filter((c) => {
+      if (normalizeTrackId(c.trackId) !== trackId) return false;
+      // Admin-injected claims (no member) always show
+      if (!c.member) return true;
+      return tippedMembers.has(String(c.member || '').trim().toLowerCase());
+    });
+
     return res.json({ trackId, claims });
   });
 
