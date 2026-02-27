@@ -486,7 +486,9 @@
       const winner = ko.winner;
       
       let activeNamesHTML = '';
-      if (activePlayers.length === 0) {
+      if (activePlayers.length === 0 && ko.status === 'pending') {
+        activeNamesHTML = ko.startRound ? `<span style="color:var(--muted);">Opens at Round ${ko.startRound}</span>` : '<span style="color:var(--muted);">Not started</span>';
+      } else if (activePlayers.length === 0) {
         activeNamesHTML = 'Competition over';
       } else if (activePlayers.length <= 4) {
         activeNamesHTML = activePlayers.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
