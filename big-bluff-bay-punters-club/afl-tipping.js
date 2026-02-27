@@ -407,13 +407,23 @@
     }
   }
 
-  function renderToolboxUsage(toolbox) {
+  function renderToolboxUsage(toolbox, entryStatus = null) {
     const detailsEl = document.getElementById('toolbox-usage-details');
     const noEntryEl = document.getElementById('toolbox-no-entry');
     
     if (!toolbox) {
       if (detailsEl) detailsEl.style.display = 'none';
-      if (noEntryEl) noEntryEl.style.display = '';
+      if (noEntryEl) {
+        noEntryEl.style.display = '';
+        // Update message based on entry status
+        if (entryStatus === 'pending') {
+          noEntryEl.innerHTML = '<span style="color:#fbbf24;">⏳ Entry registered - awaiting payment confirmation to access toolbox.</span>';
+        } else if (entryStatus) {
+          noEntryEl.innerHTML = `<span style="color:var(--muted);">Entry status: ${escHtml(entryStatus)}. Toolbox available once confirmed.</span>`;
+        } else {
+          noEntryEl.innerHTML = '<a href="#enter-card" style="color:#93c5fd;">Register and confirm your entry</a> to access your toolbox.';
+        }
+      }
       return;
     }
     
@@ -539,11 +549,20 @@
       try {
         const entryData = await req('/api/afl-tipping/my-entry');
         applyEntryState(entryData.entry);
-        // Show toolbox for confirmed entries
-        if (entryData.entry && entryData.entry.status === 'confirmed' && entryData.entry.toolbox) {
-          renderToolbox(entryData.entry.toolbox, overviewData && overviewData.currentRound);
+        // Show toolbox based on entry status
+        if (entryData.entry) {
+          if (entryData.entry.status === 'confirmed' && entryData.entry.toolbox) {
+            // Confirmed entry with toolbox - show full toolbox
+            renderToolbox(entryData.entry.toolbox, overviewData && overviewData.currentRound);
+          } else if (entryData.entry.status === 'confirmed') {
+            // Confirmed but no toolbox yet - initialize it
+            renderToolboxUsage({ doublePointsRemaining: 1, season: new Date().getFullYear() });
+          } else {
+            // Pending or other status - show status message
+            renderToolboxUsage(null, entryData.entry.status);
+          }
         } else {
-          // Show empty toolbox usage section for unconfirmed entries
+          // No entry at all - show register message
           renderToolboxUsage(null);
         }
       } catch {
