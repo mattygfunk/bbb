@@ -64,29 +64,29 @@
   let _countdownTimer = null;
 
   // ── Countdown ──────────────────────────────────────────────────────────────
-  function startCountdown(durationMs) {
+  // Counts 3-2-1-GO before the spin, resolves when done
+  function startCountdown() {
     stopCountdown();
     const cdEl = document.getElementById('wheel-countdown');
-    if (!cdEl) return;
-    cdEl.style.display = '';
-    const endAt = Date.now() + durationMs;
-
-    function tick() {
-      const remaining = Math.max(0, endAt - Date.now());
-      const secs = (remaining / 1000).toFixed(1);
-      cdEl.textContent = `⏱ ${secs}s`;
-      if (remaining > 0) {
-        _countdownTimer = requestAnimationFrame(tick);
-      } else {
-        cdEl.textContent = '🏁 Done!';
-        setTimeout(() => { cdEl.style.display = 'none'; }, 1200);
+    if (!cdEl) return Promise.resolve();
+    return new Promise((resolve) => {
+      const steps = ['3', '2', '1', '🚀 GO!'];
+      let i = 0;
+      cdEl.style.display = '';
+      function next() {
+        if (i >= steps.length) {
+          cdEl.style.display = 'none';
+          return resolve();
+        }
+        cdEl.textContent = steps[i++];
+        _countdownTimer = setTimeout(next, i === steps.length ? 400 : 800);
       }
-    }
-    _countdownTimer = requestAnimationFrame(tick);
+      next();
+    });
   }
 
   function stopCountdown() {
-    if (_countdownTimer) { cancelAnimationFrame(_countdownTimer); _countdownTimer = null; }
+    if (_countdownTimer) { clearTimeout(_countdownTimer); _countdownTimer = null; }
     const cdEl = document.getElementById('wheel-countdown');
     if (cdEl) cdEl.style.display = 'none';
   }
@@ -109,7 +109,8 @@
         // rewind one full rotation back so replay has travel distance
         const replayFrom = _lastSpinDeg - 1440;
         state.rotation = replayFrom;
-        startCountdown(_lastDurationMs);
+        statusEl.textContent = 'Get ready…';
+        await startCountdown();
         statusEl.textContent = 'Replaying…';
         await animateTo(_lastSpinDeg, _lastDurationMs);
         statusEl.textContent = `Winner: ${state.spin?.winnerUsername || ''}`;
@@ -237,10 +238,10 @@
       _lastSpinDeg = Number(d.finalRotationDeg || 0);
       _lastDurationMs = Number(d.durationMs || 7200);
 
+      statusEl.textContent = 'Get ready…';
+      await startCountdown();
       statusEl.textContent = 'Spinning…';
-      startCountdown(_lastDurationMs);
       await animateTo(_lastSpinDeg, _lastDurationMs);
-      stopCountdown();
 
       statusEl.textContent = `🏆 Winner: ${d.winnerUsername}`;
       resultCard.hidden = false;
