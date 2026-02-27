@@ -172,24 +172,31 @@
         
         <div class="rule-item">
           <div class="rule-title">Season Prizes</div>
-          <p style="color:var(--muted);margin:0;">Prize pool = <strong>80% of entry fees</strong></p>
+          <p style="color:var(--muted);margin:0;">Prize pool = <strong>75% of entry fees</strong></p>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.5rem;">
             <div style="text-align:center;background:#0f2a50;padding:.75rem;border-radius:var(--radius-md);">
               <div style="font-size:1.2em;color:#93c5fd;">🥇</div>
               <div style="font-weight:700;">1st Place</div>
-              <div style="color:var(--muted);font-size:.85em;">40%</div>
+              <div style="color:var(--muted);font-size:.85em;">40% of 75%</div>
             </div>
             <div style="text-align:center;background:#0f2a50;padding:.75rem;border-radius:var(--radius-md);">
               <div style="font-size:1.2em;color:#93c5fd;">🥈</div>
               <div style="font-weight:700;">2nd Place</div>
-              <div style="color:var(--muted);font-size:.85em;">25%</div>
+              <div style="color:var(--muted);font-size:.85em;">25% of 75%</div>
             </div>
             <div style="text-align:center;background:#0f2a50;padding:.75rem;border-radius:var(--radius-md);">
               <div style="font-size:1.2em;color:#93c5fd;">🥉</div>
               <div style="font-weight:700;">3rd Place</div>
-              <div style="color:var(--muted);font-size:.85em;">15%</div>
+              <div style="color:var(--muted);font-size:.85em;">15% of 75%</div>
             </div>
           </div>
+        </div>
+
+        <div class="rule-item">
+          <div class="rule-title">🥊 Knockout Competition</div>
+          <p style="color:var(--muted);margin:0;"><strong>5% of entry fees</strong> goes to last player standing</p>
+          <p style="color:var(--muted);font-size:.9em;margin:.25rem 0 0;">Each round: tip correctly on the <strong>first game</strong> or get eliminated</p>
+          <p style="color:var(--muted);font-size:.9em;margin:.25rem 0 0;">Example: 20 entrants × $75 × 5% = <strong>$75 KO prize</strong></p>
         </div>
       </section>
 
@@ -225,6 +232,16 @@
         <details class="rule-item" style="cursor:pointer;">
           <summary style="font-weight:700;color:#93c5fd;">Do byes affect perfect round bonus?</summary>
           <p style="color:var(--muted);margin:.5rem 0 0;">Perfect round bonus only applies to games with results. Bye rounds are excluded from perfect round calculations.</p>
+        </details>
+        
+        <details class="rule-item" style="cursor:pointer;">
+          <summary style="font-weight:700;color:#93c5fd;">How does the Knockout Competition work?</summary>
+          <p style="color:var(--muted);margin:.5rem 0 0;">Each round, you must tip correctly on the <strong>first game</strong>. Wrong tip = elimination. Last player standing wins 5% of all entry fees. Separate from regular season ladder.</p>
+        </details>
+        
+        <details class="rule-item" style="cursor:pointer;">
+          <summary style="font-weight:700;color:#93c5fd;">What if I don't tip the first game in a round?</summary>
+          <p style="color:var(--muted);margin:.5rem 0 0;">No tip = elimination. You must actively tip the first game each round to stay in the KO competition.</p>
         </details>
       </section>
 

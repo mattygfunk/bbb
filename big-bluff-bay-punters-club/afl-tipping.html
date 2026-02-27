@@ -273,6 +273,39 @@
           </div>
         </section>
 
+        <!-- KO Competition section -->
+        <section class="card" style="margin-bottom:1.5rem;border-color:#ef4444;" id="ko-section">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+            <h3 style="margin:0;color:#ef4444;">🥊 Knockout Competition</h3>
+            <span id="ko-status-badge" class="pill" style="background:#3f1d1d;color:#fca5a5;border:1px solid #ef4444;">Active</span>
+            <span id="ko-prize-badge" class="pill" style="background:#1a1000;color:#fbbf24;border:1px solid #f59e0b;margin-left:auto;">Prize: $75</span>
+          </div>
+          
+          <p style="color:var(--muted);font-size:.9em;margin-bottom:.75rem;">
+            <strong style="color:#fff;">Last player standing wins!</strong> Each round, tip correctly on the first game or get eliminated.
+          </p>
+          
+          <div style="display:grid;gap:1rem;" class="responsive-2col">
+            <div>
+              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.25rem;">Still in the fight</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="ko-active-count">—</div>
+              <div id="ko-active-names" style="margin-top:.5rem;color:var(--muted);font-size:.85em;">Loading...</div>
+            </div>
+            
+            <div>
+              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.25rem;">Eliminated</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#ef4444;" id="ko-eliminated-count">—</div>
+              <div id="ko-recent-eliminations" style="margin-top:.5rem;color:var(--muted);font-size:.85em;">Recent eliminations loading...</div>
+            </div>
+          </div>
+          
+          <div id="ko-winner-section" style="display:none;margin-top:1rem;padding:1rem;background:#052e16;border:1px solid #22c55e;border-radius:var(--radius-md);">
+            <div style="color:#4ade80;font-weight:700;margin-bottom:.5rem;">🏆 Knockout Winner!</div>
+            <div style="color:#fff;font-size:1.1em;" id="ko-winner-name">Champion</div>
+            <div style="color:var(--muted);font-size:.85em;" id="ko-winner-prize">Prize: $75</div>
+          </div>
+        </section>
+
         <!-- Nav links -->
         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
           <a href="/afl-tipping/leaderboard" class="btn btn-ghost">🏆 Full Leaderboard</a>

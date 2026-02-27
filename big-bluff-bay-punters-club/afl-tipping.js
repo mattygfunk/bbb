@@ -262,6 +262,7 @@
       renderMiniLeaderboard(data.leaderboard);
       renderJackpot(data.weeklyPot, data.rollover);
       renderPrizes(data.prizes);
+      renderKnockout(data.knockout);
       renderBanter(data.banter, data.currentRound ? data.currentRound.id : null);
 
       // Load jackpot trajectory + last winner async (non-blocking)
@@ -455,6 +456,57 @@
           </div>
         `;
       }
+    }
+  }
+
+  function renderKnockout(knockoutData) {
+    if (!knockoutData) return;
+    
+    const statusBadge = document.getElementById('ko-status-badge');
+    const prizeBadge = document.getElementById('ko-prize-badge');
+    const activeCount = document.getElementById('ko-active-count');
+    const activeNames = document.getElementById('ko-active-names');
+    const eliminatedCount = document.getElementById('ko-eliminated-count');
+    const recentEliminations = document.getElementById('ko-recent-eliminations');
+    const winnerSection = document.getElementById('ko-winner-section');
+    const winnerName = document.getElementById('ko-winner-name');
+    const winnerPrize = document.getElementById('ko-winner-prize');
+    
+    if (statusBadge) statusBadge.textContent = knockoutData.status === 'completed' ? 'Completed' : 'Active';
+    if (prizeBadge) prizeBadge.textContent = `Prize: $${knockoutData.prizePot || 75}`;
+    
+    if (activeCount) activeCount.textContent = knockoutData.activePlayers.length;
+    if (eliminatedCount) eliminatedCount.textContent = knockoutData.totalEliminated;
+    
+    if (activeNames) {
+      const players = knockoutData.activePlayers || [];
+      if (players.length === 0) {
+        activeNames.textContent = 'Competition over';
+      } else if (players.length <= 6) {
+        activeNames.innerHTML = players.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
+      } else {
+        const shown = players.slice(0, 5).map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
+        activeNames.innerHTML = `${shown} <span style="color:var(--muted);">+${players.length - 5} more</span>`;
+      }
+    }
+    
+    if (recentEliminations) {
+      const recent = knockoutData.recentEliminations || [];
+      if (recent.length === 0) {
+        recentEliminations.textContent = 'No eliminations yet';
+      } else {
+        const items = recent.slice(0, 3).map(e => 
+          `${escHtml(e.member)} (${e.roundLabel})`
+        ).join(', ');
+        recentEliminations.innerHTML = items;
+      }
+    }
+    
+    // Show winner if competition is complete
+    if (knockoutData.winner && winnerSection && winnerName && winnerPrize) {
+      winnerSection.style.display = '';
+      winnerName.textContent = knockoutData.winner.member;
+      winnerPrize.textContent = `Prize: $${knockoutData.winner.prize}`;
     }
   }
 

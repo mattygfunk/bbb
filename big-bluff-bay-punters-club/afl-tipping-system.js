@@ -46,6 +46,83 @@ function ensureToolbox(entry, seasonYear) {
   return entry.toolbox;
 }
 
+/**
+ * Process KO eliminations based on first game of a round
+ */
+function processKnockoutEliminations(store, roundId) {
+  const at = ensureAflStore(store);
+  const round = at.rounds.find((r) => r.id === roundId);
+  if (!round || round.status !== 'scored' || !round.games.length) return;
+
+  // Skip if KO already completed
+  if (at.knockout.status === 'completed') return;
+
+  const firstGame = round.games[0];
+  if (!firstGame.result || !firstGame.result.winner) return;
+
+  const correctPick = firstGame.result.winner;
+  const roundLabel = round.label || 'Round';
+
+  // Get current active players (initialize from confirmed entries if first round)
+  if (!at.knockout.activePlayers.length) {
+    const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
+    at.knockout.activePlayers = confirmedEntries.map((e) => e.userId);
+  }
+
+  const newEliminations = [];
+  const remainingPlayers = [];
+
+  for (const userId of at.knockout.activePlayers) {
+    const userTips = round.tips[userId] || [];
+    const firstGameTip = userTips.find((tip) => tip.gameId === firstGame.id);
+    
+    if (!firstGameTip || firstGameTip.pick !== correctPick) {
+      // Player is eliminated
+      const entry = at.entries.find((e) => e.userId === userId);
+      newEliminations.push({
+        userId,
+        member: entry ? entry.member : 'Unknown',
+        roundId,
+        roundLabel,
+        eliminatedAt: Date.now(),
+        incorrectPick: firstGameTip ? firstGameTip.pick : null,
+        correctPick
+      });
+    } else {
+      // Player survives
+      remainingPlayers.push(userId);
+    }
+  }
+
+  // Update knockout state
+  at.knockout.eliminated.push(...newEliminations);
+  at.knockout.activePlayers = remainingPlayers;
+
+  // Check if we have a winner
+  if (remainingPlayers.length === 1) {
+    const winnerId = remainingPlayers[0];
+    const winnerEntry = at.entries.find((e) => e.userId === winnerId);
+    const prizes = calcSeasonPrizes(store);
+    
+    at.knockout.winner = {
+      userId: winnerId,
+      member: winnerEntry ? winnerEntry.member : 'Unknown',
+      wonAt: Date.now(),
+      prize: prizes.knockout
+    };
+    at.knockout.status = 'completed';
+  } else if (remainingPlayers.length === 0) {
+    // No survivors (shouldn't happen, but handle it)
+    at.knockout.status = 'completed';
+  }
+
+  return {
+    eliminated: newEliminations.length,
+    remaining: remainingPlayers.length,
+    winner: at.knockout.winner
+  };
+}
+
 // ── Store bootstrap ───────────────────────────────────────────────────────────
 
 function ensureAflStore(store) {
@@ -58,7 +135,7 @@ function ensureAflStore(store) {
         entryFee: 75,
         weeklyPrizePot: 30,
         status: 'open',
-        prizeStructure: { first: 0.40, second: 0.25, third: 0.15, house: 0.20 },
+        prizeStructure: { first: 0.40, second: 0.25, third: 0.15, knockout: 0.05, house: 0.20 },
         createdAt: Date.now()
       },
       rounds: [],
@@ -66,7 +143,14 @@ function ensureAflStore(store) {
       paymentAudit: [],
       payoutAudit: [],
       weeklyRollover: 0,
-      analytics: { weeklyEngagement: [] }
+      analytics: { weeklyEngagement: [] },
+      knockout: {
+        status: 'active', // 'active' | 'completed'
+        activePlayers: [], // userIds still in competition
+        eliminated: [], // { userId, member, roundId, roundLabel, eliminatedAt }
+        winner: null, // { userId, member, wonAt, prize }
+        startedAt: Date.now()
+      }
     };
   }
   const at = store.aflTipping;
@@ -208,7 +292,10 @@ function scoreRound(store, roundId) {
     scoredAt: Date.now()
   });
 
-  return { roundId, scores, weeklyWinner, payout, rolledOver, newRollover: at.weeklyRollover };
+  // Process KO eliminations based on first game
+  const koResult = processKnockoutEliminations(store, roundId);
+
+  return { roundId, scores, weeklyWinner, payout, rolledOver, newRollover: at.weeklyRollover, knockout: koResult };
 }
 
 // ── Season leaderboard ────────────────────────────────────────────────────────
@@ -297,16 +384,22 @@ function calcSeasonPrizes(store) {
   const at = ensureAflStore(store);
   const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
   const gross = confirmedCount * (at.season.entryFee || 75);
-  const net = gross * 0.80;
   const ps = at.season.prizeStructure;
+  
+  // Calculate allocation percentages
+  const knockoutPrize = Math.round(gross * ps.knockout);
+  const housePortion = Math.round(gross * ps.house);
+  const seasonNet = gross - knockoutPrize - housePortion; // 75% for season prizes
+  
   return {
     confirmedCount,
     gross,
-    net,
-    first: Math.round(net * ps.first),
-    second: Math.round(net * ps.second),
-    third: Math.round(net * ps.third),
-    house: Math.round(gross * ps.house)
+    seasonNet,
+    first: Math.round(seasonNet * ps.first),
+    second: Math.round(seasonNet * ps.second),
+    third: Math.round(seasonNet * ps.third),
+    knockout: knockoutPrize,
+    house: housePortion
   };
 }
 
@@ -484,6 +577,15 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         }
       }
 
+      // KO competition status
+      const koStatus = {
+        status: at.knockout.status,
+        activePlayers: at.knockout.activePlayers.length,
+        totalEliminated: at.knockout.eliminated.length,
+        prizePot: prizes.knockout,
+        winner: at.knockout.winner
+      };
+
       res.json({
         ok: true,
         season: at.season,
@@ -495,6 +597,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         currentRound: roundData,
         leaderboard: maskedLadder,
         banter,
+        knockout: koStatus,
         teams: AFL_TEAMS,
         teamAbbr: AFL_TEAM_ABBR
       });
@@ -659,6 +762,49 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         totalRounds,
         scoredRounds,
         weeklyEngagement: at.analytics.weeklyEngagement
+      });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // GET /api/afl-tipping/knockout
+  app.get('/api/afl-tipping/knockout', (req, res) => {
+    try {
+      const store = readStore();
+      const at = ensureAflStore(store);
+      const caller = tryDecodeToken(req, JWT_SECRET);
+      const prizes = calcSeasonPrizes(store);
+      
+      // Get active player details
+      const activePlayerDetails = at.knockout.activePlayers.map(userId => {
+        const entry = at.entries.find(e => e.userId === userId);
+        return {
+          userId: caller ? userId : null, // Hide userIds from non-logged-in users
+          member: entry ? entry.member : 'Unknown'
+        };
+      });
+
+      // Get recent eliminations (last 5)
+      const recentEliminations = at.knockout.eliminated
+        .slice(-5)
+        .reverse()
+        .map(elim => ({
+          member: elim.member,
+          roundLabel: elim.roundLabel,
+          incorrectPick: elim.incorrectPick,
+          correctPick: elim.correctPick
+        }));
+
+      res.json({
+        ok: true,
+        status: at.knockout.status,
+        activePlayers: activePlayerDetails,
+        totalEliminated: at.knockout.eliminated.length,
+        recentEliminations,
+        prizePot: prizes.knockout,
+        winner: at.knockout.winner,
+        startedAt: at.knockout.startedAt
       });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
