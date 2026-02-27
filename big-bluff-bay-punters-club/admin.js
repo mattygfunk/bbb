@@ -940,9 +940,7 @@ async function refreshClaims(){
           : `<span style="color:#fbbf24;">⏳ pending</span>`;
       const actionBtn = isPaid
         ? `<span style="color:var(--muted);font-size:.85em;">Done</span>`
-        : isNotClaimed
-          ? `<button class='btn btn-ghost' style="opacity:.5;" disabled>No claim</button>`
-          : `<button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}'>Mark Paid</button>`;
+        : `<button class='btn btn-ghost' data-claim-id='${encodeURIComponent(String(c.id||''))}' data-member='${encodeURIComponent(String(c.member||''))}' data-amount='${Number(c.amount||0)}' data-note='${encodeURIComponent(String(c.note||''))}' data-admin-create='${isNotClaimed ? '1' : ''}'>Mark Paid</button>`;
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${esc(c.member||'-')}</td><td>$${Number(c.amount||0).toFixed(2)}</td><td>${statusPill}</td><td>${actionBtn}</td>`;
       body.appendChild(tr);
@@ -950,10 +948,15 @@ async function refreshClaims(){
     body.querySelectorAll('button[data-claim-id]').forEach((btn)=>{
       btn.addEventListener('click', async ()=>{
         try {
-          const claimId = decodeURIComponent(btn.dataset.claimId || '');
+          let claimId = decodeURIComponent(btn.dataset.claimId || '');
           const member = decodeURIComponent(btn.dataset.member || '');
           const amount = Number(btn.dataset.amount || 0) || 20;
           const reference = decodeURIComponent(btn.dataset.note || '');
+          // If no claim exists yet, create one on behalf of the member first
+          if (btn.dataset.adminCreate === '1' || !claimId) {
+            const created = await req(withTrack(API.puntersClaims), { method:'POST', body: JSON.stringify({ member, amount, trackId: state.trackId, adminOverride: true })});
+            claimId = created?.claim?.id || '';
+          }
           await req(withTrack(API.puntersVerifyPayment), { method:'POST', body: JSON.stringify({ claimId, member, amount, reference, trackId: state.trackId })});
           $('punters-payment-msg').textContent = 'Claim verified and jackpot eligibility updated.';
           await refresh();

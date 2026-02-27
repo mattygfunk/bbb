@@ -3981,14 +3981,18 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
     if (!openRound && !adminOverride) {
       return res.status(403).json({ error: 'Round finished ✅. Upgrade/payment claims are closed for this round.' });
     }
+    // Admin can create a claim on behalf of any member
+    const memberName = adminOverride && req.body?.member
+      ? String(req.body.member).trim()
+      : req.user.username;
     const claim = {
       id: crypto.randomUUID(),
-      member: req.user.username,
+      member: memberName,
       trackId,
       roundId: String(req.body?.roundId || openRound?.id || ''),
-      amount: Number(req.body?.amount || 0),
+      amount: Number(req.body?.amount || openRound?.entryFee || store.entryFee || 20),
       status: 'pending',
-      note: String(req.body?.note || '').slice(0, 180),
+      note: String(req.body?.note || (adminOverride ? 'admin-created' : '')).slice(0, 180),
       createdAt: Date.now()
     };
     store.puntersClub.claims.unshift(claim);
