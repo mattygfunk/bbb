@@ -608,14 +608,15 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       }
 
       // KO competition status (with fallbacks)
-      const ko = at.knockout || {};
-      const koStatus = {
-        status: ko.status || 'active',
+      const koArray = Array.isArray(at.knockout) ? at.knockout : [];
+      const koStatus = koArray.map(ko => ({
+        id: ko.id,
+        name: ko.name,
+        status: ko.status || 'pending',
         activePlayers: ko.activePlayers ? ko.activePlayers.length : 0,
         totalEliminated: ko.eliminated ? ko.eliminated.length : 0,
-        prizePot: prizes.knockout || 75,
         winner: ko.winner || null
-      };
+      }));
 
       res.json({
         ok: true,
@@ -628,11 +629,12 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         currentRound: roundData,
         leaderboard: maskedLadder,
         banter,
-        knockout: koStatus,
+        knockout: koStatus, // Return array of KO statuses
         teams: AFL_TEAMS,
         teamAbbr: AFL_TEAM_ABBR
       });
     } catch (err) {
+      console.error("!!! SERVER ERROR in /api/afl-tipping/overview:", err);
       res.status(500).json({ ok: false, error: err.message });
     }
   });
@@ -691,6 +693,8 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const prizes = calcSeasonPrizes(store);
       const scoredRounds = at.rounds.filter((r) => r.status === 'scored');
       const latestRound = scoredRounds[scoredRounds.length - 1] || null;
+      const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
+      const weeklyPot = (confirmedCount * (at.season.weeklyPrizePerUser || 1)) + (at.weeklyRollover || 0);
 
       // Weekly breakdown for latest round
       let weeklyBreakdown = [];
@@ -707,7 +711,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         latestRound: latestRound ? { id: latestRound.id, label: latestRound.label, roundNumber: latestRound.roundNumber } : null,
         prizes,
         rollover: at.weeklyRollover || 0,
-        weeklyPot: (at.season.weeklyPrizePot || 30) + (at.weeklyRollover || 0)
+        weeklyPot
       });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
