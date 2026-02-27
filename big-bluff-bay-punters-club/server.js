@@ -4069,49 +4069,42 @@ This link expires in 30 minutes. If you did not request this, ignore this email.
       if (key && !tippersMap.has(key)) tippersMap.set(key, String(t.member || '').trim());
     }
 
-    // Index existing claims for this round by member (lower-cased)
-    // Only include claims that belong to the current open round
+    // Get claims that strictly belong to the current open round only
     const existingClaims = (store.puntersClub?.claims || []).filter((c) => {
       if (normalizeTrackId(c.trackId) !== trackId) return false;
-      // If there's a current round, require the claim to match it (or have no roundId only if very recent — same session)
-      if (currentRoundId) {
-        if (c.roundId && c.roundId !== currentRoundId) return false;
-        if (!c.roundId) return false; // old claim with no roundId — exclude
-      }
-      return true;
+      if (!currentRoundId) return false; // no open round — nothing to show
+      return c.roundId === currentRoundId; // must exactly match current round
     });
-    const claimsByMember = new Map();
+
+    // Deduplicate to one claim per member — paid > pending > voided
+    const statusRank = { paid: 0, pending: 1, voided: 2 };
+    const bestClaimByMember = new Map();
     for (const c of existingClaims) {
       const key = String(c.member || '').trim().toLowerCase();
-      if (!claimsByMember.has(key)) claimsByMember.set(key, []);
-      claimsByMember.get(key).push(c);
+      if (!key) continue;
+      const existing = bestClaimByMember.get(key);
+      if (!existing || (statusRank[c.status] ?? 9) < (statusRank[existing.status] ?? 9)) {
+        bestClaimByMember.set(key, c);
+      }
     }
 
-    // Merge: every tipper gets at least one row; use their claim if it exists, else synthetic pending row
+    // Merge: every tipper this round gets exactly one row
     const claims = [];
     for (const [key, member] of tippersMap) {
-      if (claimsByMember.has(key)) {
-        claims.push(...claimsByMember.get(key));
+      if (bestClaimByMember.has(key)) {
+        claims.push(bestClaimByMember.get(key));
       } else {
-        // Synthetic row — no claim submitted yet
         claims.push({
-          id: null,
-          member,
-          trackId,
+          id: null, member, trackId,
           roundId: currentRoundId,
           amount: roundEntryFee,
           status: 'not-claimed',
-          note: '',
-          createdAt: null
+          note: '', createdAt: null
         });
       }
     }
 
-    // Also include any admin-injected claims (no member field)
-    for (const c of existingClaims.filter((c) => !c.member)) claims.push(c);
-
     claims.sort((a, b) => String(a.member || '').localeCompare(String(b.member || '')));
-
     return res.json({ trackId, claims });
   });
 
