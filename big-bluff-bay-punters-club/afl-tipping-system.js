@@ -417,28 +417,61 @@ function buildSeasonLeaderboard(store) {
 function calcSeasonPrizes(store) {
   const at = ensureAflStore(store);
   const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
-  const gross = confirmedCount * (at.season.entryFee || 100);
+  const entryFee = at.season.entryFee || 75;
+  const gross = confirmedCount * entryFee;
   const ps = at.season.prizeStructure || {};
-  const lp = ps.leaderboardPayout || { first: 0.50, second: 0.30, third: 0.20 };
 
-  const seasonLeaderboardPool = gross * (ps.seasonLeaderboard || 0.695);
-  const knockoutPool = gross * (ps.knockout || 0.075);
-  const weeklyPool = gross * (ps.weeklyPot || 0.23);
+  // Fixed per-comp KO prize (default $75 each, 2 comps)
+  const knockoutEach = at.season.knockoutPrizeFixed || 75;
+  const knockoutCount = Array.isArray(at.knockout) ? at.knockout.length : 2;
+  const knockoutTotal = knockoutEach * knockoutCount;
 
-  // Fixed $75 prize per KO competition if set in season config, otherwise derive from pool
-  const knockoutEach = at.season.knockoutPrizeFixed || (knockoutPool / 2);
+  // Fixed weekly jackpot base (default $30/round)
+  const weeklyBase = at.season.weeklyPrizePot || 30;
+
+  // Season leaderboard pool = gross minus fixed KO and weekly prizes
+  // If store has explicit leaderboard percentages use them; otherwise take what's left
+  let seasonLeaderboardPool;
+  if (ps.seasonLeaderboard) {
+    seasonLeaderboardPool = gross * ps.seasonLeaderboard;
+  } else {
+    // Use first+second+third as fractions of gross (store structure: { first, second, third, house })
+    const leaderboardFraction = (ps.first || 0.4) + (ps.second || 0.25) + (ps.third || 0.15);
+    seasonLeaderboardPool = gross * leaderboardFraction;
+  }
+
+  // Per-place amounts
+  const lp = ps.leaderboardPayout || {};
+  let first, second, third;
+  if (lp.first) {
+    // New-style: fractions of seasonLeaderboardPool
+    first = seasonLeaderboardPool * lp.first;
+    second = seasonLeaderboardPool * lp.second;
+    third = seasonLeaderboardPool * lp.third;
+  } else {
+    // Old-style: fractions directly off gross
+    first  = gross * (ps.first  || 0.4);
+    second = gross * (ps.second || 0.25);
+    third  = gross * (ps.third  || 0.15);
+    seasonLeaderboardPool = first + second + third;
+  }
+
+  const totalPrizePool = seasonLeaderboardPool + knockoutTotal + weeklyBase;
 
   return {
     confirmedCount,
+    entryFee,
     gross,
     seasonLeaderboardPool,
-    knockoutPool,
-    weeklyPool,
-    first: seasonLeaderboardPool * lp.first,
-    second: seasonLeaderboardPool * lp.second,
-    third: seasonLeaderboardPool * lp.third,
-    knockoutTotal: knockoutPool,
-    knockoutEach
+    knockoutPool: knockoutTotal,
+    knockoutTotal,
+    knockoutEach,
+    weeklyBase,
+    weeklyPool: weeklyBase,
+    first,
+    second,
+    third,
+    totalPrizePool
   };
 }
 

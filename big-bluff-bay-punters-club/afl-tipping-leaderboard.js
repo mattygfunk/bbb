@@ -140,13 +140,38 @@
       
       setText('stat-entrants', prizes.confirmedCount || 0);
       setText('stat-season-pot', fmtMoney(prizes.seasonLeaderboardPool || 0));
-      setText('stat-weekly-pot', fmtMoney(data.weeklyPot || (prizes.confirmedCount || 0) * 1)); // Use data.weeklyPot or calculate from users
+      setText('stat-weekly-pot', fmtMoney(data.weeklyPot || prizes.weeklyBase || 0));
       setText('stat-rollover', fmtMoney(data.rollover || 0));
-      
-      // Correctly display top-heavy prizes
+
+      // Season leaderboard prizes
       setText('prize-1st', fmtMoney(prizes.first || 0));
       setText('prize-2nd', fmtMoney(prizes.second || 0));
       setText('prize-3rd', fmtMoney(prizes.third || 0));
+
+      // Weekly jackpot
+      setText('prize-weekly-base', fmtMoney(prizes.weeklyBase || 0));
+      const rolloverEl = document.getElementById('prize-weekly-rollover');
+      if (rolloverEl) {
+        const rollover = data.rollover || 0;
+        rolloverEl.style.display = rollover > 0 ? '' : 'none';
+        rolloverEl.textContent = rollover > 0 ? `🔄 +${fmtMoney(rollover)} rollover this week` : '';
+      }
+
+      // KO competitions
+      setText('prize-ko-each', fmtMoney(prizes.knockoutEach || 0));
+
+      // Prize pool summary line
+      const n = prizes.confirmedCount || 0;
+      const fee = prizes.entryFee || 75;
+      const summaryEl = document.getElementById('prize-pool-summary');
+      if (summaryEl) {
+        summaryEl.textContent = `${n} confirmed ${n === 1 ? 'entry' : 'entries'} × $${fee} = ${fmtMoney(prizes.gross || 0)} gross pool — split across season leaderboard, weekly jackpots, and 2 KO competitions.`;
+      }
+
+      // Total
+      setText('prize-total', fmtMoney(prizes.totalPrizePool || prizes.gross || 0));
+      const totalEntrantsEl = document.getElementById('prize-total-entrants');
+      if (totalEntrantsEl) totalEntrantsEl.textContent = n > 0 ? `across ${n} ${n === 1 ? 'entrant' : 'entrants'}` : '';
 
       renderLadder();
       renderWeeklyBreakdown(data);
