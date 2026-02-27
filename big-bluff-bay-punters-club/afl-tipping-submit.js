@@ -94,13 +94,28 @@
     }
     
     const firstGame = games[0]; // First game of the round
-    const now = Date.now();
-    const locked = now >= firstGame.kickoff;
+    if (!firstGame) {
+      section.style.display = 'none';
+      return;
+    }
     
+    const now = Date.now();
+    const kickoff = firstGame.kickoff || 0;
+    const locked = now >= kickoff;
     section.style.display = '';
     
-    if (teamsEl) teamsEl.textContent = `${firstGame.homeTeam} vs ${firstGame.awayTeam}`;
-    if (timeEl) timeEl.textContent = `Kickoff: ${fmtDate(firstGame.kickoff)}`;
+    if (teamsEl) {
+      const homeTeam = firstGame.homeTeam || 'TBD';
+      const awayTeam = firstGame.awayTeam || 'TBD';
+      teamsEl.textContent = `${homeTeam} vs ${awayTeam}`;
+    }
+    if (timeEl) {
+      try {
+        timeEl.textContent = kickoff ? `Kickoff: ${fmtDate(kickoff)}` : 'Kickoff: TBD';
+      } catch (e) {
+        timeEl.textContent = 'Kickoff: TBD';
+      }
+    }
     
     if (inputEl) {
       inputEl.value = existingMargin || marginPrediction || '';
