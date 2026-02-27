@@ -138,7 +138,7 @@
       const prizes = data.prizes || {};
       const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       setText('stat-entrants', prizes.confirmedCount || 0);
-      setText('stat-season-pot', fmtMoney(prizes.gross || 0));
+      setText('stat-season-pot', fmtMoney(prizes.seasonLeaderboardPool || 0));
       setText('stat-weekly-pot', fmtMoney(data.weeklyPot || 0));
       setText('stat-rollover', fmtMoney(data.rollover || 0));
       setText('prize-1st', fmtMoney(prizes.first || 0));
