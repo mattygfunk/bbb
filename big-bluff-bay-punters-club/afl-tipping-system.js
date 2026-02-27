@@ -589,7 +589,8 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
 
       const prizes = calcSeasonPrizes(store);
       const rollover = at.weeklyRollover || 0;
-      const weeklyPot = (at.season.weeklyPrizePot || 30) + rollover;
+      const confirmedCount = at.entries.filter((e) => e.status === 'confirmed').length;
+      const weeklyPot = (confirmedCount * (at.season.weeklyPrizePerUser || 1)) + rollover;
 
       // Banter for current round
       let banter = [];
