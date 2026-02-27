@@ -262,7 +262,7 @@
       renderMiniLeaderboard(data.leaderboard);
       renderJackpot(data.weeklyPot, data.rollover);
       renderPrizes(data.prizes);
-      renderKnockout(data.knockout);
+      renderKnockout(data.knockout, data.prizes);
       renderBanter(data.banter, data.currentRound ? data.currentRound.id : null);
 
       // Load jackpot trajectory + last winner async (non-blocking)
@@ -469,66 +469,59 @@
     }
   }
 
-  function renderKnockout(knockoutData) {
-    const statusBadge = document.getElementById('ko-status-badge');
-    const prizeBadge = document.getElementById('ko-prize-badge');
-    const activeCount = document.getElementById('ko-active-count');
-    const activeNames = document.getElementById('ko-active-names');
-    const eliminatedCount = document.getElementById('ko-eliminated-count');
-    const recentEliminations = document.getElementById('ko-recent-eliminations');
-    const winnerSection = document.getElementById('ko-winner-section');
-    const winnerName = document.getElementById('ko-winner-name');
-    const winnerPrize = document.getElementById('ko-winner-prize');
-    
-    if (!knockoutData) {
-      // Fallback display when no data
-      if (statusBadge) statusBadge.textContent = 'Loading...';
-      if (prizeBadge) prizeBadge.textContent = 'Prize: $75';
-      if (activeCount) activeCount.textContent = '—';
-      if (eliminatedCount) eliminatedCount.textContent = '—';
-      if (activeNames) activeNames.textContent = 'Loading...';
-      if (recentEliminations) recentEliminations.textContent = 'No data yet';
-      return;
-    }
-    
-    if (statusBadge) statusBadge.textContent = knockoutData.status === 'completed' ? 'Completed' : 'Active';
-    if (prizeBadge) prizeBadge.textContent = `Prize: $${knockoutData.prizePot || 75}`;
-    
-    if (activeCount) activeCount.textContent = knockoutData.activePlayers ? knockoutData.activePlayers.length : 0;
-    if (eliminatedCount) eliminatedCount.textContent = knockoutData.totalEliminated || 0;
-    
-    if (activeNames) {
-      const players = knockoutData.activePlayers || [];
-      if (players.length === 0) {
-        activeNames.textContent = knockoutData.status === 'completed' ? 'Competition over' : 'Starting soon...';
-      } else if (players.length <= 6) {
-        activeNames.innerHTML = players.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member || 'Unknown')}</span>`).join(', ');
+  function renderKnockout(knockoutData, prizes) {
+    const container = document.getElementById('ko-competitions-container');
+    if (!container || !Array.isArray(knockoutData)) return;
+
+    const koPrizeEach = prizes?.knockoutEach || 0;
+
+    container.innerHTML = knockoutData.map(ko => {
+      const activePlayers = ko.activePlayers || [];
+      const eliminatedCount = ko.totalEliminated || 0;
+      const winner = ko.winner;
+      
+      let activeNamesHTML = '';
+      if (activePlayers.length === 0) {
+        activeNamesHTML = 'Competition over';
+      } else if (activePlayers.length <= 4) {
+        activeNamesHTML = activePlayers.map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
       } else {
-        const shown = players.slice(0, 5).map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member || 'Unknown')}</span>`).join(', ');
-        activeNames.innerHTML = `${shown} <span style="color:var(--muted);">+${players.length - 5} more</span>`;
+        const shown = activePlayers.slice(0, 3).map(p => `<span style="color:#4ade80;font-weight:600;">${escHtml(p.member)}</span>`).join(', ');
+        activeNamesHTML = `${shown} <span style="color:var(--muted);">+${activePlayers.length - 3} more</span>`;
       }
-    }
-    
-    if (recentEliminations) {
-      const recent = knockoutData.recentEliminations || [];
-      if (recent.length === 0) {
-        recentEliminations.textContent = 'No eliminations yet';
-      } else {
-        const items = recent.slice(0, 3).map(e => 
-          `${escHtml(e.member || 'Unknown')} (${escHtml(e.roundLabel || 'Unknown round')})`
-        ).join(', ');
-        recentEliminations.innerHTML = items;
-      }
-    }
-    
-    // Show winner if competition is complete
-    if (knockoutData.winner && winnerSection && winnerName && winnerPrize) {
-      winnerSection.style.display = '';
-      winnerName.textContent = knockoutData.winner.member || 'Unknown';
-      winnerPrize.textContent = `Prize: $${knockoutData.winner.prize || knockoutData.prizePot || 75}`;
-    } else if (winnerSection) {
-      winnerSection.style.display = 'none';
-    }
+      
+      const winnerHTML = winner ? `
+        <div style="margin-top:1rem;padding:1rem;background:#052e16;border:1px solid #22c55e;border-radius:var(--radius-md);">
+          <div style="color:#4ade80;font-weight:700;margin-bottom:.5rem;">🏆 Winner!</div>
+          <div style="color:#fff;font-size:1.1em;">${escHtml(winner.member)}</div>
+          <div style="color:var(--muted);font-size:.85em;">Prize: ${fmtMoney(winner.prize)}</div>
+        </div>` : '';
+        
+      return `
+        <div class="card" style="flex:1;min-width:280px;">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+            <h4 style="margin:0;color:#ef4444;">${escHtml(ko.name)}</h4>
+            <span class="pill" style="background:#3f1d1d;color:#fca5a5;border:1px solid #ef4444;">${ko.status === 'completed' ? 'Completed' : 'Active'}</span>
+            <span class="pill" style="background:#1a1000;color:#fbbf24;border:1px solid #f59e0b;margin-left:auto;">Prize: ${fmtMoney(koPrizeEach)}</span>
+          </div>
+          <p style="color:var(--muted);font-size:.82em;margin:-.25rem 0 .75rem;">
+            Uses <strong>game ${ko.id}</strong> of each round. Tip incorrectly and you're out.
+          </p>
+          <div style="display:grid;gap:1rem;" class="responsive-2col">
+            <div>
+              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.25rem;">Active</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#4ade80;">${activePlayers.length}</div>
+              <div style="margin-top:.5rem;color:var(--muted);font-size:.85em;">${activeNamesHTML}</div>
+            </div>
+            <div>
+              <div style="color:var(--muted);font-size:.8rem;margin-bottom:.25rem;">Eliminated</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#ef4444;">${eliminatedCount}</div>
+            </div>
+          </div>
+          ${winnerHTML}
+        </div>
+      `;
+    }).join('');
   }
 
   async function init() {
