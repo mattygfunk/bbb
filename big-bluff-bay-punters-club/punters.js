@@ -554,7 +554,7 @@ function renderUpgradeButtonState(){
     return;
   }
   if(state.isJackpotEligible){
-    btn.textContent = 'You're in ✅';
+    btn.textContent = "You're in ✅";
     btn.disabled = true;
     btn.classList.add('btn-ghost');
     return;
@@ -630,113 +630,180 @@ function getCurrentRoundPoolText() {
 }
 
 function generateWinningScenarios({ userName, userPoints, ladderRows, tipsFeed, raceResults, raceCount }) {
-  const items = []; // { text, type: 'good'|'warn'|'bad'|'info' }
+  const items = [];
 
-  const allRaces = [];
-  for (let i = 1; i <= (raceCount || 12); i++) allRaces.push(`R${i}`);
+  const totalRaces = raceCount || 12;
+  const allRaces = Array.from({ length: totalRaces }, (_, i) => `R${i + 1}`);
 
+  // Settled races = have at least one placed runner
   const settled = new Set(
     Object.entries(raceResults || {})
-      .filter(([, rr]) => (rr?.first?.length || rr?.second?.length || rr?.third?.length))
-      .map(([r]) => String(r).toUpperCase())
+      .filter(([, rr]) => rr?.first?.length || rr?.second?.length || rr?.third?.length)
+      .map(([r]) => r.toUpperCase())
   );
   const remaining = allRaces.filter(r => !settled.has(r));
-  const maxPerRace = 3;
-  const maxGain = remaining.length * maxPerRace;
+  const maxGain = remaining.length * 3; // max 3 pts per remaining race
 
-  // Build picks map: member -> race -> selection
-  const picks = {};
+  // Build picks: member (original case) -> race -> selection
+  const picksRaw = {};
   for (const tip of (tipsFeed || [])) {
     const m = String(tip.member || '').trim();
     const r = String(tip.race || '').toUpperCase();
     if (!m || !r) continue;
-    if (!picks[m]) picks[m] = {};
-    picks[m][r] = String(tip.selection || '').trim();
+    if (!picksRaw[m]) picksRaw[m] = {};
+    picksRaw[m][r] = String(tip.selection || '').trim();
   }
+  // Normalised lower-case lookup
+  const picks = {};
+  for (const [m, raceMap] of Object.entries(picksRaw)) picks[m.toLowerCase()] = raceMap;
 
   const me = String(userName || '').toLowerCase();
-  const myPicks = Object.fromEntries(
-    Object.entries(picks).find(([k]) => k.toLowerCase() === me)?.[1] || []
-  );
 
-  const ladder = (ladderRows || []).map(r => ({ ...r, pts: Number(r.points || 0) }));
+  // Build ladder with max-possible totals
+  const ladder = (ladderRows || []).map(r => {
+    const pts = Number(r.points || 0);
+    return { ...r, pts, maxTotal: pts + maxGain };
+  }).sort((a, b) => b.pts - a.pts);
+
   const myRow = ladder.find(r => String(r.member || '').toLowerCase() === me);
-  const myPts = myRow ? myRow.pts : Number(userPoints || 0);
+  const myPts = myRow?.pts ?? Number(userPoints || 0);
   const myMaxTotal = myPts + maxGain;
 
-  // — Position summary —
   if (!myRow) {
     items.push({ text: 'Submit tips to join the leaderboard.', type: 'info' });
     return items;
   }
 
-  const leaderPts = ladder[0]?.pts ?? myPts;
+  // True leader = highest current pts (among those who can still be caught or are leading)
+  const leaderRow = ladder[0];
+  const leaderPts = leaderRow?.pts ?? myPts;
   const gap = leaderPts - myPts;
-  const rank = myRow.rank || '?';
+  const rank = myRow.rank ?? (ladder.findIndex(r => String(r.member||'').toLowerCase() === me) + 1);
+  const racesLeft = remaining.length;
+  const racesDone = settled.size;
 
-  if (gap <= 0) {
-    items.push({ text: `You're leading with ${myPts} pts — hold the line.`, type: 'good' });
+  // ── 1. My status headline ─────────────────────────────────────────
+  if (gap <= 0 && rank === 1) {
+    if (racesLeft === 0) {
+      items.push({ text: `🏆 You won the round with ${myPts} pts!`, type: 'good' });
+    } else {
+      items.push({ text: `Leading with ${myPts} pts — ${racesLeft} races left. Stay consistent.`, type: 'good' });
+    }
   } else if (myMaxTotal < leaderPts) {
-    items.push({ text: `Eliminated — even with ${maxGain} pts perfect remaining you can't reach the leader (${leaderPts} pts).`, type: 'bad' });
+    items.push({ text: `Mathematically eliminated — max possible (${myMaxTotal} pts) can't reach the leader's current ${leaderPts} pts.`, type: 'bad' });
   } else if (myMaxTotal === leaderPts) {
-    items.push({ text: `Can tie for 1st but can't win outright — you need ${gap} pts but leader has more wins as a tiebreaker.`, type: 'warn' });
+    items.push({ text: `Can tie for 1st at best — need a perfect run (${maxGain} pts) just to draw with the leader.`, type: 'warn' });
+  } else if (gap === 0) {
+    items.push({ text: `Tied for the lead with ${myPts} pts — ${racesLeft} races left. Win tiebreaker counts next.`, type: 'warn' });
   } else {
-    items.push({ text: `Rank ${rank} · ${myPts} pts · ${gap} pts off the lead · ${remaining.length} races to go.`, type: gap <= 3 ? 'good' : 'warn' });
+    const type = gap <= 3 ? 'warn' : gap <= 6 ? 'warn' : 'bad';
+    items.push({ text: `Rank ${rank} · ${myPts} pts · ${gap} behind the lead · ${racesLeft} races left · max gain ${maxGain} pts.`, type });
   }
 
-  // — Race-by-race remaining analysis —
-  for (const race of remaining.slice(0, 4)) {
+  // ── 2. Full field — who's eliminated, who can only tie ───────────
+  const othersEliminated = ladder.filter(r => {
+    if (String(r.member||'').toLowerCase() === me) return false;
+    return r.maxTotal < leaderPts;
+  });
+  const othersCanOnlyTie = ladder.filter(r => {
+    if (String(r.member||'').toLowerCase() === me) return false;
+    if (r.rank === 1) return false;
+    return r.maxTotal === leaderPts;
+  });
+  const realContenders = ladder.filter(r => {
+    if (String(r.member||'').toLowerCase() === me) return false;
+    return r.maxTotal > leaderPts;
+  });
+
+  if (racesDone > 0) {
+    if (othersEliminated.length > 0) {
+      items.push({
+        text: `Eliminated from winning: ${othersEliminated.map(r => r.member).join(', ')} — can't catch the leader.`,
+        type: 'info'
+      });
+    }
+    if (othersCanOnlyTie.length > 0) {
+      items.push({
+        text: `Can tie but not win outright: ${othersCanOnlyTie.map(r => r.member).join(', ')}.`,
+        type: 'info'
+      });
+    }
+    if (realContenders.length > 0 && gap > 0) {
+      items.push({
+        text: `Still live contenders: ${realContenders.map(r => `${r.member} (${r.pts} pts)`).join(', ')}.`,
+        type: 'warn'
+      });
+    }
+  }
+
+  // ── 3. Next few races — pick collision analysis ───────────────────
+  const myPicks = picks[me] || {};
+  let raceItemCount = 0;
+  for (const race of remaining) {
+    if (raceItemCount >= 3) break;
     const myPick = myPicks[race];
     if (!myPick) {
-      items.push({ text: `${race}: no pick submitted — you'll get 0 pts regardless.`, type: 'bad' });
+      items.push({ text: `${race}: no tip submitted — you score 0 pts here no matter what.`, type: 'bad' });
+      raceItemCount++;
       continue;
     }
-    // How many others picked the same runner?
-    const samePickMembers = ladder
-      .filter(r => String(r.member || '').toLowerCase() !== me)
-      .filter(r => picks[r.member]?.[race] === myPick)
+
+    // Everyone else above me who has a different pick — this race can close the gap
+    const aheadDiffPick = ladder
+      .filter(r => r.pts > myPts && String(r.member||'').toLowerCase() !== me)
+      .filter(r => picks[String(r.member||'').toLowerCase()]?.[race] && picks[String(r.member||'').toLowerCase()][race] !== myPick);
+
+    // Everyone who picked the same as me — we move together, no relative gain/loss
+    const samePick = ladder
+      .filter(r => String(r.member||'').toLowerCase() !== me)
+      .filter(r => picks[String(r.member||'').toLowerCase()]?.[race] === myPick)
       .map(r => r.member);
 
-    // How many leaders picked differently — meaning this race could close the gap
-    const leadersWithDiffPick = ladder.slice(0, 3)
-      .filter(r => String(r.member || '').toLowerCase() !== me)
-      .filter(r => picks[r.member]?.[race] && picks[r.member][race] !== myPick);
+    const allFieldPicks = ladder
+      .filter(r => String(r.member||'').toLowerCase() !== me && picks[String(r.member||'').toLowerCase()]?.[race]);
+    const uniqueInField = allFieldPicks.every(r => picks[String(r.member||'').toLowerCase()]?.[race] !== myPick);
 
-    if (leadersWithDiffPick.length > 0 && samePickMembers.length === 0) {
-      items.push({ text: `${race} #${myPick}: your pick differs from the top 3 — a win here swings the gap in your favour.`, type: 'good' });
-    } else if (samePickMembers.length >= 3) {
-      items.push({ text: `${race} #${myPick}: shared with ${samePickMembers.length} others — no ladder movement regardless of result.`, type: 'info' });
-    } else if (samePickMembers.length > 0) {
-      items.push({ text: `${race} #${myPick}: shared with ${samePickMembers.map(m => m).join(', ')} — gap locked with them this race.`, type: 'info' });
+    if (aheadDiffPick.length > 0 && samePick.length === 0) {
+      items.push({
+        text: `${race} #${myPick}: leaders ${aheadDiffPick.map(r=>r.member).join(', ')} picked differently — if your runner places you close the gap.`,
+        type: 'good'
+      });
+    } else if (samePick.length > 0 && aheadDiffPick.length === 0) {
+      const sameNames = samePick.slice(0, 3).join(', ') + (samePick.length > 3 ? ` +${samePick.length-3}` : '');
+      items.push({
+        text: `${race} #${myPick}: same pick as ${sameNames} — no relative movement between you regardless of result.`,
+        type: 'info'
+      });
+    } else if (uniqueInField) {
+      items.push({
+        text: `${race} #${myPick}: nobody else in the field picked this — a place finish here is yours alone.`,
+        type: 'good'
+      });
+    } else if (aheadDiffPick.length > 0) {
+      const sameNames = samePick.slice(0, 2).join(', ');
+      items.push({
+        text: `${race} #${myPick}: shared with ${sameNames || 'some'}, but leaders picked differently — mixed swing potential.`,
+        type: 'warn'
+      });
     } else {
-      items.push({ text: `${race} #${myPick}: unique pick among the field — full swing potential.`, type: 'good' });
+      items.push({
+        text: `${race} #${myPick}: shared pick with part of the field — minor swing potential.`,
+        type: 'info'
+      });
     }
+    raceItemCount++;
   }
 
-  // — Who else is in danger / eliminated —
-  const eliminated = ladder.filter(r => {
-    const theirPts = r.pts;
-    return theirPts + maxGain < leaderPts && String(r.member || '').toLowerCase() !== me;
-  });
-  const canOnlyTie = ladder.filter(r => {
-    const theirPts = r.pts;
-    return theirPts + maxGain === leaderPts && String(r.member || '').toLowerCase() !== me && r.rank > 1;
-  });
-
-  if (eliminated.length > 0) {
-    items.push({ text: `Mathematically eliminated: ${eliminated.map(r => r.member).join(', ')} — can't catch the leader.`, type: 'info' });
-  }
-  if (canOnlyTie.length > 0) {
-    items.push({ text: `Can only tie (not win outright): ${canOnlyTie.map(r => r.member).join(', ')}.`, type: 'info' });
+  // ── 4. Cluster pressure ───────────────────────────────────────────
+  const within2 = ladder.filter(r => Math.abs(r.pts - myPts) <= 2 && String(r.member||'').toLowerCase() !== me);
+  if (within2.length >= 2 && racesLeft > 0) {
+    items.push({
+      text: `${within2.length} players within 2 pts of you (${within2.map(r=>`${r.member} ${r.pts}`).join(', ')}) — every race is a tiebreaker.`,
+      type: 'warn'
+    });
   }
 
-  // — Tight cluster warning —
-  const within2 = ladder.filter(r => Math.abs(r.pts - myPts) <= 2 && String(r.member || '').toLowerCase() !== me);
-  if (within2.length >= 3) {
-    items.push({ text: `${within2.length} players within 2 pts of you — every race counts.`, type: 'warn' });
-  }
-
-  return items.slice(0, 8);
+  return items.slice(0, 9);
 }
 
 function renderMemberCockpit(data = {}) {
@@ -745,9 +812,8 @@ function renderMemberCockpit(data = {}) {
   if (!wrap || !scen) return;
 
   const betweenRounds = state.roundPhase === 'BETWEEN_ROUNDS';
-  const roundClosed = state.roundStatus !== 'OPEN';
 
-  if (!state.user || betweenRounds || roundClosed) {
+  if (!state.user || betweenRounds) {
     wrap.hidden = true;
     scen.hidden = true;
     return;
@@ -857,7 +923,7 @@ function renderPuntersViewState() {
   if (!title || !copy || !cta) return;
 
   if (!state.user) {
-    title.textContent = 'Join this week's round';
+    title.textContent = "Join this week's round";
     copy.textContent = 'Register or log in once, then submit tips and track your leaderboard position.';
     cta.textContent = 'Register / Log In';
     cta.href = '/punters.html#punters-login-gate';
@@ -875,7 +941,7 @@ function renderPuntersViewState() {
   }
 
   if (state.existingByRace.size === 0) {
-    title.textContent = 'You're in - now enter your tips';
+    title.textContent = "You're in - now enter your tips";
     copy.textContent = 'Round is live and you have no saved tips yet. Enter now before lock.';
     cta.textContent = 'Enter Tips';
     cta.href = '/punters.html#tip-form';
@@ -1234,7 +1300,7 @@ async function hydrateNextTipCard(trackId){
         const others = Number(lg?.othersCount || 0);
         const settledCount = Object.keys(state?.lastOverview?.raceResults || {}).length;
         const hasScoredRace = settledCount > 0;
-        social.textContent = others <= 0 ? (hasScoredRace ? 'You're first on the card' : 'Tip locked - waiting for first result') : `You + ${others} others locked`;
+        social.textContent = others <= 0 ? (hasScoredRace ? "You're first on the card" : 'Tip locked - waiting for first result') : `You + ${others} others locked`;
         primary.textContent = 'Full Card';
         primary.href = '/punters.html#leaderboard';
       }
@@ -1506,8 +1572,8 @@ async function refresh(){
   const pokerLiveNudge = $('poker-live-nudge');
   if (pokerLiveNudge) {
     pokerLiveNudge.textContent = myTipCount > 0
-      ? 'You tipped this week - tonight's poker seat is live.'
-      : 'Lock your tips first, then jump into tonight's poker seat when you're ready.';
+      ? "You tipped this week - tonight's poker seat is live."
+      : "Lock your tips first, then jump into tonight's poker seat when you're ready.";
   }
 
   const userKey = String(state.user?.username || '').toLowerCase();
