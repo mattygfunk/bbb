@@ -1143,7 +1143,13 @@ function computeJackpotTierData(store, opts = {}) {
       .map((e) => String(e.member || '').toLowerCase())
   );
 
-  const trackTips = getTipsForTrack(store, trackId, { includeRemoved: false }).filter((t) => String(t.status || '') !== 'removed');
+  const roundOpenedAt = Number(round?.createdAt || 0);
+  const trackTips = getTipsForTrack(store, trackId, { includeRemoved: false }).filter((t) => {
+    if (String(t.status || '') === 'removed') return false;
+    // Only count tips from this round (created after round opened)
+    if (roundOpenedAt && Number(t.createdAt || 0) < roundOpenedAt) return false;
+    return true;
+  });
   trackTips.forEach((t) => {
     const member = String(t.member || '').toLowerCase();
     if (!member) return;
@@ -1151,8 +1157,15 @@ function computeJackpotTierData(store, opts = {}) {
     if (Boolean(t.paid)) paidMemberSet.add(member);
   });
 
+  const currentRoundId = round?.id || null;
   ((store.puntersClub?.claims || [])
-    .filter((c) => normalizeTrackId(c.trackId || 'thoroughbreds') === trackId && String(c.status || '').toLowerCase() === 'paid')
+    .filter((c) => {
+      if (normalizeTrackId(c.trackId || 'thoroughbreds') !== trackId) return false;
+      if (String(c.status || '').toLowerCase() !== 'paid') return false;
+      // Only count claims from the current open round — old rounds already settled
+      if (currentRoundId && c.roundId && c.roundId !== currentRoundId) return false;
+      return true;
+    })
   ).forEach((c) => {
     const member = String(c.member || '').toLowerCase();
     if (!member) return;
@@ -1163,7 +1176,9 @@ function computeJackpotTierData(store, opts = {}) {
   const paidMembers = paidMemberSet.size;
   const freeMembers = freeMemberSet.size;
   const entryFee = Number(round?.entryFee || store.entryFee || 20);
-  const currentRoundPot = paidMembers * entryFee;
+  const verifiedPot = paidMembers * entryFee;
+  const potBoost = Number(round?.potBoost || 0); // admin-confirmed payments pending individual verification
+  const currentRoundPot = verifiedPot + potBoost;
   const rollover = getTrackJackpotCarry(store, trackId);
   const totalPot = currentRoundPot + rollover;
   return { round, paidMembers, freeMembers, entryFee, currentRoundPot, rollover, totalPot };
