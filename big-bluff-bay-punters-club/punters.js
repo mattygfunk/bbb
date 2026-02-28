@@ -572,8 +572,11 @@ function renderRoundMeta(overview){
   const bossesCard = $('bosses-bet-card');
   if (quickTipsCard) quickTipsCard.style.display = lockWholeEntry ? 'none' : '';
   if (raceMarket) {
-    raceMarket.style.display = betweenRounds ? 'none' : '';
-    raceMarket.hidden = betweenRounds;
+    // Hide during play (tips locked, racing in progress) — only show pre-lock or between rounds for browsing
+    const inPlay = !betweenRounds && !state.tipsEditableNow;
+    const hideMarket = betweenRounds || inPlay;
+    raceMarket.style.display = hideMarket ? 'none' : '';
+    raceMarket.hidden = hideMarket;
   }
   // Keep Bosses Multi tracker visible at all times (pre-lock + post-lock).
   if (bossesCard) bossesCard.style.display = '';
