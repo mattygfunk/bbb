@@ -877,7 +877,8 @@ function renderMemberCockpit(data = {}) {
     scenarios.forEach(({ text, type }) => {
       const li = document.createElement('li');
       li.style.cssText = `list-style:none;display:flex;gap:.6rem;align-items:flex-start;padding:.55rem .75rem;border-radius:.5rem;margin-bottom:.4rem;font-size:.86rem;background:${type==='bad'?'#2a0a0a':type==='warn'?'#1a1200':type==='good'?'#071810':'#07111f'};border:1px solid ${type==='bad'?'#7f1d1d':type==='warn'?'#78350f':type==='good'?'#14532d':'#1e3a5f'};`;
-      li.innerHTML = `<span style="flex-shrink:0;line-height:1.4;">${icons[type]||'•'}</span><span style="color:${colours[type]||'#e5e7eb'};line-height:1.5;">${escHtml(text)}</span>`;
+      const safeText = String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      li.innerHTML = `<span style="flex-shrink:0;line-height:1.4;">${icons[type]||'•'}</span><span style="color:${colours[type]||'#e5e7eb'};line-height:1.5;">${safeText}</span>`;
       list.appendChild(li);
     });
   }
