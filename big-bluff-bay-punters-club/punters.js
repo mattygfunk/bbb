@@ -853,6 +853,17 @@ function renderMemberCockpit(data = {}) {
     meta.textContent = bits.length ? bits.join(' • ') : 'Your live position this round.';
   }
 
+  // Update race label pill
+  const raceLabel = $('scenarios-race-label');
+  if (raceLabel) {
+    const done = Object.keys(data.raceResults || {}).filter(r => {
+      const rr = data.raceResults[r];
+      return rr?.first?.length || rr?.second?.length || rr?.third?.length;
+    }).length;
+    const total = data.raceCount || 12;
+    raceLabel.textContent = done === 0 ? 'Pre-race' : done >= total ? `Final (${total} races)` : `After R${done} of ${total}`;
+  }
+
   const list = $('member-scenarios-list');
   if (list) {
     const scenarios = generateWinningScenarios(data);
