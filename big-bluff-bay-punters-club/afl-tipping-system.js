@@ -83,6 +83,12 @@ function processKnockoutEliminations(store, roundId) {
     // Initialize active players from confirmed entries if it's the first round of eliminations
     if (ko.status === 'pending') {
       const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
+      // Option C: defer KO activation until enough players have confirmed entries
+      const minPlayers = at.season.knockoutMinPlayers || 4;
+      if (confirmedEntries.length < minPlayers) {
+        results.push({ id: ko.id, name: ko.name, status: 'pending', reason: `Needs ${minPlayers} confirmed players (${confirmedEntries.length} so far)` });
+        continue;
+      }
       ko.activePlayers = confirmedEntries.map((e) => e.userId);
       ko.status = 'active';
     }
@@ -155,14 +161,15 @@ function ensureAflStore(store) {
         id: crypto.randomUUID(),
         name: '2026 AFL Season',
         year: 2026,
-        entryFee: 100,
+        entryFee: 75,
         weeklyPrizePerUser: 1,
+        knockoutMinPlayers: 4,
         status: 'open',
-        prizeStructure: { 
-          seasonLeaderboard: 0.695, // 69.5%
-          knockout: 0.075,          // 7.5%
-          weeklyPot: 0.23,           // 23%
-          leaderboardPayout: { first: 0.50, second: 0.30, third: 0.20 } 
+        prizeStructure: {
+          seasonLeaderboard: 0.695, // 69.5% of gross → season leaderboard
+          knockout: 0.075,          // 7.5% of gross → KO pool (split across comps)
+          weeklyPot: 0.23,          // 23% of gross → weekly jackpot pool (distributed per round)
+          leaderboardPayout: { first: 0.50, second: 0.30, third: 0.20 }
         },
         createdAt: Date.now()
       },
@@ -421,36 +428,38 @@ function calcSeasonPrizes(store) {
   const gross = confirmedCount * entryFee;
   const ps = at.season.prizeStructure || {};
 
-  // Fixed per-comp KO prize (default $75 each, 2 comps)
-  const knockoutEach = at.season.knockoutPrizeFixed || 75;
+  // ── KO prize: Options A (% of gross) + B (scales per entrant) + C (min players guard)
   const knockoutCount = Array.isArray(at.knockout) ? at.knockout.length : 2;
+  const knockoutMinPlayers = at.season.knockoutMinPlayers || 4;
+  // Option C: KO competitions only activate once the minimum player threshold is reached
+  const knockoutActive = confirmedCount >= knockoutMinPlayers;
+
+  let knockoutEach;
+  if (typeof at.season.knockoutPrizeFixed === 'number') {
+    // Explicit override — cap at available gross so payouts can never exceed what was collected
+    knockoutEach = knockoutActive ? Math.min(at.season.knockoutPrizeFixed, gross / knockoutCount) : 0;
+  } else {
+    // Options A + B: fraction of gross, naturally scales as entrant count grows
+    const koFraction = ps.knockout || 0.075;
+    knockoutEach = knockoutActive ? (gross * koFraction / knockoutCount) : 0;
+  }
   const knockoutTotal = knockoutEach * knockoutCount;
 
-  // Weekly jackpot = $1 per confirmed entrant per round (no fixed house base)
+  // ── Weekly jackpot: $weeklyPrizePerUser per confirmed entrant per round (no fixed base)
   const weeklyPrizePerUser = at.season.weeklyPrizePerUser || 1;
   const weeklyBase = confirmedCount * weeklyPrizePerUser;
 
-  // Season leaderboard pool = gross minus fixed KO and weekly prizes
-  // If store has explicit leaderboard percentages use them; otherwise take what's left
-  let seasonLeaderboardPool;
-  if (ps.seasonLeaderboard) {
-    seasonLeaderboardPool = gross * ps.seasonLeaderboard;
-  } else {
-    // Use first+second+third as fractions of gross (store structure: { first, second, third, house })
-    const leaderboardFraction = (ps.first || 0.4) + (ps.second || 0.25) + (ps.third || 0.15);
-    seasonLeaderboardPool = gross * leaderboardFraction;
-  }
-
-  // Per-place amounts
+  // ── Season leaderboard pool
   const lp = ps.leaderboardPayout || {};
-  let first, second, third;
-  if (lp.first) {
-    // New-style: fractions of seasonLeaderboardPool
-    first = seasonLeaderboardPool * lp.first;
-    second = seasonLeaderboardPool * lp.second;
-    third = seasonLeaderboardPool * lp.third;
+  let seasonLeaderboardPool, first, second, third;
+  if (ps.seasonLeaderboard) {
+    // New-style: explicit fraction of gross for leaderboard, split by leaderboardPayout ratios
+    seasonLeaderboardPool = gross * ps.seasonLeaderboard;
+    first  = seasonLeaderboardPool * (lp.first  || 0.50);
+    second = seasonLeaderboardPool * (lp.second || 0.30);
+    third  = seasonLeaderboardPool * (lp.third  || 0.20);
   } else {
-    // Old-style: fractions directly off gross
+    // Old-style: first/second/third are fractions directly off gross
     first  = gross * (ps.first  || 0.4);
     second = gross * (ps.second || 0.25);
     third  = gross * (ps.third  || 0.15);
@@ -467,6 +476,8 @@ function calcSeasonPrizes(store) {
     knockoutPool: knockoutTotal,
     knockoutTotal,
     knockoutEach,
+    knockoutMinPlayers,
+    knockoutActive,
     weeklyBase,
     weeklyPool: weeklyBase,
     first,

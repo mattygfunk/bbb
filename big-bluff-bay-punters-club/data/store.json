@@ -39183,16 +39183,16 @@
       "name": "2026 AFL Season",
       "year": 2026,
       "entryFee": 75,
-      "weeklyPrizePot": 30,
+      "weeklyPrizePerUser": 1,
+      "knockoutMinPlayers": 4,
       "status": "open",
       "prizeStructure": {
-        "first": 0.4,
-        "second": 0.25,
-        "third": 0.15,
-        "house": 0.2
+        "seasonLeaderboard": 0.695,
+        "knockout": 0.075,
+        "weeklyPot": 0.23,
+        "leaderboardPayout": { "first": 0.50, "second": 0.30, "third": 0.20 }
       },
-      "createdAt": 1772106386384,
-      "knockoutPrizeFixed": 75
+      "createdAt": 1772106386384
     },
     "rounds": [
       {
