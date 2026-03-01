@@ -326,7 +326,36 @@
       <p style="color:var(--muted);font-size:.85em;">© 2026 Big Bluff Bay · AFL Tipping is a friendly competition for members.</p>
     </footer>
 
+    <!-- Auth Modal -->
+    <div id="afl-auth-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:1rem;" aria-modal="true" role="dialog" aria-label="Sign in or Register">
+      <div style="background:#0b1221;border:1px solid var(--line);border-radius:1rem;padding:1.75rem;width:min(420px,100%);position:relative;max-height:90vh;overflow-y:auto;">
+        <button id="afl-auth-close" aria-label="Close" style="position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>
+        <h2 style="color:var(--afl-light);margin:0 0 1.25rem;">🏉 Sign In / Register</h2>
+        <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;">
+          <button type="button" class="btn chip-btn" id="afl-modal-mode-login" aria-pressed="true">I have an account</button>
+          <button type="button" class="btn" id="afl-modal-mode-register" aria-pressed="false">New here</button>
+        </div>
+        <form id="afl-auth-form" class="stack" novalidate>
+          <input type="hidden" id="afl-auth-mode" value="login">
+          <div>
+            <label for="afl-auth-username" style="font-size:.9em;color:var(--muted);display:block;margin-bottom:.3rem;">Username</label>
+            <input type="text" id="afl-auth-username" class="input" autocomplete="username" required placeholder="your_username" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div id="afl-auth-email-wrap" style="display:none;">
+            <label for="afl-auth-email" style="font-size:.9em;color:var(--muted);display:block;margin-bottom:.3rem;">Email <span style="color:var(--muted);font-size:.85em;">(optional — for alerts)</span></label>
+            <input type="email" id="afl-auth-email" class="input" autocomplete="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;">
+          </div>
+          <div>
+            <label for="afl-auth-password" style="font-size:.9em;color:var(--muted);display:block;margin-bottom:.3rem;">Password</label>
+            <input type="password" id="afl-auth-password" class="input" autocomplete="current-password" required placeholder="••••••••" style="width:100%;box-sizing:border-box;">
+          </div>
+          <p id="afl-auth-msg" style="color:#f87171;font-size:.9em;min-height:1.2em;margin:0;" role="status" aria-live="polite"></p>
+          <button type="submit" id="afl-auth-submit" class="btn btn-primary" style="width:100%;">Sign In</button>
+        </form>
+      </div>
+    </div>
+
     <script src="/menu-auth.js?v=20260226-2"></script>
-    <script src="/afl-tipping.js?v=20260226-2"></script>
+    <script src="/afl-tipping.js?v=20260227-auth-modal"></script>
   </body>
 </html>

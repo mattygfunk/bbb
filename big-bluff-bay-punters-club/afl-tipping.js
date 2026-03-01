@@ -598,7 +598,7 @@
       const enterBtn = document.getElementById('enter-btn');
       if (enterBtn) {
         enterBtn.textContent = 'Log In to Enter';
-        enterBtn.onclick = () => { window.location.href = '/'; };
+        enterBtn.onclick = () => { showAflAuthModal(); };
       }
     }
 
@@ -637,4 +637,94 @@
   }
 
   document.addEventListener('DOMContentLoaded', init);
+})();
+
+// ── Auth Modal ────────────────────────────────────────────────────────────────
+(function() {
+  const MODAL_TOKEN_KEY = 'bbb-token-v3';
+
+  function showAflAuthModal() {
+    const modal = document.getElementById('afl-auth-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.getElementById('afl-auth-username')?.focus();
+  }
+
+  function hideAflAuthModal() {
+    const modal = document.getElementById('afl-auth-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function setModalMode(mode) {
+    const modeInput = document.getElementById('afl-auth-mode');
+    const loginBtn = document.getElementById('afl-modal-mode-login');
+    const registerBtn = document.getElementById('afl-modal-mode-register');
+    const emailWrap = document.getElementById('afl-auth-email-wrap');
+    const submitBtn = document.getElementById('afl-auth-submit');
+    const passwordInput = document.getElementById('afl-auth-password');
+
+    if (modeInput) modeInput.value = mode;
+    if (loginBtn) { loginBtn.classList.toggle('chip-btn', mode === 'login'); loginBtn.setAttribute('aria-pressed', mode === 'login'); }
+    if (registerBtn) { registerBtn.classList.toggle('chip-btn', mode === 'register'); registerBtn.setAttribute('aria-pressed', mode === 'register'); }
+    if (emailWrap) emailWrap.style.display = mode === 'register' ? '' : 'none';
+    if (submitBtn) submitBtn.textContent = mode === 'register' ? 'Create Account' : 'Sign In';
+    if (passwordInput) passwordInput.setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+  }
+
+  async function modalReq(path, body) {
+    const token = localStorage.getItem(MODAL_TOKEN_KEY);
+    const res = await fetch(`/api${path}`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.error || `Request failed (${res.status})`);
+    return data;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('afl-auth-modal');
+    if (!modal) return;
+
+    document.getElementById('afl-auth-close')?.addEventListener('click', hideAflAuthModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) hideAflAuthModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideAflAuthModal(); });
+
+    document.getElementById('afl-modal-mode-login')?.addEventListener('click', () => setModalMode('login'));
+    document.getElementById('afl-modal-mode-register')?.addEventListener('click', () => setModalMode('register'));
+
+    document.getElementById('afl-auth-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mode = document.getElementById('afl-auth-mode')?.value || 'login';
+      const username = document.getElementById('afl-auth-username')?.value.trim();
+      const password = document.getElementById('afl-auth-password')?.value;
+      const email = document.getElementById('afl-auth-email')?.value.trim();
+      const msg = document.getElementById('afl-auth-msg');
+      const submitBtn = document.getElementById('afl-auth-submit');
+
+      if (!username || !password) { if (msg) msg.textContent = 'Username and password required.'; return; }
+      if (msg) msg.textContent = '';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = mode === 'register' ? 'Creating…' : 'Signing in…'; }
+
+      try {
+        const path = mode === 'register' ? '/register' : '/login';
+        const body = mode === 'register' ? { username, password, email: email || undefined } : { username, password };
+        const data = await modalReq(path, body);
+        if (data.token) localStorage.setItem(MODAL_TOKEN_KEY, data.token);
+        hideAflAuthModal();
+        window.location.reload();
+      } catch (err) {
+        if (msg) { msg.textContent = err.message; msg.style.color = '#f87171'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = mode === 'register' ? 'Create Account' : 'Sign In'; }
+      }
+    });
+  });
+
+  // Expose globally so the enter button onclick can call it
+  window.showAflAuthModal = showAflAuthModal;
 })();
