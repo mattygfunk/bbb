@@ -115,7 +115,7 @@
       if (rollover > 0) {
         rolloverEl.innerHTML = `<span class="rollover-pill" style="display:inline-block;padding:.25rem .75rem;border-radius:99px;border:1px solid;font-size:.85em;">🔄 Rollover: ${fmtMoney(rollover)} carried over</span>`;
       } else {
-        rolloverEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">Base pot: $30/week from house</span>`;
+        rolloverEl.innerHTML = `<span style="color:var(--muted);font-size:.9em;">$1 per player · grows each round</span>`;
       }
     }
   }
@@ -343,7 +343,7 @@
       return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:.5rem;padding:.4rem .75rem;font-size:.8rem;font-weight:700;color:' + color + ';text-align:center;min-width:72px;">' +
         '<div>' + escHtml(w.label) + '</div>' +
         '<div style="margin-top:.2rem;">' + icon + ' ' + (won ? escHtml(w.winnerMember) : 'Rolled') + '</div>' +
-        '<div style="font-size:.75rem;opacity:.85;">$' + (w.jackpotTotal || 30) + '</div>' +
+        '<div style="font-size:.75rem;opacity:.85;">$' + (w.jackpotTotal || '?') + '</div>' +
         '</div>';
     }).join('');
   }

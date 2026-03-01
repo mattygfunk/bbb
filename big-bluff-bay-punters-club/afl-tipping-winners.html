@@ -138,7 +138,7 @@
 
           // Season stats
           const rollover = ov.rollover || 0;
-          const weeklyPot = (ov.season?.weeklyPrizePot || 30) + rollover;
+          const weeklyPot = (ov.weeklyPot || 0) + rollover;
           document.getElementById('stat-current-jackpot').textContent = `$${weeklyPot}`;
 
           // Build weekly winners from results
@@ -218,7 +218,7 @@
                 <div class="winner-round">${r.label || `Rnd ${r.roundNumber}`}</div>
                 <div class="winner-handle">${winnerName ? escHtml(winnerName) : '<span class="rollover-badge">ROLLOVER</span>'}</div>
                 <div class="winner-score">${score} correct</div>
-                <div class="winner-payout">${hasWinner && payout ? `$${payout}` : hasWinner ? '$30' : '—'}</div></div>`;
+                <div class="winner-payout">${hasWinner && payout ? `$${payout}` : hasWinner ? `$${r.jackpotTotal || '?'}` : '—'}</div></div>`;
             }
             html += '</div>';
             winEl.innerHTML = html;

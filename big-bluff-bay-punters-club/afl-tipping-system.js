@@ -426,8 +426,9 @@ function calcSeasonPrizes(store) {
   const knockoutCount = Array.isArray(at.knockout) ? at.knockout.length : 2;
   const knockoutTotal = knockoutEach * knockoutCount;
 
-  // Fixed weekly jackpot base (default $30/round)
-  const weeklyBase = at.season.weeklyPrizePot || 30;
+  // Weekly jackpot = $1 per confirmed entrant per round (no fixed house base)
+  const weeklyPrizePerUser = at.season.weeklyPrizePerUser || 1;
+  const weeklyBase = confirmedCount * weeklyPrizePerUser;
 
   // Season leaderboard pool = gross minus fixed KO and weekly prizes
   // If store has explicit leaderboard percentages use them; otherwise take what's left
@@ -1306,9 +1307,9 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         tips: {},
         scores: {},
         weeklyJackpot: {
-          basePot: at.season.weeklyPrizePot || 30,
+          basePot: confirmedCount * (at.season.weeklyPrizePerUser || 1),
           rolloverIn: at.weeklyRollover || 0,
-          totalPot: (at.season.weeklyPrizePot || 30) + (at.weeklyRollover || 0),
+          totalPot: (confirmedCount * (at.season.weeklyPrizePerUser || 1)) + (at.weeklyRollover || 0),
           winnerId: null,
           winnerMember: null,
           winnerPayout: null,
@@ -1584,7 +1585,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
           roundNumber: r.roundNumber,
           label: r.label || ('Round ' + r.roundNumber),
           scoredAt: r.updatedAt,
-          jackpotTotal: jk.totalPot || at.season.weeklyPrizePot || 30,
+          jackpotTotal: jk.totalPot || (confirmedCount * (at.season.weeklyPrizePerUser || 1)),
           rolledOver: jk.rolledOver || false,
           winnerId: jk.rolledOver ? null : (jk.winnerId || null),
           winnerMember: jk.rolledOver ? null : (jk.winnerMember || null),
@@ -1601,7 +1602,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
         ok: true,
         season: { name: at.season.name, year: at.season.year },
         weeklyWinners,
-        currentJackpot: (at.season.weeklyPrizePot || 30) + (at.weeklyRollover || 0),
+        currentJackpot: (confirmedCount * (at.season.weeklyPrizePerUser || 1)) + (at.weeklyRollover || 0),
         rollover: at.weeklyRollover || 0,
         leaderboard: ladder.slice(0, 10),
         roundsPlayed: scoredRounds.length
@@ -1628,7 +1629,7 @@ function registerAflTippingRoutes(app, { readStore, writeStore, auth, JWT_SECRET
       const confirmedEntries = at.entries.filter((e) => e.status === 'confirmed');
       const pendingEntries = at.entries.filter((e) => e.status === 'pending');
       const rollover = at.weeklyRollover || 0;
-      const weeklyPot = (at.season.weeklyPrizePot || 30) + rollover;
+      const weeklyPot = (confirmedEntries.length * (at.season.weeklyPrizePerUser || 1)) + rollover;
 
       const activeRound = at.rounds.find((r) => r.status === 'open') ||
         at.rounds.find((r) => r.status === 'locked') || null;

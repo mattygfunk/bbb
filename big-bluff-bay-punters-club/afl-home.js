@@ -40,7 +40,7 @@
       entrantsEl.textContent = confirmed + (pending > 0 ? ' (+' + pending + ' pending)' : '');
 
       // Jackpot
-      const weeklyPot = d.weeklyPot || 30;
+      const weeklyPot = d.weeklyPot || 0;
       const rollover = d.rollover || 0;
       jackpotEl.textContent = '$' + weeklyPot;
       if (rollover > 0 && rolloverEl) {
