@@ -150,6 +150,49 @@ const checked = offline ? [] : await Promise.all([...activeSources].map(async ([
   }));
 
 for (const { item, sourceUrl } of sourceEvents) {
+  const matched = events.find((event) => normalise(event.title) === normalise(item.name));
+  if (matched) {
+    const status = String(item.eventStatus || '').toLowerCase();
+    if (status.includes('eventcancelled') || status.includes('eventpostponed')) {
+      issues.push(`${matched.title}: official structured data reports ${status.includes('cancelled') ? 'cancelled' : 'postponed'} status. Review ${sourceUrl} before changing the listing.`);
+    }
+    const itemStart = String(item.startDate || '').slice(0, 10);
+    const itemEnd = String(item.endDate || item.startDate || '').slice(0, 10);
+    if (Number.isFinite(dateMs(itemStart)) && itemStart !== matched.startDate) {
+      issues.push(`${matched.title}: official structured data shows start date ${itemStart}; calendar currently lists ${matched.startDate}. Review ${sourceUrl} before changing the listing.`);
+    }
+    if (Number.isFinite(dateMs(itemEnd)) && itemEnd !== matched.endDate) {
+      issues.push(`${matched.title}: official structured data shows end date ${itemEnd}; calendar currently lists ${matched.endDate}. Review ${sourceUrl} before changing the listing.`);
+    }
+    const location = Array.isArray(item.location) ? item.location[0] : item.location;
+    const organizer = Array.isArray(item.organizer) ? item.organizer[0] : item.organizer;
+    const venueName = location?.name;
+    const address = location?.address;
+    const cityName = typeof address === 'string' ? address : address?.addressLocality;
+    if (venueName && normalise(venueName) !== normalise(matched.venue)) {
+      issues.push(`${matched.title}: official structured data names venue “${venueName}”; calendar lists “${matched.venue}”. Review ${sourceUrl} before changing the listing.`);
+    }
+    if (matched.organiser && organizer?.name && normalise(organizer.name) !== normalise(matched.organiser)) {
+      issues.push(`${matched.title}: official structured data names organiser “${organizer.name}”; calendar lists “${matched.organiser}”. Review ${sourceUrl} before changing the listing.`);
+    }
+    if (Number.isFinite(matched.buyInMin)) {
+      const offers = Array.isArray(item.offers) ? item.offers : item.offers ? [item.offers] : [];
+      const relevant = offers.filter((offer) => {
+        const label = `${offer.name || ''} ${offer.description || ''}`.toLowerCase();
+        return (offer.priceCurrency || 'AUD') === 'AUD' && /main event|buy.?in|entry fee/.test(label) && !/satellite/.test(label) && Number.isFinite(Number(offer.price));
+      });
+      const changed = relevant.find((offer) => Number(offer.price) !== matched.buyInMin);
+      if (changed) issues.push(`${matched.title}: official structured data lists a possible entry price of $${Number(changed.price).toLocaleString('en-AU')}; calendar starts at $${matched.buyInMin.toLocaleString('en-AU')}. Review ${sourceUrl} before changing the listing.`);
+    }
+    if (Number.isFinite(matched.guaranteeAmount)) {
+      const copy = `${item.name || ''} ${item.description || ''}`;
+      const match = copy.match(/\$?\s?(\d[\d,]*)\s*(?:AUD\s*)?(?:guaranteed|guarantee|GTD)\b/i);
+      const amount = match ? Number(match[1].replace(/,/g, '')) : NaN;
+      if (Number.isFinite(amount) && amount !== matched.guaranteeAmount) {
+        issues.push(`${matched.title}: official structured data text may show a $${amount.toLocaleString('en-AU')} guarantee; calendar lists $${matched.guaranteeAmount.toLocaleString('en-AU')}. Review ${sourceUrl} before changing the listing.`);
+      }
+    }
+  }
   const candidate = candidateText(item, sourceUrl);
   if (candidate) candidates.push(candidate);
 }

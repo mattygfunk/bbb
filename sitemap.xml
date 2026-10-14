@@ -1,7 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://bigbluffbay.au/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://bigbluffbay.au/tournaments.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://bigbluffbay.au/organisers.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://bigbluffbay.au/venues.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://bigbluffbay.au/</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/tournaments.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/organisers.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/updates.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/victorian-poker-championship-2026.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-sydney-champs-2026.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/npl-super-series-nov-2026.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-gold-coast-champs-2026.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-melbourne-champs-iii-2027.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-adelaide-champs-ii-2027.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-sydney-champs-ii-2027.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/events/apt-melbourne-champs-iv-2027.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/organisers/australian-poker-tour.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/organisers/crown-melbourne.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/organisers/national-poker-league.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues/crowne-plaza-adelaide-mawson-lakes-adelaide-sa.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues/crowne-plaza-surfers-paradise-gold-coast-qld.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues/crown-melbourne-melbourne-vic.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues/revesby-workers-club-sydney-nsw.html</loc><lastmod>2026-10-14</lastmod></url>
+  <url><loc>https://bigbluffbay.au/venues/club-willoughby-sydney-nsw.html</loc><lastmod>2026-10-14</lastmod></url>
 </urlset>

@@ -26,7 +26,7 @@
     <main class="search-page shell" id="main">
       <p class="eyebrow"><span class="eyebrow-dot"></span> FIND YOUR NEXT GAME</p>
       <h1>Search poker<br /><em>events.</em></h1>
-      <p class="search-intro">Look across event names, organisers, venues, cities and states. Listings link back to the organiser for current details.</p>
+      <p class="search-intro">Search event names, organisers, venues, dates, entry bands, guaranteed prize pools and verified game formats. Listings link back to the organiser for current details.</p>
       <form class="full-search" id="full-search" action="/search.html" method="get" role="search">
         <label class="visually-hidden" for="search-query">Search events</label>
         <input id="search-query" name="q" type="search" maxlength="80" placeholder="e.g. Melbourne, Crown, NPL" autocomplete="off" />
@@ -36,6 +36,12 @@
           <option value="series">Tournament series</option>
           <option value="league">League events</option>
         </select>
+        <label class="visually-hidden" for="search-budget">Filter by entry</label>
+        <select id="search-budget" name="budget"><option value="all">Any entry</option><option value="0-100">Up to $100</option><option value="100-500">$100–$500</option><option value="500-1500">$500–$1,500</option><option value="1500+">$1,500+</option></select>
+        <label class="visually-hidden" for="search-guarantee">Filter by guarantee</label>
+        <select id="search-guarantee" name="guarantee"><option value="all">Any guarantee</option><option value="listed">Guaranteed events</option><option value="100000+">$100k+ GTD</option></select>
+        <label class="visually-hidden" for="search-format">Filter by game format</label>
+        <select id="search-format" name="format"><option value="all">Any format</option><option value="holdem">Hold’em</option><option value="plo">PLO</option><option value="mixed games">Mixed games</option></select>
         <button class="search-button" type="submit">Search <span aria-hidden="true">→</span></button>
       </form>
       <div class="search-suggestions" aria-label="Popular searches">

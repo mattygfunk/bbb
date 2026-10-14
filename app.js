@@ -4,6 +4,9 @@
   const locationInput = document.querySelector('#location-filter');
   const whenSelect = document.querySelector('#when-filter');
   const typeSelect = document.querySelector('#type-filter');
+  const budgetSelect = document.querySelector('#budget-filter');
+  const formatSelect = document.querySelector('#format-filter');
+  const guaranteeSelect = document.querySelector('#guarantee-filter');
   const resultsNote = document.querySelector('#results-note');
   const listingCount = document.querySelector('#listing-count');
   const savedToggle = document.querySelector('#saved-toggle');
@@ -59,6 +62,9 @@
     locationInput.value = params.get('location') || '';
     if (['upcoming', 'this-month', 'all'].includes(params.get('when'))) whenSelect.value = params.get('when');
     if (['all', 'series', 'league'].includes(params.get('type'))) typeSelect.value = params.get('type');
+    if (['all', '0-100', '100-500', '500-1500', '1500+'].includes(params.get('budget'))) budgetSelect.value = params.get('budget');
+    if (['all', 'holdem', 'plo', 'mixed games'].includes(params.get('format'))) formatSelect.value = params.get('format');
+    if (['all', 'listed', '100000+'].includes(params.get('guarantee'))) guaranteeSelect.value = params.get('guarantee');
     onlySaved = params.get('saved') === '1';
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location.toLowerCase() === locationInput.value.trim().toLowerCase()));
     updateSavedCount();
@@ -69,6 +75,9 @@
     if (locationInput.value.trim()) params.set('location', locationInput.value.trim());
     if (whenSelect.value !== 'upcoming') params.set('when', whenSelect.value);
     if (typeSelect.value !== 'all') params.set('type', typeSelect.value);
+    if (budgetSelect.value !== 'all') params.set('budget', budgetSelect.value);
+    if (formatSelect.value !== 'all') params.set('format', formatSelect.value);
+    if (guaranteeSelect.value !== 'all') params.set('guarantee', guaranteeSelect.value);
     if (onlySaved) params.set('saved', '1');
     const query = params.toString();
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`);
@@ -83,12 +92,21 @@
     const query = locationInput.value.trim().toLowerCase();
     const when = whenSelect.value;
     const type = typeSelect.value;
+    const budget = budgetSelect.value;
+    const format = formatSelect.value;
+    const guarantee = guaranteeSelect.value;
     const matchesLocation = !query || `${event.city} ${event.state} ${event.venue} ${event.organiser}`.toLowerCase().includes(query);
     const overlapsThisMonth = event.startDate.slice(0, 7) <= monthKey && event.endDate.slice(0, 7) >= monthKey;
     const matchesWhen = when === 'all' || (when === 'this-month' ? overlapsThisMonth : event.endDate >= today);
     const matchesType = type === 'all' || event.type === type;
+    const entry = Number(event.buyInMin);
+    const matchesBudget = budget === 'all' || (Number.isFinite(entry) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
+    const formats = Array.isArray(event.formats) ? event.formats.map((value) => String(value).toLowerCase()) : [];
+    const matchesFormat = format === 'all' || formats.includes(format);
+    const prize = Number(event.guaranteeAmount);
+    const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? Number.isFinite(prize) : Number.isFinite(prize) && prize >= 100000);
     const matchesSaved = !onlySaved || savedIds.has(event.id);
-    return matchesLocation && matchesWhen && matchesType && matchesSaved && event.endDate >= today;
+    return matchesLocation && matchesWhen && matchesType && matchesBudget && matchesFormat && matchesGuarantee && matchesSaved && event.endDate >= today;
   }
 
   function escapeIcs(value) {
@@ -143,13 +161,21 @@
       const dates = event.startDate === event.endDate ? dateLabel(event.startDate) : `${dateLabel(event.startDate)} – ${dateLabel(event.endDate)}`;
       const sourceUrl = validUrl(event.sourceUrl);
       const saved = savedIds.has(event.id);
+      const entryLabel = Number.isFinite(Number(event.buyInMin)) ? `From $${Number(event.buyInMin).toLocaleString('en-AU')}` : '';
+      const guaranteeLabel = Number.isFinite(Number(event.guaranteeAmount)) ? `$${Number(event.guaranteeAmount).toLocaleString('en-AU')} GTD` : '';
+      const formatLabel = Array.isArray(event.formats) ? event.formats.join(' · ') : '';
+      const facts = [entryLabel, guaranteeLabel, formatLabel].filter(Boolean);
+      const detailLink = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+      const mapLink = event.venueConfirmed !== false && event.venue
+        ? `<a class="detail" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue} ${event.city} ${event.state}`)}" target="_blank" rel="noopener noreferrer">Directions ↗</a>` : '';
       const organiserLink = sourceUrl
         ? `<a class="official-link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Official details <span aria-hidden="true">↗</span></a>`
         : '<span class="official-link is-unavailable">Official link unavailable</span>';
       return `<article class="event-card${featured ? ' featured' : ''}" id="event-${safe(event.id)}" data-event-id="${safe(event.id)}">
         <div class="event-topline"><span class="event-kind">${safe(event.label)}</span><span class="event-live"><span aria-hidden="true"></span>${statusFor(event)}</span></div>
-        <h3>${safe(event.title)}</h3><p class="event-organiser">${safe(event.organiser)}</p>
-        <div class="event-details"><span class="detail"><span class="detail-icon" aria-hidden="true">⌖</span>${safe(event.city)}, ${safe(event.state)}</span><span class="detail"><span class="detail-icon" aria-hidden="true">▦</span>${safe(event.venue)}</span></div>
+        <h3><a href="${safe(detailLink)}">${safe(event.title)}</a></h3><p class="event-organiser"><a href="/organisers/${String(event.organiser).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html">${safe(event.organiser)}</a></p>
+        <div class="event-details"><span class="detail"><span class="detail-icon" aria-hidden="true">⌖</span>${safe(event.city)}, ${safe(event.state)}</span><span class="detail"><span class="detail-icon" aria-hidden="true">▦</span>${safe(event.venue)}</span>${mapLink}</div>
+        ${facts.length ? `<p class="event-facts">${facts.map((fact) => `<span>${safe(fact)}</span>`).join('')}</p>` : ''}
         <div class="event-card-footer"><span class="date-range">${dates}</span>${organiserLink}</div>
         <div class="event-actions">
           <button class="card-action save-event${saved ? ' is-saved' : ''}" type="button" data-save="${safe(event.id)}" aria-pressed="${saved}">${saved ? '★ Saved' : '☆ Save event'}</button>
@@ -185,7 +211,7 @@
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location.toLowerCase() === locationInput.value.trim().toLowerCase()));
     render();
   });
-  [whenSelect, typeSelect].forEach((control) => control.addEventListener('change', render));
+  [whenSelect, typeSelect, budgetSelect, formatSelect, guaranteeSelect].forEach((control) => control.addEventListener('change', render));
   cityButtons.forEach((button) => button.addEventListener('click', () => {
     if (button.classList.contains('city-card') && button.tagName === 'BUTTON') document.querySelector('#events').scrollIntoView({ behavior: 'smooth' });
     setLocation(button.dataset.location);
@@ -200,6 +226,9 @@
     locationInput.value = '';
     whenSelect.value = 'upcoming';
     typeSelect.value = 'all';
+    budgetSelect.value = 'all';
+    formatSelect.value = 'all';
+    guaranteeSelect.value = 'all';
     onlySaved = false;
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location === ''));
     updateSavedCount();

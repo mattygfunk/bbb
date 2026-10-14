@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: bbb
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -25,11 +26,11 @@ jobs:
         run: node scripts/check-events.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Rebuild tournament directories and sitemap
+      - name: Rebuild event pages, profiles, feeds and sitemap
         run: node scripts/build-directory-pages.mjs
       - name: Commit generated pages when they change
         run: |
-          git add tournaments.html organisers.html venues.html cities/gold-coast.html cities/cairns.html sitemap.xml
+          git add events organisers venues cities/gold-coast.html cities/cairns.html tournaments.html organisers.html venues.html updates.html events.xml events.ics sitemap.xml
           if git diff --cached --quiet; then
             echo "Generated pages are current."
             exit 0

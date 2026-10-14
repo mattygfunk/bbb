@@ -2,6 +2,9 @@
   const form = document.querySelector('#full-search');
   const queryInput = document.querySelector('#search-query');
   const typeSelect = document.querySelector('#search-type');
+  const budgetSelect = document.querySelector('#search-budget');
+  const formatSelect = document.querySelector('#search-format');
+  const guaranteeSelect = document.querySelector('#search-guarantee');
   const results = document.querySelector('#search-results');
   const count = document.querySelector('#search-count');
   const params = new URLSearchParams(window.location.search);
@@ -29,13 +32,24 @@
 
   queryInput.value = (params.get('q') || '').slice(0, 80);
   if (['all', 'series', 'league'].includes(params.get('type'))) typeSelect.value = params.get('type');
+  if (['all', '0-100', '100-500', '500-1500', '1500+'].includes(params.get('budget'))) budgetSelect.value = params.get('budget');
+  if (['all', 'holdem', 'plo', 'mixed games'].includes(params.get('format'))) formatSelect.value = params.get('format');
+  if (['all', 'listed', '100000+'].includes(params.get('guarantee'))) guaranteeSelect.value = params.get('guarantee');
 
   function render() {
     const query = queryInput.value.trim().toLocaleLowerCase('en-AU');
     const type = typeSelect.value;
+    const budget = budgetSelect.value;
+    const format = formatSelect.value;
+    const guarantee = guaranteeSelect.value;
     const found = events.filter((event) => {
-      const text = [event.title, event.organiser, event.label, event.city, event.state, event.venue].join(' ').toLocaleLowerCase('en-AU');
-      return event.endDate >= today && (!query || text.includes(query)) && (type === 'all' || event.type === type);
+      const text = [event.title, event.organiser, event.label, event.city, event.state, event.venue, event.details, ...(event.formats || [])].join(' ').toLocaleLowerCase('en-AU');
+      const entry = Number(event.buyInMin);
+      const matchesBudget = budget === 'all' || (Number.isFinite(entry) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
+      const formats = (event.formats || []).map((value) => String(value).toLowerCase());
+      const prize = Number(event.guaranteeAmount);
+      const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? Number.isFinite(prize) : Number.isFinite(prize) && prize >= 100000);
+      return event.endDate >= today && (!query || text.includes(query)) && (type === 'all' || event.type === type) && matchesBudget && (format === 'all' || formats.includes(format)) && matchesGuarantee;
     }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 
     count.textContent = `${found.length} ${found.length === 1 ? 'event' : 'events'}${query ? ` matching “${queryInput.value.trim()}”` : ''}`;
@@ -51,11 +65,14 @@
       let official = '';
       const sourceUrl = validUrl(event.sourceUrl);
       if (sourceUrl) official = `<a class="official-link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Official details <span aria-hidden="true">↗</span></a>`;
+      const path = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+      const extra = [Number.isFinite(Number(event.buyInMin)) ? `Entry from $${Number(event.buyInMin).toLocaleString('en-AU')}` : '', Number.isFinite(Number(event.guaranteeAmount)) ? `$${Number(event.guaranteeAmount).toLocaleString('en-AU')} GTD` : '', ...(event.formats || [])].filter(Boolean);
       return `<article class="search-card">
         <div class="search-card-top"><span class="event-kind">${safe(event.label)}</span><span class="search-date">${safe(dates)}</span></div>
-        <h3>${safe(event.title)}</h3>
+        <h3><a href="${safe(path)}">${safe(event.title)}</a></h3>
         <p class="search-organiser">${safe(event.organiser)}</p>
         <p class="search-location-line">${safe(event.venue)} · ${safe(event.city)}, ${safe(event.state)}</p>
+        ${extra.length ? `<p class="search-facts">${extra.map((item) => safe(item)).join(' · ')}</p>` : ''}
         <div class="search-card-bottom">${official}<span>Checked ${safe(dateLabel(event.checkedAt))}</span></div>
       </article>`;
     }).join('');
@@ -66,6 +83,9 @@
     const next = new URLSearchParams();
     if (queryInput.value.trim()) next.set('q', queryInput.value.trim());
     if (typeSelect.value !== 'all') next.set('type', typeSelect.value);
+    if (budgetSelect.value !== 'all') next.set('budget', budgetSelect.value);
+    if (formatSelect.value !== 'all') next.set('format', formatSelect.value);
+    if (guaranteeSelect.value !== 'all') next.set('guarantee', guaranteeSelect.value);
     window.history.replaceState({}, '', `${window.location.pathname}${next.size ? `?${next.toString()}` : ''}`);
     render();
   });
