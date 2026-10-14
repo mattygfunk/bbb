@@ -27,9 +27,17 @@ Keep listings factual, link to primary organiser sources, and recheck details be
 - Shareable search filters that can be reopened from a link
 - One-click all-day calendar downloads in `.ics` format
 - An interactive beginner-friendly decision prompt
+- A full-text search page linked from the main navigation
+- Branded 404 and 403 pages with search and clear routes back into the site
 - No visitor accounts, payments, or location permissions
 
 The seeded events were checked against organiser sources on 14 October 2026. Organisers control final schedules; visitors should verify details directly before travelling or registering.
+
+## Error pages and search
+
+Cloudflare Pages serves the root `404.html` automatically for missing pages. `/search.html` searches the upcoming event calendar and is marked `noindex` so individual search terms do not become thin search-engine pages.
+
+`403.html` is the branded page to use for Cloudflare WAF or IP block errors. Cloudflare does not automatically serve a repository's `403.html` for those security blocks. To show it for WAF blocks, configure the zone's **Error Pages → WAF block** custom page to use `https://bigbluffbay.au/403.html`. Cloudflare's Custom Error Pages are available on paid plans; on Free, the file remains available as a normal page but cannot replace the built-in WAF block page.
 
 ## Deploy to Cloudflare Pages
 

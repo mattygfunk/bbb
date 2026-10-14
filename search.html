@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101712" />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="description" content="Search upcoming poker tournaments and league events across Australia." />
+    <title>Search poker events | Big Bluff Bay</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/search.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header error-header">
+      <div class="shell nav-wrap">
+        <a class="brand" href="/" aria-label="Big Bluff Bay home"><span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span><span class="brand-name">BIG BLUFF <b>BAY</b></span></a>
+        <nav class="main-nav" aria-label="Main navigation"><a href="/">Home</a><a href="/#cities">Browse cities</a><a href="/#quick-hand">Quick hand</a></nav>
+        <a class="nav-cta" href="/#events">Browse events <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+    <main class="search-page shell" id="main">
+      <p class="eyebrow"><span class="eyebrow-dot"></span> FIND YOUR NEXT GAME</p>
+      <h1>Search poker<br /><em>events.</em></h1>
+      <p class="search-intro">Look across event names, organisers, venues, cities and states. Listings link back to the organiser for current details.</p>
+      <form class="full-search" id="full-search" action="/search.html" method="get" role="search">
+        <label class="visually-hidden" for="search-query">Search events</label>
+        <input id="search-query" name="q" type="search" maxlength="80" placeholder="e.g. Melbourne, Crown, NPL" autocomplete="off" />
+        <label class="visually-hidden" for="search-type">Filter by event type</label>
+        <select id="search-type" name="type">
+          <option value="all">All event types</option>
+          <option value="series">Tournament series</option>
+          <option value="league">League events</option>
+        </select>
+        <button class="search-button" type="submit">Search <span aria-hidden="true">→</span></button>
+      </form>
+      <div class="search-suggestions" aria-label="Popular searches">
+        <span>TRY:</span>
+        <button type="button" data-query="Melbourne">Melbourne</button>
+        <button type="button" data-query="Sydney">Sydney</button>
+        <button type="button" data-query="Gold Coast">Gold Coast</button>
+      </div>
+      <div class="search-results-heading"><h2>Upcoming matches</h2><p id="search-count" aria-live="polite">Loading the calendar…</p></div>
+      <div class="search-results" id="search-results" aria-live="polite" aria-busy="true">
+        <article class="loading-card"><span class="loader" aria-hidden="true"></span><p>Shuffling the calendar…</p></article>
+      </div>
+      <p class="search-disclaimer">Events can change. Always confirm the schedule, venue and conditions with the organiser before making plans.</p>
+    </main>
+    <footer class="site-footer">
+      <div class="shell footer-bottom"><span>© <span id="year">2026</span> Big Bluff Bay</span><span>18+ only · Play within your limits</span><a href="https://www.gamblinghelponline.org.au/" target="_blank" rel="noopener noreferrer">Gambling Help Online</a></div>
+    </footer>
+  </body>
+</html>
