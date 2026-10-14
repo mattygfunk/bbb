@@ -1,0 +1,25 @@
+name: Poker calendar source monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly at 06:15 Melbourne time during daylight saving (UTC schedule).
+    - cron: '15 19 * * 0'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check event dates and organiser sources
+        run: node scripts/check-events.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
