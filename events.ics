@@ -1,0 +1,97 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Big Bluff Bay//Australian Poker Events//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Big Bluff Bay Australian Poker Events
+BEGIN:VEVENT
+UID:victorian-poker-championship-2026@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20261012
+DTEND;VALUE=DATE:20261028
+SUMMARY:Victorian Poker Championship
+LOCATION:Crown Melbourne\, Melbourne\, VIC
+DESCRIPTION:Crown Melbourne. Confirm details: https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship
+URL:https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship
+END:VEVENT
+BEGIN:VEVENT
+UID:npl-sydney-vip-oct-2026@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20261031
+DTEND;VALUE=DATE:20261101
+SUMMARY:NPL $20\,000 GTD SydneyVIP
+LOCATION:Padstow RSL\, Sydney\, NSW
+DESCRIPTION:National Poker League. Confirm details: https://www.npl.com.au/Events/NSW/SydneyVIP
+URL:https://www.npl.com.au/Events/NSW/SydneyVIP
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-sydney-champs-2026@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20261105
+DTEND;VALUE=DATE:20261116
+SUMMARY:Sydney Champs
+LOCATION:Revesby Workers Club\, Sydney\, NSW
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+BEGIN:VEVENT
+UID:npl-super-series-nov-2026@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20261118
+DTEND;VALUE=DATE:20261123
+SUMMARY:$300\,000 GTD NPL Super Series Main Event
+LOCATION:Club Willoughby\, Sydney\, NSW
+DESCRIPTION:National Poker League. Confirm details: https://www.npl.com.au/SuperSeries
+URL:https://www.npl.com.au/SuperSeries
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-gold-coast-champs-2026@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20261127
+DTEND;VALUE=DATE:20261207
+SUMMARY:Gold Coast Champs
+LOCATION:Crowne Plaza Surfers Paradise\, Gold Coast\, QLD
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-melbourne-champs-iii-2027@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20270108
+DTEND;VALUE=DATE:20270201
+SUMMARY:Melbourne Champs III
+LOCATION:Crown Melbourne\, Melbourne\, VIC
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-adelaide-champs-ii-2027@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20270212
+DTEND;VALUE=DATE:20270223
+SUMMARY:Adelaide Champs II
+LOCATION:Crowne Plaza Adelaide Mawson Lakes\, Adelaide\, SA
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-sydney-champs-ii-2027@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20270319
+DTEND;VALUE=DATE:20270330
+SUMMARY:Sydney Champs II
+LOCATION:Revesby Workers Club\, Sydney\, NSW
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+BEGIN:VEVENT
+UID:apt-melbourne-champs-iv-2027@bigbluffbay.au
+DTSTAMP:20261014T000000Z
+DTSTART;VALUE=DATE:20270408
+DTEND;VALUE=DATE:20270419
+SUMMARY:Melbourne Champs IV
+LOCATION:Crown Melbourne\, Melbourne\, VIC
+DESCRIPTION:Australian Poker Tour. Confirm details: https://australianpokertour.com.au/
+URL:https://australianpokertour.com.au/
+END:VEVENT
+END:VCALENDAR

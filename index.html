@@ -11,6 +11,16 @@
     <meta property="og:site_name" content="Big Bluff Bay" />
     <meta property="og:title" content="Find a poker game | Big Bluff Bay" />
     <meta property="og:description" content="Australian poker events, in one clear calendar." />
+    <meta property="og:url" content="https://bigbluffbay.au/" />
+    <meta property="og:image" content="https://bigbluffbay.au/social-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Find a poker game | Big Bluff Bay" />
+    <meta name="twitter:description" content="Australian poker events, in one clear calendar." />
+    <meta name="twitter:image" content="https://bigbluffbay.au/social-card.png" />
+    <link rel="alternate" type="application/rss+xml" title="Big Bluff Bay Australian Poker Events" href="/events.xml" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Big Bluff Bay","url":"https://bigbluffbay.au/","inLanguage":"en-AU","potentialAction":{"@type":"SearchAction","target":"https://bigbluffbay.au/search.html?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"Organization","name":"Big Bluff Bay","url":"https://bigbluffbay.au/"}]}</script>
     <title>Find a poker game | Big Bluff Bay</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,6 +42,7 @@
           <a href="/tournaments.html">Tournaments</a>
           <a href="/organisers.html">Organisers</a>
           <a href="/venues.html">Venues</a>
+          <a href="/updates.html">Updates</a>
           <a href="#quick-hand">Quick hand</a>
         </nav>
         <a class="nav-cta" href="#events">Browse events <span aria-hidden="true">↗</span></a>
@@ -43,6 +54,7 @@
         <a href="/tournaments.html">Tournaments</a>
         <a href="/organisers.html">Organisers</a>
         <a href="/venues.html">Venues</a>
+        <a href="/updates.html">Calendar updates</a>
         <a href="#cities">Browse cities</a>
         <a href="#quick-hand">Quick hand</a>
       </nav>
@@ -78,6 +90,18 @@
             <label class="search-field" for="type-filter">
               <span class="field-icon" aria-hidden="true">♠</span>
               <span class="field-content"><span class="field-label">GAME TYPE</span><select id="type-filter" name="type"><option value="all">All events</option><option value="series">Tournament series</option><option value="league">League events</option></select></span>
+            </label>
+            <label class="search-field" for="budget-filter">
+              <span class="field-icon" aria-hidden="true">$</span>
+              <span class="field-content"><span class="field-label">ENTRY BUDGET</span><select id="budget-filter" name="budget"><option value="all">Any / not listed</option><option value="0-100">Up to $100</option><option value="100-500">$100–$500</option><option value="500-1500">$500–$1,500</option><option value="1500+">$1,500+</option></select></span>
+            </label>
+            <label class="search-field" for="format-filter">
+              <span class="field-icon" aria-hidden="true">♣</span>
+              <span class="field-content"><span class="field-label">FORMAT</span><select id="format-filter" name="format"><option value="all">Any format</option><option value="holdem">Hold’em</option><option value="plo">PLO</option><option value="mixed games">Mixed games</option></select></span>
+            </label>
+            <label class="search-field" for="guarantee-filter">
+              <span class="field-icon" aria-hidden="true">◎</span>
+              <span class="field-content"><span class="field-label">PRIZE POOL</span><select id="guarantee-filter" name="guarantee"><option value="all">Any guarantee</option><option value="listed">Guaranteed events</option><option value="100000+">$100k+ GTD</option></select></span>
             </label>
             <button class="search-button" type="submit">Find games <span aria-hidden="true">→</span></button>
           </form>
@@ -158,7 +182,7 @@
 
     <footer class="site-footer">
       <div class="shell footer-top"><a class="brand footer-brand" href="/" aria-label="Big Bluff Bay home"><span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span><span class="brand-name">BIG BLUFF <b>BAY</b></span></a><p>Find a game. Check the details. Enjoy the night.</p><a class="back-top" href="#main">Back to top ↑</a></div>
-      <div class="shell footer-bottom"><span>© <span id="year">2026</span> Big Bluff Bay</span><nav class="footer-directory" aria-label="Poker event directories"><a href="/tournaments.html">Tournaments</a><a href="/organisers.html">Organisers</a><a href="/venues.html">Venues</a></nav><span>18+ only · Play within your limits</span><span>Event details belong to their respective organisers.</span></div>
+      <div class="shell footer-bottom"><span>© <span id="year">2026</span> Big Bluff Bay</span><nav class="footer-directory" aria-label="Poker event directories"><a href="/tournaments.html">Tournaments</a><a href="/organisers.html">Organisers</a><a href="/venues.html">Venues</a><a href="/updates.html">Updates</a><a href="/events.xml">RSS feed</a><a href="/events.ics">Calendar feed</a></nav><span>18+ only · Play within your limits</span><span>Event details belong to their respective organisers.</span></div>
     </footer>
   </body>
 </html>
