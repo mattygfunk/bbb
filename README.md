@@ -30,11 +30,13 @@ The daily job checks the trusted organiser source list in `data/sources.json`, i
 - Shareable search URLs that preserve selected filters
 - Upcoming event cards with source, last-checked, entry/guarantee facts, and map links only when venue details are confirmed
 - A dedicated page for each upcoming event, with official links, calendar download, share action, and verified event details
+- One-tap sharing for event pages and filtered searches, with a shareable event-ID shortlist that works for recipients who have not saved the same events
 - Generated organiser profiles and event venue pages with cross-links between listings
 - Popular-city shortcuts
 - Saved events stored privately in the visitor’s browser
 - Shareable search filters that can be reopened from a link
-- One-click all-day calendar downloads in `.ics` format
+- All-day `.ics` downloads for an individual event or the visitor’s saved-event collection
+- Accessible action feedback and browser back/forward support for search filters
 - An interactive beginner-friendly decision prompt
 - Tournament, organiser, venue and priority-city directory pages rebuilt from the verified event data
 - RSS (`events.xml`) and subscribable iCalendar (`events.ics`) feeds

@@ -93,7 +93,7 @@
             </label>
             <label class="search-field" for="budget-filter">
               <span class="field-icon" aria-hidden="true">$</span>
-              <span class="field-content"><span class="field-label">ENTRY BUDGET</span><select id="budget-filter" name="budget"><option value="all">Any / not listed</option><option value="0-100">Up to $100</option><option value="100-500">$100–$500</option><option value="500-1500">$500–$1,500</option><option value="1500+">$1,500+</option></select></span>
+              <span class="field-content"><span class="field-label">ENTRY BUDGET</span><select id="budget-filter" name="budget"><option value="all">Any / not listed</option><option value="0-100">Up to $100</option><option value="100-500">$101–$500</option><option value="500-1500">$501–$1,500</option><option value="1500+">$1,501+</option></select></span>
             </label>
             <label class="search-field" for="format-filter">
               <span class="field-icon" aria-hidden="true">♣</span>
@@ -124,9 +124,11 @@
           </div>
           <div class="event-tools" aria-label="Event list tools">
             <button class="utility-button" id="saved-toggle" type="button" aria-pressed="false">☆ <span>Saved events</span> <span class="saved-count" id="saved-count">0</span></button>
+            <button class="utility-button" id="download-saved" type="button">▦ <span>Download saved calendar</span></button>
             <button class="utility-button" id="share-search" type="button">↗ <span>Share this search</span></button>
             <button class="utility-button utility-reset" id="clear-filters" type="button">Clear filters</button>
             <span class="storage-note" id="storage-note">Saved on this device</span>
+            <span class="action-feedback" id="action-feedback" role="status" aria-live="polite"></span>
           </div>
           <div class="event-grid" id="event-grid" aria-live="polite" aria-busy="true">
             <article class="loading-card"><span class="loader" aria-hidden="true"></span><p>Shuffling the calendar…</p></article>
