@@ -23,6 +23,9 @@ Keep listings factual, link to primary organiser sources, and recheck details be
 - Mobile-first layout with city, date, and event-type filters
 - Upcoming event cards with source and last-checked details
 - Popular-city shortcuts
+- Saved events stored privately in the visitor’s browser
+- Shareable search filters that can be reopened from a link
+- One-click all-day calendar downloads in `.ics` format
 - An interactive beginner-friendly decision prompt
 - No visitor accounts, payments, or location permissions
 

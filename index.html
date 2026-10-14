@@ -87,8 +87,14 @@
       <section class="section events-section" id="events" aria-labelledby="events-title">
         <div class="shell">
           <div class="section-heading">
-            <div><p class="eyebrow">THE NEXT DEAL</p><h2 id="events-title">Upcoming events<span class="heading-period">.</span></h2><p class="section-intro">A hand-picked starting calendar. Every event links back to its organiser so you can confirm the latest details.</p></div>
+            <div><p class="eyebrow">THE NEXT DEAL</p><h2 id="events-title" tabindex="-1">Upcoming events<span class="heading-period">.</span></h2><p class="section-intro">A hand-picked starting calendar. Every event links back to its organiser so you can confirm the latest details.</p></div>
             <div class="results-note" id="results-note" aria-live="polite"></div>
+          </div>
+          <div class="event-tools" aria-label="Event list tools">
+            <button class="utility-button" id="saved-toggle" type="button" aria-pressed="false">☆ <span>Saved events</span> <span class="saved-count" id="saved-count">0</span></button>
+            <button class="utility-button" id="share-search" type="button">↗ <span>Share this search</span></button>
+            <button class="utility-button utility-reset" id="clear-filters" type="button">Clear filters</button>
+            <span class="storage-note" id="storage-note">Saved on this device</span>
           </div>
           <div class="event-grid" id="event-grid" aria-live="polite" aria-busy="true">
             <article class="loading-card"><span class="loader" aria-hidden="true"></span><p>Shuffling the calendar…</p></article>
