@@ -14,7 +14,8 @@
       "startDate": "2026-10-12",
       "endDate": "2026-10-27",
       "checkedAt": "2026-10-14",
-      "sourceUrl": "https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship"
+      "sourceUrl": "https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship",
+      "details": "$2,500 Main Event; $5,000 and $10,000 High Rollers; mixed-game events."
     },
     {
       "id": "npl-sydney-vip-oct-2026",
@@ -24,11 +25,13 @@
       "type": "league",
       "city": "Sydney",
       "state": "NSW",
-      "venue": "See organiser schedule",
+      "venue": "Padstow RSL",
       "startDate": "2026-10-31",
       "endDate": "2026-10-31",
       "checkedAt": "2026-10-14",
-      "sourceUrl": "https://www.npl.com.au/Events/NSW/SydneyVIP"
+      "sourceUrl": "https://www.npl.com.au/Events/NSW/SydneyVIP",
+      "details": "$20,000 guaranteed; $50 entry or qualification; registration 10:00am, start 11:00am, late registration until 2:00pm.",
+      "venueConfirmed": false
     },
     {
       "id": "apt-sydney-champs-2026",
@@ -50,13 +53,14 @@
       "organiser": "National Poker League",
       "label": "Tournament series",
       "type": "series",
-      "city": "Australia-wide",
-      "state": "AU",
-      "venue": "See organiser schedule",
+      "city": "Sydney",
+      "state": "NSW",
+      "venue": "Club Willoughby",
       "startDate": "2026-11-18",
       "endDate": "2026-11-22",
       "checkedAt": "2026-10-14",
-      "sourceUrl": "https://npl.com.au/"
+      "sourceUrl": "https://www.npl.com.au/SuperSeries",
+      "details": "$300,000 GTD Main Event; $1,150 entry; Day 1 flights 19–21 November; opening satellite 18 November."
     },
     {
       "id": "apt-gold-coast-champs-2026",
@@ -69,6 +73,63 @@
       "venue": "Crowne Plaza Surfers Paradise",
       "startDate": "2026-11-27",
       "endDate": "2026-12-06",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/"
+    },
+    {
+      "id": "apt-melbourne-champs-iii-2027",
+      "title": "Melbourne Champs III",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Melbourne",
+      "state": "VIC",
+      "venue": "Crown Melbourne",
+      "startDate": "2027-01-08",
+      "endDate": "2027-01-31",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/",
+      "details": "Upcoming 2027 series announced on the official APT season schedule."
+    },
+    {
+      "id": "apt-adelaide-champs-ii-2027",
+      "title": "Adelaide Champs II",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Adelaide",
+      "state": "SA",
+      "venue": "Crowne Plaza Adelaide Mawson Lakes",
+      "startDate": "2027-02-12",
+      "endDate": "2027-02-22",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/"
+    },
+    {
+      "id": "apt-sydney-champs-ii-2027",
+      "title": "Sydney Champs II",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Sydney",
+      "state": "NSW",
+      "venue": "Revesby Workers Club",
+      "startDate": "2027-03-19",
+      "endDate": "2027-03-29",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/"
+    },
+    {
+      "id": "apt-melbourne-champs-iv-2027",
+      "title": "Melbourne Champs IV",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Melbourne",
+      "state": "VIC",
+      "venue": "Crown Melbourne",
+      "startDate": "2027-04-08",
+      "endDate": "2027-04-18",
       "checkedAt": "2026-10-14",
       "sourceUrl": "https://australianpokertour.com.au/"
     }

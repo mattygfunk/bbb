@@ -108,6 +108,13 @@ function candidateText(item, sourceUrl) {
 
 const sourceEvents = [];
 const activeSources = new Map();
+const sourceConfig = JSON.parse(await readFile(new URL('../data/sources.json', import.meta.url), 'utf8'));
+for (const source of sourceConfig.sources || []) {
+  if (!source.url) continue;
+  const group = activeSources.get(source.url) || [];
+  group.push(source.name || source.organiser || source.url);
+  activeSources.set(source.url, group);
+}
 for (const event of events) {
   if (!event.sourceUrl || dateMs(event.endDate) < dateMs(today)) continue;
   const group = activeSources.get(event.sourceUrl) || [];

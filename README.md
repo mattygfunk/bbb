@@ -20,9 +20,9 @@ Keep listings factual, link to primary organiser sources, and recheck details be
 
 ## Calendar source monitoring
 
-GitHub Actions runs a small source check weekly and can also be started from **Actions → Poker calendar source monitor → Run workflow**. It validates event fields and dates, flags upcoming listings that have not been rechecked recently, checks organiser links, and looks for upcoming events published as Schema.org `Event` data on those organiser pages. Findings appear in one maintained GitHub issue. Structured-data matches are suggestions only: a person must verify game details, dates, venue and host before they are added to the public calendar. The monitor does not publish new event records automatically.
+GitHub Actions runs a small source check daily and can also be started from **Actions → Poker calendar source monitor → Run workflow**. It validates event fields and dates, flags upcoming listings that have not been rechecked recently, checks organiser links, and looks for upcoming events published as Schema.org `Event` data on those organiser pages. Findings appear in one maintained GitHub issue. Structured-data matches are suggestions only: a person must verify game details, dates, venue and host before they are added to the public calendar. The monitor does not publish new event records automatically.
 
-The weekly job runs only on its schedule or when manually started; it does not run on every push or pull request.
+The daily job checks the trusted organiser source list in `data/sources.json`, including sources with no currently active listing, then rebuilds the tournament, organiser and venue pages plus the sitemap. It commits generated pages only when they change. It runs on its daily schedule or when manually started; it does not run on every push or pull request. City hubs for the Gold Coast and Cairns are included; sparse city pages are kept out of search indexing until they have enough verified listings. The automation keeps the last published event data intact when a source is blocked or unavailable. New events remain review suggestions and are never published automatically.
 
 ## Current homepage features
 
@@ -33,6 +33,7 @@ The weekly job runs only on its schedule or when manually started; it does not r
 - Shareable search filters that can be reopened from a link
 - One-click all-day calendar downloads in `.ics` format
 - An interactive beginner-friendly decision prompt
+- Tournament, organiser, venue and priority-city directory pages rebuilt from the verified event data
 - A full-text search page linked from the main navigation
 - Branded 404 and 403 pages with search and clear routes back into the site
 - No visitor accounts, payments, or location permissions
