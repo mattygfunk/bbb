@@ -3,19 +3,21 @@ name: Poker calendar source monitor
 on:
   workflow_dispatch:
   schedule:
-    # Weekly at 06:15 Melbourne time during daylight saving (UTC schedule).
-    - cron: '15 19 * * 0'
+    # Daily at 06:15 Melbourne time during daylight saving (UTC schedule).
+    - cron: '15 19 * * *'
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: bbb
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -23,3 +25,16 @@ jobs:
         run: node scripts/check-events.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rebuild tournament directories and sitemap
+        run: node scripts/build-directory-pages.mjs
+      - name: Commit generated pages when they change
+        run: |
+          git add tournaments.html organisers.html venues.html cities/gold-coast.html cities/cairns.html sitemap.xml
+          if git diff --cached --quiet; then
+            echo "Generated pages are current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Refresh generated poker event directories"
+          git push origin bbb

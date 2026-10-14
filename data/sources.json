@@ -1,0 +1,34 @@
+{
+  "sources": [
+    {
+      "name": "Australian Poker Tour schedule",
+      "organiser": "Australian Poker Tour",
+      "url": "https://australianpokertour.com.au/"
+    },
+    {
+      "name": "National Poker League events",
+      "organiser": "National Poker League",
+      "url": "https://www.npl.com.au/Index"
+    },
+    {
+      "name": "Victorian Poker Championship",
+      "organiser": "Crown Melbourne",
+      "url": "https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship"
+    },
+    {
+      "name": "Cairns RSL Club NPL venue calendar",
+      "organiser": "National Poker League",
+      "url": "https://www.npl.com.au/Venues/QLD/Cairns/Cairns-RSL-Club"
+    },
+    {
+      "name": "NPL major events schedule",
+      "organiser": "National Poker League",
+      "url": "https://www.npl.com.au/Events/List"
+    },
+    {
+      "name": "NPL Super Series schedule",
+      "organiser": "National Poker League",
+      "url": "https://www.npl.com.au/SuperSeries"
+    }
+  ]
+}
