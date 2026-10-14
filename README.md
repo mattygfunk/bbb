@@ -32,4 +32,4 @@ The seeded events were checked against organiser sources on 14 October 2026. Org
 
 This is a buildless static site. Connect the GitHub repository in Cloudflare Pages, select the `bbb` production branch, leave the build command empty, and set the build output directory to `/`. The homepage and assets live at the repository root.
 
-Add `biglifebuy.au` as a custom domain in Cloudflare Pages after the domain is on Cloudflare DNS. Keep the existing live host in place until Cloudflare verifies the domain and the new deployment is working.
+Add `bigbluffbay.au` as a custom domain in Cloudflare Pages after the domain is on Cloudflare DNS. Keep the existing live host in place until Cloudflare verifies the domain and the new deployment is working.
