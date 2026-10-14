@@ -123,7 +123,7 @@ const checked = offline ? [] : await Promise.all([...activeSources].map(async ([
         signal: AbortSignal.timeout(15000),
       });
       if ([404, 410].includes(response.status) || response.status >= 500) {
-        issues.push(`${label}: organiser source returned HTTP ${response.status} (${response.url || event.sourceUrl})`);
+        issues.push(`${label}: organiser source returned HTTP ${response.status} (${response.url || sourceUrl})`);
       } else if (response.status === 403 || response.status === 429) {
         issues.push(`${label}: source check was rate-limited or blocked (HTTP ${response.status}); manual check needed`);
       } else if (!response.ok) {
@@ -134,7 +134,7 @@ const checked = offline ? [] : await Promise.all([...activeSources].map(async ([
       if ((response.headers.get('content-type') || '').includes('application/json')) {
         try { structured = collectJsonLd(JSON.parse(body)); } catch { /* Non-JSON response body. */ }
       }
-      sourceEvents.push(...[...htmlEvents(body), ...structured].map((item) => ({ item, sourceUrl: response.url || event.sourceUrl })));
+      sourceEvents.push(...[...htmlEvents(body), ...structured].map((item) => ({ item, sourceUrl: response.url || sourceUrl })));
       return { label, status: response.status, finalUrl: response.url };
     } catch (error) {
       issues.push(`${label}: source could not be checked (${error.name === 'TimeoutError' ? 'timed out' : 'request failed'}); manual check needed`);
