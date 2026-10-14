@@ -18,6 +18,12 @@ Edit `data/events.json`. Each event needs a title, organiser, event type, city, 
 
 Keep listings factual, link to primary organiser sources, and recheck details before publishing. Do not add private games or real-money online poker promotions without a legal review of the listing and promotion rules.
 
+## Calendar source monitoring
+
+GitHub Actions runs a small source check weekly and can also be started from **Actions → Poker calendar source monitor → Run workflow**. It validates event fields and dates, flags upcoming listings that have not been rechecked recently, checks organiser links, and looks for upcoming events published as Schema.org `Event` data on those organiser pages. Findings appear in one maintained GitHub issue. Structured-data matches are suggestions only: a person must verify game details, dates, venue and host before they are added to the public calendar. The monitor does not publish new event records automatically.
+
+The weekly job runs only on its schedule or when manually started; it does not run on every push or pull request.
+
 ## Current homepage features
 
 - Mobile-first layout with city, date, and event-type filters
