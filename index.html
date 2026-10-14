@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101712" />
+    <meta name="description" content="Find upcoming live poker tournaments and league games across Australia. Clear details, checked sources, and direct links to organisers." />
+    <link rel="canonical" href="https://biglifebuy.au/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Big Bluff Bay" />
+    <meta property="og:title" content="Find a poker game | Big Bluff Bay" />
+    <meta property="og:description" content="Australian poker events, in one clear calendar." />
+    <title>Find a poker game | Big Bluff Bay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell nav-wrap">
+        <a class="brand" href="/" aria-label="Big Bluff Bay home">
+          <span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span>
+          <span class="brand-name">BIG BLUFF <b>BAY</b></span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#events">Find games</a>
+          <a href="#cities">Browse cities</a>
+          <a href="#quick-hand">Quick hand</a>
+        </nav>
+        <a class="nav-cta" href="#events">Browse events <span aria-hidden="true">↗</span></a>
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span></button>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden>
+        <a href="#events">Find games</a>
+        <a href="#cities">Browse cities</a>
+        <a href="#quick-hand">Quick hand</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="hero-grid shell">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-dot"></span> AUSTRALIAN POKER, ALL IN ONE PLACE</p>
+            <h1>Find your next<br /><em>poker game.</em></h1>
+            <p class="hero-lede">Tournament series, league nights and live events around Australia. Get the details, check the source, and make a plan.</p>
+            <div class="hero-meta"><span class="live-dot"></span><span id="listing-count">Loading verified events…</span><span class="meta-divider"></span><span>Updated from organisers</span></div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="card-float card-back"><span>♠</span></div>
+            <div class="card-float card-front"><small>BIG BLUFF BAY</small><strong>A♠</strong><span>♠</span></div>
+            <div class="hero-stamp"><span>PLAY<br />LOCAL</span><b>✳</b></div>
+            <span class="art-spark spark-one">✳</span><span class="art-spark spark-two">✦</span>
+          </div>
+        </div>
+        <div class="shell search-shell">
+          <form id="event-search" class="search-panel">
+            <label class="search-field search-location" for="location-filter">
+              <span class="field-icon" aria-hidden="true">⌖</span>
+              <span class="field-content"><span class="field-label">WHERE</span><input id="location-filter" name="location" type="search" placeholder="City or state" autocomplete="off" /></span>
+            </label>
+            <label class="search-field" for="when-filter">
+              <span class="field-icon" aria-hidden="true">▦</span>
+              <span class="field-content"><span class="field-label">WHEN</span><select id="when-filter" name="when"><option value="upcoming">Upcoming</option><option value="this-month">This month</option><option value="all">All dates</option></select></span>
+            </label>
+            <label class="search-field" for="type-filter">
+              <span class="field-icon" aria-hidden="true">♠</span>
+              <span class="field-content"><span class="field-label">GAME TYPE</span><select id="type-filter" name="type"><option value="all">All events</option><option value="series">Tournament series</option><option value="league">League events</option></select></span>
+            </label>
+            <button class="search-button" type="submit">Find games <span aria-hidden="true">→</span></button>
+          </form>
+          <div class="quick-locations" aria-label="Popular locations">
+            <span>POPULAR:</span>
+            <button type="button" class="location-chip is-active" data-location="">All Australia</button>
+            <button type="button" class="location-chip" data-location="Melbourne">Melbourne</button>
+            <button type="button" class="location-chip" data-location="Sydney">Sydney</button>
+            <button type="button" class="location-chip" data-location="Gold Coast">Gold Coast</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section events-section" id="events" aria-labelledby="events-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div><p class="eyebrow">THE NEXT DEAL</p><h2 id="events-title">Upcoming events<span class="heading-period">.</span></h2><p class="section-intro">A hand-picked starting calendar. Every event links back to its organiser so you can confirm the latest details.</p></div>
+            <div class="results-note" id="results-note" aria-live="polite"></div>
+          </div>
+          <div class="event-grid" id="event-grid" aria-live="polite" aria-busy="true">
+            <article class="loading-card"><span class="loader" aria-hidden="true"></span><p>Shuffling the calendar…</p></article>
+          </div>
+          <div class="source-note"><span class="source-icon" aria-hidden="true">↗</span><p>Schedules can change. Check the organiser’s official page before you travel or register.</p></div>
+        </div>
+      </section>
+
+      <section class="cities-section" id="cities" aria-labelledby="cities-title">
+        <div class="shell">
+          <div class="section-heading city-heading">
+            <div><p class="eyebrow">YOUR PATCH, YOUR GAME</p><h2 id="cities-title">Pick a city<span class="heading-period">.</span></h2></div>
+            <p class="city-intro">Start with the places players are searching for. More cities join as their listings are checked.</p>
+          </div>
+          <div class="city-grid">
+            <button class="city-card city-melbourne" data-location="Melbourne" type="button"><span class="city-number">01 / VIC</span><span class="city-name">Melbourne</span><span class="city-action">See events <b>↗</b></span><span class="city-watermark" aria-hidden="true">M</span></button>
+            <button class="city-card city-sydney" data-location="Sydney" type="button"><span class="city-number">02 / NSW</span><span class="city-name">Sydney</span><span class="city-action">See events <b>↗</b></span><span class="city-watermark" aria-hidden="true">S</span></button>
+            <button class="city-card city-goldcoast" data-location="Gold Coast" type="button"><span class="city-number">03 / QLD</span><span class="city-name">Gold Coast</span><span class="city-action">See events <b>↗</b></span><span class="city-watermark" aria-hidden="true">G</span></button>
+            <a class="city-card city-australia" href="#events"><span class="city-number">04 / EVERYWHERE</span><span class="city-name">All Australia</span><span class="city-action">See the full calendar <b>↗</b></span><span class="city-watermark" aria-hidden="true">AU</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="quick-section" id="quick-hand" aria-labelledby="quick-title">
+        <div class="shell quick-layout">
+          <div class="quick-copy"><p class="eyebrow">A LITTLE TABLE TALK</p><h2 id="quick-title">One hand.<br /><em>One good question.</em></h2><p>Build your instincts with a quick decision. No magic answers—just the factors worth thinking through.</p><span class="quick-tag"><span>♠</span> QUICK HAND #01</span></div>
+          <div class="quiz-card" id="quiz-card">
+            <div class="quiz-topline"><span>NLH · 6-max · 100bb</span><span class="quiz-step">01 <i>/</i> 01</span></div>
+            <p class="quiz-situation">You’re on the button with <strong>A♠ Q♠</strong>. An early-position player raises. What’s your first thought?</p>
+            <div class="quiz-options" role="group" aria-label="Choose your poker decision">
+              <button type="button" class="quiz-option" data-answer="always">“Always 3-bet here.”</button>
+              <button type="button" class="quiz-option" data-answer="context">“Check the sizing, opener, stacks and players behind me.”</button>
+              <button type="button" class="quiz-option" data-answer="never">“Always call and see a flop.”</button>
+            </div>
+            <p class="quiz-feedback" id="quiz-feedback" role="status" aria-live="polite" hidden></p>
+            <button type="button" class="quiz-reset" id="quiz-reset" hidden>Try again <span aria-hidden="true">↻</span></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-section">
+        <div class="shell trust-layout">
+          <div><p class="eyebrow">NO GUESSWORK</p><h2>Useful details.<br /><em>Direct sources.</em></h2></div>
+          <div class="trust-points">
+            <article><span class="trust-index">01</span><div><h3>Know what’s on</h3><p>Dates, city, venue and event type up front, so you can quickly see if it suits.</p></div></article>
+            <article><span class="trust-index">02</span><div><h3>Check the source</h3><p>We link to the organiser’s own schedule. Confirm details there before making plans.</p></div></article>
+            <article><span class="trust-index">03</span><div><h3>Play within your limits</h3><p>Set a budget before you go. If gambling stops being fun, <a href="https://www.gamblinghelponline.org.au/" target="_blank" rel="noopener noreferrer">Gambling Help Online</a> is there 24/7.</p></div></article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-top"><a class="brand footer-brand" href="/" aria-label="Big Bluff Bay home"><span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span><span class="brand-name">BIG BLUFF <b>BAY</b></span></a><p>Find a game. Check the details. Enjoy the night.</p><a class="back-top" href="#main">Back to top ↑</a></div>
+      <div class="shell footer-bottom"><span>© <span id="year">2026</span> Big Bluff Bay</span><span>18+ only · Play within your limits</span><span>Event details belong to their respective organisers.</span></div>
+    </footer>
+  </body>
+</html>

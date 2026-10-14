@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-10-14",
+  "timezone": "Australia/Melbourne",
+  "events": [
+    {
+      "id": "victorian-poker-championship-2026",
+      "title": "Victorian Poker Championship",
+      "organiser": "Crown Melbourne",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Melbourne",
+      "state": "VIC",
+      "venue": "Crown Melbourne",
+      "startDate": "2026-10-12",
+      "endDate": "2026-10-27",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://www.crownmelbourne.com.au/casino/offers/victorian-poker-championship"
+    },
+    {
+      "id": "npl-sydney-vip-oct-2026",
+      "title": "NPL $20,000 GTD SydneyVIP",
+      "organiser": "National Poker League",
+      "label": "League event",
+      "type": "league",
+      "city": "Sydney",
+      "state": "NSW",
+      "venue": "See organiser schedule",
+      "startDate": "2026-10-31",
+      "endDate": "2026-10-31",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://www.npl.com.au/Events/NSW/SydneyVIP"
+    },
+    {
+      "id": "apt-sydney-champs-2026",
+      "title": "Sydney Champs",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Sydney",
+      "state": "NSW",
+      "venue": "Revesby Workers Club",
+      "startDate": "2026-11-05",
+      "endDate": "2026-11-15",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/"
+    },
+    {
+      "id": "npl-super-series-nov-2026",
+      "title": "$300,000 GTD NPL Super Series Main Event",
+      "organiser": "National Poker League",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Australia-wide",
+      "state": "AU",
+      "venue": "See organiser schedule",
+      "startDate": "2026-11-18",
+      "endDate": "2026-11-22",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://npl.com.au/"
+    },
+    {
+      "id": "apt-gold-coast-champs-2026",
+      "title": "Gold Coast Champs",
+      "organiser": "Australian Poker Tour",
+      "label": "Tournament series",
+      "type": "series",
+      "city": "Gold Coast",
+      "state": "QLD",
+      "venue": "Crowne Plaza Surfers Paradise",
+      "startDate": "2026-11-27",
+      "endDate": "2026-12-06",
+      "checkedAt": "2026-10-14",
+      "sourceUrl": "https://australianpokertour.com.au/"
+    }
+  ]
+}
