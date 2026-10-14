@@ -26,18 +26,30 @@
     const share = click.target.closest('[data-share-event]');
     if (!calendar && !share) return;
     try {
-      const response = await fetch('/data/events.json', { cache: 'no-cache' });
-      if (!response.ok) throw new Error('Calendar data unavailable');
-      const data = await response.json();
-      const id = (calendar || share).dataset.eventCalendar || (calendar || share).dataset.shareEvent;
-      const event = data.events?.find((item) => item.id === id);
-      if (!event) throw new Error('Event not found');
-      if (calendar) saveCalendar(event);
+      const button = calendar || share;
+      const event = calendar ? {
+        id: calendar.dataset.eventCalendar, title: calendar.dataset.title,
+        startDate: calendar.dataset.start, endDate: calendar.dataset.end,
+        venue: calendar.dataset.venue, city: calendar.dataset.city,
+        state: calendar.dataset.state, organiser: calendar.dataset.organiser,
+        sourceUrl: calendar.dataset.source,
+      } : null;
+      if (calendar) { saveCalendar(event); announce('Calendar file downloaded.'); }
       else {
         const url = location.href;
-        if (navigator.share) await navigator.share({ title: event.title, text: `${event.title} · ${event.city} · ${event.startDate}`, url });
-        else { await navigator.clipboard.writeText(url); share.textContent = 'Link copied'; setTimeout(() => { share.textContent = 'Share event ↗'; }, 1800); }
+        if (navigator.share) await navigator.share({ title: share.dataset.title, text: `${share.dataset.title} · ${share.dataset.city} · ${share.dataset.start}`, url });
+        else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); announce('Event link copied.'); }
+        else {
+          const input = document.createElement('textarea'); input.value = url; input.readOnly = true; input.style.position = 'fixed'; input.style.opacity = '0'; document.body.append(input); input.select();
+          const copied = document.execCommand('copy'); input.remove();
+          if (!copied) throw new Error('Copy is unavailable in this browser.');
+          announce('Event link copied.');
+        }
       }
-    } catch (error) { if (error.name !== 'AbortError') { const button = calendar || share; button.setAttribute('aria-label', error.message); } }
+    } catch (error) { if (error.name !== 'AbortError') announce('Could not complete that action. Try the official event link.'); }
   });
+  function announce(message) {
+    const status = document.querySelector('#detail-feedback');
+    if (status) { status.textContent = message; setTimeout(() => { status.textContent = ''; }, 3500); }
+  }
 })();

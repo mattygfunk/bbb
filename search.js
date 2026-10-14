@@ -29,6 +29,13 @@
       return '';
     }
   };
+  const formatKey = (value) => {
+    const key = String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    if (key.includes('mixed')) return 'mixed games';
+    if (key.includes('omaha') || key === 'plo') return 'plo';
+    if (key.includes('hold em') || key === 'holdem' || key === 'nlh') return 'holdem';
+    return key;
+  };
 
   queryInput.value = (params.get('q') || '').slice(0, 80);
   if (['all', 'series', 'league'].includes(params.get('type'))) typeSelect.value = params.get('type');
@@ -46,7 +53,7 @@
       const text = [event.title, event.organiser, event.label, event.city, event.state, event.venue, event.details, ...(event.formats || [])].join(' ').toLocaleLowerCase('en-AU');
       const entry = Number(event.buyInMin);
       const matchesBudget = budget === 'all' || (Number.isFinite(entry) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
-      const formats = (event.formats || []).map((value) => String(value).toLowerCase());
+      const formats = (event.formats || []).map(formatKey);
       const prize = Number(event.guaranteeAmount);
       const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? Number.isFinite(prize) : Number.isFinite(prize) && prize >= 100000);
       return event.endDate >= today && (!query || text.includes(query)) && (type === 'all' || event.type === type) && matchesBudget && (format === 'all' || formats.includes(format)) && matchesGuarantee;

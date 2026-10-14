@@ -12,6 +12,9 @@
 .utility-button.is-active .saved-count{background:#33412e;color:var(--green)}
 .storage-note{margin-left:auto;color:#899184;font-size:9px}
 .event-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.utility-button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.action-feedback{color:#506044;font-size:10px;min-height:1em}
+.event-actions .card-action{transition:background .18s,border-color .18s,transform .18s}
 .card-action{min-height:31px;padding:0 10px;border:1px solid #d8ddd1;border-radius:4px;background:#f5f6ef;color:#506044;font:600 9px var(--font-body);cursor:pointer;transition:background .18s,border-color .18s}
 .card-action:hover{background:#edf4e3;border-color:#9bb875}
 .card-action.is-saved{background:#eaf2dd;border-color:#acc786;color:#3f6125}
