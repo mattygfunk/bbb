@@ -50,12 +50,12 @@
     const format = formatSelect.value;
     const guarantee = guaranteeSelect.value;
     const found = events.filter((event) => {
-      const text = [event.title, event.organiser, event.label, event.city, event.state, event.venue, event.details, ...(event.formats || [])].join(' ').toLocaleLowerCase('en-AU');
-      const entry = Number(event.buyInMin);
-      const matchesBudget = budget === 'all' || (Number.isFinite(entry) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
-      const formats = (event.formats || []).map(formatKey);
-      const prize = Number(event.guaranteeAmount);
-      const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? Number.isFinite(prize) : Number.isFinite(prize) && prize >= 100000);
+      const text = [event.title, event.organiser, event.label, event.city, event.state, event.venue, event.details, ...(Array.isArray(event.formats) ? event.formats : [])].join(' ').toLocaleLowerCase('en-AU');
+      const entry = event.buyInMin;
+      const matchesBudget = budget === 'all' || ((Number.isFinite(entry) && entry >= 0) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
+      const formats = (Array.isArray(event.formats) ? event.formats : []).map(formatKey);
+      const prize = event.guaranteeAmount;
+      const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? (Number.isFinite(prize) && prize > 0) : (Number.isFinite(prize) && prize > 0) && prize >= 100000);
       return event.endDate >= today && (!query || text.includes(query)) && (type === 'all' || event.type === type) && matchesBudget && (format === 'all' || formats.includes(format)) && matchesGuarantee;
     }).sort((a, b) => a.startDate.localeCompare(b.startDate));
 
@@ -73,7 +73,7 @@
       const sourceUrl = validUrl(event.sourceUrl);
       if (sourceUrl) official = `<a class="official-link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Official details <span aria-hidden="true">↗</span></a>`;
       const path = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
-      const extra = [Number.isFinite(Number(event.buyInMin)) ? `Entry from $${Number(event.buyInMin).toLocaleString('en-AU')}` : '', Number.isFinite(Number(event.guaranteeAmount)) ? `$${Number(event.guaranteeAmount).toLocaleString('en-AU')} GTD` : '', ...(event.formats || [])].filter(Boolean);
+      const extra = [(Number.isFinite(event.buyInMin) && event.buyInMin >= 0) ? `Entry from $${event.buyInMin.toLocaleString('en-AU')}` : '', (Number.isFinite(event.guaranteeAmount) && event.guaranteeAmount > 0) ? `$${event.guaranteeAmount.toLocaleString('en-AU')} GTD` : '', ...(Array.isArray(event.formats) ? event.formats : [])].filter(Boolean);
       return `<article class="search-card">
         <div class="search-card-top"><span class="event-kind">${safe(event.label)}</span><span class="search-date">${safe(dates)}</span></div>
         <h3><a href="${safe(path)}">${safe(event.title)}</a></h3>
