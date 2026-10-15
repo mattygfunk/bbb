@@ -218,7 +218,7 @@
       const facts = [entryLabel, guaranteeLabel, formatLabel].filter(Boolean);
       const detailLink = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
       const mapLink = event.venueConfirmed !== false && event.venue
-        ? `<a class="detail" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue} ${event.city} ${event.state}`)}" target="_blank" rel="noopener noreferrer">Directions ↗</a>` : '';
+        ? `<a class="detail" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue} ${event.city} ${event.state}`)}" target="_blank" aria-label="Directions to ${safe(event.venue)}, ${safe(event.city)}, ${safe(event.state)}" rel="noopener noreferrer">Directions ↗</a>` : '';
       const organiserLink = sourceUrl
         ? `<a class="official-link" href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Official details <span aria-hidden="true">↗</span></a>`
         : '<span class="official-link is-unavailable">Official link unavailable</span>';
