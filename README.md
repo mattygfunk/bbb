@@ -12,6 +12,13 @@ python3 -m http.server 4173
 
 Then open `http://localhost:4173`.
 
+## Check changes
+
+Run `node --test tests/*.test.mjs` for browser-rendering/filter regressions (no dependencies), and
+`CHECK_EVENTS_OFFLINE=1 node scripts/check-events.mjs` to validate the calendar without network requests.
+Only explicit, non-negative numeric entry prices and positive numeric guarantees are shown or matched
+by price filters. Missing, null, blank, string or invalid amounts are unknown, never free entry.
+
 ## Update the calendar
 
 Edit `data/events.json`. Each event needs a title, organiser, event type, city, state, venue, start and end dates, the date it was checked, and a link to the organiser’s own page. The homepage filters expired events automatically using the `Australia/Melbourne` calendar date.

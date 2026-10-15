@@ -121,12 +121,12 @@
     const overlapsThisMonth = event.startDate.slice(0, 7) <= monthKey && event.endDate.slice(0, 7) >= monthKey;
     const matchesWhen = when === 'all' || (when === 'this-month' ? overlapsThisMonth : event.endDate >= today);
     const matchesType = type === 'all' || event.type === type;
-    const entry = Number(event.buyInMin);
-    const matchesBudget = budget === 'all' || (Number.isFinite(entry) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
+    const entry = event.buyInMin;
+    const matchesBudget = budget === 'all' || ((Number.isFinite(entry) && entry >= 0) && (budget === '0-100' ? entry <= 100 : budget === '100-500' ? entry > 100 && entry <= 500 : budget === '500-1500' ? entry > 500 && entry <= 1500 : entry > 1500));
     const formats = Array.isArray(event.formats) ? event.formats.map(formatKey) : [];
     const matchesFormat = format === 'all' || formats.includes(format);
-    const prize = Number(event.guaranteeAmount);
-    const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? Number.isFinite(prize) : Number.isFinite(prize) && prize >= 100000);
+    const prize = event.guaranteeAmount;
+    const matchesGuarantee = guarantee === 'all' || (guarantee === 'listed' ? (Number.isFinite(prize) && prize > 0) : (Number.isFinite(prize) && prize > 0) && prize >= 100000);
     const matchesSaved = !onlySaved || savedIds.has(event.id);
     const matchesShared = !sharedEventIds || sharedEventIds.has(event.id);
     return matchesLocation && matchesWhen && matchesType && matchesBudget && matchesFormat && matchesGuarantee && matchesSaved && matchesShared && event.endDate >= today;
@@ -212,8 +212,8 @@
       const dates = event.startDate === event.endDate ? dateLabel(event.startDate) : `${dateLabel(event.startDate)} – ${dateLabel(event.endDate)}`;
       const sourceUrl = validUrl(event.sourceUrl);
       const saved = savedIds.has(event.id);
-      const entryLabel = Number.isFinite(Number(event.buyInMin)) ? `From $${Number(event.buyInMin).toLocaleString('en-AU')}` : '';
-      const guaranteeLabel = Number.isFinite(Number(event.guaranteeAmount)) ? `$${Number(event.guaranteeAmount).toLocaleString('en-AU')} GTD` : '';
+      const entryLabel = (Number.isFinite(event.buyInMin) && event.buyInMin >= 0) ? `From $${event.buyInMin.toLocaleString('en-AU')}` : '';
+      const guaranteeLabel = (Number.isFinite(event.guaranteeAmount) && event.guaranteeAmount > 0) ? `$${event.guaranteeAmount.toLocaleString('en-AU')} GTD` : '';
       const formatLabel = Array.isArray(event.formats) ? event.formats.join(' · ') : '';
       const facts = [entryLabel, guaranteeLabel, formatLabel].filter(Boolean);
       const detailLink = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
