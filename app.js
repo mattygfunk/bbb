@@ -7,6 +7,8 @@
   const budgetSelect = document.querySelector('#budget-filter');
   const formatSelect = document.querySelector('#format-filter');
   const guaranteeSelect = document.querySelector('#guarantee-filter');
+  const advancedFilters = document.querySelector('#advanced-filters');
+  const advancedFilterCount = document.querySelector('#advanced-filter-count');
   const resultsNote = document.querySelector('#results-note');
   const listingCount = document.querySelector('#listing-count');
   const savedToggle = document.querySelector('#saved-toggle');
@@ -69,6 +71,15 @@
     downloadSavedButton.disabled = savedIds.size === 0;
   }
 
+  function updateAdvancedFilterSummary(resetDisclosure = false) {
+    const activeCount = [budgetSelect, formatSelect, guaranteeSelect]
+      .filter((control) => control.value !== 'all').length;
+    advancedFilterCount.textContent = activeCount ? `${activeCount} active` : 'Optional';
+    advancedFilterCount.classList.toggle('is-active', activeCount > 0);
+    if (activeCount) advancedFilters.open = true;
+    else if (resetDisclosure) advancedFilters.open = false;
+  }
+
   function syncFromUrl() {
     const params = new URLSearchParams(window.location.search);
     locationInput.value = params.get('location') || '';
@@ -87,6 +98,7 @@
     onlySaved = params.get('saved') === '1' && !sharedEventIds;
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location.toLowerCase() === locationInput.value.trim().toLowerCase()));
     updateSavedCount();
+    updateAdvancedFilterSummary(true);
   }
 
   function updateUrl(push = false) {
@@ -263,7 +275,10 @@
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location.toLowerCase() === locationInput.value.trim().toLowerCase()));
     render();
   });
-  [whenSelect, typeSelect, budgetSelect, formatSelect, guaranteeSelect].forEach((control) => control.addEventListener('change', () => render(true)));
+  [whenSelect, typeSelect, budgetSelect, formatSelect, guaranteeSelect].forEach((control) => control.addEventListener('change', () => {
+    updateAdvancedFilterSummary();
+    render(true);
+  }));
   cityButtons.forEach((button) => button.addEventListener('click', () => {
     if (button.classList.contains('city-card') && button.tagName === 'BUTTON') document.querySelector('#events').scrollIntoView({ behavior: 'smooth' });
     setLocation(button.dataset.location, true);
@@ -285,6 +300,7 @@
     sharedEventIds = null;
     cityButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.location === ''));
     updateSavedCount();
+    updateAdvancedFilterSummary(true);
     render(true);
   });
   grid.addEventListener('click', (event) => {
