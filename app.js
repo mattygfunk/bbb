@@ -1,5 +1,6 @@
 (() => {
   const grid = document.querySelector('#event-grid');
+  const featuredEvent = document.querySelector('#featured-event');
   const searchForm = document.querySelector('#event-search');
   const locationInput = document.querySelector('#location-filter');
   const whenSelect = document.querySelector('#when-filter');
@@ -207,8 +208,56 @@
     return 'copied';
   }
 
+  function renderFeaturedEvent(shown) {
+    if (!shown.length) {
+      const query = locationInput.value.trim();
+      featuredEvent.innerHTML = `<div class="featured-event-empty">
+        <p class="featured-event-kicker">${query ? `NO MATCH IN ${safe(query.toUpperCase())}` : 'NO MATCHES YET'}</p>
+        <h2>No event fits these filters.</h2>
+        <p>Try a wider location or date range to find the next checked game.</p>
+        <button class="featured-clear" type="button" data-clear-filters>Clear filters</button>
+      </div>`;
+      return;
+    }
+
+    const event = shown[0];
+    const sourceUrl = validUrl(event.sourceUrl);
+    const cityArt = ({ melbourne: 'melbourne', sydney: 'sydney', 'gold coast': 'gold-coast', cairns: 'cairns' })[String(event.city || '').toLowerCase()] || 'australia';
+    const context = locationInput.value.trim()
+      ? `NEXT IN ${safe(locationInput.value.trim().toUpperCase())}`
+      : 'NEXT UP · AUSTRALIA';
+    const dates = event.startDate === event.endDate
+      ? dateLabel(event.startDate)
+      : `${dateLabel(event.startDate)} – ${dateLabel(event.endDate)}`;
+    const location = [event.city, event.state].filter(Boolean).join(', ');
+    const facts = [
+      Number.isFinite(event.buyInMin) && event.buyInMin >= 0 ? `From ${event.buyInMin.toLocaleString('en-AU')}` : '',
+      Number.isFinite(event.guaranteeAmount) && event.guaranteeAmount > 0 ? `${event.guaranteeAmount.toLocaleString('en-AU')} GTD` : '',
+      Array.isArray(event.formats) ? event.formats.filter((format) => typeof format === 'string' && format.trim()).join(' · ') : '',
+    ].filter(Boolean);
+    const detailLink = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
+    const saved = savedIds.has(event.id);
+    const officialLink = sourceUrl
+      ? `<a href="${safe(sourceUrl)}" target="_blank" rel="noopener noreferrer">Official details <span aria-hidden="true">↗</span></a>`
+      : '<span class="featured-no-source">Source unavailable</span>';
+    featuredEvent.innerHTML = `<div class="featured-event-art feature-art-${cityArt}" aria-hidden="true"></div>
+      <div class="featured-event-content">
+        <div class="featured-event-topline"><p class="featured-event-kicker">${context}</p><span class="featured-event-status">${statusFor(event) === 'Happening now' ? 'LIVE NOW' : 'UP NEXT'}</span></div>
+        <h2><a href="${safe(detailLink)}">${safe(event.title)}</a></h2>
+        <p class="featured-event-location">${safe(location)}${event.venue ? ` <span aria-hidden="true">·</span> ${safe(event.venue)}` : ''}</p>
+        <p class="featured-event-date"><span aria-hidden="true">▦</span> ${safe(dates)}</p>
+        ${facts.length ? `<p class="featured-event-facts">${facts.map((fact) => `<span>${safe(fact)}</span>`).join('')}</p>` : ''}
+        <div class="featured-event-actions">
+          <button class="featured-save${saved ? ' is-saved' : ''}" type="button" data-save="${safe(event.id)}" aria-pressed="${saved}">${saved ? '★ Saved' : '☆ Save event'}</button>
+          <button class="featured-calendar" type="button" data-calendar="${safe(event.id)}">▦ Add to calendar</button>
+        </div>
+        <div class="featured-event-meta"><span>Checked ${safe(dateLabel(event.checkedAt))}</span>${officialLink}</div>
+      </div>`;
+  }
+
   function render(pushHistory = false) {
     const shown = events.filter(matches).sort((a, b) => a.startDate.localeCompare(b.startDate));
+    renderFeaturedEvent(shown);
     grid.setAttribute('aria-busy', 'false');
     resultsNote.textContent = `${shown.length} ${shown.length === 1 ? 'event' : 'events'} found`;
     if (!shown.length) {
@@ -330,6 +379,29 @@
     }
   });
 
+  featuredEvent.addEventListener('click', (event) => {
+    const clearButton = event.target.closest('[data-clear-filters]');
+    if (clearButton) {
+      clearFiltersButton.click();
+      document.querySelector('#events').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    const saveButton = event.target.closest('[data-save]');
+    if (saveButton) {
+      const id = saveButton.dataset.save;
+      if (savedIds.has(id)) savedIds.delete(id);
+      else savedIds.add(id);
+      persistSaved();
+      render();
+      return;
+    }
+    const calendarButton = event.target.closest('[data-calendar]');
+    if (calendarButton) {
+      const selected = events.find((item) => item.id === calendarButton.dataset.calendar);
+      if (selected) addToCalendar(selected);
+    }
+  });
+
   async function shareSearch() {
     const sharedUrl = new URL(window.location.href);
     sharedUrl.searchParams.delete('saved');
@@ -397,6 +469,7 @@
     })
     .catch(() => {
       events = [];
+      featuredEvent.innerHTML = '<div class="featured-event-empty"><p class="featured-event-kicker">EVENTS TEMPORARILY UNAVAILABLE</p><h2>The calendar will be back shortly.</h2><p>Please check an organiser’s official schedule in the meantime.</p></div>';
       listingCount.textContent = 'Event calendar loading soon';
       grid.setAttribute('aria-busy', 'false');
       grid.innerHTML = '<div class="empty-state"><strong>The calendar is taking a breather.</strong><p>Please try again shortly, or check an organiser’s official schedule.</p></div>';
