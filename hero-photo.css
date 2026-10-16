@@ -1,0 +1,9 @@
+/* A live local poker room gives the hero a tactile backdrop without competing with its copy. */
+.hero {
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(90deg, rgba(16, 23, 18, 0.92) 0%, rgba(16, 23, 18, 0.82) 48%, rgba(16, 23, 18, 0.45) 100%),
+    url("/big-bluff-bay-poker-room.webp");
+  background-position: center;
+  background-size: cover;
+}
