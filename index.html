@@ -26,6 +26,7 @@
     <script src="/font-loader.js" defer></script>
     <link rel="stylesheet" href="/styles.css" />
     <link rel="stylesheet" href="/hero-photo.css" />
+    <link rel="stylesheet" href="/homepage-refresh.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -33,7 +34,7 @@
     <header class="site-header">
       <div class="shell nav-wrap">
         <a class="brand" href="/" aria-label="Big Bluff Bay home">
-          <span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span>
+          <img class="brand-mark" src="/favicon.svg" alt="" />
           <span class="brand-name">BIG BLUFF <b>BAY</b></span>
         </a>
         <nav class="main-nav" aria-label="Main navigation">
@@ -81,7 +82,7 @@
           <form id="event-search" class="search-panel">
             <label class="search-field search-location" for="location-filter">
               <span class="field-icon" aria-hidden="true">⌖</span>
-              <span class="field-content"><span class="field-label">WHERE</span><input id="location-filter" name="location" type="search" placeholder="City or state" autocomplete="off" /></span>
+              <span class="field-content"><span class="field-label">WHERE</span><input id="location-filter" name="location" type="search" placeholder="City or state" autocomplete="off" list="location-options" /><datalist id="location-options"><option value="Melbourne"></option><option value="Sydney"></option><option value="Brisbane"></option><option value="Gold Coast"></option><option value="Cairns"></option><option value="Perth"></option><option value="Adelaide"></option><option value="Hobart"></option><option value="Canberra"></option><option value="Darwin"></option><option value="VIC"></option><option value="NSW"></option><option value="QLD"></option><option value="WA"></option><option value="SA"></option><option value="TAS"></option><option value="ACT"></option><option value="NT"></option></datalist></span>
             </label>
             <label class="search-field" for="when-filter">
               <span class="field-icon" aria-hidden="true">▦</span>
@@ -89,20 +90,25 @@
             </label>
             <label class="search-field" for="type-filter">
               <span class="field-icon" aria-hidden="true">♠</span>
-              <span class="field-content"><span class="field-label">GAME TYPE</span><select id="type-filter" name="type"><option value="all">All events</option><option value="series">Tournament series</option><option value="league">League events</option></select></span>
+              <span class="field-content"><span class="field-label">EVENT TYPE</span><select id="type-filter" name="type"><option value="all">All events</option><option value="series">Tournament series</option><option value="league">League events</option></select></span>
             </label>
-            <label class="search-field" for="budget-filter">
-              <span class="field-icon" aria-hidden="true">$</span>
-              <span class="field-content"><span class="field-label">ENTRY BUDGET</span><select id="budget-filter" name="budget"><option value="all">Any / not listed</option><option value="0-100">Up to $100</option><option value="100-500">$101–$500</option><option value="500-1500">$501–$1,500</option><option value="1500+">$1,501+</option></select></span>
-            </label>
-            <label class="search-field" for="format-filter">
-              <span class="field-icon" aria-hidden="true">♣</span>
-              <span class="field-content"><span class="field-label">FORMAT</span><select id="format-filter" name="format"><option value="all">Any format</option><option value="holdem">Hold’em</option><option value="plo">PLO</option><option value="mixed games">Mixed games</option></select></span>
-            </label>
-            <label class="search-field" for="guarantee-filter">
-              <span class="field-icon" aria-hidden="true">◎</span>
-              <span class="field-content"><span class="field-label">PRIZE POOL</span><select id="guarantee-filter" name="guarantee"><option value="all">Any guarantee</option><option value="listed">Guaranteed events</option><option value="100000+">$100k+ GTD</option></select></span>
-            </label>
+            <details class="advanced-filters" id="advanced-filters">
+              <summary>More filters <span class="advanced-filter-count" id="advanced-filter-count">Optional</span></summary>
+              <div class="advanced-filter-grid">
+                <label class="search-field" for="budget-filter">
+                  <span class="field-icon" aria-hidden="true">$</span>
+                  <span class="field-content"><span class="field-label">ENTRY BUDGET</span><select id="budget-filter" name="budget"><option value="all">Any / not listed</option><option value="0-100">Up to $100</option><option value="100-500">$101–$500</option><option value="500-1500">$501–$1,500</option><option value="1500+">$1,501+</option></select></span>
+                </label>
+                <label class="search-field" for="format-filter">
+                  <span class="field-icon" aria-hidden="true">♣</span>
+                  <span class="field-content"><span class="field-label">FORMAT</span><select id="format-filter" name="format"><option value="all">Any format</option><option value="holdem">Hold’em</option><option value="plo">PLO</option><option value="mixed games">Mixed games</option></select></span>
+                </label>
+                <label class="search-field" for="guarantee-filter">
+                  <span class="field-icon" aria-hidden="true">◎</span>
+                  <span class="field-content"><span class="field-label">PRIZE POOL</span><select id="guarantee-filter" name="guarantee"><option value="all">Any guarantee</option><option value="listed">Guaranteed events</option><option value="100000+">$100k+ GTD</option></select></span>
+                </label>
+              </div>
+            </details>
             <button class="search-button" type="submit">Find games <span aria-hidden="true">→</span></button>
           </form>
           <div class="quick-locations" aria-label="Popular locations">
@@ -183,7 +189,7 @@
     </main>
 
     <footer class="site-footer">
-      <div class="shell footer-top"><a class="brand footer-brand" href="/" aria-label="Big Bluff Bay home"><span class="brand-mark" aria-hidden="true">B<span>♠</span>B</span><span class="brand-name">BIG BLUFF <b>BAY</b></span></a><p>Find a game. Check the details. Enjoy the night.</p><a class="back-top" href="#main">Back to top ↑</a></div>
+      <div class="shell footer-top"><a class="brand footer-brand" href="/" aria-label="Big Bluff Bay home"><img class="brand-mark" src="/favicon.svg" alt="" /><span class="brand-name">BIG BLUFF <b>BAY</b></span></a><p>Find a game. Check the details. Enjoy the night.</p><a class="back-top" href="#main">Back to top ↑</a></div>
       <div class="shell footer-bottom"><span>© <span id="year">2026</span> Big Bluff Bay</span><nav class="footer-directory" aria-label="Poker event directories"><a href="/tournaments.html">Tournaments</a><a href="/organisers.html">Organisers</a><a href="/venues.html">Venues</a><a href="/updates.html">Updates</a><a href="/events.xml">RSS feed</a><a href="/events.ics">Calendar feed</a></nav><span>18+ only · Play within your limits</span><span>Event details belong to their respective organisers.</span></div>
     </footer>
   </body>
