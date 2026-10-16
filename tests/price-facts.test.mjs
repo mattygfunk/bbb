@@ -75,8 +75,8 @@ test('app.js: the featured event follows the selected city and offers save and c
   assert.match(p.featured(), /Sydney Championship/);
   assert.match(p.featured(), /data-save="sydney"/);
   assert.match(p.featured(), /data-calendar="sydney"/);
-  assert.match(p.featured(), /From \\$25/);
-  assert.match(p.featured(), /\\$5,000 GTD/);
+  assert.match(p.featured(), /From \$25/);
+  assert.match(p.featured(), /\$5,000 GTD/);
   assert.doesNotMatch(p.featured(), /Melbourne/);
 });
 
