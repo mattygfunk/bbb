@@ -1,0 +1,137 @@
+/* Brand artwork, lighter search controls, and tighter home spacing. */
+.brand { gap: 13px; }
+.brand-mark { width: 46px; height: 46px; display: block; flex: none; border: 0; border-radius: 0; object-fit: contain; }
+.brand-name { font-size: 12px; letter-spacing: .13em; }
+.footer-brand .brand-mark { width: 42px; height: 42px; }
+
+.events-section { padding-top: 64px; }
+
+.search-panel {
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(130px, .65fr) minmax(190px, .9fr) auto;
+  grid-template-areas:
+    "location when type submit"
+    "advanced advanced advanced advanced";
+}
+.search-panel .search-location { grid-area: location; grid-column: auto; }
+.search-panel #when-filter { }
+.search-panel label[for="when-filter"] { grid-area: when; }
+.search-panel label[for="type-filter"] { grid-area: type; }
+.search-panel > .search-button { grid-area: submit; grid-column: auto; white-space: nowrap; }
+.advanced-filters {
+  grid-area: advanced;
+  min-width: 0;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid #e2e3d9;
+}
+.advanced-filters > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  color: #44533f;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.advanced-filters > summary::-webkit-details-marker { display: none; }
+.advanced-filters > summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #b9c4b1;
+  border-radius: 50%;
+  color: #52664a;
+  font-size: 14px;
+  line-height: 1;
+}
+.advanced-filters[open] > summary::after { content: "−"; }
+.advanced-filter-count {
+  padding: 3px 7px;
+  border-radius: 99px;
+  background: #eef1e8;
+  color: #687563;
+  font-size: 9px;
+  font-weight: 600;
+}
+.advanced-filter-count.is-active { background: #e2edcf; color: #38522b; }
+.advanced-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 0 2px;
+}
+.advanced-filter-grid .search-field {
+  min-height: 58px;
+  padding: 8px 12px;
+  border: 1px solid #e0e3d9;
+  border-radius: 4px;
+}
+.advanced-filter-grid .field-icon { font-size: 18px; }
+.search-panel .search-field { min-width: 0; }
+.search-panel .field-label { white-space: nowrap; }
+
+.city-card {
+  background-size: cover;
+  background-position: center;
+  isolation: isolate;
+}
+.city-melbourne {
+  background-image: linear-gradient(180deg, rgb(12 25 22 / 13%) 0%, rgb(12 25 22 / 76%) 100%), url("/city-melbourne.svg");
+}
+.city-sydney {
+  background-image: linear-gradient(180deg, rgb(12 25 22 / 13%) 0%, rgb(12 25 22 / 76%) 100%), url("/city-sydney.svg");
+}
+.city-goldcoast {
+  background-image: linear-gradient(180deg, rgb(12 25 22 / 13%) 0%, rgb(12 25 22 / 76%) 100%), url("/city-gold-coast.svg");
+}
+.city-cairns {
+  background-image: linear-gradient(180deg, rgb(12 25 22 / 13%) 0%, rgb(12 25 22 / 76%) 100%), url("/city-cairns.svg");
+}
+.city-australia {
+  color: var(--white);
+  background-image: linear-gradient(180deg, rgb(12 25 22 / 13%) 0%, rgb(12 25 22 / 76%) 100%), url("/city-australia.svg");
+}
+.city-australia .city-number,
+.city-australia .city-action { color: #f0eee4; }
+.city-australia .city-action b { color: var(--green); }
+.city-watermark { color: rgb(255 255 255 / 20%); }
+
+@media (max-width: 1000px) {
+  .search-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(145px, .75fr) minmax(180px, 1fr) auto;
+  }
+  .search-panel .search-location,
+  .search-panel > .search-button { grid-column: auto; }
+}
+@media (max-width: 760px) {
+  .events-section { padding-top: 96px; }
+  .search-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "location when"
+      "type type"
+      "advanced advanced"
+      "submit submit";
+  }
+  .search-panel .search-location { grid-column: auto; }
+  .search-panel .search-field {
+    min-height: 58px;
+    padding: 0 10px;
+    border-top: 1px solid var(--border);
+    border-right: 0;
+  }
+  .search-panel label[for="when-filter"] { border-left: 1px solid var(--border); }
+  .search-panel label[for="type-filter"] { border-right: 0; }
+  .search-panel > .search-button {
+    grid-column: auto;
+    min-height: 46px;
+    justify-content: center;
+  }
+  .advanced-filter-grid { grid-template-columns: 1fr; }
+  .advanced-filter-grid .search-field { border: 1px solid #e0e3d9; }
+}
