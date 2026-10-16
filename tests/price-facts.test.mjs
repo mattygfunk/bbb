@@ -20,7 +20,7 @@ async function page(script, query = '') {
   const records = [
     ['missing', undefined, undefined], ['null', null, null], ['blank', '', ''],
     ['string', '50', '20000'], ['negative', -10, -500], ['boolean', false, true],
-    ['free', 0, 0], ['paid', 50, 20000], ['sydney', undefined, undefined],
+    ['free', 0, 0], ['paid', 50, 20000], ['sydney', 25, 5000],
   ].map(([id, buyInMin, guaranteeAmount]) => ({
     id, title: id === 'sydney' ? 'Sydney Championship' : id, buyInMin, guaranteeAmount,
     city: id === 'sydney' ? 'Sydney' : 'Melbourne', state: id === 'sydney' ? 'NSW' : 'VIC',
@@ -75,6 +75,8 @@ test('app.js: the featured event follows the selected city and offers save and c
   assert.match(p.featured(), /Sydney Championship/);
   assert.match(p.featured(), /data-save="sydney"/);
   assert.match(p.featured(), /data-calendar="sydney"/);
+  assert.match(p.featured(), /From \$25/);
+  assert.match(p.featured(), /\$5,000 GTD/);
   assert.doesNotMatch(p.featured(), /Melbourne/);
 });
 
