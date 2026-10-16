@@ -20,9 +20,10 @@ async function page(script, query = '') {
   const records = [
     ['missing', undefined, undefined], ['null', null, null], ['blank', '', ''],
     ['string', '50', '20000'], ['negative', -10, -500], ['boolean', false, true],
-    ['free', 0, 0], ['paid', 50, 20000],
+    ['free', 0, 0], ['paid', 50, 20000], ['sydney', undefined, undefined],
   ].map(([id, buyInMin, guaranteeAmount]) => ({
-    id, title: id, buyInMin, guaranteeAmount, city: 'Melbourne', state: 'VIC',
+    id, title: id === 'sydney' ? 'Sydney Championship' : id, buyInMin, guaranteeAmount,
+    city: id === 'sydney' ? 'Sydney' : 'Melbourne', state: id === 'sydney' ? 'NSW' : 'VIC',
     venue: 'Venue', organiser: 'Organiser', label: 'Tournament', type: 'series',
     startDate: '2099-01-01', endDate: '2099-01-02', checkedAt: '2026-10-15',
     sourceUrl: 'https://example.com/', formats: id === 'blank' ? 'malformed' : [],
@@ -37,6 +38,7 @@ async function page(script, query = '') {
   vm.runInContext(await readFile(new URL(`../${script}`, import.meta.url), 'utf8'), context);
   await new Promise(resolve => setImmediate(resolve));
   const html = () => element(script === 'app.js' ? '#event-grid' : '#search-results').innerHTML;
+  const featured = () => element('#featured-event').innerHTML;
   const filter = (kind, value) => {
     const control = element(script === 'app.js' ? `#${kind}-filter` : `#search-${kind}`);
     control.value = value;
@@ -44,7 +46,7 @@ async function page(script, query = '') {
     else element('#full-search').listeners.submit({preventDefault() {}});
     return html();
   };
-  return {html, filter};
+  return {html, featured, filter};
 }
 
 for (const script of ['app.js', 'search.js']) {
@@ -66,3 +68,18 @@ for (const script of ['app.js', 'search.js']) {
     assert.ok(!guaranteed.includes('/events/null.html'));
   });
 }
+
+test('app.js: the featured event follows the selected city and offers save and calendar actions', async () => {
+  const p = await page('app.js', '?location=Sydney');
+  assert.match(p.featured(), /NEXT IN SYDNEY/);
+  assert.match(p.featured(), /Sydney Championship/);
+  assert.match(p.featured(), /data-save="sydney"/);
+  assert.match(p.featured(), /data-calendar="sydney"/);
+  assert.doesNotMatch(p.featured(), /Melbourne/);
+});
+
+test('app.js: an empty search gives a clear-filters action instead of a stale event', async () => {
+  const p = await page('app.js', '?location=Perth');
+  assert.match(p.featured(), /NO MATCH IN PERTH/);
+  assert.match(p.featured(), /data-clear-filters/);
+});
