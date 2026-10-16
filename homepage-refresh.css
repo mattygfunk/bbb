@@ -14,7 +14,6 @@
     "advanced advanced advanced advanced";
 }
 .search-panel .search-location { grid-area: location; grid-column: auto; }
-.search-panel #when-filter { }
 .search-panel label[for="when-filter"] { grid-area: when; }
 .search-panel label[for="type-filter"] { grid-area: type; }
 .search-panel > .search-button { grid-area: submit; grid-column: auto; white-space: nowrap; }
