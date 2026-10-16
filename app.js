@@ -231,8 +231,8 @@
       : `${dateLabel(event.startDate)} – ${dateLabel(event.endDate)}`;
     const location = [event.city, event.state].filter(Boolean).join(', ');
     const facts = [
-      Number.isFinite(event.buyInMin) && event.buyInMin >= 0 ? `From ${event.buyInMin.toLocaleString('en-AU')}` : '',
-      Number.isFinite(event.guaranteeAmount) && event.guaranteeAmount > 0 ? `${event.guaranteeAmount.toLocaleString('en-AU')} GTD` : '',
+      Number.isFinite(event.buyInMin) && event.buyInMin >= 0 ? `From $${event.buyInMin.toLocaleString('en-AU')}` : '',
+      Number.isFinite(event.guaranteeAmount) && event.guaranteeAmount > 0 ? `$${event.guaranteeAmount.toLocaleString('en-AU')} GTD` : '',
       Array.isArray(event.formats) ? event.formats.filter((format) => typeof format === 'string' && format.trim()).join(' · ') : '',
     ].filter(Boolean);
     const detailLink = `/events/${String(event.id).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.html`;
